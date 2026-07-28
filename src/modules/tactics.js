@@ -389,6 +389,12 @@ export function actualizarTactica(eq) {
   const customPos = (plantel[`pos_custom_${eq}`] || {});
   const capitanActual = plantel[`capitan_${eq}`] || '';
 
+  const titularesActuales = form.map((slot, i) => {
+    return (plantel[`tit_${eq}`] && plantel[`tit_${eq}`][i]) || (plantel[slot.cat] && plantel[slot.cat][0]) || 'LIBRE';
+  });
+
+  renderSelectorCapitanInCard(eq, titularesActuales);
+
   form.forEach((slot, i) => {
     const token = document.createElement('div');
     token.className = 'jugador-token';
@@ -409,7 +415,7 @@ export function actualizarTactica(eq) {
     token.dataset.idx = i;
     token.dataset.eq = eq;
 
-    const nombreGuardado = (plantel[`tit_${eq}`] && plantel[`tit_${eq}`][i]) || (plantel[slot.cat] && plantel[slot.cat][0]) || 'LIBRE';
+    const nombreGuardado = titularesActuales[i];
     const esCapitan = capitanActual === nombreGuardado && nombreGuardado !== 'LIBRE';
 
     token.innerHTML = `
@@ -421,8 +427,10 @@ export function actualizarTactica(eq) {
     `;
 
     token.onclick = (e) => {
-      if (token.dataset.wasDragged === 'true') {
+      e.stopPropagation();
+      if (window._justDragged || token.dataset.wasDragged === 'true') {
         token.dataset.wasDragged = 'false';
+        window._justDragged = false;
         return;
       }
       abrirModalJugador(eq, i, slot.cat);
@@ -436,6 +444,27 @@ export function actualizarTactica(eq) {
   renderCT(eq);
 }
 
+function renderSelectorCapitanInCard(eq, titulares) {
+  const select = document.getElementById(`select-capitan-${eq}`);
+  if (!select) return;
+
+  const capitanActual = plantel[`capitan_${eq}`] || '';
+  const titularesUnicos = [...new Set(titulares)].filter(n => n && n !== 'LIBRE');
+
+  let html = `<option value="">-- Sin Capitán --</option>`;
+  titularesUnicos.forEach(n => {
+    html += `<option value="${n}" ${n === capitanActual ? 'selected' : ''}>⭐ ${n}</option>`;
+  });
+
+  select.innerHTML = html;
+
+  select.onchange = (e) => {
+    plantel[`capitan_${eq}`] = e.target.value;
+    autoSaveLocal();
+    actualizarTactica(eq);
+  };
+}
+
 function hacerTokenArrastrable(token, contenedor) {
   let isDragging = false;
   let startX = 0, startY = 0;
@@ -447,6 +476,8 @@ function hacerTokenArrastrable(token, contenedor) {
 
     isDragging = true;
     token.dataset.wasDragged = 'false';
+    window._justDragged = false;
+
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
@@ -473,6 +504,7 @@ function hacerTokenArrastrable(token, contenedor) {
 
     if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
       token.dataset.wasDragged = 'true';
+      window._justDragged = true;
     }
 
     const containerRect = contenedor.getBoundingClientRect();
@@ -490,6 +522,13 @@ function hacerTokenArrastrable(token, contenedor) {
     if (!isDragging) return;
     isDragging = false;
     token.classList.remove('dragging');
+
+    if (token.dataset.wasDragged === 'true') {
+      window._justDragged = true;
+      setTimeout(() => {
+        window._justDragged = false;
+      }, 350);
+    }
 
     const eq = token.dataset.eq;
     const idx = token.dataset.idx;
@@ -547,6 +586,7 @@ function renderSuplentes(eq) {
     banco.appendChild(slot);
   }
 
+  // BOTÓN + (AGREGAR ASIENTO)
   const addBtn = document.createElement('div');
   addBtn.className = 'banca-add-btn';
   addBtn.textContent = '+';
@@ -557,6 +597,23 @@ function renderSuplentes(eq) {
     autoSaveLocal();
   };
   banco.appendChild(addBtn);
+
+  // BOTÓN - (QUITAR ASIENTO / SUPLENTE)
+  if (maxSup > 1) {
+    const removeBtn = document.createElement('div');
+    removeBtn.className = 'banca-remove-btn';
+    removeBtn.textContent = '-';
+    removeBtn.title = 'Quitar asiento del banco';
+    removeBtn.onclick = () => {
+      plantel[`maxSup_${eq}`] = Math.max(1, (plantel[`maxSup_${eq}`] || 7) - 1);
+      if (plantel[`sup_${eq}`] && plantel[`sup_${eq}`].length > plantel[`maxSup_${eq}`]) {
+        plantel[`sup_${eq}`].pop();
+      }
+      renderSuplentes(eq);
+      autoSaveLocal();
+    };
+    banco.appendChild(removeBtn);
+  }
 }
 
 let modalJugadorActivo = { eq: '', idx: -1, cat: '' };
@@ -574,14 +631,8 @@ export function abrirModalJugador(eq, idx, cat) {
   const listaJugadores = [...(plantel[cat] || []), ...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
   const disponibles = [...new Set(listaJugadores)].filter(n => !ocupados.has(n));
 
-  const titularActual = (plantel[`tit_${eq}`] && plantel[`tit_${eq}`][idx]) || '';
-
   let html = `<div class="modal-title">⚽ SELECCIONAR TITULAR</div>`;
   html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
-
-  if (titularActual && titularActual !== 'LIBRE') {
-    html += `<button class="btn btn-gold" style="margin-bottom:6px;" onclick="window._designarCapitan('${eq}', '${titularActual}')">⭐ DESIGNAR A "${titularActual}" COMO CAPITÁN (C)</button>`;
-  }
 
   if (!disponibles.length) {
     html += `<div style="color:#aaa;font-size:12px;text-align:center;padding:10px;">Todos los jugadores ya han sido asignados.</div>`;
@@ -597,13 +648,6 @@ export function abrirModalJugador(eq, idx, cat) {
   modalContent.innerHTML = html;
   modal.style.display = 'flex';
 }
-
-window._designarCapitan = (eq, nombre) => {
-  plantel[`capitan_${eq}`] = nombre;
-  document.getElementById('modal').style.display = 'none';
-  actualizarTactica(eq);
-  autoSaveLocal();
-};
 
 window._seleccionarTitular = (nombre) => {
   const { eq, idx } = modalJugadorActivo;
