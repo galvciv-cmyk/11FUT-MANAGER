@@ -11,16 +11,48 @@ import { abrirConfig, cerrarConfig, guardarNombres, guardarKits, guardarLogo, gu
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged } from "firebase/auth";
 
 // ══════════════════════════════════════════
-// TAB SWITCHING 1 A 1 DIRECTO (#s1 a #s5)
+// MAPEO DE RUTAS HASH URL (#tactica, #citacion, etc.)
 // ══════════════════════════════════════════
-export function switchTab(n) {
+const TAB_ROUTES = {
+  1: 'tactica',
+  2: 'citacion',
+  3: 'plantel',
+  4: 'stats',
+  5: 'historial'
+};
+
+const ROUTE_TABS = {
+  '#tactica': 1,
+  '#citacion': 2,
+  '#plantel': 3,
+  '#stats': 4,
+  '#historial': 5
+};
+
+// ══════════════════════════════════════════
+// TAB SWITCHING Y NAVEGACIÓN POR URL
+// ══════════════════════════════════════════
+export function switchTab(n, updateHash = true) {
   document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i + 1 === n));
   document.querySelectorAll('.seccion').forEach((s, i) => s.classList.toggle('active', i + 1 === n));
+
+  if (updateHash && TAB_ROUTES[n]) {
+    window.location.hash = TAB_ROUTES[n];
+  }
+
   if (n === 1) actualizarTactica('A');
   if (n === 3) refrescarTodaLaVista();
   if (n === 4) renderStats();
   if (n === 5) renderHistorial();
 }
+
+export function restaurarPestanaDesdeURL() {
+  const hash = window.location.hash || '#tactica';
+  const tabNum = ROUTE_TABS[hash] || 1;
+  switchTab(tabNum, false);
+}
+
+window.addEventListener('hashchange', restaurarPestanaDesdeURL);
 
 // ══════════════════════════════════════════
 // CATEGORY & TEAM SELECTOR MANAGER
@@ -150,6 +182,7 @@ async function login() {
     aplicarPerfil();
     renderSelectorCategoria();
     refrescarTodaLaVista();
+    restaurarPestanaDesdeURL();
   } catch (e) {
     console.error('Error de inicio de sesión:', e);
     if (statusEl) statusEl.textContent = '❌ Correo o PIN incorrectos';
@@ -215,6 +248,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       aplicarPerfil();
       renderSelectorCategoria();
       refrescarTodaLaVista();
+      restaurarPestanaDesdeURL();
     }
   });
 
@@ -312,4 +346,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-reset-stats')?.addEventListener('click', resetearStats);
   document.getElementById('btn-borrar-historial')?.addEventListener('click', borrarHistorial);
   document.getElementById('btn-cerrar-sesion')?.addEventListener('click', cerrarSesion);
+
+  restaurarPestanaDesdeURL();
 });
