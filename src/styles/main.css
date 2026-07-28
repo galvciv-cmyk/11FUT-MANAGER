@@ -102,7 +102,30 @@ input:focus, select:focus {
   margin-bottom: 10px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 6px;
+}
+
+/* ── CITACIÓN CENTRADA MAX-WIDTH 580px ── */
+.citacion-card-container {
+  max-width: 580px;
+  margin: 0 auto;
+}
+
+/* ── STATS EN 2 COLUMNAS ── */
+.stats-2col-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+@media (min-width: 900px) {
+  .stats-2col-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
 }
 
 /* ── HEADER MÁS ALTO Y CENTRADO ── */
@@ -150,7 +173,7 @@ input:focus, select:focus {
   font-family: 'Barlow Condensed', sans-serif;
   font-weight: 900;
   font-size: 14px;
-  padding: 8px 14px;
+  padding: 6px 10px;
   border-radius: 8px;
   width: auto;
   margin: 0;

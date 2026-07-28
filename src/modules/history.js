@@ -1,176 +1,225 @@
-import { historial, perfil, autoSaveLocal, stats } from "./state.js";
+import { historial, updateHistorial, stats, updateStats, perfil, autoSaveLocal, plantel } from "./state.js";
 import { guardarFirebase } from "../services/firebase.js";
-import { incrementarStatsPartido, getTodosJugadores } from "./stats.js";
+import { renderStats } from "./stats.js";
 
-export function formatFecha(f) {
-  if (!f) return '';
-  const p = f.split('-');
-  return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : f;
+export function formatFecha(str) {
+  if (!str) return '';
+  const p = str.split('-');
+  if (p.length === 3) return `${p[2]}/${p[1]}/${p[0]}`;
+  return str;
 }
 
-export function formatHora(h) {
-  return h || '';
+export function formatHora(str) {
+  if (!str) return '';
+  const p = str.split(':');
+  if (p.length >= 2) return `${p[0]}:${p[1]} hs`;
+  return str;
 }
 
-export async function guardarPartido() {
-  const rival       = document.getElementById('h-rival')?.value.trim();
-  const gf          = +document.getElementById('h-gf')?.value || 0;
-  const gc          = +document.getElementById('h-gc')?.value || 0;
-  const goleadores  = document.getElementById('h-goleadores')?.value.trim() || '';
-  const asistidores = document.getElementById('h-asistidores')?.value.trim() || '';
-  const guardametas = document.getElementById('h-guardametas')?.value.trim() || '';
-  const equipoSel   = document.getElementById('h-equipo')?.value || 'A';
-  const fechaVal    = document.getElementById('h-fecha')?.value || '';
-  const torneoVal   = document.getElementById('h-torneo')?.value.trim() || '';
+export function guardarPartido() {
+  const eq          = document.getElementById('h-equipo').value;
+  const fecha       = document.getElementById('h-fecha').value;
+  const torneo      = document.getElementById('h-torneo').value.trim();
+  const rival       = document.getElementById('h-rival').value.trim();
+  const gf          = parseInt(document.getElementById('h-gf').value, 10);
+  const gc          = parseInt(document.getElementById('h-gc').value, 10);
+  const duracion    = parseInt(document.getElementById('h-duracion').value, 10) || 30; // ej. 30 min por tiempo
+  const rematesA    = parseInt(document.getElementById('h-remates-a').value, 10) || 0;
+  const rematesC    = parseInt(document.getElementById('h-remates-c').value, 10) || 0;
+  const cornersA    = parseInt(document.getElementById('h-corners-a').value, 10) || 0;
+  const cornersC    = parseInt(document.getElementById('h-corners-c').value, 10) || 0;
 
-  const duracionTiempo = +document.getElementById('h-duracion')?.value || 35; // e.g. 30min or 35min por tiempo
-  const rematesAFavor  = +document.getElementById('h-remates-a')?.value || 0;
-  const rematesEnContra= +document.getElementById('h-remates-c')?.value || 0;
+  const rawGoleadores  = document.getElementById('h-goleadores').value.trim();
+  const rawAsistidores = document.getElementById('h-asistidores').value.trim();
+  const rawParticipantes = document.getElementById('h-guardametas').value.trim();
 
-  if (!rival) return alert('Ingresa el rival');
+  if (!fecha || !rival || isNaN(gf) || isNaN(gc)) {
+    return alert('Ingresa Fecha, Rival, Goles a Favor y Goles en Contra.');
+  }
 
-  const resultado = gf > gc ? 'W' : gf < gc ? 'L' : 'D';
-  const partido = {
-    rival, gf, gc,
-    eq: equipoSel,
-    fecha: fechaVal,
-    torneo: torneoVal,
-    goleadores, asistidores, guardametas,
-    minutosTiempo: duracionTiempo,
-    rematesAFavor, rematesEnContra,
-    resultado, ts: Date.now()
+  const goleadores  = parseCountList(rawGoleadores);
+  const asistidores = parseCountList(rawAsistidores);
+  const participantes = rawParticipantes ? rawParticipantes.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+  let res = 'D';
+  if (gf > gc) res = 'W';
+  if (gf < gc) res = 'L';
+
+  const totalMinutosPartido = duracion * 2;
+
+  const nuevoPartido = {
+    id: Date.now().toString(),
+    eq,
+    fecha,
+    torneo: torneo || 'Amistoso',
+    rival,
+    gf,
+    gc,
+    res,
+    duracion: totalMinutosPartido,
+    rematesA,
+    rematesC,
+    cornersA,
+    cornersC,
+    goleadores,
+    asistidores,
+    participantes
   };
 
-  historial.unshift(partido);
+  historial.unshift(nuevoPartido);
+  updateHistorial(historial);
 
-  incrementarStatsPartido(partido);
+  acumularStatsPartido(nuevoPartido);
 
-  ['h-rival', 'h-gf', 'h-gc', 'h-torneo', 'h-goleadores', 'h-asistidores', 'h-guardametas', 'h-remates-a', 'h-remates-c'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
-
-  renderHistorial();
   autoSaveLocal();
-  await guardarFirebase();
+  guardarFirebase();
+  renderHistorial();
+  renderStats();
 
-  compartirPartidoWA(partido);
+  alert('✅ Partido registrado y estadísticas actualizadas con éxito.');
+
+  document.getElementById('h-rival').value = '';
+  document.getElementById('h-gf').value = '';
+  document.getElementById('h-gc').value = '';
+  document.getElementById('h-remates-a').value = '';
+  document.getElementById('h-remates-c').value = '';
+  document.getElementById('h-corners-a').value = '';
+  document.getElementById('h-corners-c').value = '';
+  document.getElementById('h-goleadores').value = '';
+  document.getElementById('h-asistidores').value = '';
+  document.getElementById('h-guardametas').value = '';
 }
 
-export function compartirPartidoWA(p) {
-  const eqNames = { A: perfil.eqA || 'EQUIPO A', B: perfil.eqB || 'EQUIPO B' };
-  const nombreEq = eqNames[p.eq];
-  let msg = '';
-  if (p.torneo) msg += `🏆 *${p.torneo}*\n`;
-  if (p.fecha)  msg += `📅 *${formatFecha(p.fecha)}*\n`;
-  msg += `\n⚽ *${nombreEq} ${p.gf} - ${p.gc} ${p.rival}*\n`;
-  if (p.goleadores)  msg += `\n*Goles:*\n${p.goleadores.split(',').map(g => '⚽ ' + g.trim()).join('\n')}\n`;
-  if (p.asistidores) msg += `\n*Asistencias:*\n${p.asistidores.split(',').map(a => '🎯 ' + a.trim()).join('\n')}\n`;
-  if (p.guardametas) msg += `\n*Guardameta / Convocados:*\n${p.guardametas.split(',').map(g => '🧤 ' + g.trim()).join('\n')}\n`;
-  if (p.rematesAFavor || p.rematesEnContra) {
-    msg += `\n📊 *Estadísticas de Remates:*\n🎯 Remates al arco: ${p.rematesAFavor || 0} vs ${p.rematesEnContra || 0}\n`;
-  }
-  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+function parseCountList(raw) {
+  if (!raw) return {};
+  const res = {};
+  const partes = raw.split(',');
+  partes.forEach(p => {
+    const item = p.trim();
+    if (!item) return;
+    const match = item.match(/^(.+?)\s+(\d+)$/);
+    if (match) {
+      res[match[1].trim()] = parseInt(match[2], 10);
+    } else {
+      res[item] = (res[item] || 0) + 1;
+    }
+  });
+  return res;
+}
+
+function acumularStatsPartido(p) {
+  const convocados = p.participantes.length ? p.participantes : [...Object.keys(p.goleadores), ...Object.keys(p.asistidores)];
+
+  convocados.forEach(nombre => {
+    if (!stats[nombre]) {
+      stats[nombre] = { pj: 0, minJug: 0, goles: 0, asist: 0, am: 0, ro: 0, rat: 6.5, vallaInvicta: 0, rematesFavor: 0, rematesContra: 0, cornersFavor: 0, cornersRival: 0 };
+    }
+    const st = stats[nombre];
+    st.pj += 1;
+    st.minJug += p.duracion;
+
+    if (p.goleadores[nombre]) st.goles += p.goleadores[nombre];
+    if (p.asistidores[nombre]) st.asist += p.asistidores[nombre];
+
+    st.rematesFavor = (st.rematesFavor || 0) + p.rematesA;
+    st.rematesContra = (st.rematesContra || 0) + p.rematesC;
+    st.cornersFavor = (st.cornersFavor || 0) + p.cornersA;
+    st.cornersRival = (st.cornersRival || 0) + p.cornersC;
+
+    if (plantel.por.includes(nombre)) {
+      if (p.gc === 0) st.vallaInvicta = (st.vallaInvicta || 0) + 1;
+    }
+
+    const baseRating = 6.0 + (st.goles * 0.8) + (st.asist * 0.5) + (st.minJug / (st.pj * 90)) - (st.am * 0.3) - (st.ro * 1.5);
+    st.rat = parseFloat(Math.min(10.0, Math.max(1.0, baseRating)).toFixed(1));
+  });
+
+  updateStats(stats);
 }
 
 export function renderHistorial() {
   const cont = document.getElementById('historial-list');
   if (!cont) return;
 
-  if (!historial.length) {
-    cont.innerHTML = '<div class="card" style="text-align:center;color:#555;padding:20px;">Sin partidos registrados</div>';
+  if (!historial || !historial.length) {
+    cont.innerHTML = `<div style="text-align:center;color:#666;font-size:13px;padding:20px;">No hay partidos registrados aún.</div>`;
     return;
   }
 
-  const eqNames = { A: perfil.eqA || 'Equipo A', B: perfil.eqB || 'Equipo B' };
-  cont.innerHTML = historial.map((p, i) => {
-    const cls = p.resultado === 'W' ? 'resultado-W' : p.resultado === 'L' ? 'resultado-L' : 'resultado-D';
-    const emoji = p.resultado === 'W' ? '🏆' : p.resultado === 'L' ? '😞' : '🤝';
+  cont.innerHTML = historial.map((h, i) => {
+    const eqNombre = perfil.eqA || 'Equipo';
+    const resClass = `resultado-${h.res}`;
+
+    const golesStr = Object.entries(h.goleadores || {}).map(([k, v]) => `${k} (${v})`).join(', ');
+    const asistStr = Object.entries(h.asistidores || {}).map(([k, v]) => `${k} (${v})`).join(', ');
+
+    const efecPct = h.rematesA > 0 ? Math.round((h.gf / h.rematesA) * 100) : 0;
+    const atajadasPct = h.rematesC > 0 ? Math.round(((h.rematesC - h.gc) / h.rematesC) * 100) : 0;
+
     return `
-      <div class="partido-item" style="display:flex;flex-direction:column;gap:8px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div>
-            <div style="font-weight:700;font-family:'Barlow Condensed',sans-serif;font-size:16px;">${emoji} ${eqNames[p.eq]} vs ${p.rival}</div>
-            <div style="font-size:11px;color:#555;margin-top:2px;">${p.fecha ? formatFecha(p.fecha) : ''} ${p.torneo ? '· ' + p.torneo : ''} (${(p.minutosTiempo||35)*2}' total)</div>
-          </div>
-          <div class="partido-resultado ${cls}">${p.gf} - ${p.gc}</div>
+      <div class="partido-item">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;color:#888;">${formatFecha(h.fecha)} • ${h.torneo}</span>
+          <span class="partido-resultado ${resClass}">${h.gf} - ${h.gc}</span>
         </div>
-        ${p.goleadores ? `<div style="font-size:12px;color:#aaa;">⚽ <span style="color:var(--oro);">Goles:</span> ${p.goleadores}</div>` : ''}
-        ${p.asistidores ? `<div style="font-size:12px;color:#aaa;">🎯 <span style="color:#4af;">Asistencias:</span> ${p.asistidores}</div>` : ''}
-        ${p.guardametas ? `<div style="font-size:12px;color:#aaa;">🧤 <span style="color:#aaa;">Convocados:</span> ${p.guardametas}</div>` : ''}
-        ${(p.rematesAFavor || p.rematesEnContra) ? `<div style="font-size:11px;color:#777;">🎯 Remates: ${p.rematesAFavor||0} a favor / ${p.rematesEnContra||0} rival</div>` : ''}
-        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;">
-          <button onclick="window._compartirWA(${i})" style="background:var(--verde);border:none;color:#fff;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:11px;font-family:'Barlow Condensed',sans-serif;">📲 WA</button>
-          <button onclick="window._borrarPartido(${i})" style="background:#1a1a1a;border:1px solid #333;color:#555;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:11px;">🗑️</button>
-        </div>
+        <div style="font-weight:700;font-size:15px;color:var(--oro);">${eqNombre} vs ${h.rival}</div>
+        <div style="font-size:11px;color:#aaa;margin-top:4px;">⏱️ Minutos: ${h.duracion || 60}m | 🎯 Efectividad: ${efecPct}% | 🧤 Atajadas: ${atajadasPct}% | 🚩 Corners: ${h.cornersA || 0} - ${h.cornersC || 0}</div>
+        ${golesStr ? `<div style="font-size:12px;color:#ccc;margin-top:4px;">⚽ Goles: ${golesStr}</div>` : ''}
+        ${asistStr ? `<div style="font-size:12px;color:#aaa;margin-top:2px;">🎯 Asistencias: ${asistStr}</div>` : ''}
+        <button onclick="window._eliminarPartido('${h.id}')" style="background:none;border:none;color:#666;font-size:11px;cursor:pointer;margin-top:6px;">🗑️ Eliminar</button>
       </div>
     `;
   }).join('');
 }
 
-export async function borrarPartido(i) {
-  if (!confirm('¿Borrar partido?')) return;
-  historial.splice(i, 1);
-  renderHistorial();
-  autoSaveLocal();
-  await guardarFirebase();
-}
+window._eliminarPartido = async (id) => {
+  if (!confirm('¿Eliminar este partido del historial?')) return;
+  const idx = historial.findIndex(h => h.id === id);
+  if (idx !== -1) {
+    historial.splice(idx, 1);
+    updateHistorial(historial);
+    autoSaveLocal();
+    await guardarFirebase();
+    renderHistorial();
+    renderStats();
+  }
+};
 
-export function mostrarSugerencias(input, listId) {
-  const list = document.getElementById(listId);
-  if (!list) return;
+export function mostrarSugerencias(inputEl, acListId) {
+  const acList = document.getElementById(acListId);
+  if (!acList || !inputEl) return;
 
-  const rawVal = input.value;
-  const parts = rawVal.split(',');
-  const ultimaParte = parts[parts.length - 1].trim().toLowerCase();
+  const val = inputEl.value.toLowerCase();
+  const todos = [...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
+  const filtrados = todos.filter(n => n.toLowerCase().includes(val));
 
-  if (ultimaParte.length < 1) { list.style.display = 'none'; return; }
-
-  const todos = getTodosJugadores();
-  const yaUsados = parts.slice(0, -1).map(p => p.trim().split(' ')[0].toLowerCase());
-
-  const sugerencias = todos.filter(n => {
-    const nombre = n.toLowerCase();
-    return nombre.includes(ultimaParte) && !yaUsados.some(u => nombre.startsWith(u));
-  }).slice(0, 6);
-
-  if (sugerencias.length === 0) { list.style.display = 'none'; return; }
-
-  list.innerHTML = sugerencias.map(n => {
-    const isGoleadores = listId === 'ac-goleadores';
-    return `<div class="autocomplete-item" onclick="window._seleccionarSugerencia('${n}','${input.id}','${listId}',${isGoleadores})">
-      ⚽ <strong>${n}</strong> ${isGoleadores ? '<span>tap para agregar</span>' : ''}
-    </div>`;
-  }).join('');
-
-  list.style.display = 'block';
-}
-
-export function seleccionarSugerencia(nombre, inputId, listId, esGoleador) {
-  const input = document.getElementById(inputId);
-  if (!input) return;
-  const rawVal = input.value;
-  const parts = rawVal.split(',');
-
-  if (esGoleador) {
-    parts[parts.length - 1] = ' ' + nombre + ' ';
-    input.value = parts.join(',');
-    input.focus();
-    input.setSelectionRange(input.value.length, input.value.length);
-  } else {
-    parts[parts.length - 1] = ' ' + nombre;
-    input.value = parts.join(',').replace(/^,\s*/, '');
-    input.focus();
+  if (!filtrados.length || !val) {
+    acList.style.display = 'none';
+    return;
   }
 
-  ocultarSugerencias(listId);
+  acList.innerHTML = filtrados.map(n => `
+    <div class="autocomplete-item" onclick="window._seleccionarAutocomplete('${inputEl.id}', '${acListId}', '${n}')">
+      <span>${n}</span>
+    </div>
+  `).join('');
+
+  acList.style.display = 'block';
 }
 
-export function ocultarSugerencias(listId) {
-  const list = document.getElementById(listId);
-  if (list) list.style.display = 'none';
-}
+window._seleccionarAutocomplete = (inputId, acId, nombre) => {
+  const inputEl = document.getElementById(inputId);
+  if (inputEl) {
+    const val = inputEl.value;
+    const partes = val.split(',');
+    partes.pop();
+    partes.push(nombre);
+    inputEl.value = partes.join(', ') + ', ';
+  }
+  ocultarSugerencias(acId);
+};
 
-window._compartirWA = (i) => compartirPartidoWA(historial[i]);
-window._borrarPartido = (i) => borrarPartido(i);
-window._seleccionarSugerencia = (n, inputId, listId, esGoleador) => seleccionarSugerencia(n, inputId, listId, esGoleador);
+export function ocultarSugerencias(acListId) {
+  const acList = document.getElementById(acListId);
+  if (acList) acList.style.display = 'none';
+}

@@ -26,6 +26,7 @@ export function switchTab(n) {
 // ══════════════════════════════════════════
 export function renderSelectorCategoria(isPublic = false) {
   const selectTactica = document.getElementById('selector-categoria-tactica');
+  const selectStats = document.getElementById('stats-categoria-selector');
   const selectPub = document.getElementById('pub-selector-categoria');
 
   const categorias = perfil.categorias || ["Sub-14"];
@@ -34,6 +35,7 @@ export function renderSelectorCategoria(isPublic = false) {
   const html = categorias.map(c => `<option value="${c}" ${c === activa ? 'selected' : ''}>⚽ ${c}</option>`).join('');
 
   if (selectTactica) selectTactica.innerHTML = html;
+  if (selectStats) selectStats.innerHTML = html;
   if (selectPub) selectPub.innerHTML = html;
 }
 
@@ -203,6 +205,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Bind Category Selectors
   document.getElementById('selector-categoria-tactica')?.addEventListener('change', (e) => cambiarCategoria(e.target.value));
+  document.getElementById('stats-categoria-selector')?.addEventListener('change', (e) => cambiarCategoria(e.target.value));
 
   // Bind Tabs 1 to 5 Direct
   [1, 2, 3, 4, 5].forEach(n => {

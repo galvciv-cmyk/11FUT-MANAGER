@@ -1,230 +1,170 @@
-import { stats, updateStats, plantel, autoSaveLocal } from "./state.js";
+import { stats, updateStats, autoSaveLocal, plantel, perfil } from "./state.js";
 import { guardarFirebase } from "../services/firebase.js";
 
-let statJugActivo = "";
-
-export function abrirStatModal(nombre) {
-  nombre = nombre?.trim();
-  if (!nombre) return alert('Ingresa primero el nombre del jugador');
-  statJugActivo = nombre;
-
-  const modal = document.getElementById('stat-modal');
-  const modalNombre = document.getElementById('stat-modal-nombre');
-  if (!modal || !modalNombre) return;
-
-  modalNombre.textContent = '📊 ' + nombre;
-  const st = stats[nombre] || {};
-  ['goles', 'asist', 'am', 'ro', 'pj', 'minJug', 'rat'].forEach(k => {
-    const el = document.getElementById('sm-' + k);
-    if (el) el.value = st[k] || 0;
-  });
-  modal.style.display = 'flex';
-}
-
-export function cerrarStatModal() {
-  const modal = document.getElementById('stat-modal');
-  if (modal) modal.style.display = 'none';
-}
-
-export async function guardarStatJugador() {
-  if (!statJugActivo) return;
-  stats[statJugActivo] = {
-    goles:  +document.getElementById('sm-goles')?.value || 0,
-    asist:  +document.getElementById('sm-asist')?.value || 0,
-    am:     +document.getElementById('sm-am')?.value || 0,
-    ro:     +document.getElementById('sm-ro')?.value || 0,
-    pj:     +document.getElementById('sm-pj')?.value || 0,
-    minJug: +document.getElementById('sm-minJug')?.value || 0,
-    rat:    parseFloat(document.getElementById('sm-rat')?.value) || 0
-  };
-  cerrarStatModal();
-  renderStats();
-  autoSaveLocal();
-  await guardarFirebase();
-}
-
-export function getTodosJugadores() {
-  return [...(plantel.por || []), ...(plantel.def || []), ...(plantel.med || []), ...(plantel.del || [])];
-}
-
 export function renderStats() {
-  const search = document.getElementById('stat-search')?.value.toLowerCase() || '';
   const cont = document.getElementById('stats-list');
   if (!cont) return;
 
-  const todos = getTodosJugadores();
-  const unicos = [...new Set(todos)];
+  const searchInput = document.getElementById('stat-search');
+  const filtro = searchInput ? searchInput.value.toLowerCase() : '';
 
-  if (!unicos.length) {
-    cont.innerHTML = '<p style="color:#555;text-align:center;font-size:13px;padding:20px;">Agrega jugadores en PLANTEL primero</p>';
+  const todosJugadores = [...new Set([...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del])];
+
+  const filtrados = todosJugadores.filter(n => n.toLowerCase().includes(filtro));
+
+  if (!filtrados.length) {
+    cont.innerHTML = `<div style="text-align:center;color:#666;font-size:13px;padding:16px;">No se encontraron jugadores.</div>`;
     return;
   }
 
-  let html = '';
-  unicos.filter(n => n.toLowerCase().includes(search)).forEach(n => {
-    const st = stats[n] || {};
+  let html = `
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;text-align:left;">
+        <thead>
+          <tr style="border-bottom:1px solid #333;color:var(--oro);font-family:'Barlow Condensed',sans-serif;font-size:13px;">
+            <th style="padding:8px;">JUGADOR</th>
+            <th style="padding:8px;text-align:center;">PJ</th>
+            <th style="padding:8px;text-align:center;">⏱️ MIN</th>
+            <th style="padding:8px;text-align:center;">⚽ GOL</th>
+            <th style="padding:8px;text-align:center;">🎯 ASI</th>
+            <th style="padding:8px;text-align:center;">🧤 VALLA</th>
+            <th style="padding:8px;text-align:center;">⭐ RAT</th>
+            <th style="padding:8px;text-align:center;">EDITAR</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  filtrados.forEach(nombre => {
+    const st = stats[nombre] || { pj: 0, minJug: 0, goles: 0, asist: 0, am: 0, ro: 0, rat: 6.5, vallaInvicta: 0, rematesFavor: 0, rematesContra: 0 };
+
+    const esPortero = plantel.por.includes(nombre);
+    const atajadasPct = st.rematesContra > 0 ? Math.round(((st.rematesContra - (st.gc || 0)) / st.rematesContra) * 100) : (st.vallaInvicta > 0 ? 100 : 0);
+    const vallaDisplay = esPortero ? `🧤 ${st.vallaInvicta || 0} (${atajadasPct}%)` : '-';
+
     html += `
-      <div style="background:#080808;border:1px solid #1a1a1a;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
-        <div>
-          <div style="font-weight:700;font-family:'Barlow Condensed',sans-serif;font-size:16px;color:#fff;">${n}</div>
-          <div style="font-size:11px;color:#555;margin-top:2px;">PJ: ${st.pj || 0} · Min: ${st.minJug || 0}' · Rating: ${st.rat || 0}</div>
-        </div>
-        <div style="display:flex;gap:10px;align-items:center;">
-          <div style="text-align:center;">
-            <div style="font-size:18px;font-weight:900;color:var(--oro);font-family:'Barlow Condensed',sans-serif;">${st.goles || 0}</div>
-            <div style="font-size:9px;color:#555;">⚽</div>
-          </div>
-          <div style="text-align:center;">
-            <div style="font-size:18px;font-weight:900;color:#4af;font-family:'Barlow Condensed',sans-serif;">${st.asist || 0}</div>
-            <div style="font-size:9px;color:#555;">🎯</div>
-          </div>
-          <div style="text-align:center;">
-            <div style="font-size:18px;font-weight:900;color:#fa0;font-family:'Barlow Condensed',sans-serif;">${st.am || 0}</div>
-            <div style="font-size:9px;color:#555;">🟨</div>
-          </div>
-          <button onclick="window._abrirStatModal('${n}')" style="background:var(--rojo);border:none;color:#fff;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;font-family:'Barlow Condensed',sans-serif;">EDITAR</button>
-        </div>
-      </div>
+      <tr style="border-bottom:1px solid #1a1a1a;">
+        <td style="padding:8px;font-weight:700;">${nombre} ${esPortero ? '🧤' : ''}</td>
+        <td style="padding:8px;text-align:center;">${st.pj || 0}</td>
+        <td style="padding:8px;text-align:center;">${st.minJug || 0}'</td>
+        <td style="padding:8px;text-align:center;color:var(--verde);font-weight:700;">${st.goles || 0}</td>
+        <td style="padding:8px;text-align:center;color:var(--azul);font-weight:700;">${st.asist || 0}</td>
+        <td style="padding:8px;text-align:center;font-size:11px;color:#aaa;">${vallaDisplay}</td>
+        <td style="padding:8px;text-align:center;color:var(--oro);font-weight:700;">${(st.rat || 6.5).toFixed(1)}</td>
+        <td style="padding:8px;text-align:center;">
+          <button class="btn btn-gray" style="padding:4px 8px;font-size:10px;width:auto;" onclick="window._abrirStatModal('${nombre}')">✏️</button>
+        </td>
+      </tr>
     `;
   });
 
-  cont.innerHTML = html || '<p style="color:#555;text-align:center;padding:20px;">No se encontraron jugadores</p>';
+  html += `</tbody></table></div>`;
+  cont.innerHTML = html;
+
   renderRankings();
 }
 
-// ══════════════════════════════════════════
-// RANKINGS LEADERBOARD UI
-// ══════════════════════════════════════════
 export function renderRankings() {
   const cont = document.getElementById('rankings-container');
   if (!cont) return;
 
-  const todos = getTodosJugadores();
-  const unicos = [...new Set(todos)];
-  if (!unicos.length) return;
+  const entradas = Object.entries(stats);
+  if (!entradas.length) {
+    cont.innerHTML = `<div style="text-align:center;color:#666;font-size:13px;padding:12px;">No hay suficientes datos para Rankings aún.</div>`;
+    return;
+  }
 
-  const listaJugadores = unicos.map(n => ({
-    nombre: n,
-    ...(stats[n] || { goles: 0, asist: 0, minJug: 0, rat: 0, pj: 0 })
-  }));
-
-  const topGoles = [...listaJugadores].sort((a, b) => b.goles - a.goles).slice(0, 5);
-  const topAsist = [...listaJugadores].sort((a, b) => b.asist - a.asist).slice(0, 5);
-  const topMin   = [...listaJugadores].sort((a, b) => b.minJug - a.minJug).slice(0, 5);
-  const topRating = [...listaJugadores].sort((a, b) => b.rat - a.rat).slice(0, 5);
+  // Top Goleadores
+  const topGoles = [...entradas].sort((a, b) => (b[1].goles || 0) - (a[1].goles || 0)).slice(0, 3);
+  // Top Asistidores
+  const topAsist = [...entradas].sort((a, b) => (b[1].asist || 0) - (a[1].asist || 0)).slice(0, 3);
+  // Top Porteros Valla Invicta
+  const topPorteros = [...entradas].filter(e => plantel.por.includes(e[0])).sort((a, b) => (b[1].vallaInvicta || 0) - (a[1].vallaInvicta || 0)).slice(0, 3);
 
   let html = `
-    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:12px;">
-      <!-- GOLEADORES -->
-      <div class="card">
-        <div class="card-title">⚽ MÁXIMOS GOLEADORES</div>
-        ${topGoles.map((j, i) => `
-          <div class="ranking-row">
+    <div class="card">
+      <div class="card-title">🏆 RANKINGS DE LA TEMPORADA</div>
+      
+      <div style="font-size:12px;color:var(--oro);font-weight:700;margin-top:6px;margin-bottom:4px;">⚽ TOP GOLEADORES</div>
+      ${topGoles.map((e, i) => `
+        <div class="ranking-row">
+          <div style="display:flex;align-items:center;gap:8px;">
             <span class="ranking-pos">#${i + 1}</span>
-            <span style="font-weight:700;flex:1;margin:0 8px;">${j.nombre}</span>
-            <span style="font-weight:900;color:var(--oro);">${j.goles} ⚽</span>
+            <span style="font-weight:700;font-size:13px;">${e[0]}</span>
           </div>
-        `).join('')}
-      </div>
+          <span style="font-weight:900;color:var(--verde);font-size:15px;">${e[1].goles || 0} Goles</span>
+        </div>
+      `).join('')}
 
-      <!-- ASISTENTES -->
-      <div class="card">
-        <div class="card-title">🎯 MÁXIMOS ASISTENTES</div>
-        ${topAsist.map((j, i) => `
-          <div class="ranking-row">
-            <span class="ranking-pos" style="color:#4af;">#${i + 1}</span>
-            <span style="font-weight:700;flex:1;margin:0 8px;">${j.nombre}</span>
-            <span style="font-weight:900;color:#4af;">${j.asist} 🎯</span>
+      <div style="font-size:12px;color:var(--oro);font-weight:700;margin-top:10px;margin-bottom:4px;">🎯 TOP ASISTIDORES</div>
+      ${topAsist.map((e, i) => `
+        <div class="ranking-row">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="ranking-pos">#${i + 1}</span>
+            <span style="font-weight:700;font-size:13px;">${e[0]}</span>
           </div>
-        `).join('')}
-      </div>
+          <span style="font-weight:900;color:var(--azul);font-size:15px;">${e[1].asist || 0} Asist</span>
+        </div>
+      `).join('')}
 
-      <!-- MINUTOS JUGADOS -->
-      <div class="card">
-        <div class="card-title">⏱️ MÁS MINUTOS JUGADOS</div>
-        ${topMin.map((j, i) => `
+      ${topPorteros.length ? `
+        <div style="font-size:12px;color:var(--oro);font-weight:700;margin-top:10px;margin-bottom:4px;">🧤 TOP VALLA INVICTA (ARCO IMBATIDO)</div>
+        ${topPorteros.map((e, i) => `
           <div class="ranking-row">
-            <span class="ranking-pos" style="color:#4fa;">#${i + 1}</span>
-            <span style="font-weight:700;flex:1;margin:0 8px;">${j.nombre}</span>
-            <span style="font-weight:900;color:#4fa;">${j.minJug}'</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="ranking-pos">#${i + 1}</span>
+              <span style="font-weight:700;font-size:13px;">${e[0]}</span>
+            </div>
+            <span style="font-weight:900;color:var(--oro);font-size:14px;">${e[1].vallaInvicta || 0} Partidos Sin Gol</span>
           </div>
         `).join('')}
-      </div>
-
-      <!-- RATING -->
-      <div class="card">
-        <div class="card-title">⭐ MEJOR RATING</div>
-        ${topRating.map((j, i) => `
-          <div class="ranking-row">
-            <span class="ranking-pos" style="color:#f8a;">#${i + 1}</span>
-            <span style="font-weight:700;flex:1;margin:0 8px;">${j.nombre}</span>
-            <span style="font-weight:900;color:#f8a;">${j.rat} ⭐</span>
-          </div>
-        `).join('')}
-      </div>
+      ` : ''}
     </div>
   `;
 
   cont.innerHTML = html;
 }
 
-// ══════════════════════════════════════════
-// AUTO-SINCRONIZACIÓN DE MATCH STATS
-// ══════════════════════════════════════════
-export function incrementarStatsPartido(partido) {
-  const goleadoresTexto  = partido.goleadores || '';
-  const guardametasTexto = partido.guardametas || '';
-  const asistidoresTexto = partido.asistidores || '';
-  const duracionTiempo   = partido.minutosTiempo || 40; // Default 40m por tiempo = 80m total
+let jugadorStatEdicion = '';
 
-  const minutosTotalesPartido = duracionTiempo * 2;
+window._abrirStatModal = (nombre) => {
+  jugadorStatEdicion = nombre;
+  const st = stats[nombre] || { pj: 0, minJug: 0, goles: 0, asist: 0, am: 0, ro: 0, rat: 6.5 };
 
-  // Parse Goleadores
-  if (goleadoresTexto) {
-    const partes = goleadoresTexto.split(',');
-    partes.forEach(part => {
-      const match = part.trim().match(/^(.+?)(?:\s+(\d+))?$/);
-      if (match) {
-        const nombre = match[1].trim();
-        const cantGoles = parseInt(match[2], 10) || 1;
-        if (nombre) {
-          if (!stats[nombre]) stats[nombre] = { goles: 0, asist: 0, am: 0, ro: 0, pj: 0, minJug: 0, rat: 0 };
-          stats[nombre].goles += cantGoles;
-        }
-      }
-    });
-  }
+  document.getElementById('stat-modal-nombre').textContent = `📊 ESTADÍSTICAS: ${nombre}`;
+  document.getElementById('sm-pj').value = st.pj || 0;
+  document.getElementById('sm-minJug').value = st.minJug || 0;
+  document.getElementById('sm-goles').value = st.goles || 0;
+  document.getElementById('sm-asist').value = st.asist || 0;
+  document.getElementById('sm-am').value = st.am || 0;
+  document.getElementById('sm-ro').value = st.ro || 0;
+  document.getElementById('sm-rat').value = st.rat || 6.5;
 
-  // Parse Asistidores
-  if (asistidoresTexto) {
-    const partes = asistidoresTexto.split(',');
-    partes.forEach(part => {
-      const match = part.trim().match(/^(.+?)(?:\s+(\d+))?$/);
-      if (match) {
-        const nombre = match[1].trim();
-        const cantAsist = parseInt(match[2], 10) || 1;
-        if (nombre) {
-          if (!stats[nombre]) stats[nombre] = { goles: 0, asist: 0, am: 0, ro: 0, pj: 0, minJug: 0, rat: 0 };
-          stats[nombre].asist += cantAsist;
-        }
-      }
-    });
-  }
+  document.getElementById('stat-modal').style.display = 'flex';
+};
 
-  // Parse Convocados / Guardametas -> Add Minutes & PJ
-  if (guardametasTexto) {
-    const partes = guardametasTexto.split(',');
-    partes.forEach(part => {
-      const nombre = part.trim();
-      if (nombre) {
-        if (!stats[nombre]) stats[nombre] = { goles: 0, asist: 0, am: 0, ro: 0, pj: 0, minJug: 0, rat: 0 };
-        stats[nombre].pj += 1;
-        stats[nombre].minJug += minutosTotalesPartido;
-      }
-    });
-  }
-
-  renderStats();
+export function cerrarStatModal() {
+  document.getElementById('stat-modal').style.display = 'none';
 }
 
-window._abrirStatModal = (n) => abrirStatModal(n);
+export async function guardarStatJugador() {
+  if (!jugadorStatEdicion) return;
+
+  const st = stats[jugadorStatEdicion] || {};
+  st.pj     = parseInt(document.getElementById('sm-pj').value, 10) || 0;
+  st.minJug = parseInt(document.getElementById('sm-minJug').value, 10) || 0;
+  st.goles  = parseInt(document.getElementById('sm-goles').value, 10) || 0;
+  st.asist  = parseInt(document.getElementById('sm-asist').value, 10) || 0;
+  st.am     = parseInt(document.getElementById('sm-am').value, 10) || 0;
+  st.ro     = parseInt(document.getElementById('sm-ro').value, 10) || 0;
+  st.rat    = parseFloat(document.getElementById('sm-rat').value) || 6.5;
+
+  stats[jugadorStatEdicion] = st;
+  updateStats(stats);
+
+  cerrarStatModal();
+  autoSaveLocal();
+  await guardarFirebase();
+  renderStats();
+  alert(`✅ Estadísticas de ${jugadorStatEdicion} guardadas.`);
+}

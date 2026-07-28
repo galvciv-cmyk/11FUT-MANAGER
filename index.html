@@ -176,23 +176,25 @@
         </div>
       </div>
 
-      <!-- SECCIÓN 2: CITACIÓN -->
+      <!-- SECCIÓN 2: CITACIÓN (CENTRADAS MAX-WIDTH 580px) -->
       <div id="s2" class="seccion">
-        <div class="card">
-          <div class="card-title">📅 CITACIÓN Y CONVOCATORIA</div>
-          <input type="text" id="torneo-A" placeholder="Torneo / Campeonato">
-          <input type="text" id="rival-A" placeholder="Rival">
-          <input type="text" id="lugar-A" placeholder="Sede / Dirección">
-          <button class="btn btn-gray" id="btn-maps-A" style="margin-bottom:8px;">📍 BUSCAR EN MAPS</button>
-          <input type="text" id="mapa-A" placeholder="Link de mapa (opcional)">
-          <input type="date" id="fecha-A-top">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-            <input type="time" id="cita-A" placeholder="Hora Cita">
-            <input type="time" id="partido-A" placeholder="Hora Inicio">
+        <div class="citacion-card-container">
+          <div class="card">
+            <div class="card-title">📅 CITACIÓN Y CONVOCATORIA</div>
+            <input type="text" id="torneo-A" placeholder="Torneo / Campeonato">
+            <input type="text" id="rival-A" placeholder="Rival">
+            <input type="text" id="lugar-A" placeholder="Sede / Dirección">
+            <button class="btn btn-gray" id="btn-maps-A" style="margin-bottom:8px;">📍 BUSCAR EN MAPS</button>
+            <input type="text" id="mapa-A" placeholder="Link de mapa (opcional)">
+            <input type="date" id="fecha-A-top">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <input type="time" id="cita-A" placeholder="Hora Cita">
+              <input type="time" id="partido-A" placeholder="Hora Inicio">
+            </div>
+            <input type="text" id="kit-A" placeholder="Uniforme (Kit)">
+            <input type="text" id="saludo-A" value="⚽ CONVOCATORIA" placeholder="Encabezado">
+            <button class="btn btn-green" id="btn-wa-A" style="margin-top:6px;">📲 ENVIAR POR WHATSAPP</button>
           </div>
-          <input type="text" id="kit-A" placeholder="Uniforme (Kit)">
-          <input type="text" id="saludo-A" value="⚽ CONVOCATORIA" placeholder="Encabezado">
-          <button class="btn btn-green" id="btn-wa-A" style="margin-top:6px;">📲 ENVIAR POR WHATSAPP</button>
         </div>
       </div>
 
@@ -215,42 +217,69 @@
         </div>
       </div>
 
-      <!-- SECCIÓN 4: STATS -->
+      <!-- SECCIÓN 4: STATS EN 2 COLUMNAS CON SELECTOR DE CATEGORÍA -->
       <div id="s4" class="seccion">
-        <div id="rankings-container" style="margin-bottom:16px;"></div>
+        <div class="stats-2col-grid">
+          
+          <!-- COLUMNA IZQUIERDA: ESTADÍSTICAS INDIVIDUALES -->
+          <div>
+            <div class="card">
+              <div class="card-title">
+                <span>📊 STATS INDIVIDUALES</span>
+                <select id="stats-categoria-selector" class="select-categoria-header" style="font-size:12px;padding:4px 8px;"></select>
+              </div>
+              <input type="text" id="stat-search" placeholder="🔍 Buscar jugador...">
+              <div id="stats-list" style="margin-top:10px;"></div>
+            </div>
+          </div>
 
-        <div class="card">
-          <div class="card-title">📊 ESTADÍSTICAS INDIVIDUALES</div>
-          <input type="text" id="stat-search" placeholder="🔍 Buscar jugador...">
-          <div id="stats-list" style="margin-top:10px;"></div>
+          <!-- COLUMNA DERECHA: RANKINGS DE LA TEMPORADA -->
+          <div>
+            <div id="rankings-container"></div>
+          </div>
+
         </div>
       </div>
 
-      <!-- SECCIÓN 5: HISTORIAL -->
+      <!-- SECCIÓN 5: HISTORIAL REORDENADO CON METRICAS AVANZADAS -->
       <div id="s5" class="seccion">
         <div class="card">
-          <div class="card-title">📝 REGISTRAR PARTIDO</div>
+          <div class="card-title">📝 REGISTRAR PARTIDO Y MÉTRICAS AVANZADAS</div>
+          
+          <!-- BLOQUE 1: INFORMACIÓN GENERAL -->
+          <div style="font-size:12px;color:var(--oro);font-weight:700;margin-bottom:4px;">1. DATOS DEL PARTIDO</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
             <select id="h-equipo">
-              <option value="A">Equipo A</option>
-              <option value="B">Equipo B</option>
+              <option value="A">Equipo Principal</option>
             </select>
             <input type="date" id="h-fecha">
           </div>
-          <input type="text" id="h-torneo" placeholder="Torneo / Competición">
-          <input type="text" id="h-rival" placeholder="Nombre del Rival">
-          
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-            <input type="number" id="h-gf" placeholder="Goles a favor">
-            <input type="number" id="h-gc" placeholder="Goles en contra">
+            <input type="text" id="h-torneo" placeholder="Torneo / Competición">
+            <input type="text" id="h-rival" placeholder="Nombre del Rival">
+          </div>
+          <input type="number" id="h-duracion" placeholder="Minutos por tiempo (ej. 30, 35, 45)">
+
+          <!-- BLOQUE 2: RESULTADO Y CHUTES A PUERTA -->
+          <div style="font-size:12px;color:var(--oro);font-weight:700;margin-top:10px;margin-bottom:4px;">2. RESULTADO Y REMATES A PUERTA</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <input type="number" id="h-gf" placeholder="⚽ Goles A Favor">
+            <input type="number" id="h-gc" placeholder="⚽ Goles En Contra">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <input type="number" id="h-remates-a" placeholder="🎯 Chutes A Favor">
+            <input type="number" id="h-remates-c" placeholder="🧤 Chutes Recibidos">
           </div>
 
+          <!-- BLOQUE 3: TIROS DE ESQUINA (CORNERS) -->
+          <div style="font-size:12px;color:var(--oro);font-weight:700;margin-top:10px;margin-bottom:4px;">3. TIROS DE ESQUINA (CORNERS)</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-            <input type="number" id="h-duracion" placeholder="Minutos por tiempo (ej. 30, 35)">
-            <input type="number" id="h-remates-a" placeholder="Chutes a puerta a favor">
+            <input type="number" id="h-corners-a" placeholder="🚩 Corners A Favor">
+            <input type="number" id="h-corners-c" placeholder="🚩 Corners En Contra">
           </div>
-          <input type="number" id="h-remates-c" placeholder="Chutes a puerta del rival">
 
+          <!-- BLOQUE 4: JUGADORES DESTACADOS -->
+          <div style="font-size:12px;color:var(--oro);font-weight:700;margin-top:10px;margin-bottom:4px;">4. JUGADORES Y EVENTOS</div>
           <div style="position:relative;">
             <input type="text" id="h-goleadores" placeholder="Goleadores (ej. Messi 2, Di Maria 1)">
             <div class="autocomplete-list" id="ac-goleadores"></div>
@@ -259,13 +288,14 @@
             <input type="text" id="h-asistidores" placeholder="Asistidores (ej. De Paul 1, Paredes 1)">
           </div>
           <div style="position:relative;">
-            <input type="text" id="h-guardametas" placeholder="Convocados / Jugadores participantes">
+            <input type="text" id="h-guardametas" placeholder="Jugadores Convocados (separados por coma)">
             <div class="autocomplete-list" id="ac-guardametas"></div>
           </div>
-          <button class="btn btn-gold" id="btn-guardar-partido" style="margin-top:6px;">💾 GUARDAR Y REGISTRAR STATS</button>
+
+          <button class="btn btn-gold" id="btn-guardar-partido" style="margin-top:8px;">💾 GUARDAR PARTIDO Y ACTUALIZAR STATS</button>
         </div>
 
-        <div class="card-title" style="margin-top:16px;">📚 HISTORIAL DE PARTIDOS</div>
+        <div class="card-title" style="margin-top:16px;">📚 HISTORIAL DE PARTIDOS Y ESTADÍSTICAS</div>
         <div id="historial-list"></div>
       </div>
 
@@ -303,7 +333,7 @@
       </div>
     </div>
 
-    <!-- MODAL DE CONFIGURACIÓN DE UN SOLO NOMBRE DE EQUIPO -->
+    <!-- MODAL DE CONFIGURACIÓN -->
     <div class="modal-overlay" id="config-modal">
       <div class="modal-body">
         <div class="modal-title">⚙️ CONFIGURACIÓN DEL CLUB</div>
