@@ -17,6 +17,7 @@ export function switchTab(n) {
   document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i + 1 === n));
   document.querySelectorAll('.seccion').forEach((s, i) => s.classList.toggle('active', i + 1 === n));
   if (n === 1) actualizarTactica('A');
+  if (n === 3) refrescarTodaLaVista();
   if (n === 4) renderStats();
   if (n === 5) renderHistorial();
 }
@@ -26,6 +27,7 @@ export function switchTab(n) {
 // ══════════════════════════════════════════
 export function renderSelectorCategoria(isPublic = false) {
   const selectTactica = document.getElementById('selector-categoria-tactica');
+  const selectPlantel = document.getElementById('squad-categoria-selector');
   const selectStats = document.getElementById('stats-categoria-selector');
   const selectPub = document.getElementById('pub-selector-categoria');
 
@@ -35,6 +37,7 @@ export function renderSelectorCategoria(isPublic = false) {
   const html = categorias.map(c => `<option value="${c}" ${c === activa ? 'selected' : ''}>⚽ ${c}</option>`).join('');
 
   if (selectTactica) selectTactica.innerHTML = html;
+  if (selectPlantel) selectPlantel.innerHTML = html;
   if (selectStats) selectStats.innerHTML = html;
   if (selectPub) selectPub.innerHTML = html;
 }
@@ -100,7 +103,6 @@ function renderStatsPublico() {
   renderStats();
   if (pubStatsContainer && mainStatsContainer) {
     pubStatsContainer.innerHTML = mainStatsContainer.innerHTML;
-    // Ocultar botones de edición en perfil público
     pubStatsContainer.querySelectorAll('button').forEach(btn => btn.style.display = 'none');
   }
 }
@@ -111,7 +113,6 @@ function renderHistorialPublico() {
   renderHistorial();
   if (pubHistContainer && mainHistContainer) {
     pubHistContainer.innerHTML = mainHistContainer.innerHTML;
-    // Ocultar botones de borrar o editar en perfil público
     pubHistContainer.querySelectorAll('.partido-item button').forEach(btn => {
       if (btn.textContent.includes('Borrar')) btn.style.display = 'none';
     });
@@ -222,8 +223,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-show-setup')?.addEventListener('click', setupNuevoUsuario);
   document.getElementById('btn-reset-pin')?.addEventListener('click', resetearPin);
 
-  // Bind Category Selectors
+  // Bind Category Selectors (Táctica, Plantel, Stats)
   document.getElementById('selector-categoria-tactica')?.addEventListener('change', (e) => cambiarCategoria(e.target.value));
+  document.getElementById('squad-categoria-selector')?.addEventListener('change', (e) => cambiarCategoria(e.target.value));
   document.getElementById('stats-categoria-selector')?.addEventListener('change', (e) => cambiarCategoria(e.target.value));
 
   // Bind Tabs 1 to 5 Direct
