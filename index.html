@@ -310,9 +310,12 @@
         <div class="card">
           <div class="card-title">🏆 GESTIÓN DE CATEGORÍAS DEL CLUB</div>
           <div id="cfg-lista-categorias" style="margin-bottom:8px;"></div>
-          <div style="display:flex;gap:6px;">
-            <input type="text" id="cfg-nueva-cat-input" placeholder="Nombre de categoría (ej. Sub-16, Femenino)" style="margin:0;">
-            <button class="btn btn-green" id="btn-cfg-add-cat" style="width:auto;padding:8px 12px;font-size:12px;">➕</button>
+          
+          <div style="display:flex;flex-direction:column;gap:6px;background:#0d0d0d;padding:10px;border-radius:8px;border:1px solid #222;">
+            <label style="font-size:11px;color:var(--oro);font-weight:700;">➕ AGREGAR NUEVA CATEGORÍA</label>
+            <input type="text" id="cfg-nueva-cat-input" placeholder="Nombre (ej. Sub-16, Femenino)">
+            <input type="text" id="cfg-nuevo-torneo-input" placeholder="Torneo (ej. LIGA DISTRITAL GEMA - LIGUILLA J3)">
+            <button class="btn btn-green" id="btn-cfg-add-cat" style="font-size:12px;margin-top:4px;">➕ AGREGAR CATEGORÍA</button>
           </div>
         </div>
 

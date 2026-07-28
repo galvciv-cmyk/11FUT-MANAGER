@@ -5,7 +5,16 @@ import { renderStats } from "./stats.js";
 export function formatFecha(str) {
   if (!str) return '';
   const p = str.split('-');
-  if (p.length === 3) return `${p[2]}/${p[1]}/${p[0]}`;
+  if (p.length === 3) {
+    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const dia = parseInt(p[2], 10);
+    const mesIdx = parseInt(p[1], 10) - 1;
+    const anio = p[0];
+    if (mesIdx >= 0 && mesIdx < 12) {
+      return `${dia} de ${meses[mesIdx]} de ${anio}`;
+    }
+    return `${p[2]}/${p[1]}/${p[0]}`;
+  }
   return str;
 }
 
@@ -15,6 +24,49 @@ export function formatHora(str) {
   if (p.length >= 2) return `${p[0]}:${p[1]} hs`;
   return str;
 }
+
+// ══════════════════════════════════════════
+// COMPARTIR RESULTADO DE PARTIDO POR WHATSAPP
+// ══════════════════════════════════════════
+export function compartirPartidoWA(id) {
+  const h = historial.find(p => p.id === id);
+  if (!h) return;
+
+  const club = perfil.club || '11FUT MANAGER';
+  const cat = perfil.categoriaActiva || 'SUB-14';
+  const torneo = h.torneo || 'LIGA OFICIAL';
+  const fechaStr = formatFecha(h.fecha);
+
+  let msg = `🏆 *${torneo.toUpperCase()}*\n`;
+  msg += `📅 ${fechaStr}\n\n`;
+  msg += `⚽ *${cat.toUpperCase()} ${club.toUpperCase()} ${h.gf} - ${h.gc} ${h.rival.toUpperCase()}*\n\n`;
+
+  const goleadoresEntries = Object.entries(h.goleadores || {});
+  if (h.gf > 0 && goleadoresEntries.length > 0) {
+    msg += `*Goles:*\n`;
+    goleadoresEntries.forEach(([nombre, c]) => {
+      for (let i = 0; i < c; i++) {
+        msg += `⚽ ${nombre.toUpperCase()}\n`;
+      }
+    });
+    msg += `\n`;
+  }
+
+  // Filtrar porteros de los convocados
+  const porterosEnConvocados = (h.participantes || []).filter(n => (plantel.por || []).includes(n));
+  const porterosFinales = porterosEnConvocados.length ? porterosEnConvocados : (plantel.por || []).slice(0, 2);
+
+  if (porterosFinales.length > 0) {
+    msg += `*Guardameta(s):*\n`;
+    porterosFinales.forEach(por => {
+      msg += `🧤 ${por.toUpperCase()}\n`;
+    });
+  }
+
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+window._compartirPartidoWA = (id) => compartirPartidoWA(id);
 
 // ══════════════════════════════════════════
 // CONSOLA INTERACTIVA DE PARTIDO EN VIVO (0 +)
@@ -65,7 +117,6 @@ export function iniciarJuegoProgramado(id) {
     convocadosList: convocados
   };
 
-  // Eliminar de programados
   const idx = juegosProgramados.findIndex(j => j.id === id);
   if (idx !== -1) {
     juegosProgramados.splice(idx, 1);
@@ -121,7 +172,6 @@ export function renderConsolaPartidoVivo() {
   if (!container) return;
 
   const st = partidoEnVivoState;
-  const eqNombre = perfil.eqA || 'Equipo';
 
   let html = `
     <div style="background:#000;border:1px solid var(--oro);border-radius:12px;padding:14px;margin-bottom:12px;">
@@ -517,11 +567,8 @@ export function renderHistorial() {
     }
 
     contHist.innerHTML = historial.map((h, i) => {
-      const eqNombre = perfil.eqA || 'Equipo';
+      const eqNombre = perfil.club || perfil.eqA || 'EQUIPO';
       const resClass = `resultado-${h.res}`;
-
-      const golesStr = Object.entries(h.goleadores || {}).map(([k, v]) => `${k} (${v})`).join(', ');
-      const asistStr = Object.entries(h.asistidores || {}).map(([k, v]) => `${k} (${v})`).join(', ');
 
       const efecPct = h.rematesA > 0 ? Math.round((h.gf / h.rematesA) * 100) : 0;
       const atajadasPct = h.rematesC > 0 ? Math.round(((h.rematesC - h.gc) / h.rematesC) * 100) : 0;
@@ -529,14 +576,16 @@ export function renderHistorial() {
       return `
         <div class="partido-item">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;color:#888;">${formatFecha(h.fecha)} • ${h.torneo}</span>
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;color:#888;">🏆 ${h.torneo} • 📅 ${formatFecha(h.fecha)}</span>
             <span class="partido-resultado ${resClass}">${h.gf} - ${h.gc}</span>
           </div>
           <div style="font-weight:700;font-size:15px;color:var(--oro);">${eqNombre} vs ${h.rival}</div>
           <div style="font-size:11px;color:#aaa;margin-top:4px;">⏱️ Minutos: ${h.duracion || 60}m | 🎯 Efectividad: ${efecPct}% | 🧤 Atajadas: ${atajadasPct}% | 🚩 Corners: ${h.cornersA || 0} - ${h.cornersC || 0}</div>
-          ${golesStr ? `<div style="font-size:12px;color:#ccc;margin-top:4px;">⚽ Goles: ${golesStr}</div>` : ''}
-          ${asistStr ? `<div style="font-size:12px;color:#aaa;margin-top:2px;">🎯 Asistencias: ${asistStr}</div>` : ''}
-          <button onclick="window._eliminarPartido('${h.id}')" style="background:none;border:none;color:#666;font-size:11px;cursor:pointer;margin-top:6px;">🗑️ Eliminar</button>
+          
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button class="btn btn-green" style="font-size:11px;padding:6px 12px;width:auto;" onclick="window._compartirPartidoWA('${h.id}')">📲 COMPARTIR POR WHATSAPP</button>
+            <button class="btn btn-gray" style="font-size:11px;padding:6px 12px;width:auto;" onclick="window._eliminarPartido('${h.id}')">🗑️ Borrar</button>
+          </div>
         </div>
       `;
     }).join('');

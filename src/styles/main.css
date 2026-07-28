@@ -260,13 +260,15 @@ input:focus, select:focus {
   margin: 0 auto;
 }
 
-/* CANCHA HORIZONTAL EN FULLSCREEN */
+/* CANCHA HORIZONTAL EN FULLSCREEN (100% RESPONSIVE ADAPTABLE) */
 .cancha-wrapper.horizontal {
   aspect-ratio: 5 / 3 !important;
-  width: 94vw !important;
-  max-width: 94vw !important;
-  height: 85vh !important;
-  max-height: 85vh !important;
+  width: 98vw !important;
+  max-width: 98vw !important;
+  height: 90vh !important;
+  max-height: 90vh !important;
+  margin: auto !important;
+  object-fit: contain !important;
   background: #0a3d1c url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='500' height='300' viewBox='0 0 500 300'><rect width='500' height='300' fill='%230a3d1c'/><rect x='0' width='50' height='300' fill='%230c4520'/><rect x='100' width='50' height='300' fill='%230c4520'/><rect x='200' width='50' height='300' fill='%230c4520'/><rect x='300' width='50' height='300' fill='%230c4520'/><rect x='400' width='50' height='300' fill='%230c4520'/><rect x='20' y='15' width='460' height='270' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><line x1='250' y1='15' x2='250' y2='285' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><circle cx='250' cy='150' r='40' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><circle cx='250' cy='150' r='3' fill='rgba(255,255,255,0.95)'/><rect x='20' y='75' width='65' height='150' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><rect x='20' y='105' width='25' height='90' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><circle cx='60' cy='150' r='3' fill='rgba(255,255,255,0.95)'/><path d='M 85 120 A 35 35 0 0 1 85 180' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><rect x='8' y='115' width='12' height='70' fill='rgba(255,255,255,0.25)' stroke='rgba(255,255,255,0.95)' stroke-width='2'/><rect x='415' y='75' width='65' height='150' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><rect x='455' y='105' width='25' height='90' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><circle cx='440' cy='150' r='3' fill='rgba(255,255,255,0.95)'/><path d='M 415 120 A 35 35 0 0 0 415 180' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><rect x='480' y='115' width='12' height='70' fill='rgba(255,255,255,0.25)' stroke='rgba(255,255,255,0.95)' stroke-width='2'/></svg>") center center / contain no-repeat !important;
 }
 

@@ -1,4 +1,4 @@
-import { perfil, setPinHash, setCategoriaActiva, autoSaveLocal, updateStats, updateHistorial } from "./state.js";
+import { perfil, setPinHash, setCategoriaActiva, autoSaveLocal, updateStats, updateHistorial, categoriasData } from "./state.js";
 import { guardarFirebase, hashPin } from "../services/firebase.js";
 import { KITS } from "./state.js";
 import { subirImagenCloudinary } from "../services/cloudinary.js";
@@ -47,31 +47,55 @@ export function renderCategoriasConfigUI() {
   if (!cont) return;
 
   const cats = perfil.categorias || ["Sub-14"];
-  cont.innerHTML = cats.map(c => `
-    <div style="display:flex;justify-content:space-between;align-items:center;background:#0d0d0d;border:1px solid #222;padding:8px 12px;border-radius:8px;margin-bottom:6px;">
-      <span style="font-weight:700;color:var(--oro);">${c} ${c === perfil.categoriaActiva ? '⭐ (ACTIVA)' : ''}</span>
-      ${cats.length > 1 ? `<button onclick="window._eliminarCategoriaConfig('${c}')" style="background:none;border:none;color:#888;cursor:pointer;">🗑️</button>` : ''}
-    </div>
-  `).join('');
+  cont.innerHTML = cats.map(c => {
+    const tor = (categoriasData[c] && categoriasData[c].torneo) || 'Torneo Oficial';
+    return `
+      <div style="background:#0d0d0d;border:1px solid #222;padding:10px 12px;border-radius:8px;margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <span style="font-weight:700;color:var(--oro);">${c} ${c === perfil.categoriaActiva ? '⭐ (ACTIVA)' : ''}</span>
+          ${cats.length > 1 ? `<button onclick="window._eliminarCategoriaConfig('${c}')" style="background:none;border:none;color:#888;cursor:pointer;">🗑️</button>` : ''}
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input type="text" value="${tor}" placeholder="Torneo de la categoría" style="margin:0;font-size:12px;padding:6px 10px;" onchange="window._guardarTorneoCategoria('${c}', this.value)">
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
+window._guardarTorneoCategoria = (catNombre, torneoVal) => {
+  if (!categoriasData[catNombre]) categoriasData[catNombre] = {};
+  categoriasData[catNombre].torneo = torneoVal.trim() || 'Torneo Oficial';
+  autoSaveLocal();
+  guardarFirebase();
+};
+
 export async function agregarNuevaCategoriaConfig() {
-  const input = document.getElementById('cfg-nueva-cat-input');
-  if (!input) return;
-  const val = input.value.trim();
-  if (!val) return alert('Ingresa el nombre de la categoría');
+  const inputCat = document.getElementById('cfg-nueva-cat-input');
+  const inputTor = document.getElementById('cfg-nuevo-torneo-input');
+  if (!inputCat) return;
+
+  const catVal = inputCat.value.trim();
+  const torVal = inputTor ? inputTor.value.trim() : 'Torneo Oficial';
+  if (!catVal) return alert('Ingresa el nombre de la categoría');
 
   if (!perfil.categorias) perfil.categorias = [];
-  if (perfil.categorias.includes(val)) return alert('Esta categoría ya existe');
+  if (perfil.categorias.includes(catVal)) return alert('Esta categoría ya existe');
 
-  perfil.categorias.push(val);
-  setCategoriaActiva(val);
+  perfil.categorias.push(catVal);
+  setCategoriaActiva(catVal);
 
-  input.value = '';
+  if (categoriasData[catVal]) {
+    categoriasData[catVal].torneo = torVal || 'Torneo Oficial';
+  }
+
+  inputCat.value = '';
+  if (inputTor) inputTor.value = '';
+
   renderCategoriasConfigUI();
   autoSaveLocal();
   await guardarFirebase();
-  alert(`✅ Categoría "${val}" creada con éxito.`);
+  alert(`✅ Categoría "${catVal}" creada con éxito para el torneo "${torVal}".`);
   location.reload();
 }
 
