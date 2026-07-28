@@ -1,4 +1,5 @@
 import { perfil, plantel, KITS, autoSaveLocal } from "./state.js";
+import { guardarFirebase } from "../services/firebase.js";
 import html2canvas from "html2canvas";
 
 export const FORMACIONES = {
@@ -66,6 +67,69 @@ export const FORMACIONES = {
   }
 };
 
+export function renderSelectEsquemas(eq) {
+  const select = document.getElementById(`esquema-${eq}`);
+  if (!select) return;
+  const modo = document.getElementById(`modo-${eq}`)?.value || '11';
+  const valorPrevio = select.value;
+
+  const baseEsquemas = FORMACIONES[modo] ? Object.keys(FORMACIONES[modo]) : ['1-4-4-2'];
+  let html = baseEsquemas.map(esq => `<option value="${esq}">${esq}</option>`).join('');
+
+  // Add custom saved schemes
+  if (perfil.esquemasCustom && perfil.esquemasCustom.length) {
+    html += `<optgroup label="⭐ Mis Esquemas Guardados">`;
+    perfil.esquemasCustom.filter(c => c.modo === modo).forEach(c => {
+      html += `<option value="custom_${c.id}">${c.nombre}</option>`;
+    });
+    html += `</optgroup>`;
+  }
+
+  select.innerHTML = html;
+  if (valorPrevio) select.value = valorPrevio;
+}
+
+export async function guardarEsquemaCustom(eq) {
+  const nombre = prompt("Ingresa un nombre para este esquema personalizado (ej. Presión Alta 4-3-3):");
+  if (!nombre || !nombre.trim()) return;
+
+  const modo = document.getElementById(`modo-${eq}`)?.value || '11';
+  const customPos = (plantel[`pos_custom_${eq}`] || {});
+  const esquemaBase = document.getElementById(`esquema-${eq}`)?.value || '1-4-4-2';
+  const formBase = (FORMACIONES[modo] && FORMACIONES[modo][esquemaBase]) || FORMACIONES["11"]["1-4-4-2"];
+
+  const posiciones = formBase.map((slot, i) => {
+    const posActual = customPos[i];
+    return {
+      x: posActual ? posActual.x : slot.x,
+      y: posActual ? posActual.y : slot.y,
+      cat: slot.cat,
+      pos: slot.pos
+    };
+  });
+
+  const nuevoEsquema = {
+    id: Date.now().toString(),
+    nombre: nombre.trim(),
+    modo,
+    posiciones
+  };
+
+  if (!perfil.esquemasCustom) perfil.esquemasCustom = [];
+  perfil.esquemasCustom.push(nuevoEsquema);
+
+  renderSelectEsquemas('A');
+  renderSelectEsquemas('B');
+
+  const select = document.getElementById(`esquema-${eq}`);
+  if (select) select.value = `custom_${nuevoEsquema.id}`;
+
+  autoSaveLocal();
+  await guardarFirebase();
+  alert(`✅ Esquema "${nombre}" guardado con éxito.`);
+  actualizarTactica(eq);
+}
+
 export function getImg(eq, tipo) {
   const kitId = eq === 'A' ? (perfil.kitA || 'predeterminado') : (perfil.kitB || 'predeterminado');
   const kitObj = KITS.find(k => k.id === kitId) || KITS[0];
@@ -87,6 +151,8 @@ export function setDrawingMode(eq, mode) {
   ['pencil', 'arrow', 'none'].forEach(m => {
     const btn = document.getElementById(`btn-${m}-${eq}`);
     if (btn) btn.classList.toggle('active', m === mode);
+    const btnFs = document.getElementById(`btn-${m}-fs-${eq}`);
+    if (btnFs) btnFs.classList.toggle('active', m === mode);
   });
 }
 
@@ -200,8 +266,9 @@ export function toggleFullscreen(eq) {
 }
 
 export function actualizarTactica(eq) {
+  renderSelectEsquemas(eq);
   const modo = document.getElementById(`modo-${eq}`)?.value || '11';
-  const esquema = document.getElementById(`esquema-${eq}`)?.value || '1-4-4-2';
+  const esquemaVal = document.getElementById(`esquema-${eq}`)?.value || '1-4-4-2';
   const cancha = document.getElementById(`cancha-${eq}`);
   const banco = document.getElementById(`banco-${eq}`);
   if (!cancha || !banco) return;
@@ -211,7 +278,16 @@ export function actualizarTactica(eq) {
 
   initCanvas(eq);
 
-  const form = (FORMACIONES[modo] && FORMACIONES[modo][esquema]) || FORMACIONES["11"]["1-4-4-2"];
+  let form = [];
+  if (esquemaVal.startsWith('custom_')) {
+    const customId = esquemaVal.replace('custom_', '');
+    const esqObj = (perfil.esquemasCustom || []).find(c => c.id === customId);
+    if (esqObj) form = esqObj.posiciones;
+    else form = FORMACIONES["11"]["1-4-4-2"];
+  } else {
+    form = (FORMACIONES[modo] && FORMACIONES[modo][esquemaVal]) || FORMACIONES["11"]["1-4-4-2"];
+  }
+
   const customPos = (plantel[`pos_custom_${eq}`] || {});
 
   form.forEach((slot, i) => {
@@ -304,7 +380,6 @@ function hacerTokenArrastrable(token, contenedor) {
     isDragging = false;
     token.classList.remove('dragging');
 
-    // Save custom dragged coordinates permanently
     const eq = token.dataset.eq;
     const idx = token.dataset.idx;
     if (!plantel[`pos_custom_${eq}`]) plantel[`pos_custom_${eq}`] = {};

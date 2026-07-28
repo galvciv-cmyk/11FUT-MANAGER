@@ -43,6 +43,15 @@ export function cerrarConfig() {
   if (modal) modal.style.display = 'none';
 }
 
+export function copiarEnlacePublico() {
+  const link = `${window.location.origin}${window.location.pathname}?public=true`;
+  navigator.clipboard.writeText(link).then(() => {
+    alert(`✅ Enlace del Perfil Público copiado al portapapeles:\n\n${link}`);
+  }).catch(() => {
+    prompt("Copia este enlace para compartir el Perfil Público:", link);
+  });
+}
+
 export async function guardarNombres() {
   const club = document.getElementById('cfg-club').value.trim();
   const eqA  = document.getElementById('cfg-eqA').value.trim();
