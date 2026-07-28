@@ -7,7 +7,7 @@ import { renderStats, guardarStatJugador, cerrarStatModal, renderRankings } from
 import { renderHistorial, guardarPartido, mostrarSugerencias, ocultarSugerencias } from "./modules/history.js";
 import { initPlantelUI, aplicarPlantelUI, guardarSquad, descargarPlantilla, importarCSV, exportarPDF } from "./modules/squad.js";
 import { buscarMaps, enviarWA } from "./modules/citacion.js";
-import { abrirConfig, cerrarConfig, guardarNombres, guardarKits, guardarLogo, guardarFondo, cambiarPin, resetearStats, borrarHistorial, cerrarSesion, aplicarPerfil, copiarEnlacePublico } from "./modules/config.js";
+import { abrirConfig, cerrarConfig, guardarNombres, guardarKits, guardarLogo, guardarFondo, cambiarPin, resetearStats, borrarHistorial, cerrarSesion, aplicarPerfil, copiarEnlacePublico, agregarNuevaCategoriaConfig } from "./modules/config.js";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 
 // ══════════════════════════════════════════
@@ -29,31 +29,15 @@ export function renderSelectorCategoria(isPublic = false) {
   const select = document.getElementById(isPublic ? 'pub-selector-categoria' : 'selector-categoria');
   if (!select) return;
 
-  const categorias = perfil.categorias || ["Sub-10", "Sub-12", "Sub-14", "Sub-16", "Sub-18", "Senior"];
-  const activa = perfil.categoriaActiva || "Sub-14";
+  const categorias = perfil.categorias || ["Sub-14"];
+  const activa = perfil.categoriaActiva || categorias[0];
 
   let html = categorias.map(c => `<option value="${c}" ${c === activa ? 'selected' : ''}>${c}</option>`).join('');
-  if (!isPublic) html += `<option value="__nueva__">➕ Nueva Categoría...</option>`;
 
   select.innerHTML = html;
 }
 
 export function cambiarCategoria(catNombre) {
-  if (catNombre === '__nueva__') {
-    const nueva = prompt('Ingresa el nombre de la nueva categoría (ej. Sub-8, Sub-20, Femenino):');
-    if (nueva && nueva.trim()) {
-      const nombreLimpio = nueva.trim();
-      setCategoriaActiva(nombreLimpio);
-      renderSelectorCategoria();
-      refrescarTodaLaVista();
-      autoSaveLocal();
-      guardarFirebase();
-    } else {
-      renderSelectorCategoria();
-    }
-    return;
-  }
-
   setCategoriaActiva(catNombre);
   renderSelectorCategoria();
   refrescarTodaLaVista();
@@ -85,11 +69,13 @@ function cargarPerfilPublico() {
 
   renderSelectorCategoria(true);
   renderRankingsPublico();
+  renderStatsPublico();
   renderHistorialPublico();
 
   document.getElementById('pub-selector-categoria')?.addEventListener('change', (e) => {
     setCategoriaActiva(e.target.value);
     renderRankingsPublico();
+    renderStatsPublico();
     renderHistorialPublico();
   });
 
@@ -104,6 +90,15 @@ function renderRankingsPublico() {
   renderRankings();
   if (pubRankContainer && mainRankContainer) {
     pubRankContainer.innerHTML = mainRankContainer.innerHTML;
+  }
+}
+
+function renderStatsPublico() {
+  const pubStatsContainer = document.getElementById('pub-stats-container');
+  const mainStatsContainer = document.getElementById('stats-list');
+  renderStats();
+  if (pubStatsContainer && mainStatsContainer) {
+    pubStatsContainer.innerHTML = mainStatsContainer.innerHTML;
   }
 }
 
@@ -284,6 +279,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-config')?.addEventListener('click', abrirConfig);
   document.getElementById('btn-cerrar-config')?.addEventListener('click', cerrarConfig);
   document.getElementById('btn-copy-public-link')?.addEventListener('click', copiarEnlacePublico);
+  document.getElementById('btn-cfg-add-cat')?.addEventListener('click', agregarNuevaCategoriaConfig);
   document.getElementById('btn-cfg-nombres')?.addEventListener('click', guardarNombres);
   document.getElementById('btn-cfg-kits')?.addEventListener('click', guardarKits);
 

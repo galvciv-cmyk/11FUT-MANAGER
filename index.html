@@ -28,7 +28,7 @@
 
     <!-- ══ PERFIL PÚBLICO COMPARTIBLE ══ -->
     <div id="public-profile-screen" style="display:none;">
-      <div style="width:100%; max-width:900px; margin:0 auto; padding:10px;">
+      <div style="width:100%; max-width:960px; margin:0 auto; padding:10px;">
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; border-bottom:1px solid #222; padding-bottom:12px;">
           <div style="display:flex; align-items:center; gap:12px;">
             <img id="pub-header-logo" class="header-logo" src="https://res.cloudinary.com/djhpfdklk/image/upload/v1778985193/cuerpo_tecnico_ysxrjt.png" alt="Logo">
@@ -49,8 +49,13 @@
         <!-- Content Public -->
         <div id="pub-rankings-container" style="margin-bottom:16px;"></div>
 
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-title">📊 ESTADÍSTICAS INDIVIDUALES DE JUGADORES</div>
+          <div id="pub-stats-container"></div>
+        </div>
+
         <div class="card">
-          <div class="card-title">📚 ÚLTIMOS PARTIDOS</div>
+          <div class="card-title">📚 ÚLTIMOS PARTIDOS Y RESULTADOS</div>
           <div id="pub-historial-list"></div>
         </div>
       </div>
@@ -59,7 +64,7 @@
     <!-- ══ APP PRINCIPAL ══ -->
     <div id="main-app" style="display:none;">
 
-      <!-- Header con Selector de Categoría -->
+      <!-- Header con Selector de Categorías Configuradas -->
       <div class="app-header">
         <div class="header-left-group">
           <img id="header-logo" class="header-logo" src="https://res.cloudinary.com/djhpfdklk/image/upload/v1778985193/cuerpo_tecnico_ysxrjt.png" alt="Logo" onerror="this.src='https://res.cloudinary.com/djhpfdklk/image/upload/v1778985193/cuerpo_tecnico_ysxrjt.png'">
@@ -121,7 +126,7 @@
             <button class="btn btn-gray" id="btn-export-png-A" style="padding:10px;">📸 GUARDAR IMAGEN A</button>
           </div>
 
-          <!-- COLUMNA CENTRO (CANCHA) -->
+          <!-- COLUMNA CENTRO (CANCHA CON ASPECT RATIO FIJO 3:5) -->
           <div class="col-cancha-centro">
             <div class="campo-layout" id="pizarra-A">
               <button class="btn-exit-fs" id="btn-exit-fs-A">❌ SALIR PANTALLA COMPLETA</button>
@@ -141,10 +146,10 @@
             </div>
           </div>
 
-          <!-- COLUMNA DERECHA (BANCA Y CUERPO TÉCNICO) -->
+          <!-- COLUMNA DERECHA (BANCA CON ASIENTOS DE DUGOUT Y CUERPO TÉCNICO) -->
           <div class="col-banca-der">
             <div class="banca-side">
-              <div class="banca-label">SUPLENTES</div>
+              <div class="banca-label">SUPLENTES / DUGOUT</div>
               <div class="banca-container" id="banco-A"></div>
               <div class="ct-section">
                 <div class="banca-label" style="margin-top:10px;">CUERPO TÉCNICO</div>
@@ -221,7 +226,7 @@
           <!-- COLUMNA DERECHA -->
           <div class="col-banca-der">
             <div class="banca-side">
-              <div class="banca-label">SUPLENTES</div>
+              <div class="banca-label">SUPLENTES / DUGOUT</div>
               <div class="banca-container" id="banco-B"></div>
               <div class="ct-section">
                 <div class="banca-label" style="margin-top:10px;">CUERPO TÉCNICO</div>
@@ -363,14 +368,25 @@
     <!-- MODAL DE CONFIGURACIÓN -->
     <div class="modal-overlay" id="config-modal">
       <div class="modal-body">
-        <div class="modal-title">⚙️ CONFIGURACIÓN</div>
+        <div class="modal-title">⚙️ CONFIGURACIÓN DEL CLUB</div>
         <div class="card">
           <div style="font-size:11px;color:#555;">Correo: <span id="cfg-email-display" style="color:#aaa;"></span></div>
           <div style="font-size:11px;color:#555;margin-top:4px;">Club: <span id="cfg-club-display" style="color:var(--oro);font-weight:700;"></span></div>
           <button class="btn btn-gold" id="btn-copy-public-link" style="margin-top:8px;font-size:11px;">🔗 COPIAR ENLACE PERFIL PÚBLICO</button>
         </div>
+
+        <!-- PANEL DE GESTIÓN DE CATEGORÍAS -->
         <div class="card">
-          <div class="card-title">✏️ NOMBRES</div>
+          <div class="card-title">🏆 GESTIÓN DE CATEGORÍAS DEL CLUB</div>
+          <div id="cfg-lista-categorias" style="margin-bottom:8px;"></div>
+          <div style="display:flex;gap:6px;">
+            <input type="text" id="cfg-nueva-cat-input" placeholder="Nombre de categoría (ej. Sub-16, Femenino)" style="margin:0;">
+            <button class="btn btn-green" id="btn-cfg-add-cat" style="width:auto;padding:8px 12px;font-size:12px;">➕</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">✏️ NOMBRES DE EQUIPOS</div>
           <input type="text" id="cfg-club" placeholder="Nombre del club">
           <input type="text" id="cfg-eqA" placeholder="Nombre Equipo A">
           <input type="text" id="cfg-eqB" placeholder="Nombre Equipo B">

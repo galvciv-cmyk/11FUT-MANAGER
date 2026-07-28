@@ -6,8 +6,8 @@ export const DEFAULT_PLANTEL = {
   def: ['Def1', 'Def2', 'Def3', 'Def4', 'Def5'],
   med: ['Med1', 'Med2', 'Med3', 'Med4', 'Med5'],
   del: ['Del1', 'Del2', 'Del3', 'Del4'],
-  tit_A: [], sup_A: [], ct_A: [], pos_custom_A: {},
-  tit_B: [], sup_B: [], ct_B: [], pos_custom_B: {}
+  tit_A: [], sup_A: [], ct_A: [], pos_custom_A: {}, maxSup_A: 7,
+  tit_B: [], sup_B: [], ct_B: [], pos_custom_B: {}, maxSup_B: 7
 };
 
 export const DEFAULT_PERFIL = {
@@ -20,7 +20,7 @@ export const DEFAULT_PERFIL = {
   bg: "",
   email: "",
   categoriaActiva: "Sub-14",
-  categorias: ["Sub-10", "Sub-12", "Sub-14", "Sub-16", "Sub-18", "Senior"],
+  categorias: ["Sub-14"],
   esquemasCustom: []
 };
 
@@ -86,7 +86,7 @@ export function updatePerfil(newPerfil) {
   if (newPerfil) {
     perfil = { ...DEFAULT_PERFIL, ...newPerfil };
     if (!perfil.categorias || !perfil.categorias.length) {
-      perfil.categorias = ["Sub-10", "Sub-12", "Sub-14", "Sub-16", "Sub-18", "Senior"];
+      perfil.categorias = ["Sub-14"];
     }
     if (!perfil.esquemasCustom) perfil.esquemasCustom = [];
     setCategoriaActiva(perfil.categoriaActiva || "Sub-14");

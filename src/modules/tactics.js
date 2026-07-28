@@ -76,7 +76,6 @@ export function renderSelectEsquemas(eq) {
   const baseEsquemas = FORMACIONES[modo] ? Object.keys(FORMACIONES[modo]) : ['1-4-4-2'];
   let html = baseEsquemas.map(esq => `<option value="${esq}">${esq}</option>`).join('');
 
-  // Add custom saved schemes
   if (perfil.esquemasCustom && perfil.esquemasCustom.length) {
     html += `<optgroup label="⭐ Mis Esquemas Guardados">`;
     perfil.esquemasCustom.filter(c => c.modo === modo).forEach(c => {
@@ -140,7 +139,6 @@ export function getImg(eq, tipo) {
   return eq === 'A' ? kitObj.local : kitObj.visita;
 }
 
-// Global drawing state per team
 const drawingState = {
   A: { mode: 'none', color: '#d4af37', isDrawing: false, startX: 0, startY: 0 },
   B: { mode: 'none', color: '#d4af37', isDrawing: false, startX: 0, startY: 0 }
@@ -295,8 +293,11 @@ export function actualizarTactica(eq) {
     token.className = 'jugador-token';
 
     const savedPos = customPos[i];
-    token.style.left = `${savedPos ? savedPos.x : slot.x}%`;
-    token.style.top = `${savedPos ? savedPos.y : slot.y}%`;
+    const posX = Math.max(6, Math.min(94, savedPos ? savedPos.x : slot.x));
+    const posY = Math.max(6, Math.min(94, savedPos ? savedPos.y : slot.y));
+
+    token.style.left = `${posX}%`;
+    token.style.top = `${posY}%`;
     token.dataset.idx = i;
     token.dataset.eq = eq;
 
@@ -368,8 +369,9 @@ function hacerTokenArrastrable(token, contenedor) {
     let newLeft = initialLeft + (deltaX / containerRect.width) * 100;
     let newTop = initialTop + (deltaY / containerRect.height) * 100;
 
-    newLeft = Math.max(4, Math.min(96, newLeft));
-    newTop = Math.max(4, Math.min(96, newTop));
+    // Strict Pitch Boundaries: 6% to 94%
+    newLeft = Math.max(6, Math.min(94, newLeft));
+    newTop = Math.max(6, Math.min(94, newTop));
 
     token.style.left = `${newLeft}%`;
     token.style.top = `${newTop}%`;
@@ -405,7 +407,7 @@ function renderSuplentes(eq) {
   banco.innerHTML = '';
 
   const suplentes = (plantel[`sup_${eq}`] || []);
-  const maxSup = 7;
+  const maxSup = plantel[`maxSup_${eq}`] || 7;
 
   for (let i = 0; i < maxSup; i++) {
     const slot = document.createElement('div');
@@ -413,6 +415,7 @@ function renderSuplentes(eq) {
     const nombre = suplentes[i] || `SUP ${i + 1}`;
 
     slot.innerHTML = `
+      <div style="font-size:9px;color:var(--oro);margin-bottom:2px;font-weight:700;">#${i + 1}</div>
       <div class="token-camisa" style="width:36px;height:36px;">
         <img src="${getImg(eq, 'sup')}">
       </div>
@@ -422,6 +425,18 @@ function renderSuplentes(eq) {
     slot.onclick = () => abrirModalSuplente(eq, i);
     banco.appendChild(slot);
   }
+
+  // Add "+" Button to add more bench slots
+  const addBtn = document.createElement('div');
+  addBtn.className = 'banca-add-btn';
+  addBtn.textContent = '+';
+  addBtn.title = 'Agregar asiento al banco';
+  addBtn.onclick = () => {
+    plantel[`maxSup_${eq}`] = (plantel[`maxSup_${eq}`] || 7) + 1;
+    renderSuplentes(eq);
+    autoSaveLocal();
+  };
+  banco.appendChild(addBtn);
 }
 
 let modalJugadorActivo = { eq: '', idx: -1, cat: '' };

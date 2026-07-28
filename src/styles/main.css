@@ -219,7 +219,7 @@ input:focus, select:focus {
   gap: 12px;
 }
 
-/* ── PIZARRA Y CANCHA ── */
+/* ── PIZARRA Y CANCHA CON ASPECT RATIO FIJO 3:5 ── */
 .campo-layout {
   position: relative;
   background: #000;
@@ -227,15 +227,18 @@ input:focus, select:focus {
   overflow: hidden;
   border: 1px solid #222;
   width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .cancha-wrapper {
   position: relative;
   width: 100%;
-  height: 520px;
+  aspect-ratio: 3 / 5;
   max-height: 75vh;
   background: #0a3d1c url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='500' viewBox='0 0 300 500'><rect width='300' height='500' fill='%230a3d1c'/><rect y='0' width='300' height='50' fill='%230c4520'/><rect y='100' width='300' height='50' fill='%230c4520'/><rect y='200' width='300' height='50' fill='%230c4520'/><rect y='300' width='300' height='50' fill='%230c4520'/><rect y='400' width='300' height='50' fill='%230c4520'/><rect x='15' y='15' width='270' height='470' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><line x1='15' y1='250' x2='285' y2='250' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><circle cx='150' cy='250' r='40' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><circle cx='150' cy='250' r='3' fill='rgba(255,255,255,0.85)'/><rect x='75' y='15' width='150' height='70' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><rect x='105' y='15' width='90' height='25' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><circle cx='150' cy='60' r='2.5' fill='rgba(255,255,255,0.85)'/><path d='M 120 85 A 35 35 0 0 0 180 85' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><rect x='115' y='5' width='70' height='10' fill='rgba(255,255,255,0.15)' stroke='rgba(255,255,255,0.9)' stroke-width='2'/><rect x='75' y='415' width='150' height='70' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><rect x='105' y='460' width='90' height='25' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><circle cx='150' cy='440' r='2.5' fill='rgba(255,255,255,0.85)'/><path d='M 120 415 A 35 35 0 0 1 180 415' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><rect x='115' y='485' width='70' height='10' fill='rgba(255,255,255,0.15)' stroke='rgba(255,255,255,0.9)' stroke-width='2'/><path d='M 15 30 A 15 15 0 0 0 30 15' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><path d='M 270 15 A 15 15 0 0 0 285 30' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><path d='M 15 470 A 15 15 0 0 0 30 485' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><path d='M 270 485 A 15 15 0 0 0 285 470' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/></svg>") center center / contain no-repeat;
   overflow: hidden;
+  margin: 0 auto;
 }
 
 /* CANVAS DE DIBUJO TÁCTICO */
@@ -319,9 +322,9 @@ input:focus, select:focus {
 }
 
 .campo-layout.fullscreen .cancha-wrapper {
-  height: 90vh !important;
-  max-height: 90vh !important;
-  max-width: 540px;
+  height: 92vh !important;
+  max-height: 92vh !important;
+  aspect-ratio: 3 / 5 !important;
   margin: 0 auto;
 }
 
@@ -377,7 +380,7 @@ input:focus, select:focus {
   display: block;
 }
 
-/* JUGADOR TOKEN EN CANCHA */
+/* JUGADOR TOKEN EN CANCHA CON CONFINAMIENTO SEGURO */
 .jugador-token {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -400,7 +403,7 @@ input:focus, select:focus {
 
 .token-camisa {
   position: relative;
-  width: 44px; height: 44px;
+  width: 42px; height: 42px;
   display: flex; align-items: center; justify-content: center;
 }
 
@@ -427,7 +430,7 @@ input:focus, select:focus {
   box-shadow: 0 2px 6px rgba(0,0,0,0.8);
 }
 
-/* BANCA / SUPLENTES */
+/* BANCA / SUPLENTES CON ASIENTOS DE DUGOUT Y BOTÓN (+) */
 .banca-side {
   padding: 12px;
   background: #080808;
@@ -446,9 +449,10 @@ input:focus, select:focus {
 
 .banca-container {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   overflow-x: auto;
-  padding-bottom: 6px;
+  padding-bottom: 8px;
+  align-items: center;
 }
 
 .banca-slot {
@@ -457,6 +461,35 @@ input:focus, select:focus {
   flex-direction: column;
   align-items: center;
   cursor: pointer;
+  background: radial-gradient(circle, #1a1a1a 0%, #0d0d0d 100%);
+  border: 1px solid #282828;
+  border-radius: 10px;
+  padding: 6px 8px;
+  box-shadow: inset 0 2px 4px rgba(255,255,255,0.05);
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.banca-slot:hover {
+  border-color: var(--oro);
+  transform: translateY(-2px);
+}
+
+.banca-add-btn {
+  flex: 0 0 auto;
+  width: 44px; height: 56px;
+  border: 2px dashed var(--oro);
+  border-radius: 10px;
+  background: rgba(212,175,55,0.05);
+  color: var(--oro);
+  font-size: 20px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.banca-add-btn:hover {
+  background: var(--oro);
+  color: #000;
 }
 
 /* CUERPO TÉCNICO */

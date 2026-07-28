@@ -1,4 +1,4 @@
-import { perfil, setPinHash, autoSaveLocal, stats, updateStats, historial, updateHistorial } from "./state.js";
+import { perfil, setPinHash, setCategoriaActiva, autoSaveLocal, stats, updateStats, historial, updateHistorial } from "./state.js";
 import { guardarFirebase, hashPin } from "../services/firebase.js";
 import { KITS } from "./state.js";
 import { subirImagenCloudinary } from "../services/cloudinary.js";
@@ -19,6 +19,7 @@ export function abrirConfig() {
   document.getElementById('cfg-eqA').value = perfil.eqA || '';
   document.getElementById('cfg-eqB').value = perfil.eqB || '';
 
+  renderCategoriasConfigUI();
   renderKitGallery('A');
   renderKitGallery('B');
 
@@ -37,6 +38,56 @@ export function abrirConfig() {
 
   modal.style.display = 'flex';
 }
+
+export function renderCategoriasConfigUI() {
+  const cont = document.getElementById('cfg-lista-categorias');
+  if (!cont) return;
+
+  const cats = perfil.categorias || ["Sub-14"];
+  cont.innerHTML = cats.map(c => `
+    <div style="display:flex;justify-content:space-between;align-items:center;background:#0d0d0d;border:1px solid #222;padding:8px 12px;border-radius:8px;margin-bottom:6px;">
+      <span style="font-weight:700;color:var(--oro);">${c} ${c === perfil.categoriaActiva ? '⭐ (ACTIVA)' : ''}</span>
+      ${cats.length > 1 ? `<button onclick="window._eliminarCategoriaConfig('${c}')" style="background:none;border:none;color:#888;cursor:pointer;">🗑️</button>` : ''}
+    </div>
+  `).join('');
+}
+
+export async function agregarNuevaCategoriaConfig() {
+  const input = document.getElementById('cfg-nueva-cat-input');
+  if (!input) return;
+  const val = input.value.trim();
+  if (!val) return alert('Ingresa el nombre de la categoría');
+
+  if (!perfil.categorias) perfil.categorias = [];
+  if (perfil.categorias.includes(val)) return alert('Esta categoría ya existe');
+
+  perfil.categorias.push(val);
+  setCategoriaActiva(val);
+
+  input.value = '';
+  renderCategoriasConfigUI();
+  autoSaveLocal();
+  await guardarFirebase();
+  alert(`✅ Categoría "${val}" creada con éxito.`);
+  location.reload();
+}
+
+export async function eliminarCategoriaConfig(catNombre) {
+  if (perfil.categorias.length <= 1) return alert('Debes mantener al menos 1 categoría.');
+  if (!confirm(`¿Estás seguro de eliminar la categoría ${catNombre}?`)) return;
+
+  perfil.categorias = perfil.categorias.filter(c => c !== catNombre);
+  if (perfil.categoriaActiva === catNombre) {
+    setCategoriaActiva(perfil.categorias[0]);
+  }
+
+  renderCategoriasConfigUI();
+  autoSaveLocal();
+  await guardarFirebase();
+  location.reload();
+}
+
+window._eliminarCategoriaConfig = (c) => eliminarCategoriaConfig(c);
 
 export function cerrarConfig() {
   const modal = document.getElementById('config-modal');
