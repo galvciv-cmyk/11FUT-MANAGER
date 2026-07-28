@@ -238,7 +238,7 @@ input:focus, select:focus {
   gap: 12px;
 }
 
-/* ── PIZARRA Y CANCHA CON VISIBILIDAD TOTAL DE PORTERÍAS ── */
+/* ── PIZARRA Y CANCHA VERTICAL U HORIZONTAL EN FULLSCREEN ── */
 .campo-layout {
   position: relative;
   background: #000;
@@ -258,6 +258,16 @@ input:focus, select:focus {
   background: #0a3d1c url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='500' viewBox='0 0 300 500'><rect width='300' height='500' fill='%230a3d1c'/><rect y='0' width='300' height='50' fill='%230c4520'/><rect y='100' width='300' height='50' fill='%230c4520'/><rect y='200' width='300' height='50' fill='%230c4520'/><rect y='300' width='300' height='50' fill='%230c4520'/><rect y='400' width='300' height='50' fill='%230c4520'/><rect x='15' y='20' width='270' height='460' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><line x1='15' y1='250' x2='285' y2='250' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><circle cx='150' cy='250' r='40' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><circle cx='150' cy='250' r='3' fill='rgba(255,255,255,0.95)'/><rect x='75' y='20' width='150' height='65' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><rect x='105' y='20' width='90' height='25' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><circle cx='150' cy='60' r='3' fill='rgba(255,255,255,0.95)'/><path d='M 120 85 A 35 35 0 0 0 180 85' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><rect x='115' y='8' width='70' height='12' fill='rgba(255,255,255,0.25)' stroke='rgba(255,255,255,0.95)' stroke-width='2'/><rect x='75' y='415' width='150' height='65' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><rect x='105' y='455' width='90' height='25' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><circle cx='150' cy='440' r='3' fill='rgba(255,255,255,0.95)'/><path d='M 120 415 A 35 35 0 0 1 180 415' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><rect x='115' y='480' width='70' height='12' fill='rgba(255,255,255,0.25)' stroke='rgba(255,255,255,0.95)' stroke-width='2'/><path d='M 15 35 A 15 15 0 0 0 30 20' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><path d='M 270 20 A 15 15 0 0 0 285 35' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><path d='M 15 465 A 15 15 0 0 0 30 480' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><path d='M 270 480 A 15 15 0 0 0 285 465' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/></svg>") center center / contain no-repeat;
   overflow: hidden;
   margin: 0 auto;
+}
+
+/* CANCHA HORIZONTAL EN FULLSCREEN */
+.cancha-wrapper.horizontal {
+  aspect-ratio: 5 / 3 !important;
+  width: 94vw !important;
+  max-width: 94vw !important;
+  height: 85vh !important;
+  max-height: 85vh !important;
+  background: #0a3d1c url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='500' height='300' viewBox='0 0 500 300'><rect width='500' height='300' fill='%230a3d1c'/><rect x='0' width='50' height='300' fill='%230c4520'/><rect x='100' width='50' height='300' fill='%230c4520'/><rect x='200' width='50' height='300' fill='%230c4520'/><rect x='300' width='50' height='300' fill='%230c4520'/><rect x='400' width='50' height='300' fill='%230c4520'/><rect x='20' y='15' width='460' height='270' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><line x1='250' y1='15' x2='250' y2='285' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><circle cx='250' cy='150' r='40' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><circle cx='250' cy='150' r='3' fill='rgba(255,255,255,0.95)'/><rect x='20' y='75' width='65' height='150' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><rect x='20' y='105' width='25' height='90' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><circle cx='60' cy='150' r='3' fill='rgba(255,255,255,0.95)'/><path d='M 85 120 A 35 35 0 0 1 85 180' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><rect x='8' y='115' width='12' height='70' fill='rgba(255,255,255,0.25)' stroke='rgba(255,255,255,0.95)' stroke-width='2'/><rect x='415' y='75' width='65' height='150' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><rect x='455' y='105' width='25' height='90' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><circle cx='440' cy='150' r='3' fill='rgba(255,255,255,0.95)'/><path d='M 415 120 A 35 35 0 0 0 415 180' fill='none' stroke='rgba(255,255,255,0.85)' stroke-width='2'/><rect x='480' y='115' width='12' height='70' fill='rgba(255,255,255,0.25)' stroke='rgba(255,255,255,0.95)' stroke-width='2'/></svg>") center center / contain no-repeat !important;
 }
 
 /* CANVAS DE DIBUJO TÁCTICO */
@@ -339,14 +349,6 @@ input:focus, select:focus {
   justify-content: center;
   align-items: center;
   padding: 10px;
-}
-
-.campo-layout.fullscreen .cancha-wrapper {
-  height: 86vh !important;
-  max-height: 86vh !important;
-  aspect-ratio: 3 / 5 !important;
-  margin: auto !important;
-  object-fit: contain;
 }
 
 .btn-exit-fs {
@@ -462,6 +464,39 @@ input:focus, select:focus {
   user-select: none;
   touch-action: none;
   filter: drop-shadow(0 3px 6px rgba(0,0,0,0.9));
+}
+
+/* CONSOLA DE PARTIDO EN VIVO (CONTADORES 0 +) */
+.live-counter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #0d0d0d;
+  border: 1px solid #222;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+}
+
+.counter-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-counter {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  font-size: 18px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; border: none;
+}
+
+.counter-val {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 22px; font-weight: 900;
+  min-width: 28px; text-align: center;
+  color: var(--oro);
 }
 
 /* BANCA / SUPLENTES DE 4 EN 4 Y CUERPO TÉCNICO MISMO TAMAÑO */

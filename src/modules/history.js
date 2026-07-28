@@ -16,16 +16,56 @@ export function formatHora(str) {
   return str;
 }
 
+// ══════════════════════════════════════════
+// CONSOLA INTERACTIVA DE PARTIDO EN VIVO (0 +)
+// ══════════════════════════════════════════
+export let partidoEnVivoState = {
+  activo: false,
+  equipo: 'A',
+  fecha: new Date().toISOString().split('T')[0],
+  torneo: 'Campeonato',
+  rival: 'Rival',
+  duracionMin: 30,
+  gf: 0, gc: 0,
+  rematesA: 0, rematesC: 0,
+  cornersA: 0, cornersC: 0,
+  faltasA: 0, faltasC: 0,
+  goleadoresMap: {},
+  asistidoresMap: {},
+  rematadoresMap: {},
+  sustitucionesList: [],
+  tarjetasAmarillasMap: {},
+  tarjetasRojasMap: {},
+  convocadosList: []
+};
+
 export function iniciarJuegoProgramado(id) {
   const prog = juegosProgramados.find(j => j.id === id);
   if (!prog) return;
 
-  document.getElementById('h-fecha').value = prog.fecha || '';
-  document.getElementById('h-torneo').value = prog.torneo || '';
-  document.getElementById('h-rival').value = prog.rival || '';
-  document.getElementById('h-guardametas').value = (prog.convocados || []).join(', ');
+  const convocados = prog.convocados || [...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
 
-  // Eliminar de programados al ser cargado para registrar
+  partidoEnVivoState = {
+    activo: true,
+    equipo: 'A',
+    fecha: prog.fecha || new Date().toISOString().split('T')[0],
+    torneo: prog.torneo || 'Campeonato',
+    rival: prog.rival || 'Rival',
+    duracionMin: 30,
+    gf: 0, gc: 0,
+    rematesA: 0, rematesC: 0,
+    cornersA: 0, cornersC: 0,
+    faltasA: 0, faltasC: 0,
+    goleadoresMap: {},
+    asistidoresMap: {},
+    rematadoresMap: {},
+    sustitucionesList: [],
+    tarjetasAmarillasMap: {},
+    tarjetasRojasMap: {},
+    convocadosList: convocados
+  };
+
+  // Eliminar de programados
   const idx = juegosProgramados.findIndex(j => j.id === id);
   if (idx !== -1) {
     juegosProgramados.splice(idx, 1);
@@ -33,60 +73,373 @@ export function iniciarJuegoProgramado(id) {
     autoSaveLocal();
   }
 
+  const consolaCard = document.getElementById('consola-partido-vivo');
+  if (consolaCard) consolaCard.style.display = 'block';
+
+  renderConsolaPartidoVivo();
   renderHistorial();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  consolaCard?.scrollIntoView({ behavior: 'smooth' });
 }
 
 window._iniciarJuegoProgramado = (id) => iniciarJuegoProgramado(id);
 
-export function guardarPartido() {
-  const eq          = document.getElementById('h-equipo').value;
-  const fecha       = document.getElementById('h-fecha').value;
-  const torneo      = document.getElementById('h-torneo').value.trim();
-  const rival       = document.getElementById('h-rival').value.trim();
-  const gf          = parseInt(document.getElementById('h-gf').value, 10);
-  const gc          = parseInt(document.getElementById('h-gc').value, 10);
-  const duracion    = parseInt(document.getElementById('h-duracion').value, 10) || 30;
-  const rematesA    = parseInt(document.getElementById('h-remates-a').value, 10) || 0;
-  const rematesC    = parseInt(document.getElementById('h-remates-c').value, 10) || 0;
-  const cornersA    = parseInt(document.getElementById('h-corners-a').value, 10) || 0;
-  const cornersC    = parseInt(document.getElementById('h-corners-c').value, 10) || 0;
+export function abrirNuevoPartidoForm() {
+  const todos = [...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
+  const convocadosDefault = [...new Set(todos)];
 
-  const rawGoleadores  = document.getElementById('h-goleadores').value.trim();
-  const rawAsistidores = document.getElementById('h-asistidores').value.trim();
-  const rawParticipantes = document.getElementById('h-guardametas').value.trim();
+  partidoEnVivoState = {
+    activo: true,
+    equipo: 'A',
+    fecha: new Date().toISOString().split('T')[0],
+    torneo: 'Campeonato',
+    rival: 'Rival',
+    duracionMin: 30,
+    gf: 0, gc: 0,
+    rematesA: 0, rematesC: 0,
+    cornersA: 0, cornersC: 0,
+    faltasA: 0, faltasC: 0,
+    goleadoresMap: {},
+    asistidoresMap: {},
+    rematadoresMap: {},
+    sustitucionesList: [],
+    tarjetasAmarillasMap: {},
+    tarjetasRojasMap: {},
+    convocadosList: convocadosDefault
+  };
 
-  if (!fecha || !rival || isNaN(gf) || isNaN(gc)) {
-    return alert('Ingresa Fecha, Rival, Goles a Favor y Goles en Contra.');
+  const consolaCard = document.getElementById('consola-partido-vivo');
+  if (consolaCard) consolaCard.style.display = 'block';
+
+  renderConsolaPartidoVivo();
+  consolaCard?.scrollIntoView({ behavior: 'smooth' });
+}
+
+window._abrirNuevoPartidoForm = () => abrirNuevoPartidoForm();
+
+export function renderConsolaPartidoVivo() {
+  const container = document.getElementById('consola-partido-body');
+  if (!container) return;
+
+  const st = partidoEnVivoState;
+  const eqNombre = perfil.eqA || 'Equipo';
+
+  let html = `
+    <div style="background:#000;border:1px solid var(--oro);border-radius:12px;padding:14px;margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:14px;color:#aaa;">📅 ${formatFecha(st.fecha)} • ${st.torneo}</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--oro);">${st.gf} - ${st.gc}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <input type="text" id="live-rival-input" value="${st.rival}" placeholder="Nombre del Rival" onchange="window._actualizarLiveRival(this.value)">
+        <input type="number" id="live-duracion-input" value="${st.duracionMin}" placeholder="Minutos por tiempo" onchange="window._actualizarLiveDuracion(this.value)">
+      </div>
+
+      <!-- CONTADOR DE GOLES (0 +) -->
+      <div class="live-counter-row">
+        <div>
+          <div style="font-weight:700;color:#fff;font-size:14px;">⚽ GOLES A FAVOR / CONTRA</div>
+          <div style="font-size:11px;color:#888;">Goleadores: ${Object.entries(st.goleadoresMap).map(([k,v]) => `${k} (${v})`).join(', ') || 'Ninguno'}</div>
+        </div>
+        <div class="counter-btn-group">
+          <button class="btn-counter btn-gray" onclick="window._modificarLiveCounter('gf', -1)">-</button>
+          <span class="counter-val">${st.gf}</span>
+          <button class="btn-counter btn-gold" onclick="window._sumarGolFavor()">+</button>
+          <span style="color:#444;font-size:16px;margin:0 4px;">|</span>
+          <span class="counter-val" style="color:var(--rojo);">${st.gc}</span>
+          <button class="btn-counter btn-red" onclick="window._modificarLiveCounter('gc', 1)">+</button>
+        </div>
+      </div>
+
+      <!-- CONTADOR DE REMATES / CHUTES A PUERTA (0 +) -->
+      <div class="live-counter-row">
+        <div>
+          <div style="font-weight:700;color:#fff;font-size:14px;">🎯 CHUTES A PUERTA A FAVOR / CONTRA</div>
+          <div style="font-size:11px;color:#888;">Remates a Favor: ${st.rematesA} | En Contra: ${st.rematesC}</div>
+        </div>
+        <div class="counter-btn-group">
+          <button class="btn-counter btn-gray" onclick="window._modificarLiveCounter('rematesA', -1)">-</button>
+          <span class="counter-val">${st.rematesA}</span>
+          <button class="btn-counter btn-gold" onclick="window._sumarRemateFavor()">+</button>
+          <span style="color:#444;font-size:16px;margin:0 4px;">|</span>
+          <span class="counter-val" style="color:var(--rojo);">${st.rematesC}</span>
+          <button class="btn-counter btn-red" onclick="window._modificarLiveCounter('rematesC', 1)">+</button>
+        </div>
+      </div>
+
+      <!-- CONTADOR DE ASISTENCIAS (0 +) -->
+      <div class="live-counter-row">
+        <div>
+          <div style="font-weight:700;color:#fff;font-size:14px;">🎯 ASISTENCIAS DE GOL</div>
+          <div style="font-size:11px;color:#888;">Asistidores: ${Object.entries(st.asistidoresMap).map(([k,v]) => `${k} (${v})`).join(', ') || 'Ninguno'}</div>
+        </div>
+        <div class="counter-btn-group">
+          <button class="btn-counter btn-gold" onclick="window._sumarAsistencia()">+</button>
+        </div>
+      </div>
+
+      <!-- CONTADOR DE CORNERS (0 +) -->
+      <div class="live-counter-row">
+        <div>
+          <div style="font-weight:700;color:#fff;font-size:14px;">🚩 CORNERS A FAVOR / CONTRA</div>
+        </div>
+        <div class="counter-btn-group">
+          <button class="btn-counter btn-gray" onclick="window._modificarLiveCounter('cornersA', -1)">-</button>
+          <span class="counter-val">${st.cornersA}</span>
+          <button class="btn-counter btn-gold" onclick="window._modificarLiveCounter('cornersA', 1)">+</button>
+          <span style="color:#444;font-size:16px;margin:0 4px;">|</span>
+          <span class="counter-val" style="color:var(--rojo);">${st.cornersC}</span>
+          <button class="btn-counter btn-red" onclick="window._modificarLiveCounter('cornersC', 1)">+</button>
+        </div>
+      </div>
+
+      <!-- CONTADOR DE FALTAS (0 +) -->
+      <div class="live-counter-row">
+        <div>
+          <div style="font-weight:700;color:#fff;font-size:14px;">🛑 FALTAS COMETIDAS / RECIBIDAS</div>
+        </div>
+        <div class="counter-btn-group">
+          <button class="btn-counter btn-gray" onclick="window._modificarLiveCounter('faltasA', -1)">-</button>
+          <span class="counter-val">${st.faltasA}</span>
+          <button class="btn-counter btn-gold" onclick="window._modificarLiveCounter('faltasA', 1)">+</button>
+          <span style="color:#444;font-size:16px;margin:0 4px;">|</span>
+          <span class="counter-val" style="color:var(--rojo);">${st.faltasC}</span>
+          <button class="btn-counter btn-red" onclick="window._modificarLiveCounter('faltasC', 1)">+</button>
+        </div>
+      </div>
+
+      <!-- REGISTRO DE SUSTITUCIONES (CAMBIOS) -->
+      <div class="live-counter-row">
+        <div>
+          <div style="font-weight:700;color:#fff;font-size:14px;">🔄 SUSTITUCIONES (${st.sustitucionesList.length})</div>
+          <div style="font-size:11px;color:#888;">${st.sustitucionesList.map(s => `🔴 ${s.sale} ➔ 🟢 ${s.entra} (${s.min}')`).join('<br>') || 'Sin cambios registrados'}</div>
+        </div>
+        <div class="counter-btn-group">
+          <button class="btn btn-green" style="width:auto;padding:6px 12px;font-size:11px;" onclick="window._abrirModalCambioLive()">➕ REGISTRAR CAMBIO</button>
+        </div>
+      </div>
+
+      <!-- CONTADOR DE TARJETAS AMARILLAS / ROJAS (0 +) -->
+      <div class="live-counter-row">
+        <div>
+          <div style="font-weight:700;color:#fff;font-size:14px;">🟨 🟥 TARJETAS SANCIÓN</div>
+          <div style="font-size:11px;color:#888;">🟨: ${Object.keys(st.tarjetasAmarillasMap).join(', ') || 'Ninguna'} | 🟥: ${Object.keys(st.tarjetasRojasMap).join(', ') || 'Ninguna'}</div>
+        </div>
+        <div class="counter-btn-group">
+          <button class="btn-counter btn-gold" style="font-size:14px;" onclick="window._sumarTarjetaLive('AMARILLA')">🟨 +</button>
+          <button class="btn-counter btn-red" style="font-size:14px;" onclick="window._sumarTarjetaLive('ROJA')">🟥 +</button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;">
+        <button class="btn btn-gold" onclick="window._finalizarYGuardarPartidoLive()">💾 FINALIZAR Y GUARDAR PARTIDO</button>
+        <button class="btn btn-gray" onclick="document.getElementById('consola-partido-vivo').style.display='none'">CANCELAR</button>
+      </div>
+    </div>
+  `;
+
+  container.innerHTML = html;
+}
+
+window._actualizarLiveRival = (val) => { partidoEnVivoState.rival = val.trim(); };
+window._actualizarLiveDuracion = (val) => { partidoEnVivoState.duracionMin = parseInt(val, 10) || 30; };
+
+window._modificarLiveCounter = (key, delta) => {
+  partidoEnVivoState[key] = Math.max(0, (partidoEnVivoState[key] || 0) + delta);
+  renderConsolaPartidoVivo();
+};
+
+window._sumarGolFavor = () => {
+  const modal = document.getElementById('modal');
+  const modalContent = document.getElementById('modal-content');
+  if (!modal || !modalContent) return;
+
+  const convocados = partidoEnVivoState.convocadosList.length ? partidoEnVivoState.convocadosList : [...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
+
+  let html = `<div class="modal-title">⚽ SELECCIONAR GOLEADOR DE LA CONVOCATORIA</div>`;
+  html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
+
+  convocados.forEach(n => {
+    html += `<button class="btn btn-gray" style="text-align:left;padding:10px;" onclick="window._confirmarGolFavorJugador('${n}')">⚽ ${n}</button>`;
+  });
+
+  html += `<button class="btn btn-red" style="margin-top:8px;" onclick="document.getElementById('modal').style.display='none'">CANCELAR</button>`;
+  html += `</div>`;
+
+  modalContent.innerHTML = html;
+  modal.style.display = 'flex';
+};
+
+window._confirmarGolFavorJugador = (nombre) => {
+  partidoEnVivoState.gf += 1;
+  partidoEnVivoState.rematesA += 1;
+  partidoEnVivoState.goleadoresMap[nombre] = (partidoEnVivoState.goleadoresMap[nombre] || 0) + 1;
+  document.getElementById('modal').style.display = 'none';
+  renderConsolaPartidoVivo();
+};
+
+window._sumarRemateFavor = () => {
+  const modal = document.getElementById('modal');
+  const modalContent = document.getElementById('modal-content');
+  if (!modal || !modalContent) return;
+
+  const convocados = partidoEnVivoState.convocadosList.length ? partidoEnVivoState.convocadosList : [...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
+
+  let html = `<div class="modal-title">🎯 SELECCIONAR JUGADOR QUE REMATÓ A PUERTA</div>`;
+  html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
+
+  convocados.forEach(n => {
+    html += `<button class="btn btn-gray" style="text-align:left;padding:10px;" onclick="window._confirmarRemateFavorJugador('${n}')">🎯 ${n}</button>`;
+  });
+
+  html += `<button class="btn btn-red" style="margin-top:8px;" onclick="document.getElementById('modal').style.display='none'">CANCELAR</button>`;
+  html += `</div>`;
+
+  modalContent.innerHTML = html;
+  modal.style.display = 'flex';
+};
+
+window._confirmarRemateFavorJugador = (nombre) => {
+  partidoEnVivoState.rematesA += 1;
+  partidoEnVivoState.rematadoresMap[nombre] = (partidoEnVivoState.rematadoresMap[nombre] || 0) + 1;
+  document.getElementById('modal').style.display = 'none';
+  renderConsolaPartidoVivo();
+};
+
+window._sumarAsistencia = () => {
+  const modal = document.getElementById('modal');
+  const modalContent = document.getElementById('modal-content');
+  if (!modal || !modalContent) return;
+
+  const convocados = partidoEnVivoState.convocadosList.length ? partidoEnVivoState.convocadosList : [...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
+
+  let html = `<div class="modal-title">🎯 SELECCIONAR ASISTIDOR DEL GOL</div>`;
+  html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
+
+  convocados.forEach(n => {
+    html += `<button class="btn btn-gray" style="text-align:left;padding:10px;" onclick="window._confirmarAsistenciaJugador('${n}')">🎯 ${n}</button>`;
+  });
+
+  html += `<button class="btn btn-gold" style="margin-top:4px;" onclick="window._confirmarAsistenciaJugador('Sin Asistencia (Tiro Libre / Penal)')">🚫 Sin Asistencia (Tiro Libre / Penal)</button>`;
+  html += `<button class="btn btn-red" style="margin-top:8px;" onclick="document.getElementById('modal').style.display='none'">CANCELAR</button>`;
+  html += `</div>`;
+
+  modalContent.innerHTML = html;
+  modal.style.display = 'flex';
+};
+
+window._confirmarAsistenciaJugador = (nombre) => {
+  if (!nombre.includes('Sin Asistencia')) {
+    partidoEnVivoState.asistidoresMap[nombre] = (partidoEnVivoState.asistidoresMap[nombre] || 0) + 1;
   }
+  document.getElementById('modal').style.display = 'none';
+  renderConsolaPartidoVivo();
+};
 
-  const goleadores  = parseCountList(rawGoleadores);
-  const asistidores = parseCountList(rawAsistidores);
-  const participantes = rawParticipantes ? rawParticipantes.split(',').map(s => s.trim()).filter(Boolean) : [];
+window._abrirModalCambioLive = () => {
+  const modal = document.getElementById('modal');
+  const modalContent = document.getElementById('modal-content');
+  if (!modal || !modalContent) return;
+
+  const convocados = partidoEnVivoState.convocadosList.length ? partidoEnVivoState.convocadosList : [...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
+
+  modalContent.innerHTML = `
+    <div class="modal-title">🔄 REGISTRAR SUSTITUCIÓN (CAMBIO)</div>
+    <div class="card">
+      <label style="font-size:11px;color:#aaa;">🔴 JUGADOR QUE SALE:</label>
+      <select id="live-cambio-sale" style="margin-bottom:8px;">
+        ${convocados.map(n => `<option value="${n}">${n}</option>`).join('')}
+      </select>
+
+      <label style="font-size:11px;color:#aaa;">🟢 JUGADOR QUE ENTRA:</label>
+      <select id="live-cambio-entra" style="margin-bottom:8px;">
+        ${convocados.map(n => `<option value="${n}">${n}</option>`).join('')}
+      </select>
+
+      <label style="font-size:11px;color:#aaa;">⏱️ MINUTO DEL CAMBIO:</label>
+      <input type="number" id="live-cambio-minuto" placeholder="ej. 45, 60" value="45" style="margin-bottom:12px;">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button class="btn btn-green" onclick="window._confirmarSustitucionLive()">✅ GUARDAR CAMBIO</button>
+        <button class="btn btn-gray" onclick="document.getElementById('modal').style.display='none'">CANCELAR</button>
+      </div>
+    </div>
+  `;
+
+  modal.style.display = 'flex';
+};
+
+window._confirmarSustitucionLive = () => {
+  const sale = document.getElementById('live-cambio-sale')?.value;
+  const entra = document.getElementById('live-cambio-entra')?.value;
+  const min = parseInt(document.getElementById('live-cambio-minuto')?.value, 10) || 45;
+
+  if (sale === entra) return alert('El jugador que entra debe ser distinto al que sale.');
+
+  partidoEnVivoState.sustitucionesList.push({ sale, entra, min });
+  document.getElementById('modal').style.display = 'none';
+  renderConsolaPartidoVivo();
+};
+
+window._sumarTarjetaLive = (tipo) => {
+  const modal = document.getElementById('modal');
+  const modalContent = document.getElementById('modal-content');
+  if (!modal || !modalContent) return;
+
+  const convocados = partidoEnVivoState.convocadosList.length ? partidoEnVivoState.convocadosList : [...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
+
+  let html = `<div class="modal-title">${tipo === 'AMARILLA' ? '🟨 AMONESTACIÓN' : '🟥 EXPULSIÓN'} - SELECCIONAR JUGADOR</div>`;
+  html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
+
+  convocados.forEach(n => {
+    html += `<button class="btn btn-gray" style="text-align:left;padding:10px;" onclick="window._confirmarTarjetaJugador('${tipo}', '${n}')">${tipo === 'AMARILLA' ? '🟨' : '🟥'} ${n}</button>`;
+  });
+
+  html += `<button class="btn btn-red" style="margin-top:8px;" onclick="document.getElementById('modal').style.display='none'">CANCELAR</button>`;
+  html += `</div>`;
+
+  modalContent.innerHTML = html;
+  modal.style.display = 'flex';
+};
+
+window._confirmarTarjetaJugador = (tipo, nombre) => {
+  if (tipo === 'AMARILLA') {
+    partidoEnVivoState.tarjetasAmarillasMap[nombre] = (partidoEnVivoState.tarjetasAmarillasMap[nombre] || 0) + 1;
+  } else {
+    partidoEnVivoState.tarjetasRojasMap[nombre] = (partidoEnVivoState.tarjetasRojasMap[nombre] || 0) + 1;
+  }
+  document.getElementById('modal').style.display = 'none';
+  renderConsolaPartidoVivo();
+};
+
+window._finalizarYGuardarPartidoLive = async () => {
+  const st = partidoEnVivoState;
+  const eqNombre = perfil.eqA || 'Equipo';
 
   let res = 'D';
-  if (gf > gc) res = 'W';
-  if (gf < gc) res = 'L';
+  if (st.gf > st.gc) res = 'W';
+  if (st.gf < st.gc) res = 'L';
 
-  const totalMinutosPartido = duracion * 2;
+  const totalMinutosPartido = st.duracionMin * 2;
 
   const nuevoPartido = {
     id: Date.now().toString(),
-    eq,
-    fecha,
-    torneo: torneo || 'Amistoso',
-    rival,
-    gf,
-    gc,
+    eq: st.equipo,
+    fecha: st.fecha,
+    torneo: st.torneo || 'Amistoso',
+    rival: st.rival || 'Rival',
+    gf: st.gf,
+    gc: st.gc,
     res,
     duracion: totalMinutosPartido,
-    rematesA,
-    rematesC,
-    cornersA,
-    cornersC,
-    goleadores,
-    asistidores,
-    participantes
+    rematesA: st.rematesA,
+    rematesC: st.rematesC,
+    cornersA: st.cornersA,
+    cornersC: st.cornersC,
+    faltasA: st.faltasA,
+    faltasC: st.faltasC,
+    goleadores: st.goleadoresMap,
+    asistidores: st.asistidoresMap,
+    participantes: st.convocadosList
   };
 
   historial.unshift(nuevoPartido);
@@ -95,40 +448,13 @@ export function guardarPartido() {
   acumularStatsPartido(nuevoPartido);
 
   autoSaveLocal();
-  guardarFirebase();
+  await guardarFirebase();
+  document.getElementById('consola-partido-vivo').style.display = 'none';
   renderHistorial();
   renderStats();
 
-  alert('✅ Partido registrado y estadísticas actualizadas con éxito.');
-
-  document.getElementById('h-rival').value = '';
-  document.getElementById('h-gf').value = '';
-  document.getElementById('h-gc').value = '';
-  document.getElementById('h-remates-a').value = '';
-  document.getElementById('h-remates-c').value = '';
-  document.getElementById('h-corners-a').value = '';
-  document.getElementById('h-corners-c').value = '';
-  document.getElementById('h-goleadores').value = '';
-  document.getElementById('h-asistidores').value = '';
-  document.getElementById('h-guardametas').value = '';
-}
-
-function parseCountList(raw) {
-  if (!raw) return {};
-  const res = {};
-  const partes = raw.split(',');
-  partes.forEach(p => {
-    const item = p.trim();
-    if (!item || item.toLowerCase().includes('sin asistencia')) return;
-    const match = item.match(/^(.+?)\s+(\d+)$/);
-    if (match) {
-      res[match[1].trim()] = parseInt(match[2], 10);
-    } else {
-      res[item] = (res[item] || 0) + 1;
-    }
-  });
-  return res;
-}
+  alert('✅ Partido finalizado y registrado con éxito en el historial.');
+};
 
 function acumularStatsPartido(p) {
   const convocados = p.participantes.length ? p.participantes : [...Object.keys(p.goleadores), ...Object.keys(p.asistidores)];
@@ -229,42 +555,3 @@ window._eliminarPartido = async (id) => {
     renderStats();
   }
 };
-
-export function mostrarSugerencias(inputEl, acListId) {
-  const acList = document.getElementById(acListId);
-  if (!acList || !inputEl) return;
-
-  const val = inputEl.value.toLowerCase();
-  const todos = [...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del, 'Sin Asistencia (Tiro Libre / Penal)'];
-  const filtrados = todos.filter(n => n.toLowerCase().includes(val));
-
-  if (!filtrados.length || !val) {
-    acList.style.display = 'none';
-    return;
-  }
-
-  acList.innerHTML = filtrados.map(n => `
-    <div class="autocomplete-item" onclick="window._seleccionarAutocomplete('${inputEl.id}', '${acId}', '${n}')">
-      <span>${n}</span>
-    </div>
-  `).join('');
-
-  acList.style.display = 'block';
-}
-
-window._seleccionarAutocomplete = (inputId, acId, nombre) => {
-  const inputEl = document.getElementById(inputId);
-  if (inputEl) {
-    const val = inputEl.value;
-    const partes = val.split(',');
-    partes.pop();
-    partes.push(nombre);
-    inputEl.value = partes.join(', ') + ', ';
-  }
-  ocultarSugerencias(acId);
-};
-
-export function ocultarSugerencias(acListId) {
-  const acList = document.getElementById(acListId);
-  if (acList) acList.style.display = 'none';
-}

@@ -350,11 +350,16 @@ function drawArrow(ctx, fromX, fromY, toX, toY, color, width = 4, isDashed = fal
 
 export function toggleFullscreen(eq) {
   const layout = document.getElementById(`pizarra-${eq}`);
-  if (!layout) return;
+  const canchaWrapper = document.getElementById(`cancha-${eq}`);
+  if (!layout || !canchaWrapper) return;
+
   const isFS = layout.classList.toggle('fullscreen');
+  canchaWrapper.classList.toggle('horizontal', isFS);
+
   const btn = document.getElementById(`btn-fs-${eq}`);
   if (btn) btn.textContent = isFS ? '🗗 SALIR FULLSCREEN' : '⛶ PANTALLA COMPLETA';
-  initCanvas(eq);
+  
+  actualizarTactica(eq);
 }
 
 export function actualizarTactica(eq) {
@@ -363,6 +368,7 @@ export function actualizarTactica(eq) {
   const esquemaVal = document.getElementById(`esquema-${eq}`)?.value || '1-4-4-2';
   const cancha = document.getElementById(`cancha-${eq}`);
   const banco = document.getElementById(`banco-${eq}`);
+  const isHorizontal = cancha ? cancha.classList.contains('horizontal') : false;
   if (!cancha || !banco) return;
 
   cancha.innerHTML = `<canvas id="canvas-${eq}" class="canvas-dibujo"></canvas>`;
@@ -387,8 +393,15 @@ export function actualizarTactica(eq) {
     token.className = 'jugador-token';
 
     const savedPos = customPos[i];
-    const posX = Math.max(5, Math.min(95, savedPos ? savedPos.x : slot.x));
-    const posY = Math.max(5, Math.min(95, savedPos ? savedPos.y : slot.y));
+    let posX = Math.max(5, Math.min(95, savedPos ? savedPos.x : slot.x));
+    let posY = Math.max(5, Math.min(95, savedPos ? savedPos.y : slot.y));
+
+    // Si está en modo horizontal, rotar 90 grados la vista táctica
+    if (isHorizontal) {
+      const origX = posX;
+      posX = Math.max(5, Math.min(95, 100 - posY));
+      posY = Math.max(5, Math.min(95, origX));
+    }
 
     token.style.left = `${posX}%`;
     token.style.top = `${posY}%`;
@@ -539,7 +552,6 @@ export function abrirModalJugador(eq, idx, cat) {
   const modalContent = document.getElementById('modal-content');
   if (!modal || !modalContent) return;
 
-  // Filtrar jugadores ya asignados para evitar duplicados en la cancha
   const asignadosTit = (plantel[`tit_${eq}`] || []).filter(Boolean);
   const asignadosSup = (plantel[`sup_${eq}`] || []).filter(Boolean);
   const ocupados = new Set([...asignadosTit, ...asignadosSup]);
@@ -547,7 +559,7 @@ export function abrirModalJugador(eq, idx, cat) {
   const listaJugadores = [...(plantel[cat] || []), ...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
   const disponibles = [...new Set(listaJugadores)].filter(n => !ocupados.has(n));
 
-  let html = `<div class="modal-title">⚽ SELECCIONAR TITULAR (SOLO DISPONIBLES)</div>`;
+  let html = `<div class="modal-title">⚽ SELECCIONAR TITULAR (DISPONIBLES)</div>`;
   html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
 
   if (!disponibles.length) {
@@ -580,7 +592,6 @@ export function abrirModalSuplente(eq, idx) {
   const modalContent = document.getElementById('modal-content');
   if (!modal || !modalContent) return;
 
-  // Filtrar jugadores ya asignados para evitar duplicados en el banco
   const asignadosTit = (plantel[`tit_${eq}`] || []).filter(Boolean);
   const asignadosSup = (plantel[`sup_${eq}`] || []).filter(Boolean);
   const ocupados = new Set([...asignadosTit, ...asignadosSup]);
@@ -588,7 +599,7 @@ export function abrirModalSuplente(eq, idx) {
   const todos = [...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
   const disponibles = [...new Set(todos)].filter(n => !ocupados.has(n));
 
-  let html = `<div class="modal-title">🔄 SELECCIONAR SUPLENTE (SOLO DISPONIBLES)</div>`;
+  let html = `<div class="modal-title">🔄 SELECCIONAR SUPLENTE (DISPONIBLES)</div>`;
   html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
 
   if (!disponibles.length) {

@@ -4,7 +4,7 @@ import { auth, hashPin, cargarFirebase, guardarFirebase } from "./services/fireb
 import { cargarKits } from "./services/cloudinary.js";
 import { actualizarTactica, exportarPNG, setDrawingMode, setDrawingColor, setLineWidth, setLineDash, agregarMarcador, clearCanvas, toggleFullscreen, guardarEsquemaCustom } from "./modules/tactics.js";
 import { renderStats, guardarStatJugador, cerrarStatModal, renderRankings } from "./modules/stats.js";
-import { renderHistorial, guardarPartido, mostrarSugerencias, ocultarSugerencias } from "./modules/history.js";
+import { renderHistorial } from "./modules/history.js";
 import { initPlantelUI, aplicarPlantelUI, guardarSquad, descargarPlantilla, importarCSV, exportarPDF } from "./modules/squad.js";
 import { buscarMaps, enviarWA } from "./modules/citacion.js";
 import { abrirConfig, cerrarConfig, guardarNombres, guardarKits, guardarLogo, guardarFondo, cambiarPin, resetearStats, borrarHistorial, cerrarSesion, aplicarPerfil, copiarEnlacePublico, agregarNuevaCategoriaConfig, abrirSoporteWhatsApp } from "./modules/config.js";
@@ -284,22 +284,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('stat-search')?.addEventListener('input', renderStats);
   document.getElementById('btn-guardar-sm')?.addEventListener('click', guardarStatJugador);
   document.getElementById('btn-cerrar-sm')?.addEventListener('click', cerrarStatModal);
-
-  // Bind History
-  document.getElementById('btn-guardar-partido')?.addEventListener('click', guardarPartido);
-  const inputGol = document.getElementById('h-goleadores');
-  const inputAsi = document.getElementById('h-asistidores');
-  const inputGua = document.getElementById('h-guardametas');
-
-  inputGol?.addEventListener('input', () => mostrarSugerencias(inputGol, 'ac-goleadores'));
-  inputAsi?.addEventListener('input', () => mostrarSugerencias(inputAsi, 'ac-asistidores'));
-  inputGua?.addEventListener('input', () => mostrarSugerencias(inputGua, 'ac-guardametas'));
-
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('#ac-goleadores') && e.target !== inputGol) ocultarSugerencias('ac-goleadores');
-    if (!e.target.closest('#ac-asistidores') && e.target !== inputAsi) ocultarSugerencias('ac-asistidores');
-    if (!e.target.closest('#ac-guardametas') && e.target !== inputGua) ocultarSugerencias('ac-guardametas');
-  });
 
   // Bind Config
   document.getElementById('btn-config')?.addEventListener('click', abrirConfig);
