@@ -7,8 +7,8 @@ import { renderStats, guardarStatJugador, cerrarStatModal, renderRankings } from
 import { renderHistorial, guardarPartido, mostrarSugerencias, ocultarSugerencias } from "./modules/history.js";
 import { initPlantelUI, aplicarPlantelUI, guardarSquad, descargarPlantilla, importarCSV, exportarPDF } from "./modules/squad.js";
 import { buscarMaps, enviarWA } from "./modules/citacion.js";
-import { abrirConfig, cerrarConfig, guardarNombres, guardarKits, guardarLogo, guardarFondo, cambiarPin, resetearStats, borrarHistorial, cerrarSesion, aplicarPerfil, copiarEnlacePublico, agregarNuevaCategoriaConfig } from "./modules/config.js";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
+import { abrirConfig, cerrarConfig, guardarNombres, guardarKits, guardarLogo, guardarFondo, cambiarPin, resetearStats, borrarHistorial, cerrarSesion, aplicarPerfil, copiarEnlacePublico, agregarNuevaCategoriaConfig, abrirSoporteWhatsApp } from "./modules/config.js";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged } from "firebase/auth";
 
 // ══════════════════════════════════════════
 // TAB SWITCHING 1 A 1 DIRECTO (#s1 a #s5)
@@ -113,7 +113,7 @@ function renderHistorialPublico() {
 }
 
 // ══════════════════════════════════════════
-// LOGIN & AUTHENTICATION
+// LOGIN & PERSISTENT AUTHENTICATION
 // ══════════════════════════════════════════
 async function login() {
   const emailInput = document.getElementById('email-input')?.value.trim();
@@ -198,6 +198,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  // Persistencia de Sesión con Firebase Auth (No se cierra al recargar F5)
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      setUserEmail(user.email);
+      await cargarFirebase();
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('main-app').style.display = 'block';
+      aplicarPerfil();
+      renderSelectorCategoria();
+      refrescarTodaLaVista();
+    }
+  });
+
   // Bind Login
   document.getElementById('btn-login')?.addEventListener('click', login);
   document.getElementById('btn-show-setup')?.addEventListener('click', setupNuevoUsuario);
@@ -275,13 +288,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Bind History
   document.getElementById('btn-guardar-partido')?.addEventListener('click', guardarPartido);
   const inputGol = document.getElementById('h-goleadores');
+  const inputAsi = document.getElementById('h-asistidores');
   const inputGua = document.getElementById('h-guardametas');
 
   inputGol?.addEventListener('input', () => mostrarSugerencias(inputGol, 'ac-goleadores'));
+  inputAsi?.addEventListener('input', () => mostrarSugerencias(inputAsi, 'ac-asistidores'));
   inputGua?.addEventListener('input', () => mostrarSugerencias(inputGua, 'ac-guardametas'));
 
   document.addEventListener('click', (e) => {
     if (!e.target.closest('#ac-goleadores') && e.target !== inputGol) ocultarSugerencias('ac-goleadores');
+    if (!e.target.closest('#ac-asistidores') && e.target !== inputAsi) ocultarSugerencias('ac-asistidores');
     if (!e.target.closest('#ac-guardametas') && e.target !== inputGua) ocultarSugerencias('ac-guardametas');
   });
 
@@ -289,6 +305,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-config')?.addEventListener('click', abrirConfig);
   document.getElementById('btn-cerrar-config')?.addEventListener('click', cerrarConfig);
   document.getElementById('btn-copy-public-link')?.addEventListener('click', copiarEnlacePublico);
+  document.getElementById('btn-soporte-wa-kit')?.addEventListener('click', abrirSoporteWhatsApp);
   document.getElementById('btn-cfg-add-cat')?.addEventListener('click', agregarNuevaCategoriaConfig);
   document.getElementById('btn-cfg-nombres')?.addEventListener('click', guardarNombres);
   document.getElementById('btn-cfg-kits')?.addEventListener('click', guardarKits);

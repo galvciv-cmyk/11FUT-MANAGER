@@ -6,16 +6,13 @@ export const DEFAULT_PLANTEL = {
   def: ['Def1', 'Def2', 'Def3', 'Def4', 'Def5'],
   med: ['Med1', 'Med2', 'Med3', 'Med4', 'Med5'],
   del: ['Del1', 'Del2', 'Del3', 'Del4'],
-  tit_A: [], sup_A: [], ct_A: [], pos_custom_A: {}, maxSup_A: 7,
-  tit_B: [], sup_B: [], ct_B: [], pos_custom_B: {}, maxSup_B: 7
+  tit_A: [], sup_A: [], ct_A: [], pos_custom_A: {}, maxSup_A: 7
 };
 
 export const DEFAULT_PERFIL = {
   club: "11FUT MANAGER",
-  eqA: "Equipo A",
-  eqB: "Equipo B",
+  eqA: "Equipo Principal",
   kitA: "predeterminado",
-  kitB: "predeterminado",
   logo: "https://res.cloudinary.com/djhpfdklk/image/upload/v1778985193/cuerpo_tecnico_ysxrjt.png",
   bg: "",
   email: "",
@@ -28,18 +25,19 @@ export let perfil = { ...DEFAULT_PERFIL };
 export let pinHash = "";
 export let userEmail = "";
 
-// Categorías aisladas
 export let categoriasData = {
   "Sub-14": {
     plantel: JSON.parse(JSON.stringify(DEFAULT_PLANTEL)),
     stats: {},
-    historial: []
+    historial: [],
+    juegosProgramados: []
   }
 };
 
 export let plantel = categoriasData["Sub-14"].plantel;
 export let stats = categoriasData["Sub-14"].stats;
 export let historial = categoriasData["Sub-14"].historial;
+export let juegosProgramados = categoriasData["Sub-14"].juegosProgramados;
 
 export function setCategoriaActiva(catNombre) {
   if (!catNombre) return;
@@ -53,13 +51,15 @@ export function setCategoriaActiva(catNombre) {
     categoriasData[catNombre] = {
       plantel: JSON.parse(JSON.stringify(DEFAULT_PLANTEL)),
       stats: {},
-      historial: []
+      historial: [],
+      juegosProgramados: []
     };
   }
 
   plantel = categoriasData[catNombre].plantel;
   stats = categoriasData[catNombre].stats;
   historial = categoriasData[catNombre].historial;
+  juegosProgramados = categoriasData[catNombre].juegosProgramados || [];
 }
 
 export function updateCategoriasData(newData) {
@@ -104,6 +104,13 @@ export function updateHistorial(newHistorial) {
   historial = newHistorial || [];
   if (categoriasData[perfil.categoriaActiva]) {
     categoriasData[perfil.categoriaActiva].historial = historial;
+  }
+}
+
+export function updateJuegosProgramados(newProg) {
+  juegosProgramados = newProg || [];
+  if (categoriasData[perfil.categoriaActiva]) {
+    categoriasData[perfil.categoriaActiva].juegosProgramados = juegosProgramados;
   }
 }
 

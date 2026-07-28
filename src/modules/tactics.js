@@ -154,7 +154,7 @@ window._confirmarGuardarEsquema = async (eq) => {
 };
 
 export function getImg(eq, tipo) {
-  const kitId = eq === 'A' ? (perfil.kitA || 'predeterminado') : (perfil.kitB || 'predeterminado');
+  const kitId = perfil.kitA || 'predeterminado';
   const kitObj = KITS.find(k => k.id === kitId) || KITS[0];
   if (!kitObj) return '';
   if (tipo === 'por') return kitObj.portero_local || kitObj.local;
@@ -539,14 +539,25 @@ export function abrirModalJugador(eq, idx, cat) {
   const modalContent = document.getElementById('modal-content');
   if (!modal || !modalContent) return;
 
-  const listaJugadores = [...(plantel[cat] || []), ...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
-  const unicos = [...new Set(listaJugadores)];
+  // Filtrar jugadores ya asignados para evitar duplicados en la cancha
+  const asignadosTit = (plantel[`tit_${eq}`] || []).filter(Boolean);
+  const asignadosSup = (plantel[`sup_${eq}`] || []).filter(Boolean);
+  const ocupados = new Set([...asignadosTit, ...asignadosSup]);
 
-  let html = `<div class="modal-title">⚽ SELECCIONAR TITULAR</div>`;
+  const listaJugadores = [...(plantel[cat] || []), ...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
+  const disponibles = [...new Set(listaJugadores)].filter(n => !ocupados.has(n));
+
+  let html = `<div class="modal-title">⚽ SELECCIONAR TITULAR (SOLO DISPONIBLES)</div>`;
   html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
-  unicos.forEach(n => {
-    html += `<button class="btn btn-gray" style="text-align:left;padding:10px;" onclick="window._seleccionarTitular('${n}')">${n}</button>`;
-  });
+
+  if (!disponibles.length) {
+    html += `<div style="color:#aaa;font-size:12px;text-align:center;padding:10px;">Todos los jugadores ya han sido asignados.</div>`;
+  } else {
+    disponibles.forEach(n => {
+      html += `<button class="btn btn-gray" style="text-align:left;padding:10px;" onclick="window._seleccionarTitular('${n}')">${n}</button>`;
+    });
+  }
+
   html += `<button class="btn btn-red" style="margin-top:8px;" onclick="window._seleccionarTitular('LIBRE')">BORRAR / LIBRE</button>`;
   html += `</div>`;
 
@@ -569,14 +580,25 @@ export function abrirModalSuplente(eq, idx) {
   const modalContent = document.getElementById('modal-content');
   if (!modal || !modalContent) return;
 
-  const todos = [...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
-  const unicos = [...new Set(todos)];
+  // Filtrar jugadores ya asignados para evitar duplicados en el banco
+  const asignadosTit = (plantel[`tit_${eq}`] || []).filter(Boolean);
+  const asignadosSup = (plantel[`sup_${eq}`] || []).filter(Boolean);
+  const ocupados = new Set([...asignadosTit, ...asignadosSup]);
 
-  let html = `<div class="modal-title">🔄 SELECCIONAR SUPLENTE</div>`;
+  const todos = [...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
+  const disponibles = [...new Set(todos)].filter(n => !ocupados.has(n));
+
+  let html = `<div class="modal-title">🔄 SELECCIONAR SUPLENTE (SOLO DISPONIBLES)</div>`;
   html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
-  unicos.forEach(n => {
-    html += `<button class="btn btn-gray" style="text-align:left;padding:10px;" onclick="window._seleccionarSuplente('${n}')">${n}</button>`;
-  });
+
+  if (!disponibles.length) {
+    html += `<div style="color:#aaa;font-size:12px;text-align:center;padding:10px;">Todos los jugadores ya han sido asignados.</div>`;
+  } else {
+    disponibles.forEach(n => {
+      html += `<button class="btn btn-gray" style="text-align:left;padding:10px;" onclick="window._seleccionarSuplente('${n}')">${n}</button>`;
+    });
+  }
+
   html += `<button class="btn btn-red" style="margin-top:8px;" onclick="window._seleccionarSuplente('LIBRE')">BORRAR / LIBRE</button>`;
   html += `</div>`;
 

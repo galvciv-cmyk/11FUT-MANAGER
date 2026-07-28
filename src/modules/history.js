@@ -1,4 +1,4 @@
-import { historial, updateHistorial, stats, updateStats, perfil, autoSaveLocal, plantel } from "./state.js";
+import { historial, updateHistorial, juegosProgramados, updateJuegosProgramados, stats, updateStats, perfil, autoSaveLocal, plantel } from "./state.js";
 import { guardarFirebase } from "../services/firebase.js";
 import { renderStats } from "./stats.js";
 
@@ -16,6 +16,29 @@ export function formatHora(str) {
   return str;
 }
 
+export function iniciarJuegoProgramado(id) {
+  const prog = juegosProgramados.find(j => j.id === id);
+  if (!prog) return;
+
+  document.getElementById('h-fecha').value = prog.fecha || '';
+  document.getElementById('h-torneo').value = prog.torneo || '';
+  document.getElementById('h-rival').value = prog.rival || '';
+  document.getElementById('h-guardametas').value = (prog.convocados || []).join(', ');
+
+  // Eliminar de programados al ser cargado para registrar
+  const idx = juegosProgramados.findIndex(j => j.id === id);
+  if (idx !== -1) {
+    juegosProgramados.splice(idx, 1);
+    updateJuegosProgramados(juegosProgramados);
+    autoSaveLocal();
+  }
+
+  renderHistorial();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+window._iniciarJuegoProgramado = (id) => iniciarJuegoProgramado(id);
+
 export function guardarPartido() {
   const eq          = document.getElementById('h-equipo').value;
   const fecha       = document.getElementById('h-fecha').value;
@@ -23,7 +46,7 @@ export function guardarPartido() {
   const rival       = document.getElementById('h-rival').value.trim();
   const gf          = parseInt(document.getElementById('h-gf').value, 10);
   const gc          = parseInt(document.getElementById('h-gc').value, 10);
-  const duracion    = parseInt(document.getElementById('h-duracion').value, 10) || 30; // ej. 30 min por tiempo
+  const duracion    = parseInt(document.getElementById('h-duracion').value, 10) || 30;
   const rematesA    = parseInt(document.getElementById('h-remates-a').value, 10) || 0;
   const rematesC    = parseInt(document.getElementById('h-remates-c').value, 10) || 0;
   const cornersA    = parseInt(document.getElementById('h-corners-a').value, 10) || 0;
@@ -96,7 +119,7 @@ function parseCountList(raw) {
   const partes = raw.split(',');
   partes.forEach(p => {
     const item = p.trim();
-    if (!item) return;
+    if (!item || item.toLowerCase().includes('sin asistencia')) return;
     const match = item.match(/^(.+?)\s+(\d+)$/);
     if (match) {
       res[match[1].trim()] = parseInt(match[2], 10);
@@ -138,38 +161,60 @@ function acumularStatsPartido(p) {
 }
 
 export function renderHistorial() {
-  const cont = document.getElementById('historial-list');
-  if (!cont) return;
+  const contProg = document.getElementById('juegos-programados-list');
+  const contHist = document.getElementById('historial-list');
 
-  if (!historial || !historial.length) {
-    cont.innerHTML = `<div style="text-align:center;color:#666;font-size:13px;padding:20px;">No hay partidos registrados aún.</div>`;
-    return;
+  // Render Juegos Programados
+  if (contProg) {
+    if (!juegosProgramados || !juegosProgramados.length) {
+      contProg.innerHTML = `<div style="font-size:12px;color:#666;text-align:center;padding:8px;">No hay encuentros convocados pendientes.</div>`;
+    } else {
+      contProg.innerHTML = juegosProgramados.map(j => `
+        <div class="juego-programado-item">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-weight:900;color:var(--oro);font-size:15px;">🆚 vs ${j.rival} (${j.torneo})</div>
+              <div style="font-size:11px;color:#aaa;margin-top:2px;">📅 ${formatFecha(j.fecha)} • ⏰ ${formatHora(j.cita)} • Convocados: ${j.convocados.length}</div>
+            </div>
+            <button class="btn btn-green" style="width:auto;padding:8px 12px;font-size:12px;" onclick="window._iniciarJuegoProgramado('${j.id}')">▶️ INICIO / REGISTRAR</button>
+          </div>
+        </div>
+      `).join('');
+    }
   }
 
-  cont.innerHTML = historial.map((h, i) => {
-    const eqNombre = perfil.eqA || 'Equipo';
-    const resClass = `resultado-${h.res}`;
+  // Render Historial
+  if (contHist) {
+    if (!historial || !historial.length) {
+      contHist.innerHTML = `<div style="text-align:center;color:#666;font-size:13px;padding:20px;">No hay partidos registrados aún.</div>`;
+      return;
+    }
 
-    const golesStr = Object.entries(h.goleadores || {}).map(([k, v]) => `${k} (${v})`).join(', ');
-    const asistStr = Object.entries(h.asistidores || {}).map(([k, v]) => `${k} (${v})`).join(', ');
+    contHist.innerHTML = historial.map((h, i) => {
+      const eqNombre = perfil.eqA || 'Equipo';
+      const resClass = `resultado-${h.res}`;
 
-    const efecPct = h.rematesA > 0 ? Math.round((h.gf / h.rematesA) * 100) : 0;
-    const atajadasPct = h.rematesC > 0 ? Math.round(((h.rematesC - h.gc) / h.rematesC) * 100) : 0;
+      const golesStr = Object.entries(h.goleadores || {}).map(([k, v]) => `${k} (${v})`).join(', ');
+      const asistStr = Object.entries(h.asistidores || {}).map(([k, v]) => `${k} (${v})`).join(', ');
 
-    return `
-      <div class="partido-item">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-          <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;color:#888;">${formatFecha(h.fecha)} • ${h.torneo}</span>
-          <span class="partido-resultado ${resClass}">${h.gf} - ${h.gc}</span>
+      const efecPct = h.rematesA > 0 ? Math.round((h.gf / h.rematesA) * 100) : 0;
+      const atajadasPct = h.rematesC > 0 ? Math.round(((h.rematesC - h.gc) / h.rematesC) * 100) : 0;
+
+      return `
+        <div class="partido-item">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;color:#888;">${formatFecha(h.fecha)} • ${h.torneo}</span>
+            <span class="partido-resultado ${resClass}">${h.gf} - ${h.gc}</span>
+          </div>
+          <div style="font-weight:700;font-size:15px;color:var(--oro);">${eqNombre} vs ${h.rival}</div>
+          <div style="font-size:11px;color:#aaa;margin-top:4px;">⏱️ Minutos: ${h.duracion || 60}m | 🎯 Efectividad: ${efecPct}% | 🧤 Atajadas: ${atajadasPct}% | 🚩 Corners: ${h.cornersA || 0} - ${h.cornersC || 0}</div>
+          ${golesStr ? `<div style="font-size:12px;color:#ccc;margin-top:4px;">⚽ Goles: ${golesStr}</div>` : ''}
+          ${asistStr ? `<div style="font-size:12px;color:#aaa;margin-top:2px;">🎯 Asistencias: ${asistStr}</div>` : ''}
+          <button onclick="window._eliminarPartido('${h.id}')" style="background:none;border:none;color:#666;font-size:11px;cursor:pointer;margin-top:6px;">🗑️ Eliminar</button>
         </div>
-        <div style="font-weight:700;font-size:15px;color:var(--oro);">${eqNombre} vs ${h.rival}</div>
-        <div style="font-size:11px;color:#aaa;margin-top:4px;">⏱️ Minutos: ${h.duracion || 60}m | 🎯 Efectividad: ${efecPct}% | 🧤 Atajadas: ${atajadasPct}% | 🚩 Corners: ${h.cornersA || 0} - ${h.cornersC || 0}</div>
-        ${golesStr ? `<div style="font-size:12px;color:#ccc;margin-top:4px;">⚽ Goles: ${golesStr}</div>` : ''}
-        ${asistStr ? `<div style="font-size:12px;color:#aaa;margin-top:2px;">🎯 Asistencias: ${asistStr}</div>` : ''}
-        <button onclick="window._eliminarPartido('${h.id}')" style="background:none;border:none;color:#666;font-size:11px;cursor:pointer;margin-top:6px;">🗑️ Eliminar</button>
-      </div>
-    `;
-  }).join('');
+      `;
+    }).join('');
+  }
 }
 
 window._eliminarPartido = async (id) => {
@@ -190,7 +235,7 @@ export function mostrarSugerencias(inputEl, acListId) {
   if (!acList || !inputEl) return;
 
   const val = inputEl.value.toLowerCase();
-  const todos = [...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
+  const todos = [...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del, 'Sin Asistencia (Tiro Libre / Penal)'];
   const filtrados = todos.filter(n => n.toLowerCase().includes(val));
 
   if (!filtrados.length || !val) {
@@ -199,7 +244,7 @@ export function mostrarSugerencias(inputEl, acListId) {
   }
 
   acList.innerHTML = filtrados.map(n => `
-    <div class="autocomplete-item" onclick="window._seleccionarAutocomplete('${inputEl.id}', '${acListId}', '${n}')">
+    <div class="autocomplete-item" onclick="window._seleccionarAutocomplete('${inputEl.id}', '${acId}', '${n}')">
       <span>${n}</span>
     </div>
   `).join('');

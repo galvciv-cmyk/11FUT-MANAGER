@@ -1,48 +1,61 @@
-import { perfil } from "./state.js";
-import { formatFecha, formatHora } from "./history.js";
+import { perfil, juegosProgramados, updateJuegosProgramados, autoSaveLocal, plantel } from "./state.js";
+import { formatFecha, formatHora, renderHistorial } from "./history.js";
+import { guardarFirebase } from "../services/firebase.js";
 
 export function buscarMaps(eq) {
   const lugar = document.getElementById(`lugar-${eq}`)?.value.trim();
-  if (!lugar) return alert('Escribe primero la dirección o sede');
-  window.open(`https://www.google.com/maps/search/${encodeURIComponent(lugar)}`, '_blank');
-}
-
-export function getFecha(eq) {
-  return document.getElementById(`fecha-${eq}-top`)?.value || document.getElementById(`fecha-${eq}`)?.value || '';
+  if (!lugar) return alert('Ingresa primero la sede o dirección.');
+  window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lugar)}`, '_blank');
 }
 
 export function enviarWA(eq) {
-  const nombre = eq === 'A' ? (perfil.eqA || 'Equipo A') : (perfil.eqB || 'Equipo B');
-  const t = document.getElementById(`torneo-${eq}`)?.value || '---';
-  const r = document.getElementById(`rival-${eq}`)?.value || '---';
-  const l = document.getElementById(`lugar-${eq}`)?.value || '---';
-  const m = document.getElementById(`mapa-${eq}`)?.value || '';
-  const fechaVal = getFecha(eq);
-  const citaVal = document.getElementById(`cita-${eq}`)?.value || '';
-  const partidoVal = document.getElementById(`partido-${eq}`)?.value || '';
-  const k = document.getElementById(`kit-${eq}`)?.value || '---';
-  const saludo = document.getElementById(`saludo-${eq}`)?.value || '⚽ CONVOCATORIA';
+  const torneo = document.getElementById(`torneo-${eq}`)?.value.trim() || 'Campeonato';
+  const rival  = document.getElementById(`rival-${eq}`)?.value.trim() || 'Rival';
+  const lugar  = document.getElementById(`lugar-${eq}`)?.value.trim() || '';
+  const mapa   = document.getElementById(`mapa-${eq}`)?.value.trim() || '';
+  const fecha  = document.getElementById(`fecha-${eq}-top`)?.value || '';
+  const cita   = document.getElementById(`cita-${eq}`)?.value || '';
+  const part   = document.getElementById(`partido-${eq}`)?.value || '';
+  const kit    = document.getElementById(`kit-${eq}`)?.value.trim() || '';
+  const saludo = document.getElementById(`saludo-${eq}`)?.value.trim() || '⚽ CONVOCATORIA DE PARTIDO';
 
-  let tit = [], sup = [];
-  document.querySelectorAll(`#cancha-${eq} .nombre-label`).forEach(el => {
-    if (el.innerText !== 'LIBRE') tit.push('✅ ' + el.innerText);
+  const tit = (plantel[`tit_${eq}`] || []).filter(Boolean);
+  const sup = (plantel[`sup_${eq}`] || []).filter(Boolean);
+  const convocados = [...new Set([...tit, ...sup])];
+
+  let msg = `*${saludo}*\n\n`;
+  msg += `🏆 *Torneo:* ${torneo}\n`;
+  msg += `🆚 *Rival:* ${rival}\n`;
+  if (fecha) msg += `📅 *Fecha:* ${formatFecha(fecha)}\n`;
+  if (cita)  msg += `⏰ *Hora Cita:* ${formatHora(cita)}\n`;
+  if (part)  msg += `⚽ *Hora Inicio:* ${formatHora(part)}\n`;
+  if (lugar) msg += `📍 *Sede:* ${lugar}\n`;
+  if (mapa)  msg += `🗺️ *Mapa:* ${mapa}\n`;
+  if (kit)   msg += `🎽 *Uniforme:* ${kit}\n`;
+
+  msg += `\n📋 *JUGADORES CONVOCADOS (${convocados.length}):*\n`;
+  convocados.forEach((n, i) => {
+    msg += `${i + 1}. ${n}\n`;
   });
-  document.querySelectorAll(`#banco-${eq} .nombre-label`).forEach(el => {
-    if (!el.innerText.startsWith('S') && el.innerText !== 'LIBRE') sup.push('🔄 ' + el.innerText);
-  });
 
-  let msg = `*${saludo} ${nombre}* ⚽\n\n`;
-  msg += `🏆 *Torneo:* ${t}\n`;
-  msg += `🆚 *Rival:* ${r}\n`;
-  msg += `🏟️ *Sede:* ${l}\n`;
-  if (m) msg += `📍 *Ubicación:* ${m}\n`;
-  if (fechaVal) msg += `📅 *Fecha:* ${formatFecha(fechaVal)}\n`;
-  if (citaVal) msg += `\n⏰ *Hora de cita:* ${formatHora(citaVal)}\n`;
-  if (partidoVal) msg += `⚽ *Inicio:* ${formatHora(partidoVal)}\n`;
-  msg += `👕 *Uniforme:* ${k}\n\n`;
-  msg += `*TITULARES:*\n${tit.length ? tit.join('\n') : '_Por confirmar_'}\n\n`;
-  msg += `*SUPLENTES:*\n${sup.length ? sup.join('\n') : '_Ninguno_'}\n\n`;
-  msg += `_Favor confirmar asistencia reaccionando al mensaje. ⚪🔴 ¡Somos pinchas! ⚪🔴_`;
+  // Guardar automáticamente como JUEGO PROGRAMADO
+  const nuevoProg = {
+    id: Date.now().toString(),
+    fecha: fecha || new Date().toISOString().split('T')[0],
+    torneo,
+    rival,
+    cita,
+    part,
+    lugar,
+    convocados
+  };
 
-  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+  if (!juegosProgramados.some(j => j.rival === rival && j.fecha === fecha)) {
+    juegosProgramados.unshift(nuevoProg);
+    updateJuegosProgramados(juegosProgramados);
+    autoSaveLocal();
+    guardarFirebase();
+  }
+
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
 }

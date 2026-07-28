@@ -37,6 +37,11 @@ export function abrirConfig() {
   modal.style.display = 'flex';
 }
 
+export function abrirSoporteWhatsApp() {
+  const link = `https://wa.me/584241895407?text=${encodeURIComponent('Hola, quisiera solicitar un kit de uniforme personalizado para mi equipo en 11FUT MANAGER.')}`;
+  window.open(link, '_blank');
+}
+
 export function renderCategoriasConfigUI() {
   const cont = document.getElementById('cfg-lista-categorias');
   if (!cont) return;

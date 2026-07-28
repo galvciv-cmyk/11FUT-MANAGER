@@ -193,7 +193,7 @@
             </div>
             <input type="text" id="kit-A" placeholder="Uniforme (Kit)">
             <input type="text" id="saludo-A" value="⚽ CONVOCATORIA" placeholder="Encabezado">
-            <button class="btn btn-green" id="btn-wa-A" style="margin-top:6px;">📲 ENVIAR POR WHATSAPP</button>
+            <button class="btn btn-green" id="btn-wa-A" style="margin-top:6px;">📲 ENVIAR POR WHATSAPP Y PROGRAMAR JUEGO</button>
           </div>
         </div>
       </div>
@@ -241,8 +241,15 @@
         </div>
       </div>
 
-      <!-- SECCIÓN 5: HISTORIAL REORDENADO CON METRICAS AVANZADAS -->
+      <!-- SECCIÓN 5: HISTORIAL Y JUEGOS PROGRAMADOS -->
       <div id="s5" class="seccion">
+        
+        <!-- CARROUSEL / TARJETA DE JUEGOS PROGRAMADOS DESDE CITACIÓN -->
+        <div class="card" style="border-color:var(--oro);">
+          <div class="card-title">📅 JUEGOS PROGRAMADOS (DESDE CITACIÓN)</div>
+          <div id="juegos-programados-list"></div>
+        </div>
+
         <div class="card">
           <div class="card-title">📝 REGISTRAR PARTIDO Y MÉTRICAS AVANZADAS</div>
           
@@ -285,7 +292,8 @@
             <div class="autocomplete-list" id="ac-goleadores"></div>
           </div>
           <div style="position:relative;">
-            <input type="text" id="h-asistidores" placeholder="Asistidores (ej. De Paul 1, Paredes 1)">
+            <input type="text" id="h-asistidores" placeholder="Asistidores (o 'Sin Asistencia (Tiro Libre / Penal)')">
+            <div class="autocomplete-list" id="ac-asistidores"></div>
           </div>
           <div style="position:relative;">
             <input type="text" id="h-guardametas" placeholder="Jugadores Convocados (separados por coma)">
@@ -333,7 +341,7 @@
       </div>
     </div>
 
-    <!-- MODAL DE CONFIGURACIÓN -->
+    <!-- MODAL DE CONFIGURACIÓN CON BOTÓN DE SOPORTE WHATSAPP -->
     <div class="modal-overlay" id="config-modal">
       <div class="modal-body">
         <div class="modal-title">⚙️ CONFIGURACIÓN DEL CLUB</div>
@@ -353,16 +361,17 @@
         </div>
 
         <div class="card">
-          <div class="card-title">✏️ DATOS DEL CLUB Y EQUIPO</div>
-          <input type="text" id="cfg-club" placeholder="Nombre del club">
-          <input type="text" id="cfg-eqA" placeholder="Nombre del Equipo">
-          <button class="btn btn-gold" id="btn-cfg-nombres">💾 GUARDAR NOMBRES</button>
+          <div class="card-title">✏️ DATOS DEL CLUB / EQUIPO</div>
+          <input type="text" id="cfg-club" placeholder="Nombre del Club o Equipo">
+          <button class="btn btn-gold" id="btn-cfg-nombres">💾 GUARDAR NOMBRE</button>
         </div>
+
         <div class="card">
           <div class="card-title">🎽 KITS Y UNIFORME</div>
-          <div id="cfg-kit-gallery-A" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;"></div>
+          <div id="cfg-kit-gallery-A" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:8px;"></div>
+          <button class="btn btn-green" id="btn-soporte-wa-kit" style="margin-top:6px;font-size:12px;">💬 SOLICITAR KIT PERSONALIZADO (SOPORTE WHATSAPP)</button>
         </div>
-        <button class="btn btn-gold" id="btn-cfg-kits" style="margin-bottom:12px;">💾 GUARDAR KITS SELECCIONADOS</button>
+
         <div class="card">
           <div class="card-title">🏅 LOGO DEL CLUB</div>
           <div class="upload-zone" id="uz-cfg-logo">
