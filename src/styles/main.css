@@ -214,7 +214,7 @@ input:focus, select:focus {
 .seccion { display: none; padding: 12px; }
 .seccion.active { display: block; }
 
-/* ── ESTRUCTURA DESKTOP 3 COLUMNAS IGUALES (1fr 1fr 1fr) ── */
+/* ── ESTRUCTURA DESKTOP CON COLUMNA CENTRAL AMPLIADA (1fr 1.6fr 1fr) ── */
 .tactica-desktop-grid {
   display: flex;
   flex-direction: column;
@@ -224,7 +224,7 @@ input:focus, select:focus {
 @media (min-width: 900px) {
   .tactica-desktop-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 1fr 1.6fr 1fr;
     gap: 20px;
     align-items: start;
     width: 100%;
@@ -239,7 +239,7 @@ input:focus, select:focus {
   gap: 12px;
 }
 
-/* ── PIZARRA Y CANCHA NORMAL (LARGO 100% SIN ASPECT RATIO FIJO) ── */
+/* ── PIZARRA Y CANCHA NORMAL (ANCHO AMPLIADO Y LARGO 84vh) ── */
 .campo-layout {
   position: relative;
   background: #000;
@@ -262,7 +262,7 @@ input:focus, select:focus {
   margin: 0 auto;
 }
 
-/* CANCHA HORIZONTAL EN FULLSCREEN (ANCHO 100% ABSOLUTO 100vw / 100vh) */
+/* CANCHA HORIZONTAL EN FULLSCREEN (ANCHO TOTAL 100vw / 100vh SIN MARGENES) */
 .cancha-wrapper.horizontal {
   width: 100vw !important;
   max-width: 100vw !important;
@@ -270,6 +270,7 @@ input:focus, select:focus {
   max-height: 100vh !important;
   aspect-ratio: auto !important;
   margin: 0 !important;
+  padding: 0 !important;
   background: #0c4520 url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='500' height='300' viewBox='0 0 500 300'><rect width='500' height='300' fill='%230c4520'/><rect x='0' width='50' height='300' fill='%230a3d1c'/><rect x='100' width='50' height='300' fill='%230a3d1c'/><rect x='200' width='50' height='300' fill='%230a3d1c'/><rect x='300' width='50' height='300' fill='%230a3d1c'/><rect x='400' width='50' height='300' fill='%230a3d1c'/><rect x='2' y='2' width='496' height='296' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><line x1='250' y1='2' x2='250' y2='298' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><circle cx='250' cy='150' r='42' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><circle cx='250' cy='150' r='4' fill='rgba(255,255,255,0.95)'/><rect x='2' y='60' width='70' height='180' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><rect x='2' y='95' width='28' height='110' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><circle cx='48' cy='150' r='4' fill='rgba(255,255,255,0.95)'/><path d='M 72 115 A 38 38 0 0 1 72 185' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><rect x='428' y='60' width='70' height='180' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><rect x='470' y='95' width='28' height='110' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><circle cx='452' cy='150' r='4' fill='rgba(255,255,255,0.95)'/><path d='M 428 115 A 38 38 0 0 0 428 185' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/></svg>") center center / 100% 100% no-repeat !important;
 }
 
@@ -336,7 +337,7 @@ input:focus, select:focus {
   transform: scale(1.25);
 }
 
-/* MODO FULLSCREEN CANCHA VISIBLE AL 100% */
+/* MODO FULLSCREEN CANCHA VISIBLE AL 100% SIN PADDING NI MARGIN */
 .campo-layout.fullscreen {
   position: fixed !important;
   inset: 0 !important;
@@ -344,14 +345,15 @@ input:focus, select:focus {
   width: 100vw !important;
   height: 100vh !important;
   max-width: 100vw !important;
+  max-height: 100vh !important;
   border-radius: 0 !important;
   margin: 0 !important;
+  padding: 0 !important;
   background: #000 !important;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 0 !important;
 }
 
 .btn-exit-fs {
