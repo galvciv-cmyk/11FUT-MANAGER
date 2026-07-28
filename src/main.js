@@ -11,7 +11,7 @@ import { abrirConfig, cerrarConfig, guardarNombres, guardarKits, guardarLogo, gu
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 
 // ══════════════════════════════════════════
-// TAB SWITCHING
+// TAB SWITCHING 1 A 1 DIRECTO (#s1 a #s5)
 // ══════════════════════════════════════════
 export function switchTab(n) {
   document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i + 1 === n));
@@ -204,11 +204,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Bind Category Selectors
   document.getElementById('selector-categoria-tactica')?.addEventListener('change', (e) => cambiarCategoria(e.target.value));
 
-  // Bind Tabs
-  const tabMap = { 1: 1, 2: 3, 3: 4, 4: 5, 5: 6 };
+  // Bind Tabs 1 to 5 Direct
   [1, 2, 3, 4, 5].forEach(n => {
-    const tabEl = document.getElementById(`tab-${n === 1 ? 1 : n === 2 ? 3 : n === 3 ? 4 : n === 4 ? 5 : 6}`);
-    tabEl?.addEventListener('click', () => switchTab(tabMap[n]));
+    const tabEl = document.getElementById(`tab-${n}`);
+    tabEl?.addEventListener('click', () => switchTab(n));
   });
 
   // Bind Tactics & Save Custom Scheme

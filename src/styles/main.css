@@ -105,45 +105,42 @@ input:focus, select:focus {
   gap: 6px;
 }
 
-/* ── HEADER DE LA APP ── */
+/* ── HEADER MÁS ALTO Y CENTRADO ── */
 .app-header {
   position: sticky; top: 0; z-index: 100;
-  background: rgba(0,0,0,0.92);
+  background: rgba(0,0,0,0.94);
   border-bottom: 1px solid #1a1a1a;
-  padding: 10px 16px;
+  padding: 12px 20px;
+  min-height: 64px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   backdrop-filter: blur(12px);
-  gap: 12px;
-}
-
-.header-left-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 
 .header-logo {
-  height: 38px;
-  width: 38px;
+  height: 42px;
+  width: 42px;
   object-fit: contain;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 .header-title {
   font-family: 'Barlow Condensed', sans-serif;
   font-weight: 900;
-  font-size: 20px;
-  letter-spacing: 1.5px;
+  font-size: 22px;
+  letter-spacing: 2px;
   background: linear-gradient(180deg, #fff 0%, #aaa 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   text-transform: uppercase;
+  text-align: center;
+  flex: 1;
 }
 
 .header-config {
-  background: none; border: none; font-size: 20px; cursor: pointer; color: #888;
+  background: none; border: none; font-size: 22px; cursor: pointer; color: #888;
+  padding: 4px;
 }
 
 .select-categoria-header {
@@ -153,7 +150,7 @@ input:focus, select:focus {
   font-family: 'Barlow Condensed', sans-serif;
   font-weight: 900;
   font-size: 14px;
-  padding: 6px 12px;
+  padding: 8px 14px;
   border-radius: 8px;
   width: auto;
   margin: 0;
@@ -172,7 +169,7 @@ input:focus, select:focus {
 .tab {
   flex: 1;
   text-align: center;
-  padding: 12px 10px;
+  padding: 14px 10px;
   font-family: 'Barlow Condensed', sans-serif;
   font-weight: 700;
   font-size: 14px;
@@ -218,7 +215,7 @@ input:focus, select:focus {
   gap: 12px;
 }
 
-/* ── PIZARRA Y CANCHA CON ASPECT RATIO FIJO 3:5 ── */
+/* ── PIZARRA Y CANCHA SIN EXCEDENTE VERDE (LÍNEAS AL BORDE EXACTO) ── */
 .campo-layout {
   position: relative;
   background: #000;
@@ -235,7 +232,7 @@ input:focus, select:focus {
   width: 100%;
   aspect-ratio: 3 / 5;
   max-height: 75vh;
-  background: #0a3d1c url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='500' viewBox='0 0 300 500'><rect width='300' height='500' fill='%230a3d1c'/><rect y='0' width='300' height='50' fill='%230c4520'/><rect y='100' width='300' height='50' fill='%230c4520'/><rect y='200' width='300' height='50' fill='%230c4520'/><rect y='300' width='300' height='50' fill='%230c4520'/><rect y='400' width='300' height='50' fill='%230c4520'/><rect x='15' y='15' width='270' height='470' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><line x1='15' y1='250' x2='285' y2='250' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><circle cx='150' cy='250' r='40' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><circle cx='150' cy='250' r='3' fill='rgba(255,255,255,0.85)'/><rect x='75' y='15' width='150' height='70' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><rect x='105' y='15' width='90' height='25' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><circle cx='150' cy='60' r='2.5' fill='rgba(255,255,255,0.85)'/><path d='M 120 85 A 35 35 0 0 0 180 85' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><rect x='115' y='5' width='70' height='10' fill='rgba(255,255,255,0.15)' stroke='rgba(255,255,255,0.9)' stroke-width='2'/><rect x='75' y='415' width='150' height='70' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><rect x='105' y='460' width='90' height='25' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><circle cx='150' cy='440' r='2.5' fill='rgba(255,255,255,0.85)'/><path d='M 120 415 A 35 35 0 0 1 180 415' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><rect x='115' y='485' width='70' height='10' fill='rgba(255,255,255,0.15)' stroke='rgba(255,255,255,0.9)' stroke-width='2'/><path d='M 15 30 A 15 15 0 0 0 30 15' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><path d='M 270 15 A 15 15 0 0 0 285 30' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><path d='M 15 470 A 15 15 0 0 0 30 485' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><path d='M 270 485 A 15 15 0 0 0 285 470' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/></svg>") center center / contain no-repeat;
+  background: #0a3d1c url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='500' viewBox='0 0 300 500'><rect width='300' height='500' fill='%230a3d1c'/><rect y='0' width='300' height='50' fill='%230c4520'/><rect y='100' width='300' height='50' fill='%230c4520'/><rect y='200' width='300' height='50' fill='%230c4520'/><rect y='300' width='300' height='50' fill='%230c4520'/><rect y='400' width='300' height='50' fill='%230c4520'/><rect x='2' y='2' width='296' height='496' fill='none' stroke='rgba(255,255,255,0.75)' stroke-width='2'/><line x1='2' y1='250' x2='298' y2='250' stroke='rgba(255,255,255,0.75)' stroke-width='2'/><circle cx='150' cy='250' r='45' fill='none' stroke='rgba(255,255,255,0.75)' stroke-width='2'/><circle cx='150' cy='250' r='3' fill='rgba(255,255,255,0.9)'/><rect x='65' y='2' width='170' height='75' fill='none' stroke='rgba(255,255,255,0.75)' stroke-width='2'/><rect x='95' y='2' width='110' height='30' fill='none' stroke='rgba(255,255,255,0.75)' stroke-width='2'/><circle cx='150' cy='55' r='3' fill='rgba(255,255,255,0.9)'/><path d='M 115 77 A 40 40 0 0 0 185 77' fill='none' stroke='rgba(255,255,255,0.75)' stroke-width='2'/><rect x='105' y='0' width='90' height='8' fill='rgba(255,255,255,0.2)' stroke='rgba(255,255,255,0.95)' stroke-width='2'/><rect x='65' y='423' width='170' height='75' fill='none' stroke='rgba(255,255,255,0.75)' stroke-width='2'/><rect x='95' y='468' width='110' height='30' fill='none' stroke='rgba(255,255,255,0.75)' stroke-width='2'/><circle cx='150' cy='445' r='3' fill='rgba(255,255,255,0.9)'/><path d='M 115 423 A 40 40 0 0 1 185 423' fill='none' stroke='rgba(255,255,255,0.75)' stroke-width='2'/><rect x='105' y='492' width='90' height='8' fill='rgba(255,255,255,0.2)' stroke='rgba(255,255,255,0.95)' stroke-width='2'/><path d='M 2 20 A 20 20 0 0 0 22 2' fill='none' stroke='rgba(255,255,255,0.75)' stroke-width='2'/><path d='M 278 2 A 20 20 0 0 0 298 20' fill='none' stroke='rgba(255,255,255,0.75)' stroke-width='2'/><path d='M 2 480 A 20 20 0 0 0 22 498' fill='none' stroke='rgba(255,255,255,0.75)' stroke-width='2'/><path d='M 278 498 A 20 20 0 0 0 298 480' fill='none' stroke='rgba(255,255,255,0.75)' stroke-width='2'/></svg>") center center / cover no-repeat;
   overflow: hidden;
   margin: 0 auto;
 }
@@ -321,8 +318,8 @@ input:focus, select:focus {
 }
 
 .campo-layout.fullscreen .cancha-wrapper {
-  height: 92vh !important;
-  max-height: 92vh !important;
+  height: 94vh !important;
+  max-height: 94vh !important;
   aspect-ratio: 3 / 5 !important;
   margin: 0 auto;
 }
@@ -442,7 +439,7 @@ input:focus, select:focus {
   filter: drop-shadow(0 3px 6px rgba(0,0,0,0.9));
 }
 
-/* BANCA / SUPLENTES DE 4 EN 4 */
+/* BANCA / SUPLENTES DE 4 EN 4 Y CUERPO TÉCNICO MISMO TAMAÑO */
 .banca-side {
   padding: 12px;
   background: #080808;
@@ -502,13 +499,40 @@ input:focus, select:focus {
   color: #000;
 }
 
-/* CUERPO TÉCNICO */
+/* CUERPO TÉCNICO TAMAÑO GRANDE (48px IGUAL A SUPLENTES) */
 .ct-section { margin-top: 10px; }
-.ct-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
-.ct-slot { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
-.ct-slot img { width: 40px; height: 40px; object-fit: contain; }
-.ct-label { font-size: 10px; color: #aaa; margin-top: 2px; }
-.ct-rol { font-size: 9px; color: var(--oro); font-weight: 700; }
+
+.ct-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.ct-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  background: radial-gradient(circle, #1a1a1a 0%, #0d0d0d 100%);
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 8px 4px;
+  box-shadow: inset 0 2px 4px rgba(255,255,255,0.05);
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.ct-slot:hover {
+  border-color: var(--azul);
+  transform: translateY(-2px);
+}
+
+.ct-slot img {
+  width: 44px; height: 44px; object-fit: contain;
+}
+
+.ct-label { font-size: 10px; color: #aaa; margin-top: 2px; text-align: center; }
+.ct-rol { font-size: 9px; color: var(--oro); font-weight: 700; text-align: center; }
 
 /* ── RANKINGS UI ── */
 .ranking-row {

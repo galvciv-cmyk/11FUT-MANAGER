@@ -1,4 +1,4 @@
-import { perfil, setPinHash, setCategoriaActiva, autoSaveLocal, stats, updateStats, historial, updateHistorial } from "./state.js";
+import { perfil, setPinHash, setCategoriaActiva, autoSaveLocal, updateStats, updateHistorial } from "./state.js";
 import { guardarFirebase, hashPin } from "../services/firebase.js";
 import { KITS } from "./state.js";
 import { subirImagenCloudinary } from "../services/cloudinary.js";
@@ -17,11 +17,9 @@ export function abrirConfig() {
 
   document.getElementById('cfg-club').value = perfil.club || '';
   document.getElementById('cfg-eqA').value = perfil.eqA || '';
-  document.getElementById('cfg-eqB').value = perfil.eqB || '';
 
   renderCategoriasConfigUI();
   renderKitGallery('A');
-  renderKitGallery('B');
 
   const imgPrev = document.getElementById('img-prev-cfg-logo');
   const divPrev = document.getElementById('prev-cfg-logo');
@@ -106,11 +104,9 @@ export function copiarEnlacePublico() {
 export async function guardarNombres() {
   const club = document.getElementById('cfg-club').value.trim();
   const eqA  = document.getElementById('cfg-eqA').value.trim();
-  const eqB  = document.getElementById('cfg-eqB').value.trim();
 
   if (club) perfil.club = club;
   if (eqA)  perfil.eqA  = eqA;
-  if (eqB)  perfil.eqB  = eqB;
 
   aplicarPerfil();
   autoSaveLocal();
@@ -119,15 +115,13 @@ export async function guardarNombres() {
 }
 
 let kitSeleccionadoA = '';
-let kitSeleccionadoB = '';
 
 export function renderKitGallery(eq) {
   const gallery = document.getElementById(`cfg-kit-gallery-${eq}`);
   if (!gallery) return;
 
-  const kitActual = eq === 'A' ? (perfil.kitA || 'predeterminado') : (perfil.kitB || 'predeterminado');
-  if (eq === 'A') kitSeleccionadoA = kitActual;
-  if (eq === 'B') kitSeleccionadoB = kitActual;
+  const kitActual = perfil.kitA || 'predeterminado';
+  kitSeleccionadoA = kitActual;
 
   gallery.innerHTML = KITS.map(k => {
     const sel = k.id === kitActual;
@@ -141,17 +135,14 @@ export function renderKitGallery(eq) {
 }
 
 window._seleccionarKit = (eq, kitId) => {
-  if (eq === 'A') kitSeleccionadoA = kitId;
-  if (eq === 'B') kitSeleccionadoB = kitId;
+  kitSeleccionadoA = kitId;
   renderKitGallery(eq);
 };
 
 export async function guardarKits() {
   if (kitSeleccionadoA) perfil.kitA = kitSeleccionadoA;
-  if (kitSeleccionadoB) perfil.kitB = kitSeleccionadoB;
 
   actualizarTactica('A');
-  actualizarTactica('B');
   autoSaveLocal();
   await guardarFirebase();
   cerrarConfig();
@@ -263,12 +254,6 @@ export function aplicarPerfil() {
     loginLogo.src = logoUrl;
     loginLogo.onerror = () => { loginLogo.src = DEFAULT_LOGO; };
   }
-
-  const tabA = document.getElementById('tab-eqA');
-  if (tabA) tabA.textContent = (perfil.eqA || 'EQUIPO A').toUpperCase();
-
-  const tabB = document.getElementById('tab-eqB');
-  if (tabB) tabB.textContent = (perfil.eqB || 'EQUIPO B').toUpperCase();
 
   if (perfil.bg) {
     const bg = document.getElementById('app-bg');

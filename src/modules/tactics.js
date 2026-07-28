@@ -88,9 +88,32 @@ export function renderSelectEsquemas(eq) {
   if (valorPrevio) select.value = valorPrevio;
 }
 
-export async function guardarEsquemaCustom(eq) {
-  const nombre = prompt("Ingresa un nombre para este esquema personalizado (ej. Presión Alta 4-3-3):");
-  if (!nombre || !nombre.trim()) return;
+export function guardarEsquemaCustom(eq) {
+  const modal = document.getElementById('modal');
+  const modalContent = document.getElementById('modal-content');
+  if (!modal || !modalContent) return;
+
+  modalContent.innerHTML = `
+    <div class="modal-title">💾 GUARDAR ESQUEMA PERSONALIZADO</div>
+    <div class="card">
+      <label style="font-size:12px;color:#aaa;">Nombre para este esquema táctico:</label>
+      <input type="text" id="custom-scheme-name-input" placeholder="ej. Presión Alta 4-3-3" style="margin-top:6px;margin-bottom:12px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button class="btn btn-gold" onclick="window._confirmarGuardarEsquema('${eq}')">✅ GUARDAR</button>
+        <button class="btn btn-gray" onclick="document.getElementById('modal').style.display='none'">CANCELAR</button>
+      </div>
+    </div>
+  `;
+
+  modal.style.display = 'flex';
+  document.getElementById('custom-scheme-name-input')?.focus();
+}
+
+window._confirmarGuardarEsquema = async (eq) => {
+  const input = document.getElementById('custom-scheme-name-input');
+  if (!input) return;
+  const nombre = input.value.trim();
+  if (!nombre) return alert('Ingresa un nombre para el esquema');
 
   const modo = document.getElementById(`modo-${eq}`)?.value || '11';
   const customPos = (plantel[`pos_custom_${eq}`] || {});
@@ -109,7 +132,7 @@ export async function guardarEsquemaCustom(eq) {
 
   const nuevoEsquema = {
     id: Date.now().toString(),
-    nombre: nombre.trim(),
+    nombre: nombre,
     modo,
     posiciones
   };
@@ -123,20 +146,21 @@ export async function guardarEsquemaCustom(eq) {
   const select = document.getElementById(`esquema-${eq}`);
   if (select) select.value = `custom_${nuevoEsquema.id}`;
 
+  document.getElementById('modal').style.display = 'none';
+
   autoSaveLocal();
   await guardarFirebase();
-  alert(`✅ Esquema "${nombre}" guardado con éxito.`);
   actualizarTactica(eq);
-}
+};
 
 export function getImg(eq, tipo) {
   const kitId = eq === 'A' ? (perfil.kitA || 'predeterminado') : (perfil.kitB || 'predeterminado');
   const kitObj = KITS.find(k => k.id === kitId) || KITS[0];
   if (!kitObj) return '';
-  if (tipo === 'por') return eq === 'A' ? kitObj.portero_local : kitObj.portero_visita;
-  if (tipo === 'sup') return eq === 'A' ? kitObj.sup_local : kitObj.sup_visita;
+  if (tipo === 'por') return kitObj.portero_local || kitObj.local;
+  if (tipo === 'sup') return kitObj.sup_local || kitObj.local;
   if (tipo === 'ct')  return kitObj.ct || 'https://res.cloudinary.com/djhpfdklk/image/upload/v1778985193/cuerpo_tecnico_ysxrjt.png';
-  return eq === 'A' ? kitObj.local : kitObj.visita;
+  return kitObj.local;
 }
 
 const drawingState = {
@@ -363,8 +387,8 @@ export function actualizarTactica(eq) {
     token.className = 'jugador-token';
 
     const savedPos = customPos[i];
-    const posX = Math.max(6, Math.min(94, savedPos ? savedPos.x : slot.x));
-    const posY = Math.max(6, Math.min(94, savedPos ? savedPos.y : slot.y));
+    const posX = Math.max(5, Math.min(95, savedPos ? savedPos.x : slot.x));
+    const posY = Math.max(5, Math.min(95, savedPos ? savedPos.y : slot.y));
 
     token.style.left = `${posX}%`;
     token.style.top = `${posY}%`;
@@ -439,8 +463,8 @@ function hacerTokenArrastrable(token, contenedor) {
     let newLeft = initialLeft + (deltaX / containerRect.width) * 100;
     let newTop = initialTop + (deltaY / containerRect.height) * 100;
 
-    newLeft = Math.max(6, Math.min(94, newLeft));
-    newTop = Math.max(6, Math.min(94, newTop));
+    newLeft = Math.max(5, Math.min(95, newLeft));
+    newTop = Math.max(5, Math.min(95, newTop));
 
     token.style.left = `${newLeft}%`;
     token.style.top = `${newTop}%`;
@@ -485,7 +509,7 @@ function renderSuplentes(eq) {
 
     slot.innerHTML = `
       <div style="font-size:9px;color:var(--oro);margin-bottom:2px;font-weight:700;">#${i + 1}</div>
-      <div class="token-camisa" style="width:38px;height:38px;">
+      <div class="token-camisa" style="width:40px;height:40px;">
         <img src="${getImg(eq, 'sup')}">
       </div>
       <div class="nombre-label" style="font-size:10px;">${nombre}</div>
@@ -589,7 +613,7 @@ export function renderCT(eq) {
     const add = document.createElement('div');
     add.className = 'ct-slot';
     add.onclick = () => abrirModalCT(eq, misCT.length);
-    add.innerHTML = `<div style="width:36px;height:36px;border:2px dashed #1a3a6e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;color:#1a3a6e;">+</div>
+    add.innerHTML = `<div style="width:40px;height:40px;border:2px dashed #1a3a6e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;color:#1a3a6e;">+</div>
       <span class="ct-rol" style="color:#1a3a6e;margin-top:2px;">AGREGAR</span>`;
     cont.appendChild(add);
   }
@@ -645,7 +669,7 @@ window._borrarCTSlot = () => {
 
 export async function exportarPNG(eq, btnElement) {
   const el = document.getElementById('pizarra-' + eq);
-  const eqName = (eq === 'A' ? (perfil.eqA || 'Equipo A') : (perfil.eqB || 'Equipo B')).replace(/\s+/g, '_');
+  const eqName = (perfil.eqA || 'Equipo').replace(/\s+/g, '_');
   const orig = btnElement.innerHTML;
   btnElement.innerHTML = '⏳ Generando...';
   btnElement.disabled = true;
