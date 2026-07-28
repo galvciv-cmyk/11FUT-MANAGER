@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>11FUT MANAGER v59</title>
+  <link rel="icon" type="image/png" href="data:image/png;base64,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">
+</head>
+<body>
+  <div id="app-bg"></div>
+  <div id="app-content">
+
+    <!-- ══ LOGIN SCREEN ══ -->
+    <div id="login-screen">
+      <div class="login-box">
+        <img id="login-logo" class="login-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASwAAADICAYAAABS39xVAAB3EUlEQVR42uydd3hdxbX23zWz9z5N56g3y71bLhjbGDBFNp0QEgiRCYH0hFTSSLnJl0RWCuk9IYEUkpACFj1gmrEtDLhgYzC23GWrdx3p9F1m1vfHObJlAgm5yc0lN+f3PPuRZJ8ye/bsd6+1Zs0aIE+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ0+ePHny5MmTJ58iAAAAAA=" alt="Logo">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;color:#555;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px;">11FUT MANAGER v59</div>
+        <input type="email" id="email-input" placeholder="✉️ Correo electrónico" style="text-align:center;">
+        <input type="password" id="pin-input" placeholder="🔐 PIN (mín. 6 dígitos)" style="text-align:center; letter-spacing:4px; font-size:18px;">
+        <button class="btn btn-red" id="btn-login">INGRESAR</button>
+        <div style="margin-top:10px; display:flex; gap:16px; justify-content:center;">
+          <button id="btn-show-setup" style="background:none;border:none;color:#555;font-size:11px;cursor:pointer;text-decoration:underline;">Nuevo usuario → Registrarse</button>
+          <button id="btn-reset-pin" style="background:none;border:none;color:#555;font-size:11px;cursor:pointer;text-decoration:underline;">¿Olvidaste tu PIN?</button>
+        </div>
+        <div class="login-status" id="login-status"></div>
+      </div>
+    </div>
+
+    <!-- ══ APP PRINCIPAL ══ -->
+    <div id="main-app" style="display:none;">
+
+      <!-- Header -->
+      <div class="app-header">
+        <img id="header-logo" class="header-logo" src="" alt="Logo">
+        <div class="header-title" id="header-club">11FUT MANAGER</div>
+        <button class="header-config" id="btn-config">⚙️</button>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <div class="tab active" id="tab-eqA">EQ A</div>
+        <div class="tab" id="tab-eqB">EQ B</div>
+        <div class="tab" id="tab-3">CITACIÓN</div>
+        <div class="tab" id="tab-4">PLANTEL</div>
+        <div class="tab" id="tab-5">STATS</div>
+        <div class="tab" id="tab-6">HISTORIAL</div>
+      </div>
+
+      <!-- SECCIÓN 1: EQUIPO A -->
+      <div id="s1" class="seccion active">
+        <div class="select-grid">
+          <select id="modo-A">
+            <option value="11">Fútbol 11</option>
+            <option value="8">Fútbol 8</option>
+            <option value="5">Fútbol 5</option>
+          </select>
+          <select id="esquema-A">
+            <option value="1-4-4-2">1-4-4-2</option>
+            <option value="1-4-3-3">1-4-3-3</option>
+            <option value="1-3-5-2">1-3-5-2</option>
+          </select>
+        </div>
+        <div class="campo-layout" id="pizarra-A">
+          <div class="cancha-wrapper" id="cancha-A"></div>
+          <div class="banca-side">
+            <div class="banca-label">SUPLENTES</div>
+            <div class="banca-container" id="banco-A"></div>
+            <div class="ct-section">
+              <div class="banca-label" style="margin-top:10px;">CUERPO TÉCNICO</div>
+              <div class="ct-container" id="ct-A"></div>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:center; margin: 8px 0;">
+          <button class="btn btn-gray" id="btn-export-png-A" style="width:auto; padding:10px 24px;">📸 GUARDAR IMAGEN A</button>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 2: EQUIPO B -->
+      <div id="s2" class="seccion">
+        <div class="select-grid">
+          <select id="modo-B">
+            <option value="11">Fútbol 11</option>
+            <option value="8">Fútbol 8</option>
+            <option value="5">Fútbol 5</option>
+          </select>
+          <select id="esquema-B">
+            <option value="1-4-4-2">1-4-4-2</option>
+            <option value="1-4-3-3">1-4-3-3</option>
+            <option value="1-3-5-2">1-3-5-2</option>
+          </select>
+        </div>
+        <div class="campo-layout" id="pizarra-B">
+          <div class="cancha-wrapper" id="cancha-B"></div>
+          <div class="banca-side">
+            <div class="banca-label">SUPLENTES</div>
+            <div class="banca-container" id="banco-B"></div>
+            <div class="ct-section">
+              <div class="banca-label" style="margin-top:10px;">CUERPO TÉCNICO</div>
+              <div class="ct-container" id="ct-B"></div>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:center; margin: 8px 0;">
+          <button class="btn btn-gray" id="btn-export-png-B" style="width:auto; padding:10px 24px;">📸 GUARDAR IMAGEN B</button>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 3: CITACIÓN -->
+      <div id="s3" class="seccion">
+        <div class="card">
+          <div class="card-title">📅 CITACIÓN Y CONVOCATORIA</div>
+          <input type="text" id="torneo-A" placeholder="Torneo / Campeonato">
+          <input type="text" id="rival-A" placeholder="Rival">
+          <input type="text" id="lugar-A" placeholder="Sede / Dirección">
+          <button class="btn btn-gray" id="btn-maps-A" style="margin-bottom:8px;">📍 BUSCAR EN MAPS</button>
+          <input type="text" id="mapa-A" placeholder="Link de mapa (opcional)">
+          <input type="date" id="fecha-A-top">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <input type="time" id="cita-A" placeholder="Hora Cita">
+            <input type="time" id="partido-A" placeholder="Hora Inicio">
+          </div>
+          <input type="text" id="kit-A" placeholder="Uniforme (Kit)">
+          <input type="text" id="saludo-A" value="⚽ CONVOCATORIA" placeholder="Encabezado">
+          <button class="btn btn-green" id="btn-wa-A" style="margin-top:6px;">📲 ENVIAR POR WHATSAPP</button>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 4: PLANTEL -->
+      <div id="s4" class="seccion">
+        <div class="card">
+          <div class="card-title">👥 GESTIÓN DE PLANTEL</div>
+          <div id="lista-inputs"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
+            <button class="btn btn-gold" id="btn-guardar-squad">💾 GUARDAR PLANTEL</button>
+            <button class="btn btn-blue" id="btn-export-pdf">📄 EXPORTAR PDF</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+            <button class="btn btn-gray" id="btn-descargar-csv" style="font-size:11px;">📥 PLANTILLA CSV</button>
+            <label class="btn btn-gray" style="font-size:11px;margin:0;">
+              📤 IMPORTAR CSV
+              <input type="file" id="input-csv" accept=".csv" style="display:none;">
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 5: STATS -->
+      <div id="s5" class="seccion">
+        <div class="card">
+          <div class="card-title">📊 ESTADÍSTICAS DE JUGADORES</div>
+          <input type="text" id="stat-search" placeholder="🔍 Buscar jugador...">
+          <div id="stats-list" style="margin-top:10px;"></div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 6: HISTORIAL -->
+      <div id="s6" class="seccion">
+        <div class="card">
+          <div class="card-title">📝 REGISTRAR PARTIDO</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <select id="h-equipo">
+              <option value="A">Equipo A</option>
+              <option value="B">Equipo B</option>
+            </select>
+            <input type="date" id="h-fecha">
+          </div>
+          <input type="text" id="h-torneo" placeholder="Torneo / Competición">
+          <input type="text" id="h-rival" placeholder="Nombre del Rival">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <input type="number" id="h-gf" placeholder="Goles a favor">
+            <input type="number" id="h-gc" placeholder="Goles en contra">
+          </div>
+          <div style="position:relative;">
+            <input type="text" id="h-goleadores" placeholder="Goleadores (ej. Messi 2, Di Maria 1)">
+            <div class="autocomplete-list" id="ac-goleadores"></div>
+          </div>
+          <div style="position:relative;">
+            <input type="text" id="h-guardametas" placeholder="Guardameta(s) / Convocados">
+            <div class="autocomplete-list" id="ac-guardametas"></div>
+          </div>
+          <button class="btn btn-gold" id="btn-guardar-partido" style="margin-top:6px;">💾 GUARDAR Y REGISTRAR STATS</button>
+        </div>
+
+        <div class="card-title" style="margin-top:16px;">📚 HISTORIAL DE PARTIDOS</div>
+        <div id="historial-list"></div>
+      </div>
+
+    </div>
+
+    <!-- MODAL DE SELECCIÓN GENERAL -->
+    <div class="modal-overlay" id="modal">
+      <div class="modal-body" id="modal-content"></div>
+    </div>
+
+    <!-- MODAL DE STATS INDIVIDUAL -->
+    <div class="modal-overlay" id="stat-modal">
+      <div class="modal-body">
+        <div class="modal-title" id="stat-modal-nombre">📊 JUGADOR</div>
+        <div class="card">
+          <label style="font-size:11px;color:#888;">Partidos Jugados (PJ)</label>
+          <input type="number" id="sm-pj" value="0">
+          <label style="font-size:11px;color:#888;">Goles (⚽)</label>
+          <input type="number" id="sm-goles" value="0">
+          <label style="font-size:11px;color:#888;">Asistencias (🎯)</label>
+          <input type="number" id="sm-asist" value="0">
+          <label style="font-size:11px;color:#888;">Tarjetas Amarillas (🟨)</label>
+          <input type="number" id="sm-am" value="0">
+          <label style="font-size:11px;color:#888;">Tarjetas Rojas (🟥)</label>
+          <input type="number" id="sm-ro" value="0">
+          <label style="font-size:11px;color:#888;">Rating Promedio (1 - 10)</label>
+          <input type="number" id="sm-rat" step="0.1" value="0">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+            <button class="btn btn-gold" id="btn-guardar-sm">💾 GUARDAR</button>
+            <button class="btn btn-gray" id="btn-cerrar-sm">CANCELAR</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DE CONFIGURACIÓN -->
+    <div class="modal-overlay" id="config-modal">
+      <div class="modal-body">
+        <div class="modal-title">⚙️ CONFIGURACIÓN</div>
+        <div class="card">
+          <div style="font-size:11px;color:#555;">Correo: <span id="cfg-email-display" style="color:#aaa;"></span></div>
+          <div style="font-size:11px;color:#555;margin-top:4px;">Club: <span id="cfg-club-display" style="color:var(--oro);font-weight:700;"></span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">✏️ NOMBRES</div>
+          <input type="text" id="cfg-club" placeholder="Nombre del club">
+          <input type="text" id="cfg-eqA" placeholder="Nombre Equipo A">
+          <input type="text" id="cfg-eqB" placeholder="Nombre Equipo B">
+          <button class="btn btn-gold" id="btn-cfg-nombres">💾 GUARDAR NOMBRES</button>
+        </div>
+        <div class="card">
+          <div class="card-title">🎽 KITS EQUIPO A</div>
+          <div id="cfg-kit-gallery-A" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🎽 KITS EQUIPO B</div>
+          <div id="cfg-kit-gallery-B" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;"></div>
+        </div>
+        <button class="btn btn-gold" id="btn-cfg-kits" style="margin-bottom:12px;">💾 GUARDAR KITS SELECCIONADOS</button>
+        <div class="card">
+          <div class="card-title">🏅 LOGO DEL CLUB</div>
+          <div class="upload-zone" id="uz-cfg-logo">
+            <div id="prev-cfg-logo" style="display:none;"><img id="img-prev-cfg-logo" src="" style="max-height:80px;"></div>
+            <span class="upload-icon" id="ico-cfg-logo">🏅</span>
+            <span class="upload-label">Toca para cambiar logo</span>
+            <input type="file" id="up-cfg-logo" accept="image/*" style="display:none;">
+          </div>
+          <button class="btn btn-blue" id="btn-cfg-subir-logo" style="margin-top:8px;">☁️ SUBIR LOGO</button>
+        </div>
+        <div class="card">
+          <div class="card-title">🌆 FONDO APP</div>
+          <div class="upload-zone" id="uz-cfg-bg">
+            <span class="upload-icon">🌆</span>
+            <span class="upload-label">Toca para cambiar fondo</span>
+            <input type="file" id="up-cfg-bg" accept="image/*" style="display:none;">
+          </div>
+          <button class="btn btn-blue" id="btn-cfg-subir-bg" style="margin-top:8px;">☁️ SUBIR FONDO</button>
+        </div>
+        <div class="card">
+          <div class="card-title">🔐 CAMBIAR PIN</div>
+          <input type="password" id="cfg-pin-nuevo" placeholder="Nuevo PIN">
+          <input type="password" id="cfg-pin-conf" placeholder="Confirmar PIN">
+          <button class="btn btn-red" id="btn-cfg-cambiar-pin">🔐 CAMBIAR PIN</button>
+        </div>
+        <div class="card">
+          <div class="card-title">📊 REINICIAR DATOS</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <button class="btn btn-gray" id="btn-reset-stats" style="font-size:11px;">🗑️ RESET STATS</button>
+            <button class="btn btn-gray" id="btn-borrar-historial" style="font-size:11px;">🗑️ BORRAR HISTORIAL</button>
+          </div>
+        </div>
+        <button class="btn btn-red" id="btn-cerrar-sesion" style="margin-bottom:8px;">🚪 CERRAR SESIÓN</button>
+        <button class="btn btn-gray" id="btn-cerrar-config">← VOLVER</button>
+      </div>
+    </div>
+
+    <!-- UPLOAD OVERLAY -->
+    <div id="upload-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:9000; flex-direction:column; align-items:center; justify-content:center; gap:16px;">
+      <div style="font-size:40px;">☁️</div>
+      <div id="upload-overlay-msg" style="font-family:'Barlow Condensed',sans-serif; font-size:18px; color:var(--oro);">Subiendo...</div>
+    </div>
+
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

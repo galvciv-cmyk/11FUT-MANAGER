@@ -1,0 +1,372 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;900&family=Barlow:wght@300;400;600&display=swap');
+
+:root {
+  --rojo: #e21e22;
+  --oro: #d4af37;
+  --verde: #00753d;
+  --azul: #0055aa;
+  --glass: rgba(0,0,0,0.93);
+  --card: rgba(8,8,8,0.92);
+  --border: #222;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #000;
+  color: #fff;
+  font-family: 'Barlow', sans-serif;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* ── FONDO DINÁMICO ── */
+#app-bg {
+  position: fixed; inset: 0; z-index: 0;
+  background: #000 no-repeat center center / cover;
+  pointer-events: none;
+}
+
+#app-bg::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at center, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.95) 100%);
+}
+
+#app-content {
+  position: relative; z-index: 1;
+}
+
+/* ── BOTONES / INPUTS ── */
+input, select, button {
+  font-family: inherit;
+  outline: none;
+}
+
+input[type="text"], input[type="password"], input[type="email"], input[type="number"], select {
+  width: 100%;
+  background: #0d0d0d;
+  border: 1px solid #222;
+  color: #fff;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 8px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus, select:focus {
+  border-color: var(--oro);
+  box-shadow: 0 0 8px rgba(212,175,55,0.2);
+}
+
+.btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.1s, opacity 0.2s;
+  text-align: center;
+}
+
+.btn:active { transform: scale(0.98); }
+.btn-gold { background: linear-gradient(180deg, #d4af37, #8a6e1a); color: #000; }
+.btn-red { background: linear-gradient(180deg, #e21e22, #8b0000); color: #fff; }
+.btn-green { background: linear-gradient(180deg, #00994d, #004d26); color: #fff; }
+.btn-blue { background: linear-gradient(180deg, #0077ee, #003a88); color: #fff; }
+.btn-gray { background: #1a1a1a; border: 1px solid #333; color: #ccc; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 14px;
+  backdrop-filter: blur(10px);
+}
+
+.card-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 16px;
+  color: var(--oro);
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── HEADER DE LA APP ── */
+.app-header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(0,0,0,0.92);
+  border-bottom: 1px solid #1a1a1a;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  backdrop-filter: blur(12px);
+}
+
+.header-logo {
+  height: 38px;
+  width: auto;
+  object-fit: contain;
+}
+
+.header-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 20px;
+  letter-spacing: 1.5px;
+  background: linear-gradient(180deg, #fff 0%, #aaa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-transform: uppercase;
+}
+
+.header-config {
+  background: none; border: none; font-size: 20px; cursor: pointer; color: #888;
+}
+
+/* ── TABS ── */
+.tabs {
+  display: flex;
+  background: #080808;
+  border-bottom: 1px solid #1a1a1a;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 12px 10px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: #666;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab.active {
+  color: var(--oro);
+  border-bottom-color: var(--oro);
+  background: rgba(212,175,55,0.05);
+}
+
+/* ── SECCIONES ── */
+.seccion { display: none; padding: 12px; }
+.seccion.active { display: block; }
+
+/* ── PIZARRA TÁCTICA ── */
+.select-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.campo-layout {
+  position: relative;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #222;
+  margin-bottom: 10px;
+}
+
+.cancha-wrapper {
+  position: relative;
+  width: 100%;
+  height: 520px;
+  background: #0a3d1c url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%230a3d1c"/><rect width="100" height="50" fill="%230c4520"/></svg>') repeat;
+  border-bottom: 2px solid #1a1a1a;
+  overflow: hidden;
+}
+
+/* MARCAS DE LA CANCHA */
+.cancha-wrapper::before {
+  content: '';
+  position: absolute; inset: 12px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.cancha-wrapper::after {
+  content: '';
+  position: absolute; top: 50%; left: 12px; right: 12px;
+  height: 2px;
+  background: rgba(255,255,255,0.35);
+  pointer-events: none;
+}
+
+/* JUGADOR TOKEN EN CANCHA */
+.jugador-token {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  z-index: 10;
+  transition: transform 0.05s ease-out;
+}
+
+.jugador-token.dragging {
+  cursor: grabbing;
+  z-index: 1000;
+  opacity: 0.9;
+  transform: translate(-50%, -50%) scale(1.15);
+}
+
+.token-camisa {
+  position: relative;
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.token-camisa img {
+  width: 100%; height: 100%; object-fit: contain;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8));
+}
+
+.nombre-label {
+  background: rgba(0,0,0,0.88);
+  border: 1px solid #333;
+  color: #fff;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 2px;
+  white-space: nowrap;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.8);
+}
+
+/* BANCA / SUPLENTES */
+.banca-side {
+  padding: 10px;
+  background: #080808;
+}
+
+.banca-label {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  color: #666;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.banca-container {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.banca-slot {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+/* CUERPO TÉCNICO */
+.ct-section { margin-top: 8px; }
+.ct-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.ct-slot { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+.ct-slot img { width: 38px; height: 38px; object-fit: contain; }
+.ct-label { font-size: 10px; color: #aaa; margin-top: 2px; }
+.ct-rol { font-size: 9px; color: var(--oro); font-weight: 700; }
+
+/* ── LOGIN / SETUP ── */
+#login-screen, #setup-screen {
+  position: fixed; inset: 0; z-index: 500;
+  background: #000;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 20px;
+}
+
+.login-box {
+  width: 100%; max-width: 360px; text-align: center;
+}
+
+.login-logo {
+  max-height: 80px; margin-bottom: 12px; object-fit: contain;
+}
+
+/* ── MODALES ── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(0,0,0,0.92);
+  display: none;
+  align-items: center; justify-content: center;
+  padding: 16px;
+  backdrop-filter: blur(10px);
+}
+
+.modal-body {
+  width: 100%; max-width: 440px;
+  max-height: 85vh; overflow-y: auto;
+  background: #0a0a0a; border: 1px solid #222;
+  border-radius: 14px; padding: 16px;
+}
+
+/* HISTORIAL PARTIDOS */
+.partido-item {
+  background: #080808; border: 1px solid #1a1a1a;
+  border-radius: 10px; padding: 12px; margin-bottom: 8px;
+}
+.partido-resultado {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 18px; font-weight: 900;
+}
+.resultado-W { color: var(--verde); }
+.resultado-L { color: var(--rojo); }
+.resultado-D { color: var(--oro); }
+
+/* UPLOAD ZONE */
+.upload-zone {
+  border: 2px dashed #333; border-radius: 10px;
+  padding: 20px; text-align: center; cursor: pointer;
+  background: #080808; transition: border-color 0.2s;
+}
+.upload-zone:hover { border-color: var(--oro); }
+.upload-icon { font-size: 32px; display: block; margin-bottom: 6px; }
+.upload-label { font-size: 12px; color: #888; }
+
+/* AUTOCOMPLETE */
+.autocomplete-list {
+  position: absolute; z-index: 100;
+  background: #111; border: 1px solid #333;
+  border-radius: 8px; max-height: 180px; overflow-y: auto;
+  width: 100%; display: none; box-shadow: 0 4px 16px rgba(0,0,0,0.8);
+}
+.autocomplete-item {
+  padding: 8px 12px; font-size: 13px; cursor: pointer;
+  border-bottom: 1px solid #1c1c1c; display: flex; justify-content: space-between;
+}
+.autocomplete-item:hover { background: rgba(212,175,55,0.15); color: var(--oro); }
