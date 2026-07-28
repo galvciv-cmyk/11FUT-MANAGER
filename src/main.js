@@ -129,6 +129,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById(`btn-arrow-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'arrow'));
     document.getElementById(`btn-clear-${eq}`)?.addEventListener('click', () => clearCanvas(eq));
     document.getElementById(`btn-fs-${eq}`)?.addEventListener('click', () => toggleFullscreen(eq));
+    document.getElementById(`btn-exit-fs-${eq}`)?.addEventListener('click', () => toggleFullscreen(eq));
 
     document.querySelectorAll(`#colors-${eq} .color-dot`).forEach(el => {
       el.addEventListener('click', () => setDrawingColor(eq, el.dataset.color));

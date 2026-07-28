@@ -5,5 +5,8 @@ export default defineConfig({
     rollupOptions: {
       external: [/^core-js/]
     }
+  },
+  optimizeDeps: {
+    exclude: ['canvg', 'html2canvas']
   }
 });
