@@ -76,6 +76,129 @@ export function getImg(eq, tipo) {
   return eq === 'A' ? kitObj.local : kitObj.visita;
 }
 
+// Global drawing state per team
+const drawingState = {
+  A: { mode: 'none', color: '#d4af37', isDrawing: false, startX: 0, startY: 0 },
+  B: { mode: 'none', color: '#d4af37', isDrawing: false, startX: 0, startY: 0 }
+};
+
+export function setDrawingMode(eq, mode) {
+  drawingState[eq].mode = mode;
+  ['pencil', 'arrow', 'none'].forEach(m => {
+    const btn = document.getElementById(`btn-${m}-${eq}`);
+    if (btn) btn.classList.toggle('active', m === mode);
+  });
+}
+
+export function setDrawingColor(eq, color) {
+  drawingState[eq].color = color;
+  document.querySelectorAll(`#colors-${eq} .color-dot`).forEach(el => {
+    el.classList.toggle('active', el.dataset.color === color);
+  });
+}
+
+export function clearCanvas(eq) {
+  const canvas = document.getElementById(`canvas-${eq}`);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+export function initCanvas(eq) {
+  const canvas = document.getElementById(`canvas-${eq}`);
+  const cancha = document.getElementById(`cancha-${eq}`);
+  if (!canvas || !cancha) return;
+
+  canvas.width = cancha.clientWidth;
+  canvas.height = cancha.clientHeight;
+
+  const ctx = canvas.getContext('2d');
+
+  const getPos = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  };
+
+  const startDraw = (e) => {
+    const state = drawingState[eq];
+    if (state.mode === 'none') return;
+
+    state.isDrawing = true;
+    const pos = getPos(e);
+    state.startX = pos.x;
+    state.startY = pos.y;
+
+    if (state.mode === 'pencil') {
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+      ctx.strokeStyle = state.color;
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+    }
+  };
+
+  const draw = (e) => {
+    const state = drawingState[eq];
+    if (!state.isDrawing || state.mode === 'none') return;
+    const pos = getPos(e);
+
+    if (state.mode === 'pencil') {
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+    }
+  };
+
+  const stopDraw = (e) => {
+    const state = drawingState[eq];
+    if (!state.isDrawing) return;
+    state.isDrawing = false;
+
+    if (state.mode === 'arrow') {
+      const pos = getPos(e.changedTouches ? e.changedTouches[0] : e);
+      drawArrow(ctx, state.startX, state.startY, pos.x, pos.y, state.color);
+    }
+  };
+
+  canvas.onmousedown = startDraw;
+  canvas.onmousemove = draw;
+  canvas.onmouseup = stopDraw;
+
+  canvas.ontouchstart = startDraw;
+  canvas.ontouchmove = draw;
+  canvas.ontouchend = stopDraw;
+}
+
+function drawArrow(ctx, fromX, fromY, toX, toY, color) {
+  const headlen = 14;
+  const angle = Math.atan2(toY - fromY, toX - fromX);
+
+  ctx.beginPath();
+  ctx.moveTo(fromX, fromY);
+  ctx.lineTo(toX, toY);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 3.5;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(toX, toY);
+  ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
+  ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
+  ctx.lineTo(toX, toY);
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+export function toggleFullscreen(eq) {
+  const layout = document.getElementById(`pizarra-${eq}`);
+  if (!layout) return;
+  const isFS = layout.classList.toggle('fullscreen');
+  const btn = document.getElementById(`btn-fs-${eq}`);
+  if (btn) btn.textContent = isFS ? '🗗 SALIR FULLSCREEN' : '⛶ PANTALLA COMPLETA';
+  initCanvas(eq);
+}
+
 export function actualizarTactica(eq) {
   const modo = document.getElementById(`modo-${eq}`)?.value || '11';
   const esquema = document.getElementById(`esquema-${eq}`)?.value || '1-4-4-2';
@@ -83,16 +206,21 @@ export function actualizarTactica(eq) {
   const banco = document.getElementById(`banco-${eq}`);
   if (!cancha || !banco) return;
 
-  cancha.innerHTML = '';
+  cancha.innerHTML = `<canvas id="canvas-${eq}" class="canvas-dibujo"></canvas>`;
   banco.innerHTML = '';
 
+  initCanvas(eq);
+
   const form = (FORMACIONES[modo] && FORMACIONES[modo][esquema]) || FORMACIONES["11"]["1-4-4-2"];
+  const customPos = (plantel[`pos_custom_${eq}`] || {});
 
   form.forEach((slot, i) => {
     const token = document.createElement('div');
     token.className = 'jugador-token';
-    token.style.left = `${slot.x}%`;
-    token.style.top = `${slot.y}%`;
+
+    const savedPos = customPos[i];
+    token.style.left = `${savedPos ? savedPos.x : slot.x}%`;
+    token.style.top = `${savedPos ? savedPos.y : slot.y}%`;
     token.dataset.idx = i;
     token.dataset.eq = eq;
 
@@ -105,7 +233,6 @@ export function actualizarTactica(eq) {
       <div class="nombre-label">${nombreGuardado}</div>
     `;
 
-    // Click handler for name selection
     token.onclick = (e) => {
       if (token.dataset.wasDragged === 'true') {
         delete token.dataset.wasDragged;
@@ -114,9 +241,7 @@ export function actualizarTactica(eq) {
       abrirModalJugador(eq, i, slot.cat);
     };
 
-    // Make Token Draggable (Mouse + Touch)
     hacerTokenArrastrable(token, cancha);
-
     cancha.appendChild(token);
   });
 
@@ -124,15 +249,15 @@ export function actualizarTactica(eq) {
   renderCT(eq);
 }
 
-// ══════════════════════════════════════════
-// DRAG & DROP IMPLEMENTATION
-// ══════════════════════════════════════════
 function hacerTokenArrastrable(token, contenedor) {
   let isDragging = false;
   let startX = 0, startY = 0;
   let initialLeft = 0, initialTop = 0;
 
   const onStart = (e) => {
+    const eq = token.dataset.eq;
+    if (drawingState[eq].mode !== 'none') return;
+
     isDragging = true;
     token.dataset.wasDragged = 'false';
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -167,7 +292,6 @@ function hacerTokenArrastrable(token, contenedor) {
     let newLeft = initialLeft + (deltaX / containerRect.width) * 100;
     let newTop = initialTop + (deltaY / containerRect.height) * 100;
 
-    // Constrain to container
     newLeft = Math.max(4, Math.min(96, newLeft));
     newTop = Math.max(4, Math.min(96, newTop));
 
@@ -179,6 +303,16 @@ function hacerTokenArrastrable(token, contenedor) {
     if (!isDragging) return;
     isDragging = false;
     token.classList.remove('dragging');
+
+    // Save custom dragged coordinates permanently
+    const eq = token.dataset.eq;
+    const idx = token.dataset.idx;
+    if (!plantel[`pos_custom_${eq}`]) plantel[`pos_custom_${eq}`] = {};
+    plantel[`pos_custom_${eq}`][idx] = {
+      x: parseFloat(token.style.left),
+      y: parseFloat(token.style.top)
+    };
+    autoSaveLocal();
   };
 
   token.addEventListener('mousedown', onStart);

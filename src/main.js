@@ -1,8 +1,8 @@
 import "./styles/main.css";
-import { perfil, setPinHash, setUserEmail, userEmail, pinHash } from "./modules/state.js";
+import { perfil, setPinHash, setUserEmail, userEmail } from "./modules/state.js";
 import { auth, hashPin, cargarFirebase, guardarFirebase } from "./services/firebase.js";
 import { cargarKits } from "./services/cloudinary.js";
-import { actualizarTactica, exportarPNG } from "./modules/tactics.js";
+import { actualizarTactica, exportarPNG, setDrawingMode, setDrawingColor, clearCanvas, toggleFullscreen } from "./modules/tactics.js";
 import { renderStats, guardarStatJugador, cerrarStatModal } from "./modules/stats.js";
 import { renderHistorial, guardarPartido, mostrarSugerencias, ocultarSugerencias } from "./modules/history.js";
 import { initPlantelUI, aplicarPlantelUI, guardarSquad, descargarPlantilla, importarCSV, exportarPDF } from "./modules/squad.js";
@@ -121,6 +121,19 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('esquema-B')?.addEventListener('change', () => actualizarTactica('B'));
   document.getElementById('btn-export-png-A')?.addEventListener('click', (e) => exportarPNG('A', e.target));
   document.getElementById('btn-export-png-B')?.addEventListener('click', (e) => exportarPNG('B', e.target));
+
+  // Drawing tools & Fullscreen bindings
+  ['A', 'B'].forEach(eq => {
+    document.getElementById(`btn-none-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'none'));
+    document.getElementById(`btn-pencil-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'pencil'));
+    document.getElementById(`btn-arrow-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'arrow'));
+    document.getElementById(`btn-clear-${eq}`)?.addEventListener('click', () => clearCanvas(eq));
+    document.getElementById(`btn-fs-${eq}`)?.addEventListener('click', () => toggleFullscreen(eq));
+
+    document.querySelectorAll(`#colors-${eq} .color-dot`).forEach(el => {
+      el.addEventListener('click', () => setDrawingColor(eq, el.dataset.color));
+    });
+  });
 
   // Bind Citaciones
   document.getElementById('btn-maps-A')?.addEventListener('click', () => buscarMaps('A'));
