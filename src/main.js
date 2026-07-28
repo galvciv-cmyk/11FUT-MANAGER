@@ -55,7 +55,7 @@ function refrescarTodaLaVista() {
 }
 
 // ══════════════════════════════════════════
-// PUBLIC PROFILE VIEW
+// PUBLIC PROFILE VIEW (SOLO LECTURA SIN BOTONES DE EDICIÓN)
 // ══════════════════════════════════════════
 function cargarPerfilPublico() {
   document.getElementById('login-screen').style.display = 'none';
@@ -100,6 +100,8 @@ function renderStatsPublico() {
   renderStats();
   if (pubStatsContainer && mainStatsContainer) {
     pubStatsContainer.innerHTML = mainStatsContainer.innerHTML;
+    // Ocultar botones de edición en perfil público
+    pubStatsContainer.querySelectorAll('button').forEach(btn => btn.style.display = 'none');
   }
 }
 
@@ -109,6 +111,10 @@ function renderHistorialPublico() {
   renderHistorial();
   if (pubHistContainer && mainHistContainer) {
     pubHistContainer.innerHTML = mainHistContainer.innerHTML;
+    // Ocultar botones de borrar o editar en perfil público
+    pubHistContainer.querySelectorAll('.partido-item button').forEach(btn => {
+      if (btn.textContent.includes('Borrar')) btn.style.display = 'none';
+    });
   }
 }
 
@@ -285,7 +291,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-guardar-sm')?.addEventListener('click', guardarStatJugador);
   document.getElementById('btn-cerrar-sm')?.addEventListener('click', cerrarStatModal);
 
-  // Bind Config
+  // Bind Config Modal Trigger
   document.getElementById('btn-config')?.addEventListener('click', abrirConfig);
   document.getElementById('btn-cerrar-config')?.addEventListener('click', cerrarConfig);
   document.getElementById('btn-copy-public-link')?.addEventListener('click', copiarEnlacePublico);

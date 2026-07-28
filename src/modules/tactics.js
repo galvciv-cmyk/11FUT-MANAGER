@@ -396,7 +396,7 @@ export function actualizarTactica(eq) {
     let posX = Math.max(5, Math.min(95, savedPos ? savedPos.x : slot.x));
     let posY = Math.max(5, Math.min(95, savedPos ? savedPos.y : slot.y));
 
-    // Si está en modo horizontal, rotar 90 grados la vista táctica
+    // Conversión bidireccional si la cancha está en modo horizontal
     if (isHorizontal) {
       const origX = posX;
       posX = Math.max(5, Math.min(95, 100 - posY));
@@ -490,10 +490,22 @@ function hacerTokenArrastrable(token, contenedor) {
 
     const eq = token.dataset.eq;
     const idx = token.dataset.idx;
+    const isHorizontal = contenedor.classList.contains('horizontal');
+
+    let currentLeft = parseFloat(token.style.left);
+    let currentTop = parseFloat(token.style.top);
+
+    // Mapeo inverso si se arrastra en pantalla completa horizontal para actualizar vista vertical
+    if (isHorizontal) {
+      const origLeft = currentLeft;
+      currentLeft = currentTop;
+      currentTop = 100 - origLeft;
+    }
+
     if (!plantel[`pos_custom_${eq}`]) plantel[`pos_custom_${eq}`] = {};
     plantel[`pos_custom_${eq}`][idx] = {
-      x: parseFloat(token.style.left),
-      y: parseFloat(token.style.top)
+      x: parseFloat(currentLeft.toFixed(1)),
+      y: parseFloat(currentTop.toFixed(1))
     };
     autoSaveLocal();
   };

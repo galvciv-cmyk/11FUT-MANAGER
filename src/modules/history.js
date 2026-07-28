@@ -52,7 +52,6 @@ export function compartirPartidoWA(id) {
     msg += `\n`;
   }
 
-  // Filtrar porteros de los convocados
   const porterosEnConvocados = (h.participantes || []).filter(n => (plantel.por || []).includes(n));
   const porterosFinales = porterosEnConvocados.length ? porterosEnConvocados : (plantel.por || []).slice(0, 2);
 
@@ -85,6 +84,7 @@ export let partidoEnVivoState = {
   goleadoresMap: {},
   asistidoresMap: {},
   rematadoresMap: {},
+  golesRecibidosPorMap: {},
   sustitucionesList: [],
   tarjetasAmarillasMap: {},
   tarjetasRojasMap: {},
@@ -111,6 +111,7 @@ export function iniciarJuegoProgramado(id) {
     goleadoresMap: {},
     asistidoresMap: {},
     rematadoresMap: {},
+    golesRecibidosPorMap: {},
     sustitucionesList: [],
     tarjetasAmarillasMap: {},
     tarjetasRojasMap: {},
@@ -152,6 +153,7 @@ export function abrirNuevoPartidoForm() {
     goleadoresMap: {},
     asistidoresMap: {},
     rematadoresMap: {},
+    golesRecibidosPorMap: {},
     sustitucionesList: [],
     tarjetasAmarillasMap: {},
     tarjetasRojasMap: {},
@@ -196,7 +198,7 @@ export function renderConsolaPartidoVivo() {
           <button class="btn-counter btn-gold" onclick="window._sumarGolFavor()">+</button>
           <span style="color:#444;font-size:16px;margin:0 4px;">|</span>
           <span class="counter-val" style="color:var(--rojo);">${st.gc}</span>
-          <button class="btn-counter btn-red" onclick="window._modificarLiveCounter('gc', 1)">+</button>
+          <button class="btn-counter btn-red" onclick="window._sumarGolContraModal()">+</button>
         </div>
       </div>
 
@@ -295,6 +297,35 @@ window._actualizarLiveDuracion = (val) => { partidoEnVivoState.duracionMin = par
 
 window._modificarLiveCounter = (key, delta) => {
   partidoEnVivoState[key] = Math.max(0, (partidoEnVivoState[key] || 0) + delta);
+  renderConsolaPartidoVivo();
+};
+
+window._sumarGolContraModal = () => {
+  const modal = document.getElementById('modal');
+  const modalContent = document.getElementById('modal-content');
+  if (!modal || !modalContent) return;
+
+  const porteros = (plantel.por || []).length ? plantel.por : ['Guardameta'];
+
+  let html = `<div class="modal-title">🧤 SELECCIONAR GUARDAMETA QUE RECIBIÓ EL GOL</div>`;
+  html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
+
+  porteros.forEach(n => {
+    html += `<button class="btn btn-gray" style="text-align:left;padding:10px;" onclick="window._confirmarGolContraPortero('${n}')">🧤 ${n}</button>`;
+  });
+
+  html += `<button class="btn btn-red" style="margin-top:8px;" onclick="document.getElementById('modal').style.display='none'">CANCELAR</button>`;
+  html += `</div>`;
+
+  modalContent.innerHTML = html;
+  modal.style.display = 'flex';
+};
+
+window._confirmarGolContraPortero = (nombre) => {
+  partidoEnVivoState.gc += 1;
+  partidoEnVivoState.rematesC += 1;
+  partidoEnVivoState.golesRecibidosPorMap[nombre] = (partidoEnVivoState.golesRecibidosPorMap[nombre] || 0) + 1;
+  document.getElementById('modal').style.display = 'none';
   renderConsolaPartidoVivo();
 };
 
@@ -463,13 +494,13 @@ window._confirmarTarjetaJugador = (tipo, nombre) => {
 
 window._finalizarYGuardarPartidoLive = async () => {
   const st = partidoEnVivoState;
-  const eqNombre = perfil.eqA || 'Equipo';
 
   let res = 'D';
   if (st.gf > st.gc) res = 'W';
   if (st.gf < st.gc) res = 'L';
 
   const totalMinutosPartido = st.duracionMin * 2;
+  const titulares = (plantel.tit_A || []).filter(Boolean);
 
   const nuevoPartido = {
     id: Date.now().toString(),
@@ -489,6 +520,9 @@ window._finalizarYGuardarPartidoLive = async () => {
     faltasC: st.faltasC,
     goleadores: st.goleadoresMap,
     asistidores: st.asistidoresMap,
+    sustituciones: st.sustitucionesList,
+    golesRecibidosPor: st.golesRecibidosPorMap,
+    titulares,
     participantes: st.convocadosList
   };
 
@@ -507,25 +541,50 @@ window._finalizarYGuardarPartidoLive = async () => {
 };
 
 function acumularStatsPartido(p) {
-  const convocados = p.participantes.length ? p.participantes : [...Object.keys(p.goleadores), ...Object.keys(p.asistidores)];
+  const totalMin = p.duracion || 60;
+  const titulares = new Set(p.titulares && p.titulares.length ? p.titulares : (p.participantes || []).slice(0, 11));
+  const suplentesEntrados = new Map();
 
-  convocados.forEach(nombre => {
+  (p.sustituciones || []).forEach(sub => {
+    if (sub.entra) {
+      const minJugadosSub = Math.max(0, totalMin - (sub.min || (totalMin / 2)));
+      suplentesEntrados.set(sub.entra, minJugadosSub);
+    }
+    if (sub.sale && titulares.has(sub.sale)) {
+      // Titular que salió
+      const minJugadosTitular = Math.min(totalMin, sub.min || (totalMin / 2));
+      titulares.delete(sub.sale);
+      suplentesEntrados.set(sub.sale, minJugadosTitular);
+    }
+  });
+
+  titulares.forEach(nombre => {
+    if (!suplentesEntrados.has(nombre)) {
+      suplentesEntrados.set(nombre, totalMin);
+    }
+  });
+
+  // Solo los jugadores con minutos disputados reciben PJ y minutos
+  suplentesEntrados.forEach((minutosJugados, nombre) => {
     if (!stats[nombre]) {
-      stats[nombre] = { pj: 0, minJug: 0, goles: 0, asist: 0, am: 0, ro: 0, rat: 6.5, vallaInvicta: 0, rematesFavor: 0, rematesContra: 0, cornersFavor: 0, cornersRival: 0 };
+      stats[nombre] = { pj: 0, minJug: 0, goles: 0, asist: 0, am: 0, ro: 0, rat: 6.5, vallaInvicta: 0, rematesFavor: 0, rematesContra: 0, cornersFavor: 0, cornersRival: 0, golesRecibidos: 0 };
     }
     const st = stats[nombre];
     st.pj += 1;
-    st.minJug += p.duracion;
+    st.minJug += minutosJugados;
 
-    if (p.goleadores[nombre]) st.goles += p.goleadores[nombre];
-    if (p.asistidores[nombre]) st.asist += p.asistidores[nombre];
+    if (p.goleadores && p.goleadores[nombre]) st.goles += p.goleadores[nombre];
+    if (p.asistidores && p.asistidores[nombre]) st.asist += p.asistidores[nombre];
 
-    st.rematesFavor = (st.rematesFavor || 0) + p.rematesA;
-    st.rematesContra = (st.rematesContra || 0) + p.rematesC;
-    st.cornersFavor = (st.cornersFavor || 0) + p.cornersA;
-    st.cornersRival = (st.cornersRival || 0) + p.cornersC;
+    st.rematesFavor = (st.rematesFavor || 0) + (p.rematesA || 0);
+    st.rematesContra = (st.rematesContra || 0) + (p.rematesC || 0);
+    st.cornersFavor = (st.cornersFavor || 0) + (p.cornersA || 0);
+    st.cornersRival = (st.cornersRival || 0) + (p.cornersC || 0);
 
     if (plantel.por.includes(nombre)) {
+      if (p.golesRecibidosPor && p.golesRecibidosPor[nombre]) {
+        st.golesRecibidos = (st.golesRecibidos || 0) + p.golesRecibidosPor[nombre];
+      }
       if (p.gc === 0) st.vallaInvicta = (st.vallaInvicta || 0) + 1;
     }
 
