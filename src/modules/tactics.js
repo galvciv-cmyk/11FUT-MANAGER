@@ -387,6 +387,7 @@ export function actualizarTactica(eq) {
   }
 
   const customPos = (plantel[`pos_custom_${eq}`] || {});
+  const capitanActual = plantel[`capitan_${eq}`] || '';
 
   form.forEach((slot, i) => {
     const token = document.createElement('div');
@@ -409,17 +410,19 @@ export function actualizarTactica(eq) {
     token.dataset.eq = eq;
 
     const nombreGuardado = (plantel[`tit_${eq}`] && plantel[`tit_${eq}`][i]) || (plantel[slot.cat] && plantel[slot.cat][0]) || 'LIBRE';
+    const esCapitan = capitanActual === nombreGuardado && nombreGuardado !== 'LIBRE';
 
     token.innerHTML = `
       <div class="token-camisa">
         <img src="${getImg(eq, slot.cat === 'por' ? 'por' : 'campo')}">
+        ${esCapitan ? `<span class="capitan-badge">C</span>` : ''}
       </div>
       <div class="nombre-label">${nombreGuardado}</div>
     `;
 
     token.onclick = (e) => {
       if (token.dataset.wasDragged === 'true') {
-        delete token.dataset.wasDragged;
+        token.dataset.wasDragged = 'false';
         return;
       }
       abrirModalJugador(eq, i, slot.cat);
@@ -571,8 +574,14 @@ export function abrirModalJugador(eq, idx, cat) {
   const listaJugadores = [...(plantel[cat] || []), ...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
   const disponibles = [...new Set(listaJugadores)].filter(n => !ocupados.has(n));
 
-  let html = `<div class="modal-title">⚽ SELECCIONAR TITULAR (DISPONIBLES)</div>`;
+  const titularActual = (plantel[`tit_${eq}`] && plantel[`tit_${eq}`][idx]) || '';
+
+  let html = `<div class="modal-title">⚽ SELECCIONAR TITULAR</div>`;
   html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
+
+  if (titularActual && titularActual !== 'LIBRE') {
+    html += `<button class="btn btn-gold" style="margin-bottom:6px;" onclick="window._designarCapitan('${eq}', '${titularActual}')">⭐ DESIGNAR A "${titularActual}" COMO CAPITÁN (C)</button>`;
+  }
 
   if (!disponibles.length) {
     html += `<div style="color:#aaa;font-size:12px;text-align:center;padding:10px;">Todos los jugadores ya han sido asignados.</div>`;
@@ -588,6 +597,13 @@ export function abrirModalJugador(eq, idx, cat) {
   modalContent.innerHTML = html;
   modal.style.display = 'flex';
 }
+
+window._designarCapitan = (eq, nombre) => {
+  plantel[`capitan_${eq}`] = nombre;
+  document.getElementById('modal').style.display = 'none';
+  actualizarTactica(eq);
+  autoSaveLocal();
+};
 
 window._seleccionarTitular = (nombre) => {
   const { eq, idx } = modalJugadorActivo;
@@ -611,7 +627,7 @@ export function abrirModalSuplente(eq, idx) {
   const todos = [...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
   const disponibles = [...new Set(todos)].filter(n => !ocupados.has(n));
 
-  let html = `<div class="modal-title">🔄 SELECCIONAR SUPLENTE (DISPONIBLES)</div>`;
+  let html = `<div class="modal-title">🔄 SELECCIONAR SUPLENTE</div>`;
   html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
 
   if (!disponibles.length) {
