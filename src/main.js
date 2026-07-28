@@ -131,6 +131,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById(`btn-fs-${eq}`)?.addEventListener('click', () => toggleFullscreen(eq));
     document.getElementById(`btn-exit-fs-${eq}`)?.addEventListener('click', () => toggleFullscreen(eq));
 
+    // Fullscreen Overlay Drawer Toggle
+    document.getElementById(`btn-toggle-tools-fs-${eq}`)?.addEventListener('click', () => {
+      const overlay = document.getElementById(`fs-tools-overlay-${eq}`);
+      if (overlay) overlay.style.display = overlay.style.display === 'block' ? 'none' : 'block';
+    });
+
+    document.getElementById(`btn-none-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'none'));
+    document.getElementById(`btn-pencil-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'pencil'));
+    document.getElementById(`btn-arrow-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'arrow'));
+    document.getElementById(`btn-clear-fs-${eq}`)?.addEventListener('click', () => clearCanvas(eq));
+
     document.querySelectorAll(`#colors-${eq} .color-dot`).forEach(el => {
       el.addEventListener('click', () => setDrawingColor(eq, el.dataset.color));
     });

@@ -119,8 +119,9 @@ input:focus, select:focus {
 
 .header-logo {
   height: 38px;
-  width: auto;
+  width: 38px;
   object-fit: contain;
+  border-radius: 4px;
 }
 
 .header-title {
@@ -171,34 +172,61 @@ input:focus, select:focus {
 .seccion { display: none; padding: 12px; }
 .seccion.active { display: block; }
 
-/* ── PIZARRA TÁCTICA ── */
-.select-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 10px;
-  max-width: 480px;
-  margin-left: auto;
-  margin-right: auto;
+/* ── ESTRUCTURA DESKTOP 3-COLUMNAS TÁCTICA ── */
+.tactica-desktop-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
+@media (min-width: 900px) {
+  .tactica-desktop-grid {
+    display: grid;
+    grid-template-columns: 260px 1fr 240px;
+    gap: 16px;
+    align-items: start;
+    max-width: 1240px;
+    margin: 0 auto;
+  }
+}
+
+.col-panel-izq {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.col-cancha-centro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.col-banca-der {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+/* ── PIZARRA Y CANCHA ── */
 .campo-layout {
   position: relative;
   background: #000;
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid #222;
-  margin: 0 auto 10px auto;
-  max-width: 480px;
   width: 100%;
+  max-width: 480px;
 }
 
 .cancha-wrapper {
   position: relative;
   width: 100%;
-  height: 560px;
-  background: #0a3d1c url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='500' viewBox='0 0 300 500'><rect width='300' height='500' fill='%230a3d1c'/><rect y='0' width='300' height='50' fill='%230c4520'/><rect y='100' width='300' height='50' fill='%230c4520'/><rect y='200' width='300' height='50' fill='%230c4520'/><rect y='300' width='300' height='50' fill='%230c4520'/><rect y='400' width='300' height='50' fill='%230c4520'/><rect x='15' y='15' width='270' height='470' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><line x1='15' y1='250' x2='285' y2='250' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><circle cx='150' cy='250' r='40' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><circle cx='150' cy='250' r='3' fill='rgba(255,255,255,0.85)'/><rect x='75' y='15' width='150' height='70' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><rect x='105' y='15' width='90' height='25' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><circle cx='150' cy='60' r='2.5' fill='rgba(255,255,255,0.85)'/><path d='M 120 85 A 35 35 0 0 0 180 85' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><rect x='115' y='5' width='70' height='10' fill='rgba(255,255,255,0.15)' stroke='rgba(255,255,255,0.9)' stroke-width='2'/><rect x='75' y='415' width='150' height='70' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><rect x='105' y='460' width='90' height='25' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><circle cx='150' cy='440' r='2.5' fill='rgba(255,255,255,0.85)'/><path d='M 120 415 A 35 35 0 0 1 180 415' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><rect x='115' y='485' width='70' height='10' fill='rgba(255,255,255,0.15)' stroke='rgba(255,255,255,0.9)' stroke-width='2'/><path d='M 15 30 A 15 15 0 0 0 30 15' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><path d='M 270 15 A 15 15 0 0 0 285 30' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><path d='M 15 470 A 15 15 0 0 0 30 485' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><path d='M 270 485 A 15 15 0 0 0 285 470' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/></svg>") center center / cover no-repeat;
-  border-bottom: 2px solid #1a1a1a;
+  height: 520px;
+  max-height: 72vh;
+  background: #0a3d1c url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='500' viewBox='0 0 300 500'><rect width='300' height='500' fill='%230a3d1c'/><rect y='0' width='300' height='50' fill='%230c4520'/><rect y='100' width='300' height='50' fill='%230c4520'/><rect y='200' width='300' height='50' fill='%230c4520'/><rect y='300' width='300' height='50' fill='%230c4520'/><rect y='400' width='300' height='50' fill='%230c4520'/><rect x='15' y='15' width='270' height='470' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><line x1='15' y1='250' x2='285' y2='250' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><circle cx='150' cy='250' r='40' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><circle cx='150' cy='250' r='3' fill='rgba(255,255,255,0.85)'/><rect x='75' y='15' width='150' height='70' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><rect x='105' y='15' width='90' height='25' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><circle cx='150' cy='60' r='2.5' fill='rgba(255,255,255,0.85)'/><path d='M 120 85 A 35 35 0 0 0 180 85' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><rect x='115' y='5' width='70' height='10' fill='rgba(255,255,255,0.15)' stroke='rgba(255,255,255,0.9)' stroke-width='2'/><rect x='75' y='415' width='150' height='70' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><rect x='105' y='460' width='90' height='25' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><circle cx='150' cy='440' r='2.5' fill='rgba(255,255,255,0.85)'/><path d='M 120 415 A 35 35 0 0 1 180 415' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><rect x='115' y='485' width='70' height='10' fill='rgba(255,255,255,0.15)' stroke='rgba(255,255,255,0.9)' stroke-width='2'/><path d='M 15 30 A 15 15 0 0 0 30 15' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><path d='M 270 15 A 15 15 0 0 0 285 30' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><path d='M 15 470 A 15 15 0 0 0 30 485' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/><path d='M 270 485 A 15 15 0 0 0 285 470' fill='none' stroke='rgba(255,255,255,0.65)' stroke-width='2'/></svg>") center center / contain no-repeat;
   overflow: hidden;
 }
 
@@ -214,22 +242,19 @@ input:focus, select:focus {
 /* TOOLBAR DIBUJO Y FULLSCREEN */
 .tactica-toolbar {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   background: #0a0a0a;
   border: 1px solid #222;
-  border-radius: 8px;
-  padding: 6px 10px;
-  margin: 0 auto 8px auto;
-  max-width: 480px;
+  border-radius: 10px;
+  padding: 10px;
   gap: 8px;
-  flex-wrap: wrap;
 }
 
 .tool-btn-group {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
 }
 
 .tool-btn {
@@ -237,12 +262,14 @@ input:focus, select:focus {
   border: 1px solid #333;
   color: #ccc;
   border-radius: 6px;
-  padding: 6px 10px;
+  padding: 8px 10px;
   font-size: 12px;
   cursor: pointer;
   font-family: 'Barlow Condensed', sans-serif;
   font-weight: 700;
   transition: all 0.2s;
+  flex: 1;
+  text-align: center;
 }
 
 .tool-btn.active {
@@ -252,20 +279,21 @@ input:focus, select:focus {
 }
 
 .color-dot {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   cursor: pointer;
   border: 2px solid #222;
   display: inline-block;
+  transition: transform 0.2s;
 }
 
 .color-dot.active {
   border-color: #fff;
-  transform: scale(1.2);
+  transform: scale(1.25);
 }
 
-/* MODO FULLSCREEN CANCHA Y BOTÓN SALIR */
+/* MODO FULLSCREEN CANCHA Y BOTONES FLOTANTES */
 .campo-layout.fullscreen {
   position: fixed !important;
   inset: 0 !important;
@@ -276,11 +304,16 @@ input:focus, select:focus {
   border-radius: 0 !important;
   margin: 0 !important;
   background: #000 !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .campo-layout.fullscreen .cancha-wrapper {
-  height: calc(100vh - 60px) !important;
-  max-width: 520px;
+  height: 90vh !important;
+  max-height: 90vh !important;
+  max-width: 540px;
   margin: 0 auto;
 }
 
@@ -288,11 +321,11 @@ input:focus, select:focus {
   display: none;
   position: absolute;
   top: 12px; right: 12px;
-  z-index: 100000;
+  z-index: 100001;
   background: var(--rojo);
   color: #fff;
   border: none;
-  padding: 8px 16px;
+  padding: 8px 14px;
   border-radius: 20px;
   font-family: 'Barlow Condensed', sans-serif;
   font-weight: 900;
@@ -301,7 +334,38 @@ input:focus, select:focus {
   box-shadow: 0 4px 12px rgba(0,0,0,0.8);
 }
 
-.campo-layout.fullscreen .btn-exit-fs {
+.btn-toggle-tools-fs {
+  display: none;
+  position: absolute;
+  top: 12px; left: 12px;
+  z-index: 100001;
+  background: var(--azul);
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 900;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.8);
+}
+
+.fs-toolbar-overlay {
+  display: none;
+  position: absolute;
+  top: 54px; left: 12px;
+  z-index: 100001;
+  background: rgba(10,10,10,0.95);
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.9);
+  backdrop-filter: blur(10px);
+}
+
+.campo-layout.fullscreen .btn-exit-fs,
+.campo-layout.fullscreen .btn-toggle-tools-fs {
   display: block;
 }
 
@@ -359,6 +423,8 @@ input:focus, select:focus {
 .banca-side {
   padding: 10px;
   background: #080808;
+  border-radius: 10px;
+  border: 1px solid #1a1a1a;
 }
 
 .banca-label {

@@ -1,87 +1,41 @@
-import { perfil, stats, historial, KITS, updatePerfil, updateStats, updateHistorial, autoSaveLocal, resetEstado, userEmail, pinHash, setPinHash } from "./state.js";
-import { guardarFirebase, auth, hashPin } from "../services/firebase.js";
-import { cargarKits, subirImagenCloudinary } from "../services/cloudinary.js";
-import { actualizarTactica } from "./tactics.js";
+import { perfil, setPinHash, autoSaveLocal, stats, updateStats, historial, updateHistorial } from "./state.js";
+import { guardarFirebase, hashPin } from "../services/firebase.js";
+import { KITS } from "./state.js";
+import { subirImagenCloudinary } from "../services/cloudinary.js";
 import { renderStats } from "./stats.js";
 import { renderHistorial } from "./history.js";
-import { updatePassword, signOut } from "firebase/auth";
+import { actualizarTactica } from "./tactics.js";
 
-export function showUploadStatus(msg) {
-  const ov = document.getElementById('upload-overlay');
-  const mv = document.getElementById('upload-overlay-msg');
-  if (ov) ov.style.display = 'flex';
-  if (mv) mv.textContent = msg;
-}
+const DEFAULT_LOGO = "https://res.cloudinary.com/djhpfdklk/image/upload/v1778985193/cuerpo_tecnico_ysxrjt.png";
 
-export function hideUploadStatus() {
-  const ov = document.getElementById('upload-overlay');
-  if (ov) ov.style.display = 'none';
-}
+export function abrirConfig() {
+  const modal = document.getElementById('config-modal');
+  if (!modal) return;
 
-export function aplicarPerfil() {
-  const logo = document.getElementById('header-logo');
-  const club = document.getElementById('header-club');
-  const bg = document.getElementById('app-bg');
-  const tabA = document.getElementById('tab-eqA');
-  const tabB = document.getElementById('tab-eqB');
+  document.getElementById('cfg-email-display').textContent = perfil.email || 'Invitado';
+  document.getElementById('cfg-club-display').textContent = perfil.club || '11FUT MANAGER';
 
-  if (logo && perfil.logo) logo.src = perfil.logo;
-  if (club) club.textContent = perfil.club || '11FUT MANAGER';
-  if (bg && perfil.bg) bg.style.backgroundImage = `url(${perfil.bg})`;
-  if (tabA) tabA.textContent = perfil.eqA || 'EQ A';
-  if (tabB) tabB.textContent = perfil.eqB || 'EQ B';
-}
+  document.getElementById('cfg-club').value = perfil.club || '';
+  document.getElementById('cfg-eqA').value = perfil.eqA || '';
+  document.getElementById('cfg-eqB').value = perfil.eqB || '';
 
-export function renderCfgKitGallery() {
-  ['A', 'B'].forEach(eq => {
-    const cont = document.getElementById('cfg-kit-gallery-' + eq);
-    if (!cont) return;
-    cont.innerHTML = '';
-    const currentKit = eq === 'A' ? (perfil.kitA || 'predeterminado') : (perfil.kitB || 'predeterminado');
-    KITS.forEach(kit => {
-      const imgSrc = eq === 'A' ? kit.local : kit.visita;
-      const isSelected = currentKit === kit.id;
-      const card = document.createElement('div');
-      card.style.cssText = `border:2px solid ${isSelected ? 'var(--oro)' : '#222'};border-radius:10px;padding:8px;text-align:center;cursor:pointer;background:${isSelected ? 'rgba(212,175,55,0.1)' : '#0a0a0a'};transition:all 0.2s;`;
-      card.onclick = () => {
-        if (eq === 'A') perfil.kitA = kit.id; else perfil.kitB = kit.id;
-        renderCfgKitGallery();
-      };
-      card.innerHTML = `<img src="${imgSrc}" style="width:80px;height:auto;object-fit:contain;margin-bottom:6px;" onerror="this.style.display='none'">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:900;color:${isSelected ? 'var(--oro)' : '#aaa'};">${kit.nombre}</div>
-        ${isSelected ? '<div style="font-size:11px;color:var(--verde);margin-top:2px;">✅ Seleccionado</div>' : ''}`;
-      cont.appendChild(card);
-    });
-  });
-}
+  renderKitGallery('A');
+  renderKitGallery('B');
 
-export async function abrirConfig() {
-  const emailEl = document.getElementById('cfg-email-display');
-  const clubEl = document.getElementById('cfg-club-display');
-  if (emailEl) emailEl.textContent = userEmail || perfil.email || '---';
-  if (clubEl) clubEl.textContent = perfil.club || '11FUT MANAGER';
-
-  const inputClub = document.getElementById('cfg-club');
-  const inputA = document.getElementById('cfg-eqA');
-  const inputB = document.getElementById('cfg-eqB');
-  if (inputClub) inputClub.value = perfil.club || '';
-  if (inputA) inputA.value = perfil.eqA || '';
-  if (inputB) inputB.value = perfil.eqB || '';
+  const imgPrev = document.getElementById('img-prev-cfg-logo');
+  const divPrev = document.getElementById('prev-cfg-logo');
+  const icoLogo = document.getElementById('ico-cfg-logo');
 
   if (perfil.logo) {
-    const prevLogo = document.getElementById('prev-cfg-logo');
-    const imgPrev = document.getElementById('img-prev-cfg-logo');
-    const icoLogo = document.getElementById('ico-cfg-logo');
     if (imgPrev) imgPrev.src = perfil.logo;
-    if (prevLogo) prevLogo.style.display = 'block';
+    if (divPrev) divPrev.style.display = 'block';
     if (icoLogo) icoLogo.style.display = 'none';
+  } else {
+    if (divPrev) divPrev.style.display = 'none';
+    if (icoLogo) icoLogo.style.display = 'block';
   }
 
-  if (KITS.length === 0) await cargarKits();
-  renderCfgKitGallery();
-
-  const modal = document.getElementById('config-modal');
-  if (modal) modal.style.display = 'block';
+  modal.style.display = 'flex';
 }
 
 export function cerrarConfig() {
@@ -90,115 +44,174 @@ export function cerrarConfig() {
 }
 
 export async function guardarNombres() {
-  perfil.club = document.getElementById('cfg-club')?.value.trim() || perfil.club;
-  perfil.eqA  = document.getElementById('cfg-eqA')?.value.trim()  || perfil.eqA;
-  perfil.eqB  = document.getElementById('cfg-eqB')?.value.trim()  || perfil.eqB;
+  const club = document.getElementById('cfg-club').value.trim();
+  const eqA  = document.getElementById('cfg-eqA').value.trim();
+  const eqB  = document.getElementById('cfg-eqB').value.trim();
+
+  if (club) perfil.club = club;
+  if (eqA)  perfil.eqA  = eqA;
+  if (eqB)  perfil.eqB  = eqB;
+
   aplicarPerfil();
   autoSaveLocal();
   await guardarFirebase();
-  alert('✅ Nombres guardados!');
+  cerrarConfig();
 }
 
+let kitSeleccionadoA = '';
+let kitSeleccionadoB = '';
+
+export function renderKitGallery(eq) {
+  const gallery = document.getElementById(`cfg-kit-gallery-${eq}`);
+  if (!gallery) return;
+
+  const kitActual = eq === 'A' ? (perfil.kitA || 'predeterminado') : (perfil.kitB || 'predeterminado');
+  if (eq === 'A') kitSeleccionadoA = kitActual;
+  if (eq === 'B') kitSeleccionadoB = kitActual;
+
+  gallery.innerHTML = KITS.map(k => {
+    const sel = k.id === kitActual;
+    return `
+      <div style="border:2px solid ${sel ? 'var(--oro)' : '#333'};border-radius:8px;padding:6px;background:#0d0d0d;cursor:pointer;text-align:center;" onclick="window._seleccionarKit('${eq}', '${k.id}')">
+        <img src="${k.local}" style="height:40px;object-fit:contain;">
+        <div style="font-size:10px;color:#aaa;margin-top:2px;">${k.nombre}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+window._seleccionarKit = (eq, kitId) => {
+  if (eq === 'A') kitSeleccionadoA = kitId;
+  if (eq === 'B') kitSeleccionadoB = kitId;
+  renderKitGallery(eq);
+};
+
 export async function guardarKits() {
-  const kitA = KITS.find(k => k.id === (perfil.kitA || 'predeterminado')) || KITS[0];
-  const kitB = KITS.find(k => k.id === (perfil.kitB || 'predeterminado')) || KITS[0];
-  if (kitA) {
-    perfil.imgs.A.campo = kitA.local;
-    perfil.imgs.A.por   = kitA.portero_local;
-    perfil.imgs.A.sup   = kitA.sup_local;
-    perfil.imgs.A.ct    = kitA.ct;
-  }
-  if (kitB) {
-    perfil.imgs.B.campo = kitB.visita;
-    perfil.imgs.B.por   = kitB.portero_visita;
-    perfil.imgs.B.sup   = kitB.sup_visita;
-    perfil.imgs.B.ct    = kitB.ct;
-  }
-  aplicarPerfil();
+  if (kitSeleccionadoA) perfil.kitA = kitSeleccionadoA;
+  if (kitSeleccionadoB) perfil.kitB = kitSeleccionadoB;
+
   actualizarTactica('A');
   actualizarTactica('B');
   autoSaveLocal();
   await guardarFirebase();
-  alert('✅ Kits guardados!');
+  cerrarConfig();
 }
 
 export async function guardarLogo() {
-  const file = document.getElementById('up-cfg-logo')?.files[0];
-  if (!file) return alert('Selecciona primero una imagen');
-  showUploadStatus('Subiendo logo... ☁️');
+  const fileInput = document.getElementById('up-cfg-logo');
+  if (!fileInput || !fileInput.files.length) return alert('Selecciona una imagen primero');
+
+  const file = fileInput.files[0];
+  const overlay = document.getElementById('upload-overlay');
+  if (overlay) overlay.style.display = 'flex';
+
   try {
-    perfil.logo = await subirImagenCloudinary(file, `${pinHash}_logo`);
+    const url = await subirImagenCloudinary(file);
+    perfil.logo = url;
     aplicarPerfil();
     autoSaveLocal();
     await guardarFirebase();
-    alert('✅ Logo actualizado!');
+    alert('✅ Logo actualizado con éxito');
+    cerrarConfig();
   } catch (e) {
-    alert('❌ Error al subir logo');
+    alert('Error al subir logo: ' + e.message);
+  } finally {
+    if (overlay) overlay.style.display = 'none';
   }
-  hideUploadStatus();
 }
 
 export async function guardarFondo() {
-  const file = document.getElementById('up-cfg-bg')?.files[0];
-  if (!file) return alert('Selecciona primero una imagen');
-  showUploadStatus('Subiendo fondo... ☁️');
+  const fileInput = document.getElementById('up-cfg-bg');
+  if (!fileInput || !fileInput.files.length) return alert('Selecciona una imagen primero');
+
+  const file = fileInput.files[0];
+  const overlay = document.getElementById('upload-overlay');
+  if (overlay) overlay.style.display = 'flex';
+
   try {
-    perfil.bg = await subirImagenCloudinary(file, `${pinHash}_bg`);
+    const url = await subirImagenCloudinary(file);
+    perfil.bg = url;
     aplicarPerfil();
     autoSaveLocal();
     await guardarFirebase();
-    alert('✅ Fondo actualizado!');
+    alert('✅ Fondo actualizado con éxito');
+    cerrarConfig();
   } catch (e) {
-    alert('❌ Error al subir fondo');
+    alert('Error al subir fondo: ' + e.message);
+  } finally {
+    if (overlay) overlay.style.display = 'none';
   }
-  hideUploadStatus();
 }
 
 export async function cambiarPin() {
-  const nuevo = document.getElementById('cfg-pin-nuevo')?.value;
-  const conf  = document.getElementById('cfg-pin-conf')?.value;
-  if (!nuevo || nuevo.length < 6) return alert('❌ El PIN debe tener mínimo 6 dígitos');
-  if (nuevo !== conf) return alert('❌ Los PINs no coinciden');
+  const nuevo = document.getElementById('cfg-pin-nuevo').value.trim();
+  const conf  = document.getElementById('cfg-pin-conf').value.trim();
 
-  try {
-    if (auth.currentUser) {
-      await updatePassword(auth.currentUser, nuevo);
-      const newHash = await hashPin(nuevo + userEmail);
-      setPinHash(newHash);
-      await guardarFirebase();
-      alert('✅ PIN cambiado correctamente.');
-    }
-  } catch (e) {
-    alert('Error: ' + e.message);
-  }
+  if (!nuevo || nuevo.length < 6) return alert('El PIN debe tener al menos 6 dígitos');
+  if (nuevo !== conf) return alert('Los PINs no coinciden');
+
+  const hashed = await hashPin(nuevo + perfil.email);
+  setPinHash(hashed);
+  autoSaveLocal();
+  await guardarFirebase();
+
+  document.getElementById('cfg-pin-nuevo').value = '';
+  document.getElementById('cfg-pin-conf').value = '';
+  alert('🔐 PIN actualizado exitosamente');
+  cerrarConfig();
 }
 
 export async function resetearStats() {
-  if (!confirm('⚠️ ¿Seguro que quieres resetear TODAS las estadísticas?')) return;
+  if (!confirm('¿Estás seguro de reiniciar todas las estadísticas?')) return;
   updateStats({});
+  renderStats();
   autoSaveLocal();
   await guardarFirebase();
-  renderStats();
-  alert('✅ Estadísticas reseteadas');
+  alert('✅ Estadísticas reiniciadas');
 }
 
 export async function borrarHistorial() {
-  if (!confirm('⚠️ ¿Seguro que quieres borrar TODO el historial de partidos?')) return;
+  if (!confirm('¿Estás seguro de borrar el historial de partidos?')) return;
   updateHistorial([]);
+  renderHistorial();
   autoSaveLocal();
   await guardarFirebase();
-  renderHistorial();
   alert('✅ Historial borrado');
 }
 
-export async function cerrarSesion() {
+export function cerrarSesion() {
   if (!confirm('¿Cerrar sesión?')) return;
-  try {
-    if (auth) await signOut(auth);
-  } catch (e) {}
-  resetEstado();
+  localStorage.clear();
+  location.reload();
+}
 
-  document.getElementById('main-app').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'flex';
-  cerrarConfig();
+export function aplicarPerfil() {
+  const clubName = perfil.club || '11FUT MANAGER';
+  const logoUrl = perfil.logo || DEFAULT_LOGO;
+
+  const headerTitle = document.getElementById('header-club');
+  if (headerTitle) headerTitle.textContent = clubName;
+
+  const headerLogo = document.getElementById('header-logo');
+  if (headerLogo) {
+    headerLogo.src = logoUrl;
+    headerLogo.onerror = () => { headerLogo.src = DEFAULT_LOGO; };
+  }
+
+  const loginLogo = document.getElementById('login-logo');
+  if (loginLogo) {
+    loginLogo.src = logoUrl;
+    loginLogo.onerror = () => { loginLogo.src = DEFAULT_LOGO; };
+  }
+
+  const tabA = document.getElementById('tab-eqA');
+  if (tabA) tabA.textContent = (perfil.eqA || 'EQUIPO A').toUpperCase();
+
+  const tabB = document.getElementById('tab-eqB');
+  if (tabB) tabB.textContent = (perfil.eqB || 'EQUIPO B').toUpperCase();
+
+  if (perfil.bg) {
+    const bg = document.getElementById('app-bg');
+    if (bg) bg.style.backgroundImage = `url('${perfil.bg}')`;
+  }
 }
