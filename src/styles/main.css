@@ -239,7 +239,7 @@ input:focus, select:focus {
   gap: 12px;
 }
 
-/* ── PIZARRA Y CANCHA NORMAL (ANCHO AMPLIADO Y LARGO 84vh) ── */
+/* ── PIZARRA Y CANCHA NORMAL (PROPORCIÓN EXACTA 3/5 SIN MÁRGENES EXTRA) ── */
 .campo-layout {
   position: relative;
   background: #000;
@@ -249,28 +249,30 @@ input:focus, select:focus {
   width: 100%;
   display: flex;
   justify-content: center;
+  padding: 0;
 }
 
 .cancha-wrapper {
   position: relative;
-  width: 100% !important;
+  aspect-ratio: 3 / 5 !important;
   height: 84vh !important;
   max-height: 84vh !important;
-  aspect-ratio: auto !important;
+  width: auto !important;
+  max-width: 100% !important;
   background: #0c4520 url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='500' viewBox='0 0 300 500'><rect width='300' height='500' fill='%230c4520'/><rect y='0' width='300' height='50' fill='%230a3d1c'/><rect y='100' width='300' height='50' fill='%230a3d1c'/><rect y='200' width='300' height='50' fill='%230a3d1c'/><rect y='300' width='300' height='50' fill='%230a3d1c'/><rect y='400' width='300' height='50' fill='%230a3d1c'/><rect x='2' y='2' width='296' height='496' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><line x1='2' y1='250' x2='298' y2='250' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><circle cx='150' cy='250' r='42' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><circle cx='150' cy='250' r='4' fill='rgba(255,255,255,0.95)'/><rect x='60' y='2' width='180' height='70' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><rect x='95' y='2' width='110' height='28' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><circle cx='150' cy='48' r='4' fill='rgba(255,255,255,0.95)'/><path d='M 115 72 A 38 38 0 0 0 185 72' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><rect x='60' y='428' width='180' height='70' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><rect x='95' y='470' width='110' height='28' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><circle cx='150' cy='452' r='4' fill='rgba(255,255,255,0.95)'/><path d='M 115 428 A 38 38 0 0 1 185 428' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/></svg>") center center / 100% 100% no-repeat !important;
   overflow: hidden;
-  margin: 0 auto;
+  margin: 0 auto !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.8);
 }
 
-/* CANCHA HORIZONTAL EN FULLSCREEN (ANCHO TOTAL 100vw / 100vh SIN MARGENES) */
+/* CANCHA HORIZONTAL EN FULLSCREEN (5/3 PROPORCIÓN EXACTA CON 98vw/90vh) */
 .cancha-wrapper.horizontal {
-  width: 100vw !important;
-  max-width: 100vw !important;
-  height: 100vh !important;
-  max-height: 100vh !important;
-  aspect-ratio: auto !important;
-  margin: 0 !important;
-  padding: 0 !important;
+  aspect-ratio: 5 / 3 !important;
+  width: 98vw !important;
+  max-width: 98vw !important;
+  height: 90vh !important;
+  max-height: 90vh !important;
+  margin: auto !important;
   background: #0c4520 url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='500' height='300' viewBox='0 0 500 300'><rect width='500' height='300' fill='%230c4520'/><rect x='0' width='50' height='300' fill='%230a3d1c'/><rect x='100' width='50' height='300' fill='%230a3d1c'/><rect x='200' width='50' height='300' fill='%230a3d1c'/><rect x='300' width='50' height='300' fill='%230a3d1c'/><rect x='400' width='50' height='300' fill='%230a3d1c'/><rect x='2' y='2' width='496' height='296' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><line x1='250' y1='2' x2='250' y2='298' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><circle cx='250' cy='150' r='42' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><circle cx='250' cy='150' r='4' fill='rgba(255,255,255,0.95)'/><rect x='2' y='60' width='70' height='180' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><rect x='2' y='95' width='28' height='110' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><circle cx='48' cy='150' r='4' fill='rgba(255,255,255,0.95)'/><path d='M 72 115 A 38 38 0 0 1 72 185' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><rect x='428' y='60' width='70' height='180' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><rect x='470' y='95' width='28' height='110' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><circle cx='452' cy='150' r='4' fill='rgba(255,255,255,0.95)'/><path d='M 428 115 A 38 38 0 0 0 428 185' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/></svg>") center center / 100% 100% no-repeat !important;
 }
 
