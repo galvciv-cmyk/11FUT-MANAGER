@@ -1,8 +1,8 @@
 import "./styles/main.css";
-import { perfil, setPinHash, setUserEmail, setCategoriaActiva, autoSaveLocal, stats, historial } from "./modules/state.js";
+import { perfil, setPinHash, setUserEmail, setCategoriaActiva, autoSaveLocal } from "./modules/state.js";
 import { auth, hashPin, cargarFirebase, guardarFirebase } from "./services/firebase.js";
 import { cargarKits } from "./services/cloudinary.js";
-import { actualizarTactica, exportarPNG, setDrawingMode, setDrawingColor, clearCanvas, toggleFullscreen, guardarEsquemaCustom } from "./modules/tactics.js";
+import { actualizarTactica, exportarPNG, setDrawingMode, setDrawingColor, setLineWidth, setLineDash, agregarMarcador, clearCanvas, toggleFullscreen, guardarEsquemaCustom } from "./modules/tactics.js";
 import { renderStats, guardarStatJugador, cerrarStatModal, renderRankings } from "./modules/stats.js";
 import { renderHistorial, guardarPartido, mostrarSugerencias, ocultarSugerencias } from "./modules/history.js";
 import { initPlantelUI, aplicarPlantelUI, guardarSquad, descargarPlantilla, importarCSV, exportarPDF } from "./modules/squad.js";
@@ -17,24 +17,24 @@ export function switchTab(n) {
   document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i + 1 === n));
   document.querySelectorAll('.seccion').forEach((s, i) => s.classList.toggle('active', i + 1 === n));
   if (n === 1) actualizarTactica('A');
-  if (n === 2) actualizarTactica('B');
-  if (n === 5) renderStats();
-  if (n === 6) renderHistorial();
+  if (n === 4) renderStats();
+  if (n === 5) renderHistorial();
 }
 
 // ══════════════════════════════════════════
-// CATEGORY SELECTOR MANAGER
+// CATEGORY & TEAM SELECTOR MANAGER
 // ══════════════════════════════════════════
 export function renderSelectorCategoria(isPublic = false) {
-  const select = document.getElementById(isPublic ? 'pub-selector-categoria' : 'selector-categoria');
-  if (!select) return;
+  const selectTactica = document.getElementById('selector-categoria-tactica');
+  const selectPub = document.getElementById('pub-selector-categoria');
 
   const categorias = perfil.categorias || ["Sub-14"];
   const activa = perfil.categoriaActiva || categorias[0];
 
-  let html = categorias.map(c => `<option value="${c}" ${c === activa ? 'selected' : ''}>${c}</option>`).join('');
+  const html = categorias.map(c => `<option value="${c}" ${c === activa ? 'selected' : ''}>⚽ ${c}</option>`).join('');
 
-  select.innerHTML = html;
+  if (selectTactica) selectTactica.innerHTML = html;
+  if (selectPub) selectPub.innerHTML = html;
 }
 
 export function cambiarCategoria(catNombre) {
@@ -48,7 +48,6 @@ function refrescarTodaLaVista() {
   initPlantelUI();
   aplicarPlantelUI();
   actualizarTactica('A');
-  actualizarTactica('B');
   renderStats();
   renderHistorial();
 }
@@ -202,49 +201,58 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-show-setup')?.addEventListener('click', setupNuevoUsuario);
   document.getElementById('btn-reset-pin')?.addEventListener('click', resetearPin);
 
-  // Bind Category Selector
-  document.getElementById('selector-categoria')?.addEventListener('change', (e) => cambiarCategoria(e.target.value));
+  // Bind Category Selectors
+  document.getElementById('selector-categoria-tactica')?.addEventListener('change', (e) => cambiarCategoria(e.target.value));
 
   // Bind Tabs
-  [1, 2, 3, 4, 5, 6].forEach(n => {
-    const tabEl = document.getElementById(`tab-${n === 1 ? 'eqA' : n === 2 ? 'eqB' : n}`);
-    tabEl?.addEventListener('click', () => switchTab(n));
+  const tabMap = { 1: 1, 2: 3, 3: 4, 4: 5, 5: 6 };
+  [1, 2, 3, 4, 5].forEach(n => {
+    const tabEl = document.getElementById(`tab-${n === 1 ? 1 : n === 2 ? 3 : n === 3 ? 4 : n === 4 ? 5 : 6}`);
+    tabEl?.addEventListener('click', () => switchTab(tabMap[n]));
   });
 
   // Bind Tactics & Save Custom Scheme
   document.getElementById('modo-A')?.addEventListener('change', () => actualizarTactica('A'));
   document.getElementById('esquema-A')?.addEventListener('change', () => actualizarTactica('A'));
   document.getElementById('btn-save-esquema-A')?.addEventListener('click', () => guardarEsquemaCustom('A'));
-
-  document.getElementById('modo-B')?.addEventListener('change', () => actualizarTactica('B'));
-  document.getElementById('esquema-B')?.addEventListener('change', () => actualizarTactica('B'));
-  document.getElementById('btn-save-esquema-B')?.addEventListener('click', () => guardarEsquemaCustom('B'));
-
   document.getElementById('btn-export-png-A')?.addEventListener('click', (e) => exportarPNG('A', e.target));
-  document.getElementById('btn-export-png-B')?.addEventListener('click', (e) => exportarPNG('B', e.target));
 
-  // Drawing tools & Fullscreen bindings
-  ['A', 'B'].forEach(eq => {
-    document.getElementById(`btn-none-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'none'));
-    document.getElementById(`btn-pencil-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'pencil'));
-    document.getElementById(`btn-arrow-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'arrow'));
-    document.getElementById(`btn-clear-${eq}`)?.addEventListener('click', () => clearCanvas(eq));
-    document.getElementById(`btn-fs-${eq}`)?.addEventListener('click', () => toggleFullscreen(eq));
-    document.getElementById(`btn-exit-fs-${eq}`)?.addEventListener('click', () => toggleFullscreen(eq));
+  // Extended Drawing tools & Fullscreen bindings
+  const eq = 'A';
+  document.getElementById(`btn-none-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'none'));
+  document.getElementById(`btn-pencil-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'pencil'));
+  document.getElementById(`btn-arrow-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'arrow'));
+  document.getElementById(`btn-clear-${eq}`)?.addEventListener('click', () => clearCanvas(eq));
 
-    document.getElementById(`btn-toggle-tools-fs-${eq}`)?.addEventListener('click', () => {
-      const overlay = document.getElementById(`fs-tools-overlay-${eq}`);
-      if (overlay) overlay.style.display = overlay.style.display === 'block' ? 'none' : 'block';
-    });
+  document.getElementById(`btn-w2-${eq}`)?.addEventListener('click', () => setLineWidth(eq, 2));
+  document.getElementById(`btn-w4-${eq}`)?.addEventListener('click', () => setLineWidth(eq, 4));
+  document.getElementById(`btn-w7-${eq}`)?.addEventListener('click', () => setLineWidth(eq, 7));
+  document.getElementById(`btn-dash-${eq}`)?.addEventListener('click', (e) => {
+    const isDashed = !e.target.classList.contains('active');
+    setLineDash(eq, isDashed);
+  });
 
-    document.getElementById(`btn-none-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'none'));
-    document.getElementById(`btn-pencil-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'pencil'));
-    document.getElementById(`btn-arrow-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'arrow'));
-    document.getElementById(`btn-clear-fs-${eq}`)?.addEventListener('click', () => clearCanvas(eq));
+  document.getElementById(`btn-add-balon-${eq}`)?.addEventListener('click', () => agregarMarcador(eq, 'balon'));
+  document.getElementById(`btn-add-cono-${eq}`)?.addEventListener('click', () => agregarMarcador(eq, 'cono'));
 
-    document.querySelectorAll(`#colors-${eq} .color-dot`).forEach(el => {
-      el.addEventListener('click', () => setDrawingColor(eq, el.dataset.color));
-    });
+  document.getElementById(`btn-add-balon-fs-${eq}`)?.addEventListener('click', () => agregarMarcador(eq, 'balon'));
+  document.getElementById(`btn-add-cono-fs-${eq}`)?.addEventListener('click', () => agregarMarcador(eq, 'cono'));
+
+  document.getElementById(`btn-fs-${eq}`)?.addEventListener('click', () => toggleFullscreen(eq));
+  document.getElementById(`btn-exit-fs-${eq}`)?.addEventListener('click', () => toggleFullscreen(eq));
+
+  document.getElementById(`btn-toggle-tools-fs-${eq}`)?.addEventListener('click', () => {
+    const overlay = document.getElementById(`fs-tools-overlay-${eq}`);
+    if (overlay) overlay.style.display = overlay.style.display === 'block' ? 'none' : 'block';
+  });
+
+  document.getElementById(`btn-none-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'none'));
+  document.getElementById(`btn-pencil-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'pencil'));
+  document.getElementById(`btn-arrow-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'arrow'));
+  document.getElementById(`btn-clear-fs-${eq}`)?.addEventListener('click', () => clearCanvas(eq));
+
+  document.querySelectorAll(`#colors-${eq} .color-dot`).forEach(el => {
+    el.addEventListener('click', () => setDrawingColor(eq, el.dataset.color));
   });
 
   // Bind Citaciones

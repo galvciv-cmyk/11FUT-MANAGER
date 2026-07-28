@@ -140,8 +140,8 @@ export function getImg(eq, tipo) {
 }
 
 const drawingState = {
-  A: { mode: 'none', color: '#d4af37', isDrawing: false, startX: 0, startY: 0 },
-  B: { mode: 'none', color: '#d4af37', isDrawing: false, startX: 0, startY: 0 }
+  A: { mode: 'none', color: '#d4af37', width: 4, isDashed: false, isDrawing: false, startX: 0, startY: 0 },
+  B: { mode: 'none', color: '#d4af37', width: 4, isDashed: false, isDrawing: false, startX: 0, startY: 0 }
 };
 
 export function setDrawingMode(eq, mode) {
@@ -161,11 +161,75 @@ export function setDrawingColor(eq, color) {
   });
 }
 
+export function setLineWidth(eq, width) {
+  drawingState[eq].width = width;
+  ['2', '4', '7'].forEach(w => {
+    const b = document.getElementById(`btn-w${w}-${eq}`);
+    if (b) b.classList.toggle('active', +w === width);
+  });
+}
+
+export function setLineDash(eq, isDashed) {
+  drawingState[eq].isDashed = isDashed;
+  const b = document.getElementById(`btn-dash-${eq}`);
+  if (b) b.classList.toggle('active', isDashed);
+}
+
+export function agregarMarcador(eq, tipo) {
+  const cancha = document.getElementById(`cancha-${eq}`);
+  if (!cancha) return;
+
+  const m = document.createElement('div');
+  m.className = 'marcador-token';
+  m.textContent = tipo === 'balon' ? '⚽' : '🪧';
+  m.style.left = '50%';
+  m.style.top = '50%';
+
+  hacerMarcadorArrastrable(m, cancha);
+  cancha.appendChild(m);
+}
+
+function hacerMarcadorArrastrable(elem, contenedor) {
+  let isDragging = false, startX = 0, startY = 0, initialLeft = 50, initialTop = 50;
+
+  const onStart = (e) => {
+    isDragging = true;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    startX = clientX; startY = clientY;
+    const rect = elem.getBoundingClientRect();
+    const containerRect = contenedor.getBoundingClientRect();
+    initialLeft = ((rect.left + rect.width / 2 - containerRect.left) / containerRect.width) * 100;
+    initialTop = ((rect.top + rect.height / 2 - containerRect.top) / containerRect.height) * 100;
+  };
+
+  const onMove = (e) => {
+    if (!isDragging) return;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const containerRect = contenedor.getBoundingClientRect();
+    let newLeft = initialLeft + ((clientX - startX) / containerRect.width) * 100;
+    let newTop = initialTop + ((clientY - startY) / containerRect.height) * 100;
+    elem.style.left = `${Math.max(4, Math.min(96, newLeft))}%`;
+    elem.style.top = `${Math.max(4, Math.min(96, newTop))}%`;
+  };
+
+  const onEnd = () => { isDragging = false; };
+
+  elem.addEventListener('mousedown', onStart);
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('mouseup', onEnd);
+  elem.addEventListener('touchstart', onStart, { passive: true });
+  window.addEventListener('touchmove', onMove, { passive: true });
+  window.addEventListener('touchend', onEnd);
+}
+
 export function clearCanvas(eq) {
   const canvas = document.getElementById(`canvas-${eq}`);
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  document.querySelectorAll(`#cancha-${eq} .marcador-token`).forEach(el => el.remove());
 }
 
 export function initCanvas(eq) {
@@ -198,7 +262,9 @@ export function initCanvas(eq) {
       ctx.beginPath();
       ctx.moveTo(pos.x, pos.y);
       ctx.strokeStyle = state.color;
-      ctx.lineWidth = 3;
+      ctx.lineWidth = state.width || 4;
+      if (state.isDashed) ctx.setLineDash([8, 8]);
+      else ctx.setLineDash([]);
       ctx.lineCap = 'round';
     }
   };
@@ -221,7 +287,7 @@ export function initCanvas(eq) {
 
     if (state.mode === 'arrow') {
       const pos = getPos(e.changedTouches ? e.changedTouches[0] : e);
-      drawArrow(ctx, state.startX, state.startY, pos.x, pos.y, state.color);
+      drawArrow(ctx, state.startX, state.startY, pos.x, pos.y, state.color, state.width || 4, state.isDashed);
     }
   };
 
@@ -234,18 +300,22 @@ export function initCanvas(eq) {
   canvas.ontouchend = stopDraw;
 }
 
-function drawArrow(ctx, fromX, fromY, toX, toY, color) {
+function drawArrow(ctx, fromX, fromY, toX, toY, color, width = 4, isDashed = false) {
   const headlen = 14;
   const angle = Math.atan2(toY - fromY, toX - fromX);
 
   ctx.beginPath();
+  if (isDashed) ctx.setLineDash([8, 8]);
+  else ctx.setLineDash([]);
+
   ctx.moveTo(fromX, fromY);
   ctx.lineTo(toX, toY);
   ctx.strokeStyle = color;
-  ctx.lineWidth = 3.5;
+  ctx.lineWidth = width;
   ctx.stroke();
 
   ctx.beginPath();
+  ctx.setLineDash([]);
   ctx.moveTo(toX, toY);
   ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
   ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
@@ -369,7 +439,6 @@ function hacerTokenArrastrable(token, contenedor) {
     let newLeft = initialLeft + (deltaX / containerRect.width) * 100;
     let newTop = initialTop + (deltaY / containerRect.height) * 100;
 
-    // Strict Pitch Boundaries: 6% to 94%
     newLeft = Math.max(6, Math.min(94, newLeft));
     newTop = Math.max(6, Math.min(94, newTop));
 
@@ -416,7 +485,7 @@ function renderSuplentes(eq) {
 
     slot.innerHTML = `
       <div style="font-size:9px;color:var(--oro);margin-bottom:2px;font-weight:700;">#${i + 1}</div>
-      <div class="token-camisa" style="width:36px;height:36px;">
+      <div class="token-camisa" style="width:38px;height:38px;">
         <img src="${getImg(eq, 'sup')}">
       </div>
       <div class="nombre-label" style="font-size:10px;">${nombre}</div>
@@ -426,7 +495,6 @@ function renderSuplentes(eq) {
     banco.appendChild(slot);
   }
 
-  // Add "+" Button to add more bench slots
   const addBtn = document.createElement('div');
   addBtn.className = 'banca-add-btn';
   addBtn.textContent = '+';

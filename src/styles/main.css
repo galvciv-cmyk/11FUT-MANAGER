@@ -116,7 +116,6 @@ input:focus, select:focus {
   justify-content: space-between;
   backdrop-filter: blur(12px);
   gap: 12px;
-  flex-wrap: wrap;
 }
 
 .header-left-group {
@@ -176,7 +175,7 @@ input:focus, select:focus {
   padding: 12px 10px;
   font-family: 'Barlow Condensed', sans-serif;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 14px;
   letter-spacing: 1px;
   color: #666;
   border-bottom: 2px solid transparent;
@@ -250,7 +249,7 @@ input:focus, select:focus {
   touch-action: none;
 }
 
-/* TOOLBAR DIBUJO Y FULLSCREEN */
+/* TOOLBAR DIBUJO Y FULLSCREEN EXTENDIDO */
 .tactica-toolbar {
   display: flex;
   flex-direction: column;
@@ -370,9 +369,10 @@ input:focus, select:focus {
   background: rgba(10,10,10,0.95);
   border: 1px solid #333;
   border-radius: 12px;
-  padding: 10px;
+  padding: 12px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.9);
   backdrop-filter: blur(10px);
+  max-width: 300px;
 }
 
 .campo-layout.fullscreen .btn-exit-fs,
@@ -398,39 +398,51 @@ input:focus, select:focus {
   cursor: grabbing;
   z-index: 1000;
   opacity: 0.9;
-  transform: translate(-50%, -50%) scale(1.15);
+  transform: translate(-50%, -50%) scale(1.18);
 }
 
 .token-camisa {
   position: relative;
-  width: 42px; height: 42px;
+  width: 48px; height: 48px;
   display: flex; align-items: center; justify-content: center;
 }
 
 .token-camisa img {
   width: 100%; height: 100%; object-fit: contain;
-  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.8));
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.85));
 }
 
 .nombre-label {
-  background: rgba(0,0,0,0.88);
+  background: rgba(0,0,0,0.9);
   border: 1px solid #333;
   color: #fff;
   font-family: 'Barlow Condensed', sans-serif;
   font-weight: 700;
-  font-size: 11px;
-  padding: 2px 6px;
+  font-size: 12px;
+  padding: 2px 7px;
   border-radius: 4px;
   margin-top: 2px;
   white-space: nowrap;
-  max-width: 90px;
+  max-width: 100px;
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: center;
   box-shadow: 0 2px 6px rgba(0,0,0,0.8);
 }
 
-/* BANCA / SUPLENTES CON ASIENTOS DE DUGOUT Y BOTÓN (+) */
+/* MARCADOR DIBUJABLE (BALÓN / CONO) */
+.marcador-token {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-size: 26px;
+  z-index: 15;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.9));
+}
+
+/* BANCA / SUPLENTES DE 4 EN 4 */
 .banca-side {
   padding: 12px;
   background: #080808;
@@ -440,31 +452,30 @@ input:focus, select:focus {
 
 .banca-label {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 11px;
-  color: #666;
+  font-size: 12px;
+  color: var(--oro);
+  font-weight: 900;
   letter-spacing: 1px;
   text-transform: uppercase;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .banca-container {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 10px;
-  overflow-x: auto;
-  padding-bottom: 8px;
-  align-items: center;
+  align-items: start;
 }
 
 .banca-slot {
-  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   cursor: pointer;
   background: radial-gradient(circle, #1a1a1a 0%, #0d0d0d 100%);
-  border: 1px solid #282828;
+  border: 1px solid #2a2a2a;
   border-radius: 10px;
-  padding: 6px 8px;
+  padding: 8px 4px;
   box-shadow: inset 0 2px 4px rgba(255,255,255,0.05);
   transition: transform 0.15s, border-color 0.15s;
 }
@@ -475,13 +486,12 @@ input:focus, select:focus {
 }
 
 .banca-add-btn {
-  flex: 0 0 auto;
-  width: 44px; height: 56px;
+  height: 68px;
   border: 2px dashed var(--oro);
   border-radius: 10px;
   background: rgba(212,175,55,0.05);
   color: var(--oro);
-  font-size: 20px; font-weight: 900;
+  font-size: 24px; font-weight: 900;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
@@ -493,10 +503,10 @@ input:focus, select:focus {
 }
 
 /* CUERPO TÉCNICO */
-.ct-section { margin-top: 8px; }
+.ct-section { margin-top: 10px; }
 .ct-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
 .ct-slot { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
-.ct-slot img { width: 38px; height: 38px; object-fit: contain; }
+.ct-slot img { width: 40px; height: 40px; object-fit: contain; }
 .ct-label { font-size: 10px; color: #aaa; margin-top: 2px; }
 .ct-rol { font-size: 9px; color: var(--oro); font-weight: 700; }
 

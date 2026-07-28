@@ -40,13 +40,11 @@
           <button class="btn btn-gold" id="btn-pub-login-link" style="width:auto; padding:8px 16px; font-size:12px;">🔑 INICIAR SESIÓN</button>
         </div>
 
-        <!-- Categoria Selector Publico -->
         <div style="margin-bottom:16px; display:flex; align-items:center; gap:8px;">
-          <span style="font-size:12px; color:#aaa;">Categoría:</span>
+          <span style="font-size:12px; color:#aaa;">Categoría / Equipo:</span>
           <select id="pub-selector-categoria" class="select-categoria-header"></select>
         </div>
 
-        <!-- Content Public -->
         <div id="pub-rankings-container" style="margin-bottom:16px;"></div>
 
         <div class="card" style="margin-bottom:16px;">
@@ -64,34 +62,35 @@
     <!-- ══ APP PRINCIPAL ══ -->
     <div id="main-app" style="display:none;">
 
-      <!-- Header con Selector de Categorías Configuradas -->
+      <!-- Header -->
       <div class="app-header">
         <div class="header-left-group">
           <img id="header-logo" class="header-logo" src="https://res.cloudinary.com/djhpfdklk/image/upload/v1778985193/cuerpo_tecnico_ysxrjt.png" alt="Logo" onerror="this.src='https://res.cloudinary.com/djhpfdklk/image/upload/v1778985193/cuerpo_tecnico_ysxrjt.png'">
           <div class="header-title" id="header-club">11FUT MANAGER</div>
-          <select id="selector-categoria" class="select-categoria-header"></select>
         </div>
         <button class="header-config" id="btn-config">⚙️</button>
       </div>
 
-      <!-- Tabs -->
+      <!-- Tabs Limpias -->
       <div class="tabs">
-        <div class="tab active" id="tab-eqA">EQ A</div>
-        <div class="tab" id="tab-eqB">EQ B</div>
+        <div class="tab active" id="tab-1">TÁCTICA</div>
         <div class="tab" id="tab-3">CITACIÓN</div>
         <div class="tab" id="tab-4">PLANTEL</div>
         <div class="tab" id="tab-5">STATS</div>
         <div class="tab" id="tab-6">HISTORIAL</div>
       </div>
 
-      <!-- SECCIÓN 1: EQUIPO A -->
+      <!-- SECCIÓN 1: TÁCTICA Y ALINEACIÓN (UNIFICADA) -->
       <div id="s1" class="seccion active">
         <div class="tactica-desktop-grid">
           
-          <!-- COLUMNA IZQUIERDA (CONTROLES + HERRAMIENTAS DE DIBUJO) -->
+          <!-- COLUMNA IZQUIERDA (SELECTOR CATEGORÍA/EQUIPO + CONTROLES + HERRAMIENTAS EXTENDIDAS DE DIBUJO) -->
           <div class="col-panel-izq">
             <div class="card" style="margin-bottom:0;">
-              <div class="card-title">⚙️ ALINEACIÓN A</div>
+              <div class="card-title">🏆 CATEGORÍA / EQUIPO</div>
+              <select id="selector-categoria-tactica" class="select-categoria-header" style="width:100%;font-size:15px;padding:10px;margin-bottom:12px;"></select>
+
+              <div class="card-title" style="font-size:14px;margin-top:6px;">⚙️ ALINEACIÓN</div>
               <select id="modo-A">
                 <option value="11">Fútbol 11</option>
                 <option value="8">Fútbol 8</option>
@@ -105,25 +104,44 @@
               <button class="btn btn-gold" id="btn-save-esquema-A" style="margin-top:6px;font-size:11px;">💾 GUARDAR ESQUEMA ACTUAL</button>
             </div>
 
-            <!-- TOOLBAR DE DIBUJO A -->
+            <!-- TOOLBAR EXTENDIDO DE DIBUJO -->
             <div class="tactica-toolbar">
-              <div class="card-title" style="margin-bottom:4px;font-size:13px;">✏️ PIZARRA DE DIBUJO</div>
+              <div class="card-title" style="margin-bottom:4px;font-size:13px;">✏️ PIZARRA DE DIBUJO Y MARCADORES</div>
+              
+              <!-- Herramientas Base -->
               <div class="tool-btn-group">
                 <button class="tool-btn active" id="btn-none-A">🤚 MOVER</button>
                 <button class="tool-btn" id="btn-pencil-A">✏️ LÁPIZ</button>
                 <button class="tool-btn" id="btn-arrow-A">➔ FLECHA</button>
                 <button class="tool-btn" id="btn-clear-A">🗑️ BORRAR</button>
               </div>
+
+              <!-- Selector de Grosor y Trazo -->
+              <div class="tool-btn-group" style="margin-top:4px;">
+                <button class="tool-btn" id="btn-w2-A">🪡 FINA</button>
+                <button class="tool-btn active" id="btn-w4-A">✏️ MED</button>
+                <button class="tool-btn" id="btn-w7-A">🖊️ GRUESA</button>
+                <button class="tool-btn" id="btn-dash-A">🏁 PUNTEADA</button>
+              </div>
+
+              <!-- Marcadores de Balón y Cono -->
+              <div class="tool-btn-group" style="margin-top:4px;">
+                <button class="tool-btn" id="btn-add-balon-A" style="background:#222;color:#fff;">⚽ +BALÓN</button>
+                <button class="tool-btn" id="btn-add-cono-A" style="background:#222;color:#fa0;">🪧 +CONO</button>
+              </div>
+
+              <!-- Colores -->
               <div class="tool-btn-group" id="colors-A" style="justify-content:center;margin-top:4px;">
                 <span class="color-dot active" data-color="#d4af37" style="background:#d4af37;"></span>
                 <span class="color-dot" data-color="#ffffff" style="background:#ffffff;"></span>
                 <span class="color-dot" data-color="#e21e22" style="background:#e21e22;"></span>
                 <span class="color-dot" data-color="#00eeff" style="background:#00eeff;"></span>
               </div>
+
               <button class="tool-btn" id="btn-fs-A" style="background:var(--azul);color:#fff;margin-top:6px;">⛶ PANTALLA COMPLETA</button>
             </div>
 
-            <button class="btn btn-gray" id="btn-export-png-A" style="padding:10px;">📸 GUARDAR IMAGEN A</button>
+            <button class="btn btn-gray" id="btn-export-png-A" style="padding:10px;">📸 GUARDAR IMAGEN TÁCTICA</button>
           </div>
 
           <!-- COLUMNA CENTRO (CANCHA CON ASPECT RATIO FIJO 3:5) -->
@@ -140,97 +158,24 @@
                   <button class="tool-btn" id="btn-arrow-fs-A">➔ FLECHA</button>
                   <button class="tool-btn" id="btn-clear-fs-A">🗑️ BORRAR</button>
                 </div>
+                <div class="tool-btn-group" style="margin-top:6px;">
+                  <button class="tool-btn" id="btn-add-balon-fs-A">⚽ BALÓN</button>
+                  <button class="tool-btn" id="btn-add-cono-fs-A">🪧 CONO</button>
+                </div>
               </div>
 
               <div class="cancha-wrapper" id="cancha-A"></div>
             </div>
           </div>
 
-          <!-- COLUMNA DERECHA (BANCA CON ASIENTOS DE DUGOUT Y CUERPO TÉCNICO) -->
+          <!-- COLUMNA DERECHA (BANCA DE 4 EN 4 Y CUERPO TÉCNICO) -->
           <div class="col-banca-der">
             <div class="banca-side">
-              <div class="banca-label">SUPLENTES / DUGOUT</div>
+              <div class="banca-label">🪑 BANCO DE SUPLENTES (DUGOUT)</div>
               <div class="banca-container" id="banco-A"></div>
               <div class="ct-section">
-                <div class="banca-label" style="margin-top:10px;">CUERPO TÉCNICO</div>
+                <div class="banca-label" style="margin-top:14px;">🧥 CUERPO TÉCNICO</div>
                 <div class="ct-container" id="ct-A"></div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- SECCIÓN 2: EQUIPO B -->
-      <div id="s2" class="seccion">
-        <div class="tactica-desktop-grid">
-          
-          <!-- COLUMNA IZQUIERDA -->
-          <div class="col-panel-izq">
-            <div class="card" style="margin-bottom:0;">
-              <div class="card-title">⚙️ ALINEACIÓN B</div>
-              <select id="modo-B">
-                <option value="11">Fútbol 11</option>
-                <option value="8">Fútbol 8</option>
-                <option value="5">Fútbol 5</option>
-              </select>
-              <select id="esquema-B">
-                <option value="1-4-4-2">1-4-4-2</option>
-                <option value="1-4-3-3">1-4-3-3</option>
-                <option value="1-3-5-2">1-3-5-2</option>
-              </select>
-              <button class="btn btn-gold" id="btn-save-esquema-B" style="margin-top:6px;font-size:11px;">💾 GUARDAR ESQUEMA ACTUAL</button>
-            </div>
-
-            <!-- TOOLBAR DE DIBUJO B -->
-            <div class="tactica-toolbar">
-              <div class="card-title" style="margin-bottom:4px;font-size:13px;">✏️ PIZARRA DE DIBUJO</div>
-              <div class="tool-btn-group">
-                <button class="tool-btn active" id="btn-none-B">🤚 MOVER</button>
-                <button class="tool-btn" id="btn-pencil-B">✏️ LÁPIZ</button>
-                <button class="tool-btn" id="btn-arrow-B">➔ FLECHA</button>
-                <button class="tool-btn" id="btn-clear-B">🗑️ BORRAR</button>
-              </div>
-              <div class="tool-btn-group" id="colors-B" style="justify-content:center;margin-top:4px;">
-                <span class="color-dot active" data-color="#d4af37" style="background:#d4af37;"></span>
-                <span class="color-dot" data-color="#ffffff" style="background:#ffffff;"></span>
-                <span class="color-dot" data-color="#e21e22" style="background:#e21e22;"></span>
-                <span class="color-dot" data-color="#00eeff" style="background:#00eeff;"></span>
-              </div>
-              <button class="tool-btn" id="btn-fs-B" style="background:var(--azul);color:#fff;margin-top:6px;">⛶ PANTALLA COMPLETA</button>
-            </div>
-
-            <button class="btn btn-gray" id="btn-export-png-B" style="padding:10px;">📸 GUARDAR IMAGEN B</button>
-          </div>
-
-          <!-- COLUMNA CENTRO -->
-          <div class="col-cancha-centro">
-            <div class="campo-layout" id="pizarra-B">
-              <button class="btn-exit-fs" id="btn-exit-fs-B">❌ SALIR PANTALLA COMPLETA</button>
-              <button class="btn-toggle-tools-fs" id="btn-toggle-tools-fs-B">✏️ DIBUJO</button>
-
-              <!-- OVERLAY HERRAMIENTAS EN FULLSCREEN -->
-              <div class="fs-toolbar-overlay" id="fs-tools-overlay-B">
-                <div class="tool-btn-group">
-                  <button class="tool-btn active" id="btn-none-fs-B">🤚 MOVER</button>
-                  <button class="tool-btn" id="btn-pencil-fs-B">✏️ LÁPIZ</button>
-                  <button class="tool-btn" id="btn-arrow-fs-B">➔ FLECHA</button>
-                  <button class="tool-btn" id="btn-clear-fs-B">🗑️ BORRAR</button>
-                </div>
-              </div>
-
-              <div class="cancha-wrapper" id="cancha-B"></div>
-            </div>
-          </div>
-
-          <!-- COLUMNA DERECHA -->
-          <div class="col-banca-der">
-            <div class="banca-side">
-              <div class="banca-label">SUPLENTES / DUGOUT</div>
-              <div class="banca-container" id="banco-B"></div>
-              <div class="ct-section">
-                <div class="banca-label" style="margin-top:10px;">CUERPO TÉCNICO</div>
-                <div class="ct-container" id="ct-B"></div>
               </div>
             </div>
           </div>
@@ -393,12 +338,8 @@
           <button class="btn btn-gold" id="btn-cfg-nombres">💾 GUARDAR NOMBRES</button>
         </div>
         <div class="card">
-          <div class="card-title">🎽 KITS EQUIPO A</div>
+          <div class="card-title">🎽 KITS EQUIPO LOCAL</div>
           <div id="cfg-kit-gallery-A" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;"></div>
-        </div>
-        <div class="card">
-          <div class="card-title">🎽 KITS EQUIPO B</div>
-          <div id="cfg-kit-gallery-B" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;"></div>
         </div>
         <button class="btn btn-gold" id="btn-cfg-kits" style="margin-bottom:12px;">💾 GUARDAR KITS SELECCIONADOS</button>
         <div class="card">
