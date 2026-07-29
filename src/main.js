@@ -132,13 +132,7 @@ function renderRankingsPublico() {
 }
 
 function renderStatsPublico() {
-  const pubStatsContainer = document.getElementById('pub-stats-container');
-  const mainStatsContainer = document.getElementById('stats-list');
-  renderStats();
-  if (pubStatsContainer && mainStatsContainer) {
-    pubStatsContainer.innerHTML = mainStatsContainer.innerHTML;
-    pubStatsContainer.querySelectorAll('button').forEach(btn => btn.style.display = 'none');
-  }
+  renderStats('pub-stats-container');
 }
 
 function renderHistorialPublico() {

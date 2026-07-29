@@ -1,8 +1,8 @@
 import { stats, updateStats, autoSaveLocal, plantel, perfil } from "./state.js";
 import { guardarFirebase } from "../services/firebase.js";
 
-export function renderStats() {
-  const cont = document.getElementById('stats-list');
+export function renderStats(targetId = 'stats-list') {
+  const cont = document.getElementById(targetId) || document.getElementById('stats-list');
   if (!cont) return;
 
   const searchInput = document.getElementById('stat-search');
@@ -29,7 +29,7 @@ export function renderStats() {
             <th style="padding:8px;text-align:center;">🎯 ASI</th>
             <th style="padding:8px;text-align:center;">🧤 VALLA</th>
             <th style="padding:8px;text-align:center;">⭐ RAT</th>
-            <th style="padding:8px;text-align:center;">EDITAR</th>
+            ${targetId === 'pub-stats-container' ? '' : '<th style="padding:8px;text-align:center;">EDITAR</th>'}
           </tr>
         </thead>
         <tbody>
@@ -51,9 +51,10 @@ export function renderStats() {
         <td style="padding:8px;text-align:center;color:var(--azul);font-weight:700;">${st.asist || 0}</td>
         <td style="padding:8px;text-align:center;font-size:11px;color:#aaa;">${vallaDisplay}</td>
         <td style="padding:8px;text-align:center;color:var(--oro);font-weight:700;">${(st.rat || 6.5).toFixed(1)}</td>
+        ${targetId === 'pub-stats-container' ? '' : `
         <td style="padding:8px;text-align:center;">
           <button class="btn btn-gray" style="padding:4px 8px;font-size:10px;width:auto;" onclick="window._abrirStatModal('${nombre}')">✏️</button>
-        </td>
+        </td>`}
       </tr>
     `;
   });
