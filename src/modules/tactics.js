@@ -637,14 +637,17 @@ export function abrirModalJugador(eq, idx, cat) {
   const asignadosSup = (plantel[`sup_${eq}`] || []).filter(Boolean);
   const ocupados = new Set([...asignadosTit, ...asignadosSup]);
 
-  const listaJugadores = [...(plantel[cat] || []), ...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
-  const disponibles = [...new Set(listaJugadores)].filter(n => !ocupados.has(n));
+  const listaCat = (plantel[cat] && plantel[cat].length) ? plantel[cat] : [];
+  const todosLos25 = [...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
+  const pool = listaCat.length ? [...new Set([...listaCat, ...todosLos25])] : [...new Set(todosLos25)];
+  
+  const disponibles = pool.filter(n => n && !ocupados.has(n));
 
   let html = `<div class="modal-title">⚽ SELECCIONAR TITULAR</div>`;
   html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
 
   if (!disponibles.length) {
-    html += `<div style="color:#aaa;font-size:12px;text-align:center;padding:10px;">Todos los demás jugadores ya están ubicados en otra posición.</div>`;
+    html += `<div style="color:#aaa;font-size:12px;text-align:center;padding:10px;">No hay más jugadores disponibles (todos ya están ubicados en la cancha o el banco).</div>`;
   } else {
     disponibles.forEach(n => {
       const esElMismo = n === jugadorActualEnSlot;
@@ -689,14 +692,14 @@ export function abrirModalSuplente(eq, idx) {
   const asignadosSup = (plantel[`sup_${eq}`] || []).filter((n, i) => i !== idx && n);
   const ocupados = new Set([...asignadosTit, ...asignadosSup]);
 
-  const todos = [...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
-  const disponibles = [...new Set(todos)].filter(n => !ocupados.has(n));
+  const todosLos25 = [...new Set([...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del])];
+  const disponibles = todosLos25.filter(n => n && !ocupados.has(n));
 
   let html = `<div class="modal-title">🔄 SELECCIONAR SUPLENTE</div>`;
   html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
 
   if (!disponibles.length) {
-    html += `<div style="color:#aaa;font-size:12px;text-align:center;padding:10px;">Todos los demás jugadores ya están ubicados en otra posición.</div>`;
+    html += `<div style="color:#aaa;font-size:12px;text-align:center;padding:10px;">No hay más jugadores disponibles (todos ya están ubicados en la cancha o el banco).</div>`;
   } else {
     disponibles.forEach(n => {
       const esElMismo = n === suplenteActualEnSlot;
