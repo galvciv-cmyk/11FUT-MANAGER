@@ -43,18 +43,21 @@ export function setCategoriaActiva(catNombre) {
   if (!catNombre) return;
   perfil.categoriaActiva = catNombre;
 
-  if (!perfil.categorias.includes(catNombre)) {
-    perfil.categorias.push(catNombre);
-  }
-
   if (!categoriasData[catNombre]) {
     categoriasData[catNombre] = {
       plantel: JSON.parse(JSON.stringify(DEFAULT_PLANTEL)),
       stats: {},
       historial: [],
-      juegosProgramados: []
+      juegosProgramados: [],
+      torneo: 'Torneo Oficial'
     };
   }
+
+  const todas = new Set([
+    ...(perfil.categorias || []),
+    ...Object.keys(categoriasData)
+  ]);
+  perfil.categorias = Array.from(todas).filter(Boolean);
 
   plantel = categoriasData[catNombre].plantel;
   stats = categoriasData[catNombre].stats;

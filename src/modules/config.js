@@ -1,5 +1,6 @@
 import { perfil, setPinHash, setCategoriaActiva, autoSaveLocal, updateStats, updateHistorial, categoriasData } from "./state.js";
-import { guardarFirebase, hashPin, getPublicId } from "../services/firebase.js";
+import { guardarFirebase, hashPin, getPublicId, auth } from "../services/firebase.js";
+import { signOut } from "firebase/auth";
 import { KITS } from "./state.js";
 import { subirImagenCloudinary } from "../services/cloudinary.js";
 import { renderStats } from "./stats.js";
@@ -133,6 +134,9 @@ export async function agregarNuevaCategoriaConfig() {
   if (inputTor) inputTor.value = '';
 
   renderCategoriasConfigUI();
+  if (typeof window._renderSelectorCategoria === 'function') {
+    window._renderSelectorCategoria();
+  }
   autoSaveLocal();
   await guardarFirebase();
   mostrarNotificacionApp('Categoría Creada', `Categoría "${catVal}" creada con éxito para el torneo "${torVal}".`);
@@ -322,9 +326,15 @@ export function borrarHistorial() {
 }
 
 export function cerrarSesion() {
-  mostrarConfirmacionApp('Cerrar Sesión', '¿Deseas cerrar tu sesión actual?', () => {
+  mostrarConfirmacionApp('Cerrar Sesión', '¿Deseas cerrar tu sesión actual?', async () => {
+    try {
+      if (auth) await signOut(auth);
+    } catch (e) {
+      console.error('Error al cerrar sesión:', e);
+    }
     localStorage.clear();
-    location.reload();
+    sessionStorage.clear();
+    window.location.href = window.location.origin + window.location.pathname;
   });
 }
 

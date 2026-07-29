@@ -86,6 +86,8 @@ export function renderSelectorCategoria(isPublic = false) {
   if (selectPub) selectPub.innerHTML = html;
 }
 
+window._renderSelectorCategoria = renderSelectorCategoria;
+
 export function cambiarCategoria(catNombre) {
   setCategoriaActiva(catNombre);
   renderSelectorCategoria();
