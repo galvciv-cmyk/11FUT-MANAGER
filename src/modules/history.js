@@ -198,7 +198,7 @@ export function renderConsolaPartidoVivo() {
           <button class="btn-counter btn-gold" onclick="window._sumarGolFavor()">+</button>
           <span style="color:#444;font-size:16px;margin:0 4px;">|</span>
           <span class="counter-val" style="color:var(--rojo);">${st.gc}</span>
-          <button class="btn-counter btn-red" onclick="window._modificarLiveCounter('gc', 1)">+</button>
+          <button class="btn-counter btn-red" onclick="window._sumarGolContraModal()">+</button>
         </div>
       </div>
 
@@ -214,7 +214,7 @@ export function renderConsolaPartidoVivo() {
           <button class="btn-counter btn-gold" onclick="window._sumarRemateFavor()">+</button>
           <span style="color:#444;font-size:16px;margin:0 4px;">|</span>
           <span class="counter-val" style="color:var(--rojo);">${st.rematesC}</span>
-          <button class="btn-counter btn-red" onclick="window._modificarLiveCounter('rematesC', 1)">+</button>
+          <button class="btn-counter btn-red" onclick="window._sumarRemateContraModal()">+</button>
         </div>
       </div>
 
@@ -325,6 +325,33 @@ window._confirmarGolContraPortero = (nombre) => {
   partidoEnVivoState.gc += 1;
   partidoEnVivoState.rematesC += 1;
   partidoEnVivoState.golesRecibidosPorMap[nombre] = (partidoEnVivoState.golesRecibidosPorMap[nombre] || 0) + 1;
+  document.getElementById('modal').style.display = 'none';
+  renderConsolaPartidoVivo();
+};
+
+window._sumarRemateContraModal = () => {
+  const modal = document.getElementById('modal');
+  const modalContent = document.getElementById('modal-content');
+  if (!modal || !modalContent) return;
+
+  const porteros = (plantel.por || []).length ? plantel.por : ['Guardameta'];
+
+  let html = `<div class="modal-title">🧤 SELECCIONAR GUARDAMETA EN CHUTE DEL RIVAL</div>`;
+  html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
+
+  porteros.forEach(n => {
+    html += `<button class="btn btn-gray" style="text-align:left;padding:10px;" onclick="window._confirmarRemateContraPortero('${n}')">🧤 ${n}</button>`;
+  });
+
+  html += `<button class="btn btn-red" style="margin-top:8px;" onclick="document.getElementById('modal').style.display='none'">CANCELAR</button>`;
+  html += `</div>`;
+
+  modalContent.innerHTML = html;
+  modal.style.display = 'flex';
+};
+
+window._confirmarRemateContraPortero = (nombre) => {
+  partidoEnVivoState.rematesC += 1;
   document.getElementById('modal').style.display = 'none';
   renderConsolaPartidoVivo();
 };
