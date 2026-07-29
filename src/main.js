@@ -99,6 +99,10 @@ async function cargarPerfilPublico(publicId) {
 
   await cargarFirebasePublico(publicId);
 
+  const cats = perfil.categorias || ["Sub-14"];
+  const catActiva = perfil.categoriaActiva || cats[0];
+  setCategoriaActiva(catActiva);
+
   document.getElementById('pub-header-club').textContent = perfil.club || '11FUT MANAGER';
   if (perfil.logo) {
     const pubLogo = document.getElementById('pub-header-logo');
@@ -112,6 +116,7 @@ async function cargarPerfilPublico(publicId) {
 
   const selectPub = document.getElementById('pub-selector-categoria');
   if (selectPub) {
+    selectPub.value = catActiva;
     selectPub.onchange = (e) => {
       setCategoriaActiva(e.target.value);
       renderRankingsPublico();

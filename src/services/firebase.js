@@ -65,10 +65,13 @@ export async function cargarFirebase() {
     if (snap.exists()) {
       const data = snap.data();
       if (data.perfil) updatePerfil(data.perfil);
-      if (data.categoriasData) updateCategoriasData(data.categoriasData);
-      if (data.plantel) updatePlantel(data.plantel);
-      if (data.stats) updateStats(data.stats);
-      if (data.historial) updateHistorial(data.historial);
+      if (data.categoriasData && Object.keys(data.categoriasData).length > 0) {
+        updateCategoriasData(data.categoriasData);
+      } else {
+        if (data.plantel) updatePlantel(data.plantel);
+        if (data.stats) updateStats(data.stats);
+        if (data.historial) updateHistorial(data.historial);
+      }
       autoSaveLocal();
       return true;
     }
@@ -93,10 +96,13 @@ export async function cargarFirebasePublico(targetPublicId) {
     if (snap.exists()) {
       const data = snap.data();
       if (data.perfil) updatePerfil(data.perfil);
-      if (data.categoriasData) updateCategoriasData(data.categoriasData);
-      if (data.plantel) updatePlantel(data.plantel);
-      if (data.stats) updateStats(data.stats);
-      if (data.historial) updateHistorial(data.historial);
+      if (data.categoriasData && Object.keys(data.categoriasData).length > 0) {
+        updateCategoriasData(data.categoriasData);
+      } else {
+        if (data.plantel) updatePlantel(data.plantel);
+        if (data.stats) updateStats(data.stats);
+        if (data.historial) updateHistorial(data.historial);
+      }
       autoSaveLocal();
       return true;
     }
