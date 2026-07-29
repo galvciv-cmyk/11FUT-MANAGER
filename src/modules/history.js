@@ -649,6 +649,7 @@ export function renderHistorial() {
       `;
     }).join('');
   }
+  setTimeout(inicializarModuloIA, 100);
 }
 
 window._eliminarPartido = async (id) => {
@@ -663,3 +664,110 @@ window._eliminarPartido = async (id) => {
     renderStats();
   }
 };
+
+// ══════════════════════════════════════════
+// MÓDULO DE ANÁLISIS TÁCTICO CON IA (GEMINI)
+// ══════════════════════════════════════════
+const GEMINI_API_KEY = "AQ.Ab8RN6J_Uw5jsZ1mV2dDOZLk7o1P7DFiC3mKCR9PKwEeM4oHOQ";
+
+export async function obtenerAnalisisGemini(datos) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+  const promptText = `
+    Actúa como un analista táctico de fútbol profesional. 
+    Analiza las siguientes estadísticas de un partido y genera un informe breve (máximo 2 párrafos), técnico y motivador para el equipo:
+
+    - Partido: ${datos.equipoLocal} vs ${datos.equipoRival}
+    - Marcador Final: ${datos.golesLocal} - ${datos.golesRival}
+    - Tiros a puerta: ${datos.tirosPuerta}
+    - Córners: ${datos.corners}
+    - Faltas: ${datos.faltas}
+    - Destacados:
+      * Mejor Portero: ${datos.portero}
+      * Máximo Asistidor: ${datos.asistidor}
+      * Máximo Rematador: ${datos.rematador}
+  `;
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: promptText }] }]
+      })
+    });
+
+    const data = await response.json();
+    if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
+      return data.candidates[0].content.parts[0].text;
+    }
+    return data.error?.message || "Ocurrió una respuesta inesperada de la IA.";
+  } catch (error) {
+    console.error("Error conectando con Gemini:", error);
+    return "Ocurrió un error al generar el análisis. Verifica tu conexión o tu API Key.";
+  }
+}
+
+export function inicializarModuloIA() {
+  const btn = document.getElementById("btnGenerarIA");
+  if (!btn) return;
+
+  btn.onclick = async () => {
+    const contenedorResultado = document.getElementById("resultadoIA");
+    if (!contenedorResultado) return;
+    
+    contenedorResultado.innerHTML = "⏳ <i>Analizando estadísticas del partido con IA...</i>";
+
+    const ultimoPartido = (historial && historial.length > 0) ? historial[0] : null;
+    const club = perfil.club || perfil.eqA || "11FUT MANAGER";
+
+    const porteroMain = (plantel.por && plantel.por.length > 0) ? plantel.por[0] : "Carlos (3 atajadas)";
+    
+    let asistidorMain = "Luis (2 pases de gol)";
+    let rematadorMain = "Mateo (2 goles)";
+
+    if (ultimoPartido) {
+      if (ultimoPartido.asistidores && Object.keys(ultimoPartido.asistidores).length > 0) {
+        asistidorMain = Object.entries(ultimoPartido.asistidores).map(([k, v]) => `${k} (${v} asist)`).join(', ');
+      }
+      if (ultimoPartido.goleadores && Object.keys(ultimoPartido.goles || ultimoPartido.goleadores).length > 0) {
+        rematadorMain = Object.entries(ultimoPartido.goleadores).map(([k, v]) => `${k} (${v} goles)`).join(', ');
+      }
+    }
+
+    const datosDelPartido = ultimoPartido ? {
+      equipoLocal: club,
+      equipoRival: ultimoPartido.rival || "Rival CD",
+      golesLocal: ultimoPartido.gf || 0,
+      golesRival: ultimoPartido.gc || 0,
+      tirosPuerta: ultimoPartido.rematesA || 7,
+      corners: ultimoPartido.cornersA || 4,
+      faltas: ultimoPartido.faltasA || 5,
+      portero: porteroMain,
+      asistidor: asistidorMain,
+      rematador: rematadorMain
+    } : {
+      equipoLocal: club,
+      equipoRival: "Rival CD",
+      golesLocal: 3,
+      golesRival: 1,
+      tirosPuerta: 7,
+      corners: 4,
+      faltas: 5,
+      portero: porteroMain,
+      asistidor: "Luis (2 pases de gol)",
+      rematador: "Mateo (2 goles)"
+    };
+
+    const informe = await obtenerAnalisisGemini(datosDelPartido);
+    contenedorResultado.innerText = informe;
+  };
+}
+
+if (typeof window !== 'undefined') {
+  window._inicializarModuloIA = inicializarModuloIA;
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(inicializarModuloIA, 400);
+  });
+}
+
