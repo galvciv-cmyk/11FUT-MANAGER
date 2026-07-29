@@ -8,6 +8,46 @@ import { actualizarTactica } from "./tactics.js";
 
 const DEFAULT_LOGO = "https://res.cloudinary.com/djhpfdklk/image/upload/v1778985193/cuerpo_tecnico_ysxrjt.png";
 
+export function mostrarNotificacionApp(titulo, mensaje, esExito = true) {
+  const modal = document.getElementById('modal');
+  const modalContent = document.getElementById('modal-content');
+  if (!modal || !modalContent) return;
+
+  modalContent.innerHTML = `
+    <div class="modal-title">${esExito ? '✅' : '⚠️'} ${titulo.toUpperCase()}</div>
+    <div class="card" style="text-align:center;padding:20px 14px;">
+      <div style="font-size:14px;color:#eee;margin-bottom:16px;">${mensaje}</div>
+      <button class="btn btn-gold" onclick="document.getElementById('modal').style.display='none'">ACEPTAR</button>
+    </div>
+  `;
+
+  modal.style.display = 'flex';
+}
+
+export function mostrarConfirmacionApp(titulo, mensaje, onConfirm) {
+  const modal = document.getElementById('modal');
+  const modalContent = document.getElementById('modal-content');
+  if (!modal || !modalContent) return;
+
+  window._modalCallbackConfirm = () => {
+    document.getElementById('modal').style.display = 'none';
+    if (typeof onConfirm === 'function') onConfirm();
+  };
+
+  modalContent.innerHTML = `
+    <div class="modal-title">❓ ${titulo.toUpperCase()}</div>
+    <div class="card" style="text-align:center;padding:20px 14px;">
+      <div style="font-size:14px;color:#eee;margin-bottom:16px;">${mensaje}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <button class="btn btn-red" onclick="window._modalCallbackConfirm()">SÍ, CONFIRMAR</button>
+        <button class="btn btn-gray" onclick="document.getElementById('modal').style.display='none'">CANCELAR</button>
+      </div>
+    </div>
+  `;
+
+  modal.style.display = 'flex';
+}
+
 export function abrirConfig() {
   const modal = document.getElementById('config-modal');
   if (!modal) return;
@@ -28,14 +68,10 @@ export function abrirConfig() {
   const divPrev = document.getElementById('prev-cfg-logo');
   const icoLogo = document.getElementById('ico-cfg-logo');
 
-  if (perfil.logo) {
-    if (imgPrev) imgPrev.src = perfil.logo;
-    if (divPrev) divPrev.style.display = 'block';
-    if (icoLogo) icoLogo.style.display = 'none';
-  } else {
-    if (divPrev) divPrev.style.display = 'none';
-    if (icoLogo) icoLogo.style.display = 'block';
-  }
+  const logoActual = perfil.logo || DEFAULT_LOGO;
+  if (imgPrev) imgPrev.src = logoActual;
+  if (divPrev) divPrev.style.display = 'block';
+  if (icoLogo) icoLogo.style.display = 'none';
 
   modal.style.display = 'flex';
 }
@@ -82,17 +118,16 @@ export async function agregarNuevaCategoriaConfig() {
 
   const catVal = inputCat.value.trim();
   const torVal = inputTor ? inputTor.value.trim() : 'Torneo Oficial';
-  if (!catVal) return alert('Ingresa el nombre de la categoría');
+  if (!catVal) return mostrarNotificacionApp('Datos incompletos', 'Ingresa el nombre de la categoría', false);
 
   if (!perfil.categorias) perfil.categorias = [];
-  if (perfil.categorias.includes(catVal)) return alert('Esta categoría ya existe');
+  if (perfil.categorias.includes(catVal)) return mostrarNotificacionApp('Categoría existente', 'Esta categoría ya existe', false);
 
   perfil.categorias.push(catVal);
   setCategoriaActiva(catVal);
 
-  if (categoriasData[catVal]) {
-    categoriasData[catVal].torneo = torVal || 'Torneo Oficial';
-  }
+  if (!categoriasData[catVal]) categoriasData[catVal] = {};
+  categoriasData[catVal].torneo = torVal || 'Torneo Oficial';
 
   inputCat.value = '';
   if (inputTor) inputTor.value = '';
@@ -100,23 +135,23 @@ export async function agregarNuevaCategoriaConfig() {
   renderCategoriasConfigUI();
   autoSaveLocal();
   await guardarFirebase();
-  alert(`✅ Categoría "${catVal}" creada con éxito para el torneo "${torVal}".`);
-  location.reload();
+  mostrarNotificacionApp('Categoría Creada', `Categoría "${catVal}" creada con éxito para el torneo "${torVal}".`);
 }
 
-export async function eliminarCategoriaConfig(catNombre) {
-  if (perfil.categorias.length <= 1) return alert('Debes mantener al menos 1 categoría.');
-  if (!confirm(`¿Estás seguro de eliminar la categoría ${catNombre}?`)) return;
+export function eliminarCategoriaConfig(catNombre) {
+  if (perfil.categorias.length <= 1) return mostrarNotificacionApp('Operación denegada', 'Debes mantener al menos 1 categoría.', false);
 
-  perfil.categorias = perfil.categorias.filter(c => c !== catNombre);
-  if (perfil.categoriaActiva === catNombre) {
-    setCategoriaActiva(perfil.categorias[0]);
-  }
+  mostrarConfirmacionApp('Eliminar Categoría', `¿Estás seguro de eliminar la categoría ${catNombre}?`, async () => {
+    perfil.categorias = perfil.categorias.filter(c => c !== catNombre);
+    if (perfil.categoriaActiva === catNombre) {
+      setCategoriaActiva(perfil.categorias[0]);
+    }
 
-  renderCategoriasConfigUI();
-  autoSaveLocal();
-  await guardarFirebase();
-  location.reload();
+    renderCategoriasConfigUI();
+    autoSaveLocal();
+    await guardarFirebase();
+    location.reload();
+  });
 }
 
 window._eliminarCategoriaConfig = (c) => eliminarCategoriaConfig(c);
@@ -129,9 +164,9 @@ export function cerrarConfig() {
 export function copiarEnlacePublico() {
   const link = `${window.location.origin}${window.location.pathname}?public=true`;
   navigator.clipboard.writeText(link).then(() => {
-    alert(`✅ Enlace del Perfil Público copiado al portapapeles:\n\n${link}`);
+    mostrarNotificacionApp('Enlace Copiado', `Enlace del Perfil Público copiado al portapapeles:\n\n${link}`);
   }).catch(() => {
-    prompt("Copia este enlace para compartir el Perfil Público:", link);
+    mostrarNotificacionApp('Perfil Público', `Enlace para compartir:\n\n${link}`);
   });
 }
 
@@ -148,6 +183,7 @@ export async function guardarNombres() {
   autoSaveLocal();
   await guardarFirebase();
   cerrarConfig();
+  mostrarNotificacionApp('Guardado', 'Nombre del Club actualizado correctamente.');
 }
 
 let kitSeleccionadoA = '';
@@ -182,11 +218,16 @@ export async function guardarKits() {
   autoSaveLocal();
   await guardarFirebase();
   cerrarConfig();
+  mostrarNotificacionApp('Kits Guardados', 'Kit de uniforme actualizado con éxito.');
 }
 
 export async function guardarLogo() {
   const fileInput = document.getElementById('up-cfg-logo');
-  if (!fileInput || !fileInput.files.length) return alert('Selecciona una imagen primero');
+  if (!fileInput || !fileInput.files.length) {
+    perfil.logo = perfil.logo || DEFAULT_LOGO;
+    aplicarPerfil();
+    return mostrarNotificacionApp('Logo Predeterminado', 'Se mantiene el logo oficial del club.');
+  }
 
   const file = fileInput.files[0];
   const overlay = document.getElementById('upload-overlay');
@@ -194,14 +235,16 @@ export async function guardarLogo() {
 
   try {
     const url = await subirImagenCloudinary(file);
-    perfil.logo = url;
+    perfil.logo = url || DEFAULT_LOGO;
     aplicarPerfil();
     autoSaveLocal();
     await guardarFirebase();
-    alert('✅ Logo actualizado con éxito');
     cerrarConfig();
+    mostrarNotificacionApp('Logo Actualizado', 'El logo del club fue actualizado con éxito.');
   } catch (e) {
-    alert('Error al subir logo: ' + e.message);
+    perfil.logo = perfil.logo || DEFAULT_LOGO;
+    aplicarPerfil();
+    mostrarNotificacionApp('Error al Subir', 'Ocurrió un inconveniente con la imagen. Se mantendrá el logo predeterminado.', false);
   } finally {
     if (overlay) overlay.style.display = 'none';
   }
@@ -209,7 +252,9 @@ export async function guardarLogo() {
 
 export async function guardarFondo() {
   const fileInput = document.getElementById('up-cfg-bg');
-  if (!fileInput || !fileInput.files.length) return alert('Selecciona una imagen primero');
+  if (!fileInput || !fileInput.files.length) {
+    return mostrarNotificacionApp('Fondo Actual', 'Se mantiene el fondo seleccionado actualmente.');
+  }
 
   const file = fileInput.files[0];
   const overlay = document.getElementById('upload-overlay');
@@ -217,59 +262,62 @@ export async function guardarFondo() {
 
   try {
     const url = await subirImagenCloudinary(file);
-    perfil.bg = url;
+    if (url) perfil.bg = url;
     aplicarPerfil();
     autoSaveLocal();
     await guardarFirebase();
-    alert('✅ Fondo actualizado con éxito');
     cerrarConfig();
+    mostrarNotificacionApp('Fondo Actualizado', 'El fondo de la aplicación fue actualizado.');
   } catch (e) {
-    alert('Error al subir fondo: ' + e.message);
+    mostrarNotificacionApp('Error al Subir', 'No se pudo subir la imagen de fondo. Se conserva el fondo actual.', false);
   } finally {
     if (overlay) overlay.style.display = 'none';
   }
 }
 
 export async function cambiarPin() {
-  const nuevo = document.getElementById('cfg-pin-nuevo').value.trim();
-  const conf  = document.getElementById('cfg-pin-conf').value.trim();
+  const nuevo = document.getElementById('cfg-pin-nuevo')?.value.trim();
+  const conf  = document.getElementById('cfg-pin-conf')?.value.trim();
 
-  if (!nuevo || nuevo.length < 6) return alert('El PIN debe tener al menos 6 dígitos');
-  if (nuevo !== conf) return alert('Los PINs no coinciden');
+  if (!nuevo || nuevo.length < 6) return mostrarNotificacionApp('PIN Inválido', 'El PIN debe tener al menos 6 dígitos', false);
+  if (nuevo !== conf) return mostrarNotificacionApp('PIN No Coincide', 'Los PINs ingresados no coinciden', false);
 
   const hashed = await hashPin(nuevo + perfil.email);
   setPinHash(hashed);
   autoSaveLocal();
   await guardarFirebase();
 
-  document.getElementById('cfg-pin-nuevo').value = '';
-  document.getElementById('cfg-pin-conf').value = '';
-  alert('🔐 PIN actualizado exitosamente');
+  if (document.getElementById('cfg-pin-nuevo')) document.getElementById('cfg-pin-nuevo').value = '';
+  if (document.getElementById('cfg-pin-conf')) document.getElementById('cfg-pin-conf').value = '';
   cerrarConfig();
+  mostrarNotificacionApp('PIN Actualizado', '🔐 PIN actualizado exitosamente');
 }
 
-export async function resetearStats() {
-  if (!confirm('¿Estás seguro de reiniciar todas las estadísticas?')) return;
-  updateStats({});
-  renderStats();
-  autoSaveLocal();
-  await guardarFirebase();
-  alert('✅ Estadísticas reiniciadas');
+export function resetearStats() {
+  mostrarConfirmacionApp('Reiniciar Estadísticas', '¿Estás seguro de reiniciar todas las estadísticas de la categoría?', async () => {
+    updateStats({});
+    renderStats();
+    autoSaveLocal();
+    await guardarFirebase();
+    mostrarNotificacionApp('Stats Reiniciadas', 'Estadísticas restablecidas a cero.');
+  });
 }
 
-export async function borrarHistorial() {
-  if (!confirm('¿Estás seguro de borrar el historial de partidos?')) return;
-  updateHistorial([]);
-  renderHistorial();
-  autoSaveLocal();
-  await guardarFirebase();
-  alert('✅ Historial borrado');
+export function borrarHistorial() {
+  mostrarConfirmacionApp('Borrar Historial', '¿Estás seguro de borrar el historial de partidos?', async () => {
+    updateHistorial([]);
+    renderHistorial();
+    autoSaveLocal();
+    await guardarFirebase();
+    mostrarNotificacionApp('Historial Borrado', 'El historial de partidos fue vaciado.');
+  });
 }
 
 export function cerrarSesion() {
-  if (!confirm('¿Cerrar sesión?')) return;
-  localStorage.clear();
-  location.reload();
+  mostrarConfirmacionApp('Cerrar Sesión', '¿Deseas cerrar tu sesión actual?', () => {
+    localStorage.clear();
+    location.reload();
+  });
 }
 
 export function aplicarPerfil() {
