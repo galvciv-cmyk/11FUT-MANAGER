@@ -12,11 +12,14 @@ export function abrirConfig() {
   const modal = document.getElementById('config-modal');
   if (!modal) return;
 
-  document.getElementById('cfg-email-display').textContent = perfil.email || 'Invitado';
-  document.getElementById('cfg-club-display').textContent = perfil.club || '11FUT MANAGER';
+  const emailDisplay = document.getElementById('cfg-email-display');
+  if (emailDisplay) emailDisplay.textContent = perfil.email || 'Invitado';
 
-  document.getElementById('cfg-club').value = perfil.club || '';
-  document.getElementById('cfg-eqA').value = perfil.eqA || '';
+  const clubDisplay = document.getElementById('cfg-club-display');
+  if (clubDisplay) clubDisplay.textContent = perfil.club || '11FUT MANAGER';
+
+  const cfgClubInput = document.getElementById('cfg-club');
+  if (cfgClubInput) cfgClubInput.value = perfil.club || '';
 
   renderCategoriasConfigUI();
   renderKitGallery('A');
@@ -133,11 +136,13 @@ export function copiarEnlacePublico() {
 }
 
 export async function guardarNombres() {
-  const club = document.getElementById('cfg-club').value.trim();
-  const eqA  = document.getElementById('cfg-eqA').value.trim();
+  const cfgClubInput = document.getElementById('cfg-club');
+  const club = cfgClubInput ? cfgClubInput.value.trim() : '';
 
-  if (club) perfil.club = club;
-  if (eqA)  perfil.eqA  = eqA;
+  if (club) {
+    perfil.club = club;
+    perfil.eqA = club;
+  }
 
   aplicarPerfil();
   autoSaveLocal();
