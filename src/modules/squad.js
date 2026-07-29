@@ -1,6 +1,7 @@
 import { plantel, cupos, catNombres, perfil, stats, autoSaveLocal } from "./state.js";
 import { guardarFirebase } from "../services/firebase.js";
 import { renderStats } from "./stats.js";
+import { mostrarNotificacionApp } from "./config.js";
 import { jsPDF } from "jspdf";
 
 export function initPlantelUI() {
@@ -47,15 +48,15 @@ export async function guardarSquad() {
   autoSaveLocal();
   await guardarFirebase();
   renderStats();
-  alert('✅ Plantel guardado en la nube!');
+  mostrarNotificacionApp('Plantel Guardado', '✅ Plantel guardado con éxito en la nube.');
 }
 
 export function descargarPlantilla() {
   let csv = "NOMBRE\n";
-  for (let i = 1; i <= 5; i++) csv += `Arquero ${i}\n`;
-  for (let i = 1; i <= 13; i++) csv += `Defensa ${i}\n`;
-  for (let i = 1; i <= 13; i++) csv += `Medio ${i}\n`;
-  for (let i = 1; i <= 13; i++) csv += `Delantero ${i}\n`;
+  for (let i = 1; i <= cupos.por; i++) csv += `Arquero ${i}\n`;
+  for (let i = 1; i <= cupos.def; i++) csv += `Defensa ${i}\n`;
+  for (let i = 1; i <= cupos.med; i++) csv += `Medio ${i}\n`;
+  for (let i = 1; i <= cupos.del; i++) csv += `Delantero ${i}\n`;
   const a = document.createElement('a');
   a.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
   a.download = 'plantilla.csv';
@@ -66,10 +67,10 @@ export function importarCSV(input) {
   const reader = new FileReader();
   reader.onload = function () {
     const lines = reader.result.split('\n').map(l => l.trim()).filter(l => l && !l.includes('NOMBRE'));
-    const keys = ['por', 'def', 'med', 'del'], limits = { por: 5, def: 13, med: 13, del: 13 };
+    const keys = ['por', 'def', 'med', 'del'];
     let cur = 0;
     keys.forEach(k => {
-      for (let i = 0; i < limits[k]; i++) {
+      for (let i = 0; i < cupos[k]; i++) {
         if (lines[cur]) {
           const el = document.getElementById(`p-${k}-${i}`);
           if (el) el.value = lines[cur];
@@ -77,7 +78,7 @@ export function importarCSV(input) {
         }
       }
     });
-    alert('📥 Importado. Pulsa GUARDAR EN NUBE.');
+    mostrarNotificacionApp('Plantel Importado', '📥 Plantilla importada. Pulsa GUARDAR PLANTEL.');
   };
   if (input.files[0]) reader.readAsText(input.files[0]);
 }
