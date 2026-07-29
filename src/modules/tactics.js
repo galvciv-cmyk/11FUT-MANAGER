@@ -450,11 +450,18 @@ function renderSelectorCapitanInCard(eq, titulares) {
   if (!select) return;
 
   const capitanActual = plantel[`capitan_${eq}`] || '';
-  const titularesUnicos = [...new Set(titulares)].filter(n => n && n !== 'LIBRE');
+  const oficialesCapitanes = (plantel.capitanes && Array.isArray(plantel.capitanes)) 
+    ? plantel.capitanes.filter(Boolean)
+    : [];
+
+  let opciones = oficialesCapitanes.length 
+    ? oficialesCapitanes 
+    : [...new Set(titulares)].filter(n => n && n !== 'LIBRE');
 
   let html = `<option value="">-- Sin Capitán --</option>`;
-  titularesUnicos.forEach(n => {
-    html += `<option value="${n}" ${n === capitanActual ? 'selected' : ''}>⭐ ${n}</option>`;
+  opciones.forEach((n, idx) => {
+    const label = oficialesCapitanes.length ? `👑 Capitán #${idx + 1}: ${n}` : `⭐ ${n}`;
+    html += `<option value="${n}" ${n === capitanActual ? 'selected' : ''}>${label}</option>`;
   });
 
   select.innerHTML = html;

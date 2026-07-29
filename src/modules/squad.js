@@ -22,6 +22,28 @@ export function initPlantelUI() {
   }
 }
 
+export function renderCapitanesUI() {
+  const allPlayers = [...new Set([...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del])];
+  if (!plantel.capitanes || !Array.isArray(plantel.capitanes)) {
+    plantel.capitanes = ['', '', ''];
+  }
+
+  [1, 2, 3].forEach(num => {
+    const sel = document.getElementById(`cap-select-${num}`);
+    if (sel) {
+      const selectedVal = plantel.capitanes[num - 1] || '';
+      sel.innerHTML = `<option value="">-- Seleccionar Capitán --</option>` +
+        allPlayers.map(p => `<option value="${p}" ${p === selectedVal ? 'selected' : ''}>👑 ${p}</option>`).join('');
+
+      sel.onchange = (e) => {
+        plantel.capitanes[num - 1] = e.target.value;
+        autoSaveLocal();
+        guardarFirebase();
+      };
+    }
+  });
+}
+
 export function aplicarPlantelUI() {
   for (let k in cupos) {
     if (plantel[k]) {
@@ -31,6 +53,7 @@ export function aplicarPlantelUI() {
       });
     }
   }
+  renderCapitanesUI();
 }
 
 export function syncPlantelFromUI() {
@@ -41,6 +64,11 @@ export function syncPlantelFromUI() {
       if (v) plantel[k].push(v);
     }
   }
+  plantel.capitanes = [
+    document.getElementById('cap-select-1')?.value || '',
+    document.getElementById('cap-select-2')?.value || '',
+    document.getElementById('cap-select-3')?.value || ''
+  ];
 }
 
 export async function guardarSquad() {
@@ -48,7 +76,7 @@ export async function guardarSquad() {
   autoSaveLocal();
   await guardarFirebase();
   renderStats();
-  mostrarNotificacionApp('Plantel Guardado', '✅ Plantel guardado con éxito en la nube.');
+  mostrarNotificacionApp('Plantel Guardado', '✅ Plantel y capitanes guardados con éxito.');
 }
 
 export function descargarPlantilla() {
