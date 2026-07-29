@@ -312,10 +312,26 @@ async function resetearPin() {
   }
 }
 
+export function aplicarTema(themeName) {
+  const isLight = themeName === 'light';
+  document.body.classList.toggle('theme-light', isLight);
+  localStorage.setItem('11fut_theme', themeName);
+
+  const btn = document.getElementById('btn-toggle-theme');
+  if (btn) btn.textContent = isLight ? '🌙' : '☀️';
+}
+
+export function toggleTheme() {
+  const current = localStorage.getItem('11fut_theme') || 'dark';
+  const newTheme = current === 'dark' ? 'light' : 'dark';
+  aplicarTema(newTheme);
+}
+
 // ══════════════════════════════════════════
 // INITIALIZATION & EVENT BINDINGS
 // ══════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async () => {
+  aplicarTema(localStorage.getItem('11fut_theme') || 'dark');
   await cargarKits();
 
   // Detect Public Profile Mode
@@ -340,7 +356,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Bind Login
+  // Bind Theme & Login
+  document.getElementById('btn-toggle-theme')?.addEventListener('click', toggleTheme);
   document.getElementById('btn-login')?.addEventListener('click', login);
   document.getElementById('btn-show-setup')?.addEventListener('click', setupNuevoUsuario);
   document.getElementById('btn-reset-pin')?.addEventListener('click', resetearPin);

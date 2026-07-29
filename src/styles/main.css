@@ -119,6 +119,101 @@ input:focus, select:focus {
   gap: 6px;
 }
 
+/* ── MODO CLARO GLASSMORPHISM (THEME-LIGHT) ── */
+body.theme-light {
+  background: #ebf0f5;
+  color: #1e293b;
+}
+
+body.theme-light #app-bg {
+  background: #ebf0f5 url('/bg_tactico.png') no-repeat center center / cover;
+}
+
+body.theme-light #app-bg::after {
+  background: radial-gradient(circle at center, rgba(241, 245, 249, 0.72) 0%, rgba(226, 232, 240, 0.94) 100%);
+}
+
+body.theme-light .app-header {
+  background: rgba(255, 255, 255, 0.88);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.45);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light .header-title {
+  background: linear-gradient(180deg, #0f172a 0%, #b8860b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+body.theme-light .tabs {
+  background: rgba(241, 245, 249, 0.92);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+body.theme-light .tab {
+  color: #64748b;
+}
+
+body.theme-light .tab.active {
+  color: #b8860b;
+  background: rgba(212, 175, 55, 0.16);
+}
+
+body.theme-light .card {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(212, 175, 55, 0.32);
+  color: #1e293b;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+body.theme-light .card:hover {
+  border-color: rgba(212, 175, 55, 0.6);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12);
+}
+
+body.theme-light input[type="text"], 
+body.theme-light input[type="password"], 
+body.theme-light input[type="email"], 
+body.theme-light input[type="number"], 
+body.theme-light input[type="date"], 
+body.theme-light input[type="time"], 
+body.theme-light select {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(0, 0, 0, 0.16) !important;
+  color: #0f172a !important;
+  color-scheme: light;
+}
+
+body.theme-light input:focus, 
+body.theme-light select:focus {
+  border-color: #b8860b !important;
+  box-shadow: 0 0 12px rgba(184, 134, 11, 0.3);
+}
+
+body.theme-light .btn-gray {
+  background: rgba(241, 245, 249, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  color: #334155;
+}
+
+body.theme-light .modal-overlay {
+  background: rgba(241, 245, 249, 0.8);
+}
+
+body.theme-light .modal-body {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  color: #0f172a;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+body.theme-light .partido-item, 
+body.theme-light .juego-programado-item {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(212, 175, 55, 0.3);
+  color: #0f172a;
+}
+
 /* ── CITACIÓN CENTRADA MAX-WIDTH 580px ── */
 .citacion-card-container {
   max-width: 580px;
