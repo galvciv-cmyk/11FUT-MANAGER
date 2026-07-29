@@ -20,17 +20,17 @@ body {
   min-height: 100vh;
 }
 
-/* ── FONDO DINÁMICO ── */
+/* ── FONDO DINÁMICO DE PIZARRA TÁCTICA ── */
 #app-bg {
   position: fixed; inset: 0; z-index: 0;
-  background: #000 no-repeat center center / cover;
+  background: #000 url('/bg_tactico.png') no-repeat center center / cover;
   pointer-events: none;
 }
 
 #app-bg::after {
   content: '';
   position: absolute; inset: 0;
-  background: radial-gradient(circle at center, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.95) 100%);
+  background: radial-gradient(circle at center, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.92) 100%);
 }
 
 #app-content {
