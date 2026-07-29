@@ -1,10 +1,10 @@
 import "./styles/main.css";
-import { perfil, setPinHash, setUserEmail, setCategoriaActiva, autoSaveLocal } from "./modules/state.js";
+import { perfil, setPinHash, setUserEmail, setCategoriaActiva, autoSaveLocal, historial } from "./modules/state.js";
 import { auth, hashPin, cargarFirebase, guardarFirebase } from "./services/firebase.js";
 import { cargarKits } from "./services/cloudinary.js";
 import { actualizarTactica, exportarPNG, setDrawingMode, setDrawingColor, setLineWidth, setLineDash, agregarMarcador, clearCanvas, toggleFullscreen, guardarEsquemaCustom } from "./modules/tactics.js";
 import { renderStats, guardarStatJugador, cerrarStatModal, renderRankings } from "./modules/stats.js";
-import { renderHistorial } from "./modules/history.js";
+import { renderHistorial, formatFecha } from "./modules/history.js";
 import { initPlantelUI, aplicarPlantelUI, guardarSquad, descargarPlantilla, importarCSV, exportarPDF } from "./modules/squad.js";
 import { buscarMaps, enviarWA } from "./modules/citacion.js";
 import { abrirConfig, cerrarConfig, guardarNombres, guardarKits, guardarLogo, guardarFondo, cambiarPin, resetearStats, borrarHistorial, cerrarSesion, aplicarPerfil, copiarEnlacePublico, agregarNuevaCategoriaConfig, abrirSoporteWhatsApp } from "./modules/config.js";
@@ -92,10 +92,12 @@ function refrescarTodaLaVista() {
 // ══════════════════════════════════════════
 // PUBLIC PROFILE VIEW (SOLO LECTURA SIN BOTONES DE EDICIÓN)
 // ══════════════════════════════════════════
-function cargarPerfilPublico() {
+async function cargarPerfilPublico() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('public-profile-screen').style.display = 'block';
+
+  await cargarFirebase();
 
   document.getElementById('pub-header-club').textContent = perfil.club || '11FUT MANAGER';
   if (perfil.logo) {
@@ -141,14 +143,37 @@ function renderStatsPublico() {
 
 function renderHistorialPublico() {
   const pubHistContainer = document.getElementById('pub-historial-list');
-  const mainHistContainer = document.getElementById('historial-list');
-  renderHistorial();
-  if (pubHistContainer && mainHistContainer) {
-    pubHistContainer.innerHTML = mainHistContainer.innerHTML;
-    pubHistContainer.querySelectorAll('.partido-item button').forEach(btn => {
-      if (btn.textContent.includes('Borrar')) btn.style.display = 'none';
-    });
+  if (!pubHistContainer) return;
+
+  if (!historial || !historial.length) {
+    pubHistContainer.innerHTML = `<div style="text-align:center;color:#666;font-size:13px;padding:20px;">No hay partidos registrados aún en esta categoría.</div>`;
+    return;
   }
+
+  pubHistContainer.innerHTML = historial.map((h) => {
+    const eqNombre = perfil.club || perfil.eqA || 'EQUIPO';
+    const resClass = `resultado-${h.res}`;
+
+    return `
+      <div class="partido-item">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;color:#888;">🏆 ${h.torneo || 'Liga'} • 📅 ${formatFecha(h.fecha)}</span>
+          <span class="partido-resultado ${resClass}">${h.gf} - ${h.gc}</span>
+        </div>
+
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#fff;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;background:#0d0d0d;padding:10px 14px;border-radius:8px;border:1px solid #222;">
+          <span style="color:var(--oro);">${eqNombre.toUpperCase()}</span>
+          <span style="font-size:22px;color:#fff;margin:0 10px;">${h.gf} - ${h.gc}</span>
+          <span style="color:#aaa;">${(h.rival || 'RIVAL').toUpperCase()}</span>
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-gold" style="font-size:11px;padding:8px 12px;width:auto;" onclick="window._abrirModalEstadisticasPartido('${h.id}')">📊 VER ESTADÍSTICAS DEL PARTIDO</button>
+          <button class="btn btn-green" style="font-size:11px;padding:8px 12px;width:auto;" onclick="window._compartirPartidoWA('${h.id}')">📲 COMPARTIR POR WHATSAPP</button>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 // ══════════════════════════════════════════
