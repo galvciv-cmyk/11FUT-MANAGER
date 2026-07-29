@@ -668,10 +668,10 @@ window._eliminarPartido = async (id) => {
 // ══════════════════════════════════════════
 // MÓDULO DE ANÁLISIS TÁCTICO CON IA (GEMINI)
 // ══════════════════════════════════════════
-const GEMINI_API_KEY = "AQ.Ab8RN6J_Uw5jsZ1mV2dDOZLk7o1P7DFiC3mKCR9PKwEeM4oHOQ";
+const GEMINI_API_KEY = "AQ.Ab8RN6J.Uw5jsZ1mV2dDOZLk7o1P7DFiC3mKCR9PKwEeM4oHOQ";
 
 export async function obtenerAnalisisGemini(datos) {
-  const modelos = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-pro"];
+  const modelos = ["gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-2.0-flash", "gemini-2.5-flash"];
 
   const promptText = `
     Actúa como un analista táctico de fútbol profesional. 
@@ -688,6 +688,8 @@ export async function obtenerAnalisisGemini(datos) {
       * Máximo Rematador: ${datos.rematador}
   `;
 
+  let ultimoError = "";
+
   for (const mod of modelos) {
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${mod}:generateContent?key=${GEMINI_API_KEY}`;
@@ -702,16 +704,17 @@ export async function obtenerAnalisisGemini(datos) {
       const data = await response.json();
       if (response.ok && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
         return data.candidates[0].content.parts[0].text;
+      } else if (data.error && data.error.message) {
+        ultimoError = data.error.message;
       }
     } catch (e) {
-      console.warn(`Modelo ${mod} no disponible, intentando siguiente...`);
+      console.warn(`Modelo ${mod} no disponible, intentando siguiente...`, e);
+      ultimoError = e.message;
     }
   }
 
-  return `💡 **Nota sobre la API Key de Gemini**:
-Para activar el informe táctico automático en tiempo real, asegúrate de ingresar una **API Key válida de Google AI Studio** (las claves oficiales de Google comienzan por \`AIzaSy...\`).
-
-📌 Puedes obtener tu clave totalmente gratuita en: **https://aistudio.google.com**`;
+  return `⚠️ **Resultado de la API de Gemini**:
+${ultimoError || "No se pudo conectar con el servicio de IA de Google."}`;
 }
 
 export function inicializarModuloIA() {
