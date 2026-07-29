@@ -198,7 +198,7 @@ export function renderConsolaPartidoVivo() {
           <button class="btn-counter btn-gold" onclick="window._sumarGolFavor()">+</button>
           <span style="color:#444;font-size:16px;margin:0 4px;">|</span>
           <span class="counter-val" style="color:var(--rojo);">${st.gc}</span>
-          <button class="btn-counter btn-red" onclick="window._sumarGolContraModal()">+</button>
+          <button class="btn-counter btn-red" onclick="window._modificarLiveCounter('gc', 1)">+</button>
         </div>
       </div>
 
@@ -625,32 +625,102 @@ export function renderHistorial() {
       return;
     }
 
-    contHist.innerHTML = historial.map((h, i) => {
+    contHist.innerHTML = historial.map((h) => {
       const eqNombre = perfil.club || perfil.eqA || 'EQUIPO';
       const resClass = `resultado-${h.res}`;
 
-      const efecPct = h.rematesA > 0 ? Math.round((h.gf / h.rematesA) * 100) : 0;
-      const atajadasPct = h.rematesC > 0 ? Math.round(((h.rematesC - h.gc) / h.rematesC) * 100) : 0;
-
       return `
         <div class="partido-item">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;color:#888;">🏆 ${h.torneo} • 📅 ${formatFecha(h.fecha)}</span>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;color:#888;">🏆 ${h.torneo || 'Liga'} • 📅 ${formatFecha(h.fecha)}</span>
             <span class="partido-resultado ${resClass}">${h.gf} - ${h.gc}</span>
           </div>
-          <div style="font-weight:700;font-size:15px;color:var(--oro);">${eqNombre} vs ${h.rival}</div>
-          <div style="font-size:11px;color:#aaa;margin-top:4px;">⏱️ Minutos: ${h.duracion || 60}m | 🎯 Efectividad: ${efecPct}% | 🧤 Atajadas: ${atajadasPct}% | 🚩 Corners: ${h.cornersA || 0} - ${h.cornersC || 0}</div>
-          
-          <div style="display:flex;gap:8px;margin-top:10px;">
-            <button class="btn btn-green" style="font-size:11px;padding:6px 12px;width:auto;" onclick="window._compartirPartidoWA('${h.id}')">📲 COMPARTIR POR WHATSAPP</button>
-            <button class="btn btn-gray" style="font-size:11px;padding:6px 12px;width:auto;" onclick="window._eliminarPartido('${h.id}')">🗑️ Borrar</button>
+
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#fff;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;background:#0d0d0d;padding:10px 14px;border-radius:8px;border:1px solid #222;">
+            <span style="color:var(--oro);">${eqNombre.toUpperCase()}</span>
+            <span style="font-size:22px;color:#fff;margin:0 10px;">${h.gf} - ${h.gc}</span>
+            <span style="color:#aaa;">${(h.rival || 'RIVAL').toUpperCase()}</span>
+          </div>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-gold" style="font-size:11px;padding:8px 12px;width:auto;" onclick="window._abrirModalEstadisticasPartido('${h.id}')">📊 VER ESTADÍSTICAS DEL PARTIDO</button>
+            <button class="btn btn-green" style="font-size:11px;padding:8px 12px;width:auto;" onclick="window._compartirPartidoWA('${h.id}')">📲 COMPARTIR POR WHATSAPP</button>
+            <button class="btn btn-gray" style="font-size:11px;padding:8px 12px;width:auto;" onclick="window._eliminarPartido('${h.id}')">🗑️ Borrar</button>
           </div>
         </div>
       `;
     }).join('');
   }
-  setTimeout(inicializarModuloIA, 100);
 }
+
+export function abrirModalEstadisticasPartido(id) {
+  const h = historial.find(p => p.id === id);
+  if (!h) return;
+
+  const modal = document.getElementById('modal');
+  const modalContent = document.getElementById('modal-content');
+  if (!modal || !modalContent) return;
+
+  const eqNombre = perfil.club || perfil.eqA || '11FUT MANAGER';
+  const efecPct = h.rematesA > 0 ? Math.round((h.gf / h.rematesA) * 100) : 0;
+  const atajadasPct = h.rematesC > 0 ? Math.round(((h.rematesC - h.gc) / h.rematesC) * 100) : 0;
+
+  const goleadoresEntries = Object.entries(h.goleadores || {});
+  const goleadoresTxt = goleadoresEntries.length 
+    ? goleadoresEntries.map(([k, v]) => `⚽ ${k} (${v} ${v > 1 ? 'goles' : 'gol'})`).join('<br>')
+    : '<span style="color:#666;">Sin goles registrados</span>';
+
+  const asistidoresEntries = Object.entries(h.asistidores || {});
+  const asistidoresTxt = asistidoresEntries.length 
+    ? asistidoresEntries.map(([k, v]) => `🎯 ${k} (${v} ${v > 1 ? 'asistencias' : 'asistencia'})`).join('<br>')
+    : '<span style="color:#666;">Sin asistencias registradas</span>';
+
+  const sustitucionesTxt = (h.sustituciones || []).length
+    ? h.sustituciones.map(s => `🔄 Min ${s.min}': Entra <b>${s.entra}</b> por <b>${s.sale}</b>`).join('<br>')
+    : '<span style="color:#666;">Sin cambios registrados</span>';
+
+  let html = `
+    <div class="modal-title">📊 ESTADÍSTICAS DEL PARTIDO</div>
+    
+    <div class="card" style="margin-bottom:10px;text-align:center;">
+      <div style="font-size:12px;color:#888;margin-bottom:4px;">🏆 ${h.torneo || 'Torneo Oficial'} • 📅 ${formatFecha(h.fecha)}</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--oro);margin:6px 0;">
+        ${eqNombre.toUpperCase()} ${h.gf} - ${h.gc} ${(h.rival || 'RIVAL').toUpperCase()}
+      </div>
+      <div style="font-size:11px;color:#aaa;">⏱️ Tiempo total: ${h.duracion || 60} minutos</div>
+    </div>
+
+    <div class="card" style="margin-bottom:10px;">
+      <div class="card-title">📈 MÉTRICAS TÁCTICAS</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;color:#eee;">
+        <div>🎯 Efectividad Chutes: <b>${efecPct}%</b> (${h.gf}/${h.rematesA || 0})</div>
+        <div>🧤 Atajadas Guardameta: <b>${atajadasPct}%</b></div>
+        <div>🚩 Córners: <b>${h.cornersA || 0} - ${h.cornersC || 0}</b></div>
+        <div>🛑 Faltas: <b>${h.faltasA || 0} - ${h.faltasC || 0}</b></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:10px;">
+      <div class="card-title">⚽ GOLEADORES Y ASISTIDORES</div>
+      <div style="font-size:12px;line-height:1.6;color:#eee;">
+        <div style="margin-bottom:8px;"><b>Goles:</b><br>${goleadoresTxt}</div>
+        <div><b>Asistencias:</b><br>${asistidoresTxt}</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-title">🔄 SUSTITUCIONES Y CAMBIOS</div>
+      <div style="font-size:12px;line-height:1.5;color:#eee;">${sustitucionesTxt}</div>
+    </div>
+
+    <button class="btn btn-gold" onclick="document.getElementById('modal').style.display='none'">ACEPTAR</button>
+  `;
+
+  modalContent.innerHTML = html;
+  modal.style.display = 'flex';
+}
+
+window._abrirModalEstadisticasPartido = (id) => abrirModalEstadisticasPartido(id);
 
 window._eliminarPartido = async (id) => {
   if (!confirm('¿Eliminar este partido del historial?')) return;
@@ -665,149 +735,4 @@ window._eliminarPartido = async (id) => {
   }
 };
 
-// ══════════════════════════════════════════
-// MÓDULO DE ANÁLISIS TÁCTICO CON IA (GEMINI)
-// ══════════════════════════════════════════
-const DEFAULT_GEMINI_KEY = "AQ.Ab8RN6J.Uw5jsZ1mV2dDOZLk7o1P7DFiC3mKCR9PKwEeM4oHOQ";
-
-export function getApiKeyGemini() {
-  return perfil.geminiKey || DEFAULT_GEMINI_KEY;
-}
-
-window._toggleEditarApiKeyIA = () => {
-  const box = document.getElementById('box-editar-api-key');
-  const input = document.getElementById('input-api-key-ia');
-  if (box) {
-    const visible = box.style.display === 'block';
-    box.style.display = visible ? 'none' : 'block';
-    if (!visible && input) input.value = getApiKeyGemini();
-  }
-};
-
-window._guardarApiKeyIA = () => {
-  const input = document.getElementById('input-api-key-ia');
-  if (input) {
-    const val = input.value.trim();
-    if (!val) return alert('Ingresa una API Key válida.');
-    perfil.geminiKey = val;
-    autoSaveLocal();
-    guardarFirebase();
-    document.getElementById('box-editar-api-key').style.display = 'none';
-    alert('🔑 API Key guardada correctamente.');
-  }
-};
-
-export async function obtenerAnalisisGemini(datos) {
-  const modelos = ["gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-2.0-flash", "gemini-2.5-flash"];
-  const apiKey = getApiKeyGemini();
-
-  const promptText = `
-    Actúa como un analista táctico de fútbol profesional. 
-    Analiza las siguientes estadísticas de un partido y genera un informe breve (máximo 2 párrafos), técnico y motivador para el equipo:
-
-    - Partido: ${datos.equipoLocal} vs ${datos.equipoRival}
-    - Marcador Final: ${datos.golesLocal} - ${datos.golesRival}
-    - Tiros a puerta: ${datos.tirosPuerta}
-    - Córners: ${datos.corners}
-    - Faltas: ${datos.faltas}
-    - Destacados:
-      * Mejor Portero: ${datos.portero}
-      * Máximo Asistidor: ${datos.asistidor}
-      * Máximo Rematador: ${datos.rematador}
-  `;
-
-  let ultimoError = "";
-
-  for (const mod of modelos) {
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${mod}:generateContent?key=${apiKey}`;
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "x-goog-api-key": apiKey
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: promptText }] }]
-        })
-      });
-
-      const data = await response.json();
-      if (response.ok && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
-        return data.candidates[0].content.parts[0].text;
-      } else if (data.error && data.error.message) {
-        ultimoError = data.error.message;
-      }
-    } catch (e) {
-      console.warn(`Modelo ${mod} no disponible, intentando siguiente...`, e);
-      ultimoError = e.message;
-    }
-  }
-
-  return `⚠️ **Resultado de la API de Gemini**:
-${ultimoError || "No se pudo conectar con el servicio de IA de Google."}`;
-}
-
-export function inicializarModuloIA() {
-  const btn = document.getElementById("btnGenerarIA");
-  if (!btn) return;
-
-  btn.onclick = async () => {
-    const contenedorResultado = document.getElementById("resultadoIA");
-    if (!contenedorResultado) return;
-    
-    contenedorResultado.innerHTML = "⏳ <i>Analizando estadísticas del partido con IA...</i>";
-
-    const ultimoPartido = (historial && historial.length > 0) ? historial[0] : null;
-    const club = perfil.club || perfil.eqA || "11FUT MANAGER";
-
-    const porteroMain = (plantel.por && plantel.por.length > 0) ? plantel.por[0] : "Carlos (3 atajadas)";
-    
-    let asistidorMain = "Luis (2 pases de gol)";
-    let rematadorMain = "Mateo (2 goles)";
-
-    if (ultimoPartido) {
-      if (ultimoPartido.asistidores && Object.keys(ultimoPartido.asistidores).length > 0) {
-        asistidorMain = Object.entries(ultimoPartido.asistidores).map(([k, v]) => `${k} (${v} asist)`).join(', ');
-      }
-      if (ultimoPartido.goleadores && Object.keys(ultimoPartido.goles || ultimoPartido.goleadores).length > 0) {
-        rematadorMain = Object.entries(ultimoPartido.goleadores).map(([k, v]) => `${k} (${v} goles)`).join(', ');
-      }
-    }
-
-    const datosDelPartido = ultimoPartido ? {
-      equipoLocal: club,
-      equipoRival: ultimoPartido.rival || "Rival CD",
-      golesLocal: ultimoPartido.gf || 0,
-      golesRival: ultimoPartido.gc || 0,
-      tirosPuerta: ultimoPartido.rematesA || 7,
-      corners: ultimoPartido.cornersA || 4,
-      faltas: ultimoPartido.faltasA || 5,
-      portero: porteroMain,
-      asistidor: asistidorMain,
-      rematador: rematadorMain
-    } : {
-      equipoLocal: club,
-      equipoRival: "Rival CD",
-      golesLocal: 3,
-      golesRival: 1,
-      tirosPuerta: 7,
-      corners: 4,
-      faltas: 5,
-      portero: porteroMain,
-      asistidor: "Luis (2 pases de gol)",
-      rematador: "Mateo (2 goles)"
-    };
-
-    const informe = await obtenerAnalisisGemini(datosDelPartido);
-    contenedorResultado.innerText = informe;
-  };
-}
-
-if (typeof window !== 'undefined') {
-  window._inicializarModuloIA = inicializarModuloIA;
-  document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(inicializarModuloIA, 400);
-  });
-}
 
