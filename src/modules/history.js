@@ -729,53 +729,53 @@ export function abrirModalEstadisticasPartido(id) {
         <span style="color:#aaa;">${(h.rival || 'RIVAL').toUpperCase()}</span>
       </div>
 
-      <div style="display:flex;flex-direction:column;gap:7px;font-size:12px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-          <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;">${h.gf || 0}</span>
-          <span style="color:#888;flex:1;text-align:center;font-size:11px;">--------- goles ---------</span>
-          <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;">${h.gc || 0}</span>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a1a1a;padding-bottom:4px;">
+          <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;font-size:14px;">${h.gf || 0}</span>
+          <span style="color:#aaa;flex:1;text-align:center;font-size:12px;font-weight:600;text-transform:uppercase;">goles</span>
+          <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;font-size:14px;">${h.gc || 0}</span>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a1a1a;padding-bottom:4px;">
+          <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;font-size:14px;">${h.rematesA || 0}</span>
+          <span style="color:#aaa;flex:1;text-align:center;font-size:12px;font-weight:600;text-transform:uppercase;">tiros a puerta</span>
+          <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;font-size:14px;">${h.rematesC || 0}</span>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a1a1a;padding-bottom:4px;">
+          <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;font-size:14px;">${asistTotalA}</span>
+          <span style="color:#aaa;flex:1;text-align:center;font-size:12px;font-weight:600;text-transform:uppercase;">pases a gol (asistencia)</span>
+          <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;font-size:14px;">0</span>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a1a1a;padding-bottom:4px;">
+          <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;font-size:14px;">${h.cornersA || 0}</span>
+          <span style="color:#aaa;flex:1;text-align:center;font-size:12px;font-weight:600;text-transform:uppercase;">corners</span>
+          <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;font-size:14px;">${h.cornersC || 0}</span>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a1a1a;padding-bottom:4px;">
+          <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;font-size:14px;">${h.faltasA || 0}</span>
+          <span style="color:#aaa;flex:1;text-align:center;font-size:12px;font-weight:600;text-transform:uppercase;">faltas</span>
+          <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;font-size:14px;">${h.faltasC || 0}</span>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a1a1a;padding-bottom:4px;">
+          <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;font-size:14px;">${amarillasTotalA}</span>
+          <span style="color:#aaa;flex:1;text-align:center;font-size:12px;font-weight:600;text-transform:uppercase;">tarjetas amarillas</span>
+          <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;font-size:14px;">0</span>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a1a1a;padding-bottom:4px;">
+          <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;font-size:14px;">${rojasTotalA}</span>
+          <span style="color:#aaa;flex:1;text-align:center;font-size:12px;font-weight:600;text-transform:uppercase;">tarjetas rojas</span>
+          <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;font-size:14px;">0</span>
         </div>
 
         <div style="display:flex;align-items:center;justify-content:space-between;">
-          <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;">${h.rematesA || 0}</span>
-          <span style="color:#888;flex:1;text-align:center;font-size:11px;">--------- tiros a puerta ---------</span>
-          <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;">${h.rematesC || 0}</span>
-        </div>
-
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-          <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;">${asistTotalA}</span>
-          <span style="color:#888;flex:1;text-align:center;font-size:11px;">--- pases a gol (asistencia) ---</span>
-          <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;">0</span>
-        </div>
-
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-          <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;">${h.cornersA || 0}</span>
-          <span style="color:#888;flex:1;text-align:center;font-size:11px;">--------- corners ---------</span>
-          <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;">${h.cornersC || 0}</span>
-        </div>
-
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-          <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;">${h.faltasA || 0}</span>
-          <span style="color:#888;flex:1;text-align:center;font-size:11px;">--------- faltas ---------</span>
-          <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;">${h.faltasC || 0}</span>
-        </div>
-
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-          <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;">${amarillasTotalA}</span>
-          <span style="color:#888;flex:1;text-align:center;font-size:11px;">----- tarjetas amarillas -----</span>
-          <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;">0</span>
-        </div>
-
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-          <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;">${rojasTotalA}</span>
-          <span style="color:#888;flex:1;text-align:center;font-size:11px;">------- tarjetas rojas -------</span>
-          <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;">0</span>
-        </div>
-
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-          <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;">${cambiosTotalA}</span>
-          <span style="color:#888;flex:1;text-align:center;font-size:11px;">--------- sustituciones ---------</span>
-          <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;">0</span>
+          <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;font-size:14px;">${cambiosTotalA}</span>
+          <span style="color:#aaa;flex:1;text-align:center;font-size:12px;font-weight:600;text-transform:uppercase;">sustituciones</span>
+          <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;font-size:14px;">0</span>
         </div>
       </div>
     </div>

@@ -40,7 +40,7 @@ export function renderStats(targetId = 'stats-list') {
 
     const esPortero = plantel.por.includes(nombre);
     const atajadasPct = st.rematesContra > 0 ? Math.round(((st.rematesContra - (st.gc || 0)) / st.rematesContra) * 100) : (st.vallaInvicta > 0 ? 100 : 0);
-    const vallaDisplay = esPortero ? `🧤 ${st.vallaInvicta || 0} (${atajadasPct}%)` : '-';
+    const vallaDisplay = esPortero ? `🧤 ${st.vallaInvicta || 0} (${atajadasPct}%)` : '';
 
     html += `
       <tr style="border-bottom:1px solid #1a1a1a;">

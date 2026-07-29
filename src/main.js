@@ -97,7 +97,7 @@ async function cargarPerfilPublico() {
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('public-profile-screen').style.display = 'block';
 
-  await cargarFirebase();
+  await cargarFirebasePublico();
 
   document.getElementById('pub-header-club').textContent = perfil.club || '11FUT MANAGER';
   if (perfil.logo) {

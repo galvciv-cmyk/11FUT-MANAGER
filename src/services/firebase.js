@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { perfil, plantel, stats, historial, pinHash, userEmail, setPinHash, setUserEmail, updatePerfil, updatePlantel, updateStats, updateHistorial, autoSaveLocal } from "../modules/state.js";
+import { perfil, plantel, stats, historial, pinHash, userEmail, setPinHash, setUserEmail, updatePerfil, updatePlantel, updateStats, updateHistorial, autoSaveLocal, categoriasData, updateCategoriasData } from "../modules/state.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyANMJ6ls4tswFgAYIqfa5RP18fBmvK2hIU",
@@ -27,13 +27,22 @@ export function setSyncStatus(type, msg) {
 }
 
 export async function guardarFirebase() {
-  if (!db || !pinHash) return;
+  if (!db) return;
   try {
-    const ref = doc(db, 'usuarios', pinHash);
-    await setDoc(ref, {
-      perfil, plantel, stats, historial,
+    const payload = {
+      perfil, plantel, stats, historial, categoriasData,
       updatedAt: new Date().toISOString()
-    }, { merge: true });
+    };
+
+    if (pinHash) {
+      const ref = doc(db, 'usuarios', pinHash);
+      await setDoc(ref, payload, { merge: true });
+    }
+
+    // Copia pública accesible para cualquier visitante sin login
+    const refPub = doc(db, 'publico', 'perfil_publico');
+    await setDoc(refPub, payload, { merge: true });
+
     setSyncStatus('saved', '☁️ Sincronizado en la nube');
   } catch (e) {
     console.error('Error al guardar en Firebase:', e);
@@ -49,6 +58,7 @@ export async function cargarFirebase() {
     if (snap.exists()) {
       const data = snap.data();
       if (data.perfil) updatePerfil(data.perfil);
+      if (data.categoriasData) updateCategoriasData(data.categoriasData);
       if (data.plantel) updatePlantel(data.plantel);
       if (data.stats) updateStats(data.stats);
       if (data.historial) updateHistorial(data.historial);
@@ -57,6 +67,27 @@ export async function cargarFirebase() {
     }
   } catch (e) {
     console.error('Error al cargar de Firebase:', e);
+  }
+  return false;
+}
+
+export async function cargarFirebasePublico() {
+  if (!db) return false;
+  try {
+    const refPub = doc(db, 'publico', 'perfil_publico');
+    const snap = await getDoc(refPub);
+    if (snap.exists()) {
+      const data = snap.data();
+      if (data.perfil) updatePerfil(data.perfil);
+      if (data.categoriasData) updateCategoriasData(data.categoriasData);
+      if (data.plantel) updatePlantel(data.plantel);
+      if (data.stats) updateStats(data.stats);
+      if (data.historial) updateHistorial(data.historial);
+      autoSaveLocal();
+      return true;
+    }
+  } catch (e) {
+    console.error('Error al cargar perfil público de Firebase:', e);
   }
   return false;
 }
