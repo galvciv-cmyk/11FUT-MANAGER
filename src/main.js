@@ -1,6 +1,6 @@
 import "./styles/main.css";
-import { perfil, setPinHash, setUserEmail, setCategoriaActiva, autoSaveLocal, historial } from "./modules/state.js";
-import { auth, hashPin, cargarFirebase, guardarFirebase } from "./services/firebase.js";
+import { perfil, setPinHash, setUserEmail, setCategoriaActiva, autoSaveLocal, historial, categoriasData, autoLoadLocal } from "./modules/state.js";
+import { auth, hashPin, cargarFirebase, guardarFirebase, cargarFirebasePublico } from "./services/firebase.js";
 import { cargarKits } from "./services/cloudinary.js";
 import { actualizarTactica, exportarPNG, setDrawingMode, setDrawingColor, setLineWidth, setLineDash, agregarMarcador, clearCanvas, toggleFullscreen, guardarEsquemaCustom } from "./modules/tactics.js";
 import { renderStats, guardarStatJugador, cerrarStatModal, renderRankings } from "./modules/stats.js";
@@ -426,6 +426,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-reset-stats')?.addEventListener('click', resetearStats);
   document.getElementById('btn-borrar-historial')?.addEventListener('click', borrarHistorial);
   document.getElementById('btn-cerrar-sesion')?.addEventListener('click', cerrarSesion);
+
+  // Cierre intuitivo de modales con clic externo y tecla Escape
+  ['modal', 'stat-modal', 'config-modal'].forEach(mId => {
+    const el = document.getElementById(mId);
+    if (el) {
+      el.addEventListener('click', (e) => {
+        if (e.target === el) el.style.display = 'none';
+      });
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      ['modal', 'stat-modal', 'config-modal'].forEach(mId => {
+        const el = document.getElementById(mId);
+        if (el) el.style.display = 'none';
+      });
+    }
+  });
 
   restaurarPestanaDesdeURL();
 });

@@ -147,11 +147,17 @@ export function eliminarCategoriaConfig(catNombre) {
 
   mostrarConfirmacionApp('Eliminar Categoría', `¿Estás seguro de eliminar la categoría ${catNombre}?`, async () => {
     perfil.categorias = perfil.categorias.filter(c => c !== catNombre);
+    if (categoriasData[catNombre]) {
+      delete categoriasData[catNombre];
+    }
     if (perfil.categoriaActiva === catNombre) {
       setCategoriaActiva(perfil.categorias[0]);
     }
 
     renderCategoriasConfigUI();
+    if (typeof window._renderSelectorCategoria === 'function') {
+      window._renderSelectorCategoria();
+    }
     autoSaveLocal();
     await guardarFirebase();
     location.reload();

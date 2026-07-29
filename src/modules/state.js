@@ -22,7 +22,7 @@ export const DEFAULT_PERFIL = {
 };
 
 export let perfil = { ...DEFAULT_PERFIL };
-export let pinHash = "";
+export let pinHash = localStorage.getItem('11fut_pinhash') || "";
 export let userEmail = "";
 
 export let categoriasData = {
@@ -90,7 +90,11 @@ export function updatePlantel(newPlantel) {
   }
 }
 
-export function setPinHash(hash) { pinHash = hash; }
+export function setPinHash(hash) { 
+  pinHash = hash; 
+  if (hash) localStorage.setItem('11fut_pinhash', hash); 
+  else localStorage.removeItem('11fut_pinhash'); 
+}
 export function setUserEmail(email) { userEmail = email; perfil.email = email; }
 
 export function updatePerfil(newPerfil) {

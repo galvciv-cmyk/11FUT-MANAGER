@@ -1,6 +1,7 @@
 import { historial, updateHistorial, juegosProgramados, updateJuegosProgramados, stats, updateStats, perfil, autoSaveLocal, plantel } from "./state.js";
 import { guardarFirebase } from "../services/firebase.js";
 import { renderStats } from "./stats.js";
+import { mostrarNotificacionApp } from "./config.js";
 
 export function formatFecha(str) {
   if (!str) return '';
@@ -547,6 +548,8 @@ window._finalizarYGuardarPartidoLive = async () => {
     faltasC: st.faltasC,
     goleadores: st.goleadoresMap,
     asistidores: st.asistidoresMap,
+    tarjetasAmarillas: st.tarjetasAmarillasMap,
+    tarjetasRojas: st.tarjetasRojasMap,
     sustituciones: st.sustitucionesList,
     golesRecibidosPor: st.golesRecibidosPorMap,
     titulares,
@@ -564,7 +567,7 @@ window._finalizarYGuardarPartidoLive = async () => {
   renderHistorial();
   renderStats();
 
-  alert('✅ Partido finalizado y registrado con éxito en el historial.');
+  mostrarNotificacionApp('Partido Finalizado', '✅ Partido finalizado y registrado con éxito en el historial.');
 };
 
 function acumularStatsPartido(p) {
@@ -602,6 +605,8 @@ function acumularStatsPartido(p) {
 
     if (p.goleadores && p.goleadores[nombre]) st.goles += p.goleadores[nombre];
     if (p.asistidores && p.asistidores[nombre]) st.asist += p.asistidores[nombre];
+    if (p.tarjetasAmarillas && p.tarjetasAmarillas[nombre]) st.am = (st.am || 0) + p.tarjetasAmarillas[nombre];
+    if (p.tarjetasRojas && p.tarjetasRojas[nombre]) st.ro = (st.ro || 0) + p.tarjetasRojas[nombre];
 
     st.rematesFavor = (st.rematesFavor || 0) + (p.rematesA || 0);
     st.rematesContra = (st.rematesContra || 0) + (p.rematesC || 0);
@@ -615,7 +620,8 @@ function acumularStatsPartido(p) {
       if (p.gc === 0) st.vallaInvicta = (st.vallaInvicta || 0) + 1;
     }
 
-    const baseRating = 6.0 + (st.goles * 0.8) + (st.asist * 0.5) + (st.minJug / (st.pj * 90)) - (st.am * 0.3) - (st.ro * 1.5);
+    const ratioPJ = st.pj > 0 ? (st.minJug / (st.pj * 90)) : 0;
+    const baseRating = 6.0 + (st.goles * 0.8) + (st.asist * 0.5) + ratioPJ - (st.am * 0.3) - (st.ro * 1.5);
     st.rat = parseFloat(Math.min(10.0, Math.max(1.0, baseRating)).toFixed(1));
   });
 
