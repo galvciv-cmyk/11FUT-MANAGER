@@ -129,6 +129,16 @@ async function cargarPerfilPublico(publicId) {
     if (pubLogo) pubLogo.src = perfil.logo;
   }
 
+  if (perfil.bg) {
+    const bgEl = document.getElementById('app-bg');
+    if (bgEl) {
+      bgEl.style.backgroundImage = `url(${perfil.bg})`;
+      bgEl.style.backgroundSize = 'cover';
+      bgEl.style.backgroundPosition = 'center';
+      bgEl.style.opacity = '0.4';
+    }
+  }
+
   renderRankingsPublico();
   renderSquadPublico();
   renderStatsPublico();
@@ -145,9 +155,6 @@ async function cargarPerfilPublico(publicId) {
     };
   }
 
-  document.getElementById('btn-pub-login-link')?.addEventListener('click', () => {
-    window.location.href = window.location.pathname;
-  });
 }
 
 function renderSquadPublico() {
