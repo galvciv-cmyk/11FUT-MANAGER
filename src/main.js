@@ -63,7 +63,7 @@ export function renderSelectorCategoria(isPublic = false) {
   const selectStats = document.getElementById('stats-categoria-selector');
   const selectPub = document.getElementById('pub-selector-categoria');
 
-  const categorias = perfil.categorias || ["Sub-14"];
+  const categorias = (perfil.categorias && perfil.categorias.length) ? perfil.categorias : ["Sub-14"];
   const activa = perfil.categoriaActiva || categorias[0];
 
   const html = categorias.map(c => `<option value="${c}" ${c === activa ? 'selected' : ''}>⚽ ${c}</option>`).join('');
@@ -97,9 +97,12 @@ async function cargarPerfilPublico(publicId) {
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('public-profile-screen').style.display = 'block';
 
-  await cargarFirebasePublico(publicId);
+  const cargado = await cargarFirebasePublico(publicId);
+  if (!cargado) {
+    autoLoadLocal();
+  }
 
-  const cats = perfil.categorias || ["Sub-14"];
+  const cats = (perfil.categorias && perfil.categorias.length) ? perfil.categorias : ["Sub-14"];
   const catActiva = perfil.categoriaActiva || cats[0];
   setCategoriaActiva(catActiva);
 
