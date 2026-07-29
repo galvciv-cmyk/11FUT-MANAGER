@@ -47,8 +47,14 @@ export async function guardarFirebase() {
     }
 
     const pubId = getPublicId();
-    const refPub = doc(db, 'publicos', pubId);
-    await setDoc(refPub, payload, { merge: true });
+    if (pubId && pubId !== 'perfil_demo') {
+      const refPub = doc(db, 'publicos', pubId);
+      await setDoc(refPub, payload, { merge: true });
+    }
+
+    // Copia pública general de respaldo
+    const refGeneral = doc(db, 'publico', 'perfil_publico');
+    await setDoc(refGeneral, payload, { merge: true });
 
     setSyncStatus('saved', '☁️ Sincronizado en la nube');
   } catch (e) {
@@ -84,16 +90,26 @@ export async function cargarFirebase() {
 export async function cargarFirebasePublico(targetPublicId) {
   if (!db) return false;
   try {
-    const pubId = targetPublicId || getPublicId() || 'perfil_demo';
-    const refPub = doc(db, 'publicos', pubId);
-    let snap = await getDoc(refPub);
+    let snap;
+    if (targetPublicId && targetPublicId !== 'true' && targetPublicId !== 'perfil_demo') {
+      const refPub = doc(db, 'publicos', targetPublicId);
+      snap = await getDoc(refPub);
+    }
 
-    if (!snap.exists()) {
+    if (!snap || !snap.exists()) {
+      const pubId = getPublicId();
+      if (pubId && pubId !== 'perfil_demo') {
+        const refUserPub = doc(db, 'publicos', pubId);
+        snap = await getDoc(refUserPub);
+      }
+    }
+
+    if (!snap || !snap.exists()) {
       const refFallback = doc(db, 'publico', 'perfil_publico');
       snap = await getDoc(refFallback);
     }
 
-    if (snap.exists()) {
+    if (snap && snap.exists()) {
       const data = snap.data();
       if (data.perfil) updatePerfil(data.perfil);
       if (data.categoriasData && Object.keys(data.categoriasData).length > 0) {

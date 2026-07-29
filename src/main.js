@@ -63,8 +63,20 @@ export function renderSelectorCategoria(isPublic = false) {
   const selectStats = document.getElementById('stats-categoria-selector');
   const selectPub = document.getElementById('pub-selector-categoria');
 
-  const categorias = (perfil.categorias && perfil.categorias.length) ? perfil.categorias : ["Sub-14"];
-  const activa = perfil.categoriaActiva || categorias[0];
+  const catsSet = new Set([
+    ...(perfil.categorias || []),
+    ...Object.keys(categoriasData || {})
+  ]);
+  let categorias = Array.from(catsSet).filter(Boolean);
+  if (!categorias.length) categorias = ["Sub-14"];
+
+  perfil.categorias = categorias;
+
+  const activa = (perfil.categoriaActiva && categorias.includes(perfil.categoriaActiva)) 
+    ? perfil.categoriaActiva 
+    : categorias[0];
+
+  perfil.categoriaActiva = activa;
 
   const html = categorias.map(c => `<option value="${c}" ${c === activa ? 'selected' : ''}>⚽ ${c}</option>`).join('');
 
@@ -102,8 +114,10 @@ async function cargarPerfilPublico(publicId) {
     autoLoadLocal();
   }
 
-  const cats = (perfil.categorias && perfil.categorias.length) ? perfil.categorias : ["Sub-14"];
-  const catActiva = perfil.categoriaActiva || cats[0];
+  renderSelectorCategoria(true);
+
+  const selectPub = document.getElementById('pub-selector-categoria');
+  const catActiva = (selectPub && selectPub.value) ? selectPub.value : (perfil.categoriaActiva || "Sub-14");
   setCategoriaActiva(catActiva);
 
   document.getElementById('pub-header-club').textContent = perfil.club || '11FUT MANAGER';
@@ -112,13 +126,11 @@ async function cargarPerfilPublico(publicId) {
     if (pubLogo) pubLogo.src = perfil.logo;
   }
 
-  renderSelectorCategoria(true);
   renderRankingsPublico();
   renderSquadPublico();
   renderStatsPublico();
   renderHistorialPublico();
 
-  const selectPub = document.getElementById('pub-selector-categoria');
   if (selectPub) {
     selectPub.value = catActiva;
     selectPub.onchange = (e) => {
