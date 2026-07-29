@@ -111,6 +111,7 @@ async function cargarPerfilPublico(publicId) {
 
   renderSelectorCategoria(true);
   renderRankingsPublico();
+  renderSquadPublico();
   renderStatsPublico();
   renderHistorialPublico();
 
@@ -120,6 +121,7 @@ async function cargarPerfilPublico(publicId) {
     selectPub.onchange = (e) => {
       setCategoriaActiva(e.target.value);
       renderRankingsPublico();
+      renderSquadPublico();
       renderStatsPublico();
       renderHistorialPublico();
     };
@@ -128,6 +130,39 @@ async function cargarPerfilPublico(publicId) {
   document.getElementById('btn-pub-login-link')?.addEventListener('click', () => {
     window.location.href = window.location.pathname;
   });
+}
+
+function renderSquadPublico() {
+  const cont = document.getElementById('pub-squad-container');
+  if (!cont) return;
+
+  const roles = [
+    { key: 'por', title: '🧤 PORTEROS / GUARDAMETAS', color: 'var(--oro)' },
+    { key: 'def', title: '🛡️ DEFENSAS', color: '#4a90e2' },
+    { key: 'med', title: '🎯 MEDIOCAMPISTAS', color: '#50e3c2' },
+    { key: 'del', title: '⚡ DELANTEROS', color: '#e65100' }
+  ];
+
+  let html = `<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:12px;">`;
+
+  roles.forEach(r => {
+    const lista = (plantel && plantel[r.key]) ? plantel[r.key] : [];
+    html += `
+      <div style="background:#0d0d0d;border:1px solid #222;border-radius:10px;padding:12px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;color:${r.color};margin-bottom:8px;border-bottom:1px solid #222;padding-bottom:4px;">
+          ${r.title} (${lista.length})
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          ${lista.length 
+            ? lista.map(n => `<div style="font-size:13px;color:#eee;background:#141414;padding:6px 10px;border-radius:6px;font-weight:600;">⚽ ${n}</div>`).join('') 
+            : '<div style="font-size:11px;color:#666;">Sin jugadores registrados</div>'}
+        </div>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+  cont.innerHTML = html;
 }
 
 function renderRankingsPublico() {
