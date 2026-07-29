@@ -1,7 +1,7 @@
 import { perfil, juegosProgramados, updateJuegosProgramados, autoSaveLocal, plantel, categoriasData } from "./state.js";
 import { formatFecha, formatHora, renderHistorial } from "./history.js";
 import { guardarFirebase } from "../services/firebase.js";
-import { mostrarNotificacionApp } from "./config.js";
+import { mostrarNotificacionApp, mostrarPromptModal } from "./config.js";
 
 export function renderTorneosCitacionUI() {
   const select = document.getElementById('torneo-A');
@@ -17,16 +17,13 @@ export function renderTorneosCitacionUI() {
 
   select.onchange = (e) => {
     if (e.target.value === '__otro__') {
-      const nuevo = prompt(`Nuevo torneo para la categoría ${cat}:`);
-      if (nuevo && nuevo.trim()) {
+      mostrarPromptModal('Nuevo Torneo', `Nombre del torneo para ${cat}`, (nuevo) => {
         const val = nuevo.trim();
         if (!catData.torneos) catData.torneos = [];
         catData.torneos.push(val);
         renderTorneosCitacionUI();
         select.value = val;
-      } else {
-        select.value = torneos[0];
-      }
+      });
     }
   };
 }

@@ -145,15 +145,43 @@ window._eliminarTorneoCategoriaIndex = (catNombre, idx) => {
   guardarFirebase();
 };
 
+export function mostrarPromptModal(titulo, placeholder, onConfirm) {
+  const modal = document.getElementById('modal');
+  const modalContent = document.getElementById('modal-content');
+  if (!modal || !modalContent) return;
+
+  window._modalCallbackPrompt = () => {
+    const val = document.getElementById('modal-prompt-input')?.value.trim();
+    document.getElementById('modal').style.display = 'none';
+    if (val && typeof onConfirm === 'function') onConfirm(val);
+  };
+
+  modalContent.innerHTML = `
+    <div class="modal-title">✏️ ${titulo.toUpperCase()}</div>
+    <div class="card" style="text-align:center;padding:20px 14px;">
+      <input type="text" id="modal-prompt-input" placeholder="${placeholder}" style="margin-bottom:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <button class="btn btn-gold" onclick="window._modalCallbackPrompt()">ACEPTAR</button>
+        <button class="btn btn-gray" onclick="document.getElementById('modal').style.display='none'">CANCELAR</button>
+      </div>
+    </div>
+  `;
+
+  modal.style.display = 'flex';
+  setTimeout(() => {
+    document.getElementById('modal-prompt-input')?.focus();
+  }, 100);
+}
+
 window._agregarTorneoACategoria = (catNombre) => {
-  const torneos = getTorneosCategoria(catNombre);
-  const nuevoNombre = prompt(`Nombre del nuevo torneo para la categoría ${catNombre}:`);
-  if (!nuevoNombre || !nuevoNombre.trim()) return;
-  torneos.push(nuevoNombre.trim());
-  categoriasData[catNombre].torneo = torneos[0];
-  renderCategoriasConfigUI();
-  autoSaveLocal();
-  guardarFirebase();
+  mostrarPromptModal('Añadir Torneo', `Nombre del torneo para ${catNombre}`, (nuevoNombre) => {
+    const torneos = getTorneosCategoria(catNombre);
+    torneos.push(nuevoNombre.trim());
+    categoriasData[catNombre].torneo = torneos[0];
+    renderCategoriasConfigUI();
+    autoSaveLocal();
+    guardarFirebase();
+  });
 };
 
 export async function agregarNuevaCategoriaConfig() {

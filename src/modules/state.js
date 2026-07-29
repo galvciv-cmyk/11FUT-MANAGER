@@ -2,10 +2,10 @@ export const cupos = { por: 3, def: 8, med: 8, del: 6 };
 export const catNombres = { por: 'PORTEROS', def: 'DEFENSAS', med: 'MEDIOCAMPISTAS', del: 'DELANTEROS' };
 
 export const DEFAULT_PLANTEL = {
-  por: ['Por1', 'Por2'],
-  def: ['Def1', 'Def2', 'Def3', 'Def4', 'Def5'],
-  med: ['Med1', 'Med2', 'Med3', 'Med4', 'Med5'],
-  del: ['Del1', 'Del2', 'Del3', 'Del4'],
+  por: [],
+  def: [],
+  med: [],
+  del: [],
   tit_A: [], sup_A: [], ct_A: [], pos_custom_A: {}, maxSup_A: 7
 };
 

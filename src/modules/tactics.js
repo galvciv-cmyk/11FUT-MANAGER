@@ -1,5 +1,6 @@
 import { perfil, plantel, KITS, autoSaveLocal } from "./state.js";
 import { guardarFirebase } from "../services/firebase.js";
+import { mostrarNotificacionApp } from "./config.js";
 import html2canvas from "html2canvas";
 
 export const FORMACIONES = {
@@ -753,7 +754,7 @@ export function abrirModalCT(eq, idx) {
 window._guardarCTSlot = () => {
   const nombre = document.getElementById('ct-input-nombre').value.trim();
   const rol    = document.getElementById('ct-input-rol').value;
-  if (!nombre) return alert('Ingresa el nombre');
+  if (!nombre) return mostrarNotificacionApp('Datos incompletos', 'Ingresa el nombre completo', false);
   const eq = ctActivo.eq;
   if (!plantel['ct_' + eq]) plantel['ct_' + eq] = [];
   plantel['ct_' + eq][ctActivo.idx] = { nombre, rol };
@@ -773,10 +774,12 @@ window._borrarCTSlot = () => {
 };
 
 export async function exportarPNG(eq, btnElement) {
-  const el = document.getElementById('pizarra-' + eq);
-  const eqName = (perfil.eqA || 'Equipo').replace(/\s+/g, '_');
+  const el = document.getElementById(`pizarra-${eq}`);
+  if (!el || !btnElement) return;
+
+  const eqName = (perfil[`eq${eq}`] || 'EQUIPO').toUpperCase();
   const orig = btnElement.innerHTML;
-  btnElement.innerHTML = '⏳ Generando...';
+  btnElement.innerHTML = '⏳ GENERANDO PNG...';
   btnElement.disabled = true;
 
   try {
@@ -802,7 +805,7 @@ export async function exportarPNG(eq, btnElement) {
     link.href = canvas.toDataURL('image/png');
     link.click();
   } catch (e) {
-    alert('Error al generar imagen PNG');
+    mostrarNotificacionApp('Error al exportar', 'Ocurrió un error al generar la imagen PNG.', false);
     console.error(e);
   } finally {
     btnElement.innerHTML = orig;

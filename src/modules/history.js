@@ -548,6 +548,7 @@ window._finalizarYGuardarPartidoLive = async () => {
     faltasC: st.faltasC,
     goleadores: st.goleadoresMap,
     asistidores: st.asistidoresMap,
+    rematadores: st.rematadoresMap,
     tarjetasAmarillas: st.tarjetasAmarillasMap,
     tarjetasRojas: st.tarjetasRojasMap,
     sustituciones: st.sustitucionesList,
@@ -597,7 +598,7 @@ function acumularStatsPartido(p) {
   // Solo los jugadores con minutos disputados reciben PJ y minutos
   suplentesEntrados.forEach((minutosJugados, nombre) => {
     if (!stats[nombre]) {
-      stats[nombre] = { pj: 0, minJug: 0, goles: 0, asist: 0, am: 0, ro: 0, rat: 6.5, vallaInvicta: 0, rematesFavor: 0, rematesContra: 0, cornersFavor: 0, cornersRival: 0, golesRecibidos: 0 };
+      stats[nombre] = { pj: 0, minJug: 0, goles: 0, asist: 0, am: 0, ro: 0, remates: 0, rat: 6.5, vallaInvicta: 0, rematesFavor: 0, rematesContra: 0, cornersFavor: 0, cornersRival: 0, golesRecibidos: 0 };
     }
     const st = stats[nombre];
     st.pj += 1;
@@ -605,6 +606,7 @@ function acumularStatsPartido(p) {
 
     if (p.goleadores && p.goleadores[nombre]) st.goles += p.goleadores[nombre];
     if (p.asistidores && p.asistidores[nombre]) st.asist += p.asistidores[nombre];
+    if (p.rematadores && p.rematadores[nombre]) st.remates = (st.remates || 0) + p.rematadores[nombre];
     if (p.tarjetasAmarillas && p.tarjetasAmarillas[nombre]) st.am = (st.am || 0) + p.tarjetasAmarillas[nombre];
     if (p.tarjetasRojas && p.tarjetasRojas[nombre]) st.ro = (st.ro || 0) + p.tarjetasRojas[nombre];
 

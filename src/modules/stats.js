@@ -27,6 +27,10 @@ export function renderStats(targetId = 'stats-list') {
             <th style="padding:8px;text-align:center;">⏱️ MIN</th>
             <th style="padding:8px;text-align:center;">⚽ GOL</th>
             <th style="padding:8px;text-align:center;">🎯 ASI</th>
+            <th style="padding:8px;text-align:center;">🚀 REM</th>
+            <th style="padding:8px;text-align:center;">🟨 AM</th>
+            <th style="padding:8px;text-align:center;">🟥 RO</th>
+            <th style="padding:8px;text-align:center;">📈 EFECT.</th>
             <th style="padding:8px;text-align:center;">🧤 VALLA</th>
             <th style="padding:8px;text-align:center;">⭐ RAT</th>
             ${targetId === 'pub-stats-container' ? '' : '<th style="padding:8px;text-align:center;">EDITAR</th>'}
@@ -36,11 +40,13 @@ export function renderStats(targetId = 'stats-list') {
   `;
 
   filtrados.forEach(nombre => {
-    const st = stats[nombre] || { pj: 0, minJug: 0, goles: 0, asist: 0, am: 0, ro: 0, rat: 6.5, vallaInvicta: 0, rematesFavor: 0, rematesContra: 0 };
+    const st = stats[nombre] || { pj: 0, minJug: 0, goles: 0, asist: 0, am: 0, ro: 0, remates: 0, rat: 6.5, vallaInvicta: 0, rematesFavor: 0, rematesContra: 0 };
 
     const esPortero = plantel.por.includes(nombre);
     const atajadasPct = st.rematesContra > 0 ? Math.round(((st.rematesContra - (st.golesRecibidos || 0)) / st.rematesContra) * 100) : (st.vallaInvicta > 0 ? 100 : 0);
-    const vallaDisplay = esPortero ? `🧤 ${st.vallaInvicta || 0} (${atajadasPct}%)` : '';
+    const vallaDisplay = esPortero ? `🧤 ${st.vallaInvicta || 0} (${atajadasPct}%)` : '-';
+
+    const efectividad = !esPortero ? ((st.remates || 0) > 0 ? Math.round(((st.goles || 0) / st.remates) * 100) + '%' : '0%') : '-';
 
     html += `
       <tr style="border-bottom:1px solid #1a1a1a;">
@@ -49,6 +55,10 @@ export function renderStats(targetId = 'stats-list') {
         <td style="padding:8px;text-align:center;">${st.minJug || 0}'</td>
         <td style="padding:8px;text-align:center;color:var(--verde);font-weight:700;">${st.goles || 0}</td>
         <td style="padding:8px;text-align:center;color:var(--azul);font-weight:700;">${st.asist || 0}</td>
+        <td style="padding:8px;text-align:center;font-weight:700;">${st.remates || 0}</td>
+        <td style="padding:8px;text-align:center;color:#ffd700;">${st.am || 0}</td>
+        <td style="padding:8px;text-align:center;color:var(--rojo);">${st.ro || 0}</td>
+        <td style="padding:8px;text-align:center;color:var(--oro);font-weight:700;">${efectividad}</td>
         <td style="padding:8px;text-align:center;font-size:11px;color:#aaa;">${vallaDisplay}</td>
         <td style="padding:8px;text-align:center;color:var(--oro);font-weight:700;">${(st.rat || 6.5).toFixed(1)}</td>
         ${targetId === 'pub-stats-container' ? '' : `
