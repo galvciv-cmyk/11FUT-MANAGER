@@ -668,10 +668,38 @@ window._eliminarPartido = async (id) => {
 // ══════════════════════════════════════════
 // MÓDULO DE ANÁLISIS TÁCTICO CON IA (GEMINI)
 // ══════════════════════════════════════════
-const GEMINI_API_KEY = "AQ.Ab8RN6J.Uw5jsZ1mV2dDOZLk7o1P7DFiC3mKCR9PKwEeM4oHOQ";
+const DEFAULT_GEMINI_KEY = "AQ.Ab8RN6J.Uw5jsZ1mV2dDOZLk7o1P7DFiC3mKCR9PKwEeM4oHOQ";
+
+export function getApiKeyGemini() {
+  return perfil.geminiKey || DEFAULT_GEMINI_KEY;
+}
+
+window._toggleEditarApiKeyIA = () => {
+  const box = document.getElementById('box-editar-api-key');
+  const input = document.getElementById('input-api-key-ia');
+  if (box) {
+    const visible = box.style.display === 'block';
+    box.style.display = visible ? 'none' : 'block';
+    if (!visible && input) input.value = getApiKeyGemini();
+  }
+};
+
+window._guardarApiKeyIA = () => {
+  const input = document.getElementById('input-api-key-ia');
+  if (input) {
+    const val = input.value.trim();
+    if (!val) return alert('Ingresa una API Key válida.');
+    perfil.geminiKey = val;
+    autoSaveLocal();
+    guardarFirebase();
+    document.getElementById('box-editar-api-key').style.display = 'none';
+    alert('🔑 API Key guardada correctamente.');
+  }
+};
 
 export async function obtenerAnalisisGemini(datos) {
   const modelos = ["gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-2.0-flash", "gemini-2.5-flash"];
+  const apiKey = getApiKeyGemini();
 
   const promptText = `
     Actúa como un analista táctico de fútbol profesional. 
@@ -692,10 +720,13 @@ export async function obtenerAnalisisGemini(datos) {
 
   for (const mod of modelos) {
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${mod}:generateContent?key=${GEMINI_API_KEY}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${mod}:generateContent?key=${apiKey}`;
       const response = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey
+        },
         body: JSON.stringify({
           contents: [{ parts: [{ text: promptText }] }]
         })
