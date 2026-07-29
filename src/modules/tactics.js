@@ -632,7 +632,8 @@ export function abrirModalJugador(eq, idx, cat) {
   const modalContent = document.getElementById('modal-content');
   if (!modal || !modalContent) return;
 
-  const asignadosTit = (plantel[`tit_${eq}`] || []).filter(Boolean);
+  const jugadorActualEnSlot = (plantel[`tit_${eq}`] || [])[idx];
+  const asignadosTit = (plantel[`tit_${eq}`] || []).filter((n, i) => i !== idx && n && n !== 'LIBRE');
   const asignadosSup = (plantel[`sup_${eq}`] || []).filter(Boolean);
   const ocupados = new Set([...asignadosTit, ...asignadosSup]);
 
@@ -643,10 +644,11 @@ export function abrirModalJugador(eq, idx, cat) {
   html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
 
   if (!disponibles.length) {
-    html += `<div style="color:#aaa;font-size:12px;text-align:center;padding:10px;">Todos los jugadores ya han sido asignados.</div>`;
+    html += `<div style="color:#aaa;font-size:12px;text-align:center;padding:10px;">Todos los demás jugadores ya están ubicados en otra posición.</div>`;
   } else {
     disponibles.forEach(n => {
-      html += `<button class="btn btn-gray" style="text-align:left;padding:10px;" onclick="window._seleccionarTitular('${n}')">${n}</button>`;
+      const esElMismo = n === jugadorActualEnSlot;
+      html += `<button class="btn ${esElMismo ? 'btn-gold' : 'btn-gray'}" style="text-align:left;padding:10px;" onclick="window._seleccionarTitular('${n}')">${n} ${esElMismo ? '✓ (ACTUAL)' : ''}</button>`;
     });
   }
 
@@ -660,6 +662,16 @@ export function abrirModalJugador(eq, idx, cat) {
 window._seleccionarTitular = (nombre) => {
   const { eq, idx } = modalJugadorActivo;
   if (!plantel[`tit_${eq}`]) plantel[`tit_${eq}`] = [];
+
+  if (nombre !== 'LIBRE') {
+    // Si el jugador ya estaba en otra posición de titulares, liberarla
+    plantel[`tit_${eq}`] = plantel[`tit_${eq}`].map((p, i) => (i !== idx && p === nombre) ? 'LIBRE' : p);
+    // Si el jugador estaba en los suplentes, liberarlo del banco
+    if (plantel[`sup_${eq}`]) {
+      plantel[`sup_${eq}`] = plantel[`sup_${eq}`].filter(p => p !== nombre);
+    }
+  }
+
   plantel[`tit_${eq}`][idx] = nombre;
   document.getElementById('modal').style.display = 'none';
   actualizarTactica(eq);
@@ -672,8 +684,9 @@ export function abrirModalSuplente(eq, idx) {
   const modalContent = document.getElementById('modal-content');
   if (!modal || !modalContent) return;
 
+  const suplenteActualEnSlot = (plantel[`sup_${eq}`] || [])[idx];
   const asignadosTit = (plantel[`tit_${eq}`] || []).filter(Boolean);
-  const asignadosSup = (plantel[`sup_${eq}`] || []).filter(Boolean);
+  const asignadosSup = (plantel[`sup_${eq}`] || []).filter((n, i) => i !== idx && n);
   const ocupados = new Set([...asignadosTit, ...asignadosSup]);
 
   const todos = [...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
@@ -683,10 +696,11 @@ export function abrirModalSuplente(eq, idx) {
   html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
 
   if (!disponibles.length) {
-    html += `<div style="color:#aaa;font-size:12px;text-align:center;padding:10px;">Todos los jugadores ya han sido asignados.</div>`;
+    html += `<div style="color:#aaa;font-size:12px;text-align:center;padding:10px;">Todos los demás jugadores ya están ubicados en otra posición.</div>`;
   } else {
     disponibles.forEach(n => {
-      html += `<button class="btn btn-gray" style="text-align:left;padding:10px;" onclick="window._seleccionarSuplente('${n}')">${n}</button>`;
+      const esElMismo = n === suplenteActualEnSlot;
+      html += `<button class="btn ${esElMismo ? 'btn-gold' : 'btn-gray'}" style="text-align:left;padding:10px;" onclick="window._seleccionarSuplente('${n}')">${n} ${esElMismo ? '✓ (ACTUAL)' : ''}</button>`;
     });
   }
 
@@ -700,9 +714,20 @@ export function abrirModalSuplente(eq, idx) {
 window._seleccionarSuplente = (nombre) => {
   const { eq, idx } = modalJugadorActivo;
   if (!plantel[`sup_${eq}`]) plantel[`sup_${eq}`] = [];
+
+  if (nombre !== 'LIBRE') {
+    // Si el jugador estaba en los titulares, liberarlo del campo
+    if (plantel[`tit_${eq}`]) {
+      plantel[`tit_${eq}`] = plantel[`tit_${eq}`].map(p => p === nombre ? 'LIBRE' : p);
+    }
+    // Si el jugador estaba en otra posición del banco, liberarlo
+    plantel[`sup_${eq}`] = plantel[`sup_${eq}`].map((p, i) => (i !== idx && p === nombre) ? '' : p);
+  }
+
   plantel[`sup_${eq}`][idx] = nombre;
   document.getElementById('modal').style.display = 'none';
   renderSuplentes(eq);
+  actualizarTactica(eq);
   autoSaveLocal();
 };
 
