@@ -92,12 +92,12 @@ function refrescarTodaLaVista() {
 // ══════════════════════════════════════════
 // PUBLIC PROFILE VIEW (SOLO LECTURA SIN BOTONES DE EDICIÓN)
 // ══════════════════════════════════════════
-async function cargarPerfilPublico() {
+async function cargarPerfilPublico(publicId) {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('public-profile-screen').style.display = 'block';
 
-  await cargarFirebasePublico();
+  await cargarFirebasePublico(publicId);
 
   document.getElementById('pub-header-club').textContent = perfil.club || '11FUT MANAGER';
   if (perfil.logo) {
@@ -110,12 +110,15 @@ async function cargarPerfilPublico() {
   renderStatsPublico();
   renderHistorialPublico();
 
-  document.getElementById('pub-selector-categoria')?.addEventListener('change', (e) => {
-    setCategoriaActiva(e.target.value);
-    renderRankingsPublico();
-    renderStatsPublico();
-    renderHistorialPublico();
-  });
+  const selectPub = document.getElementById('pub-selector-categoria');
+  if (selectPub) {
+    selectPub.onchange = (e) => {
+      setCategoriaActiva(e.target.value);
+      renderRankingsPublico();
+      renderStatsPublico();
+      renderHistorialPublico();
+    };
+  }
 
   document.getElementById('btn-pub-login-link')?.addEventListener('click', () => {
     window.location.href = window.location.pathname;
@@ -252,8 +255,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Detect Public Profile Mode
   const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('public') === 'true') {
-    cargarPerfilPublico();
+  const publicVal = urlParams.get('public');
+  if (publicVal) {
+    cargarPerfilPublico(publicVal);
     return;
   }
 

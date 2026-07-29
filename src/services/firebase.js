@@ -26,6 +26,13 @@ export function setSyncStatus(type, msg) {
   if (el) el.textContent = msg;
 }
 
+export function getPublicId() {
+  if (pinHash) {
+    return `usr_${pinHash.slice(0, 16)}`;
+  }
+  return 'perfil_demo';
+}
+
 export async function guardarFirebase() {
   if (!db) return;
   try {
@@ -39,8 +46,8 @@ export async function guardarFirebase() {
       await setDoc(ref, payload, { merge: true });
     }
 
-    // Copia pública accesible para cualquier visitante sin login
-    const refPub = doc(db, 'publico', 'perfil_publico');
+    const pubId = getPublicId();
+    const refPub = doc(db, 'publicos', pubId);
     await setDoc(refPub, payload, { merge: true });
 
     setSyncStatus('saved', '☁️ Sincronizado en la nube');
@@ -71,11 +78,18 @@ export async function cargarFirebase() {
   return false;
 }
 
-export async function cargarFirebasePublico() {
+export async function cargarFirebasePublico(targetPublicId) {
   if (!db) return false;
   try {
-    const refPub = doc(db, 'publico', 'perfil_publico');
-    const snap = await getDoc(refPub);
+    const pubId = targetPublicId || getPublicId() || 'perfil_demo';
+    const refPub = doc(db, 'publicos', pubId);
+    let snap = await getDoc(refPub);
+
+    if (!snap.exists()) {
+      const refFallback = doc(db, 'publico', 'perfil_publico');
+      snap = await getDoc(refFallback);
+    }
+
     if (snap.exists()) {
       const data = snap.data();
       if (data.perfil) updatePerfil(data.perfil);

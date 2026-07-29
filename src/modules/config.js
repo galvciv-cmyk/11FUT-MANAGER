@@ -1,5 +1,5 @@
 import { perfil, setPinHash, setCategoriaActiva, autoSaveLocal, updateStats, updateHistorial, categoriasData } from "./state.js";
-import { guardarFirebase, hashPin } from "../services/firebase.js";
+import { guardarFirebase, hashPin, getPublicId } from "../services/firebase.js";
 import { KITS } from "./state.js";
 import { subirImagenCloudinary } from "../services/cloudinary.js";
 import { renderStats } from "./stats.js";
@@ -162,13 +162,21 @@ export function cerrarConfig() {
 }
 
 export function copiarEnlacePublico() {
-  const link = `${window.location.origin}${window.location.pathname}?public=true`;
-  navigator.clipboard.writeText(link).then(() => {
-    mostrarNotificacionApp('Enlace Copiado', `Enlace del Perfil Público copiado al portapapeles:\n\n${link}`);
-  }).catch(() => {
-    mostrarNotificacionApp('Perfil Público', `Enlace para compartir:\n\n${link}`);
-  });
+  const pubId = getPublicId();
+  const url = `${window.location.origin}${window.location.pathname}?public=${pubId}`;
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(() => {
+      mostrarNotificacionApp('Enlace Copiado', `📋 Enlace de tu perfil público copiado al portapapeles:\n${url}`);
+    }).catch(() => {
+      prompt('Copia este enlace de tu perfil público:', url);
+    });
+  } else {
+    prompt('Copia este enlace de tu perfil público:', url);
+  }
 }
+
+window._copiarEnlacePublico = () => copiarEnlacePublico();
 
 export async function guardarNombres() {
   const cfgClubInput = document.getElementById('cfg-club');
@@ -344,3 +352,4 @@ export function aplicarPerfil() {
     if (bg) bg.style.backgroundImage = `url('${perfil.bg}')`;
   }
 }
+
