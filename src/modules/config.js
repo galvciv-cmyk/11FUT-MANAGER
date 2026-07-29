@@ -84,30 +84,74 @@ export function abrirSoporteWhatsApp() {
   window.open(link, '_blank');
 }
 
+export function getTorneosCategoria(catNombre) {
+  if (!categoriasData[catNombre]) {
+    categoriasData[catNombre] = { torneos: ['Torneo Oficial'] };
+  }
+  if (!categoriasData[catNombre].torneos || !Array.isArray(categoriasData[catNombre].torneos) || !categoriasData[catNombre].torneos.length) {
+    const single = categoriasData[catNombre].torneo || 'Torneo Oficial';
+    categoriasData[catNombre].torneos = [single];
+  }
+  return categoriasData[catNombre].torneos;
+}
+
 export function renderCategoriasConfigUI() {
   const cont = document.getElementById('cfg-lista-categorias');
   if (!cont) return;
 
   const cats = perfil.categorias || ["Sub-14"];
   cont.innerHTML = cats.map(c => {
-    const tor = (categoriasData[c] && categoriasData[c].torneo) || 'Torneo Oficial';
+    const torneos = getTorneosCategoria(c);
     return `
-      <div style="background:#0d0d0d;border:1px solid #222;padding:10px 12px;border-radius:8px;margin-bottom:8px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <div style="background:#0d0d0d;border:1px solid #222;padding:12px;border-radius:10px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
           <span style="font-weight:700;color:var(--oro);">${c} ${c === perfil.categoriaActiva ? '⭐ (ACTIVA)' : ''}</span>
-          ${cats.length > 1 ? `<button onclick="window._eliminarCategoriaConfig('${c}')" style="background:none;border:none;color:#888;cursor:pointer;">🗑️</button>` : ''}
+          ${cats.length > 1 ? `<button onclick="window._eliminarCategoriaConfig('${c}')" style="background:none;border:none;color:#888;cursor:pointer;font-size:12px;">🗑️ Eliminar Categ.</button>` : ''}
         </div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <input type="text" value="${tor}" placeholder="Torneo de la categoría" style="margin:0;font-size:12px;padding:6px 10px;" onchange="window._guardarTorneoCategoria('${c}', this.value)">
+        
+        <div style="font-size:11px;color:#aaa;margin-bottom:6px;font-weight:600;">🏆 Torneos de esta categoría:</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;">
+          ${torneos.map((t, idx) => `
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input type="text" value="${t}" placeholder="Nombre del Torneo" style="margin:0;font-size:12px;padding:6px 10px;" onchange="window._guardarTorneoCategoriaIndex('${c}', ${idx}, this.value)">
+              ${torneos.length > 1 ? `<button onclick="window._eliminarTorneoCategoriaIndex('${c}', ${idx})" style="background:none;border:none;color:var(--rojo);cursor:pointer;font-size:14px;" title="Eliminar torneo">🗑️</button>` : ''}
+            </div>
+          `).join('')}
         </div>
+
+        <button class="btn btn-gray" style="font-size:11px;padding:6px 10px;width:auto;" onclick="window._agregarTorneoACategoria('${c}')">➕ AÑADIR TORNEO</button>
       </div>
     `;
   }).join('');
 }
 
-window._guardarTorneoCategoria = (catNombre, torneoVal) => {
-  if (!categoriasData[catNombre]) categoriasData[catNombre] = {};
-  categoriasData[catNombre].torneo = torneoVal.trim() || 'Torneo Oficial';
+window._guardarTorneoCategoriaIndex = (catNombre, idx, val) => {
+  const torneos = getTorneosCategoria(catNombre);
+  if (torneos[idx] !== undefined) {
+    torneos[idx] = val.trim() || 'Torneo Oficial';
+    categoriasData[catNombre].torneo = torneos[0];
+    autoSaveLocal();
+    guardarFirebase();
+  }
+};
+
+window._eliminarTorneoCategoriaIndex = (catNombre, idx) => {
+  const torneos = getTorneosCategoria(catNombre);
+  if (torneos.length <= 1) return;
+  torneos.splice(idx, 1);
+  categoriasData[catNombre].torneo = torneos[0];
+  renderCategoriasConfigUI();
+  autoSaveLocal();
+  guardarFirebase();
+};
+
+window._agregarTorneoACategoria = (catNombre) => {
+  const torneos = getTorneosCategoria(catNombre);
+  const nuevoNombre = prompt(`Nombre del nuevo torneo para la categoría ${catNombre}:`);
+  if (!nuevoNombre || !nuevoNombre.trim()) return;
+  torneos.push(nuevoNombre.trim());
+  categoriasData[catNombre].torneo = torneos[0];
+  renderCategoriasConfigUI();
   autoSaveLocal();
   guardarFirebase();
 };
@@ -128,6 +172,7 @@ export async function agregarNuevaCategoriaConfig() {
   setCategoriaActiva(catVal);
 
   if (!categoriasData[catVal]) categoriasData[catVal] = {};
+  categoriasData[catVal].torneos = [torVal || 'Torneo Oficial'];
   categoriasData[catVal].torneo = torVal || 'Torneo Oficial';
 
   inputCat.value = '';
