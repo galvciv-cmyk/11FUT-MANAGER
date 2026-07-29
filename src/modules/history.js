@@ -1,7 +1,7 @@
 import { historial, updateHistorial, juegosProgramados, updateJuegosProgramados, stats, updateStats, perfil, autoSaveLocal, plantel } from "./state.js";
 import { guardarFirebase } from "../services/firebase.js";
 import { renderStats } from "./stats.js";
-import { mostrarNotificacionApp } from "./config.js";
+import { mostrarNotificacionApp, mostrarConfirmacionApp } from "./config.js";
 
 export function formatFecha(str) {
   if (!str) return '';
@@ -816,19 +816,21 @@ export function abrirModalEstadisticasPartido(id) {
   modal.style.display = 'flex';
 }
 
+
 window._abrirModalEstadisticasPartido = (id) => abrirModalEstadisticasPartido(id);
 
-window._eliminarPartido = async (id) => {
-  if (!confirm('¿Eliminar este partido del historial?')) return;
-  const idx = historial.findIndex(h => h.id === id);
-  if (idx !== -1) {
-    historial.splice(idx, 1);
-    updateHistorial(historial);
-    autoSaveLocal();
-    await guardarFirebase();
-    renderHistorial();
-    renderStats();
-  }
+window._eliminarPartido = (id) => {
+  mostrarConfirmacionApp('Eliminar Partido', '¿Estás seguro de eliminar este partido del historial?', async () => {
+    const idx = historial.findIndex(h => h.id === id);
+    if (idx !== -1) {
+      historial.splice(idx, 1);
+      updateHistorial(historial);
+      autoSaveLocal();
+      await guardarFirebase();
+      renderHistorial();
+      renderStats();
+    }
+  });
 };
 
 

@@ -1,10 +1,39 @@
-import { perfil, juegosProgramados, updateJuegosProgramados, autoSaveLocal, plantel } from "./state.js";
+import { perfil, juegosProgramados, updateJuegosProgramados, autoSaveLocal, plantel, categoriasData } from "./state.js";
 import { formatFecha, formatHora, renderHistorial } from "./history.js";
 import { guardarFirebase } from "../services/firebase.js";
+import { mostrarNotificacionApp } from "./config.js";
+
+export function renderTorneosCitacionUI() {
+  const select = document.getElementById('torneo-A');
+  if (!select) return;
+
+  const cat = perfil.categoriaActiva || "Sub-14";
+  const catData = categoriasData[cat] || {};
+  let torneos = catData.torneos || [catData.torneo || 'Torneo Oficial'];
+  if (!torneos.length) torneos = ['Torneo Oficial'];
+
+  select.innerHTML = torneos.map(t => `<option value="${t}">🏆 ${t}</option>`).join('') +
+    `<option value="__otro__">➕ Escribir otro torneo...</option>`;
+
+  select.onchange = (e) => {
+    if (e.target.value === '__otro__') {
+      const nuevo = prompt(`Nuevo torneo para la categoría ${cat}:`);
+      if (nuevo && nuevo.trim()) {
+        const val = nuevo.trim();
+        if (!catData.torneos) catData.torneos = [];
+        catData.torneos.push(val);
+        renderTorneosCitacionUI();
+        select.value = val;
+      } else {
+        select.value = torneos[0];
+      }
+    }
+  };
+}
 
 export function buscarMaps(eq) {
   const lugar = document.getElementById(`lugar-${eq}`)?.value.trim();
-  if (!lugar) return alert('Ingresa primero la sede o dirección.');
+  if (!lugar) return mostrarNotificacionApp('Datos incompletos', 'Ingresa primero la sede o dirección.', false);
   window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lugar)}`, '_blank');
 }
 

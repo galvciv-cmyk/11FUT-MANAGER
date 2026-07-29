@@ -383,6 +383,10 @@ export function cerrarSesion() {
     } catch (e) {
       console.error('Error al cerrar sesión:', e);
     }
+    const pinInput = document.getElementById('pin-input');
+    if (pinInput) pinInput.value = '';
+    const statusEl = document.getElementById('login-status');
+    if (statusEl) statusEl.textContent = '';
     localStorage.clear();
     sessionStorage.clear();
     window.location.href = window.location.origin + window.location.pathname;

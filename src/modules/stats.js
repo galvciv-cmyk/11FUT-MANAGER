@@ -39,7 +39,7 @@ export function renderStats(targetId = 'stats-list') {
     const st = stats[nombre] || { pj: 0, minJug: 0, goles: 0, asist: 0, am: 0, ro: 0, rat: 6.5, vallaInvicta: 0, rematesFavor: 0, rematesContra: 0 };
 
     const esPortero = plantel.por.includes(nombre);
-    const atajadasPct = st.rematesContra > 0 ? Math.round(((st.rematesContra - (st.gc || 0)) / st.rematesContra) * 100) : (st.vallaInvicta > 0 ? 100 : 0);
+    const atajadasPct = st.rematesContra > 0 ? Math.round(((st.rematesContra - (st.golesRecibidos || 0)) / st.rematesContra) * 100) : (st.vallaInvicta > 0 ? 100 : 0);
     const vallaDisplay = esPortero ? `🧤 ${st.vallaInvicta || 0} (${atajadasPct}%)` : '';
 
     html += `

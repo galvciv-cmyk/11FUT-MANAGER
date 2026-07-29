@@ -1,12 +1,12 @@
 import "./styles/main.css";
-import { perfil, setPinHash, setUserEmail, setCategoriaActiva, autoSaveLocal, historial, categoriasData, autoLoadLocal } from "./modules/state.js";
+import { perfil, setPinHash, setUserEmail, setCategoriaActiva, autoSaveLocal, historial, categoriasData, autoLoadLocal, plantel } from "./modules/state.js";
 import { auth, hashPin, cargarFirebase, guardarFirebase, cargarFirebasePublico } from "./services/firebase.js";
 import { cargarKits } from "./services/cloudinary.js";
 import { actualizarTactica, exportarPNG, setDrawingMode, setDrawingColor, setLineWidth, setLineDash, agregarMarcador, clearCanvas, toggleFullscreen, guardarEsquemaCustom } from "./modules/tactics.js";
 import { renderStats, guardarStatJugador, cerrarStatModal, renderRankings } from "./modules/stats.js";
 import { renderHistorial, formatFecha } from "./modules/history.js";
 import { initPlantelUI, aplicarPlantelUI, guardarSquad, descargarPlantilla, importarCSV, exportarPDF } from "./modules/squad.js";
-import { buscarMaps, enviarWA } from "./modules/citacion.js";
+import { buscarMaps, enviarWA, renderTorneosCitacionUI } from "./modules/citacion.js";
 import { abrirConfig, cerrarConfig, guardarNombres, guardarKits, guardarLogo, guardarFondo, cambiarPin, resetearStats, borrarHistorial, cerrarSesion, aplicarPerfil, copiarEnlacePublico, agregarNuevaCategoriaConfig, abrirSoporteWhatsApp } from "./modules/config.js";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged } from "firebase/auth";
 
@@ -99,6 +99,7 @@ function refrescarTodaLaVista() {
   initPlantelUI();
   aplicarPlantelUI();
   actualizarTactica('A');
+  renderTorneosCitacionUI();
   renderStats();
   renderHistorial();
 }
@@ -418,9 +419,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('uz-cfg-logo')?.addEventListener('click', () => document.getElementById('up-cfg-logo')?.click());
   document.getElementById('btn-cfg-subir-logo')?.addEventListener('click', guardarLogo);
-
-  document.getElementById('uz-cfg-bg')?.addEventListener('click', () => document.getElementById('up-cfg-bg')?.click());
-  document.getElementById('btn-cfg-subir-bg')?.addEventListener('click', guardarFondo);
 
   document.getElementById('btn-cfg-cambiar-pin')?.addEventListener('click', cambiarPin);
   document.getElementById('btn-reset-stats')?.addEventListener('click', resetearStats);
