@@ -1,7 +1,22 @@
 import { perfil, plantel, KITS, autoSaveLocal } from "./state.js";
 import { guardarFirebase } from "../services/firebase.js";
-import { mostrarNotificacionApp } from "./config.js";
+import { mostrarNotificacionApp, mostrarConfirmacionApp } from "./config.js";
 import html2canvas from "html2canvas";
+
+export function limpiarCanchaYBanco(eq = 'A') {
+  mostrarConfirmacionApp('Limpiar Cancha y Banco', '¿Estás seguro de quitar todos los jugadores seleccionados y dejarlos LIBRES?', () => {
+    plantel[`tit_${eq}`] = [];
+    plantel[`sup_${eq}`] = [];
+    plantel[`capitan_${eq}`] = '';
+
+    actualizarTactica(eq);
+    renderSuplentes(eq);
+    autoSaveLocal();
+    guardarFirebase();
+    mostrarNotificacionApp('Cancha Limpia', '🧹 Todos los puestos han sido dejados LIBRES.');
+  });
+}
+window._limpiarCanchaYBanco = (eq) => limpiarCanchaYBanco(eq);
 
 export const FORMACIONES = {
   "11": {
@@ -391,7 +406,8 @@ export function actualizarTactica(eq) {
   const capitanActual = plantel[`capitan_${eq}`] || '';
 
   const titularesActuales = form.map((slot, i) => {
-    return (plantel[`tit_${eq}`] && plantel[`tit_${eq}`][i]) || (plantel[slot.cat] && plantel[slot.cat][0]) || 'LIBRE';
+    const val = (plantel[`tit_${eq}`] && plantel[`tit_${eq}`][i]);
+    return (val && val !== '') ? val : 'LIBRE';
   });
 
   renderSelectorCapitanInCard(eq, titularesActuales);
@@ -417,14 +433,16 @@ export function actualizarTactica(eq) {
     token.dataset.eq = eq;
 
     const nombreGuardado = titularesActuales[i];
-    const esCapitan = capitanActual === nombreGuardado && nombreGuardado !== 'LIBRE';
+    const esLibre = !nombreGuardado || nombreGuardado === 'LIBRE';
+    const esCapitan = !esLibre && capitanActual === nombreGuardado;
+    const textoLabel = esLibre ? slot.pos : nombreGuardado;
 
     token.innerHTML = `
       <div class="token-camisa">
         <img src="${getImg(eq, slot.cat === 'por' ? 'por' : 'campo')}">
         ${esCapitan ? `<span class="capitan-badge">C</span>` : ''}
       </div>
-      <div class="nombre-label">${nombreGuardado}</div>
+      <div class="nombre-label" style="${esLibre ? 'opacity:0.75;font-style:italic;' : ''}">${textoLabel}</div>
     `;
 
     token.onclick = (e) => {
