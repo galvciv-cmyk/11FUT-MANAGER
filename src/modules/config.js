@@ -7,7 +7,7 @@ import { renderStats } from "./stats.js";
 import { renderHistorial } from "./history.js";
 import { actualizarTactica } from "./tactics.js";
 
-const DEFAULT_LOGO = "https://res.cloudinary.com/djhpfdklk/image/upload/v1778985193/cuerpo_tecnico_ysxrjt.png";
+const DEFAULT_LOGO = "https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png";
 
 export function mostrarNotificacionApp(titulo, mensaje, esExito = true) {
   const modal = document.getElementById('modal');

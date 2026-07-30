@@ -13,7 +13,7 @@ export const DEFAULT_PERFIL = {
   club: "11FUT MANAGER",
   eqA: "Equipo Principal",
   kitA: "predeterminado",
-  logo: "https://res.cloudinary.com/djhpfdklk/image/upload/v1778985193/cuerpo_tecnico_ysxrjt.png",
+  logo: "https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png",
   bg: "",
   email: "",
   categoriaActiva: "Sub-14",
