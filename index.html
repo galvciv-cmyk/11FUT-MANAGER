@@ -602,10 +602,20 @@
               <div id="medical-injuries-list" style="margin-top:8px;"></div>
             </div>
 
-            <!-- CONTROL DE ASISTENCIA -->
+            <!-- CONTROL DE ASISTENCIA DEL PLANTEL -->
             <div class="card">
-              <div class="card-title">📋 CONTROL DE ASISTENCIA DEL PLANTEL</div>
-              <div id="attendance-players-list" style="margin-top:8px;"></div>
+              <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
+                <span>📋 CONTROL DE ASISTENCIA</span>
+                <span id="attendance-today-date" style="font-size:11px;color:var(--verde-campo);font-weight:800;"></span>
+              </div>
+              
+              <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
+                <button class="btn btn-green" id="btn-iniciar-pasar-lista" style="font-size:13px;padding:12px;font-weight:900;">📋 PASAR LISTA (1 POR 1)</button>
+                <button class="btn btn-gray" id="btn-toggle-listado-completo" style="font-size:11px;padding:8px;background:#181818;border:1px solid #333;color:#ccc;">📊 VER LISTADO COMPLETO Y PORCENTAJES</button>
+              </div>
+
+              <!-- Listado completo desplegable con estadísticas de porcentaje -->
+              <div id="attendance-players-list" style="margin-top:12px;display:none;"></div>
             </div>
 
           </div>
@@ -649,6 +659,29 @@
         <textarea id="injury-notes-input" placeholder="ej. En reposo e inflamación reducida. Tratamiento con hielo." style="height:60px;margin-bottom:14px;"></textarea>
 
         <button class="btn" id="btn-save-medical-report" style="background:#9c27b0;color:#fff;">💾 GUARDAR PARTE MÉDICO</button>
+      </div>
+    </div>
+
+    <!-- MODAL PASAR LISTA WIZARD 1 POR 1 -->
+    <div class="modal-overlay" id="modal-pasar-lista-wizard" style="display:none;">
+      <div class="modal-body" style="max-width:480px;width:92%;padding:24px;text-align:center;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid #222;padding-bottom:10px;">
+          <div style="font-size:12px;font-weight:800;color:var(--verde-campo);" id="pasar-lista-step-counter">JUGADOR 1 DE 10</div>
+          <button onclick="document.getElementById('modal-pasar-lista-wizard').style.display='none';" style="background:none;border:none;color:#aaa;font-size:20px;cursor:pointer;">❌</button>
+        </div>
+
+        <div style="font-size:12px;color:#aaa;margin-bottom:4px;">Toma de Asistencia de Hoy</div>
+        <h2 id="pasar-lista-player-name" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:#fff;margin:0 0 6px 0;">⚽ NOMBRE JUGADOR</h2>
+        <div id="pasar-lista-player-role" style="font-size:13px;color:var(--oro);margin-bottom:20px;font-weight:700;">🛡️ DEFENSA</div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+          <button onclick="window._marcarAsistenciaIndividual('presente')" style="background:#4caf50;color:#000;border:none;padding:14px;border-radius:10px;font-size:14px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">🟢 PRESENTE</button>
+          <button onclick="window._marcarAsistenciaIndividual('justificada')" style="background:var(--oro);color:#000;border:none;padding:14px;border-radius:10px;font-size:14px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">🟡 JUSTIFICADO</button>
+          <button onclick="window._marcarAsistenciaIndividual('ausente')" style="background:#ff5252;color:#fff;border:none;padding:14px;border-radius:10px;font-size:14px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">🔴 AUSENTE</button>
+          <button onclick="window._marcarAsistenciaIndividual('lesionado')" style="background:#9c27b0;color:#fff;border:none;padding:14px;border-radius:10px;font-size:14px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">🏥 LESIONADO</button>
+        </div>
+
+        <div style="font-size:11px;color:#666;" id="pasar-lista-status-hint">Presiona una opción para guardar e ir al siguiente jugador</div>
       </div>
     </div>
 

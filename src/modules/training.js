@@ -6,7 +6,7 @@ import { perfil, categoriasData, plantel, setCategoriaActiva, autoSaveLocal } fr
 import { guardarFirebase } from '../services/firebase.js';
 import { mostrarNotificacionApp } from './config.js';
 
-// URLS DE VIDEOS DEMOSTRATIVOS DE ENTRENAMIENTO DE FÚTBOL
+// URLS DE VIDEOS DEMOSTRATIVOS ROBUSTOS Y DIRECTOS DE ENTRENAMIENTO DE FÚTBOL
 const VIDEO_CLIPS = [
   'https://assets.mixkit.co/videos/preview/mixkit-young-football-players-training-42931-large.mp4',
   'https://assets.mixkit.co/videos/preview/mixkit-football-player-dribbling-the-ball-42932-large.mp4',
@@ -256,7 +256,7 @@ export const EJERCICIOS_DB = [
     level: 'formativo',
     cat: 'pre_partido',
     dur: '8 min',
-    desc: 'Rondo dinámico sin presión excessive para activar confianza y soltura del grupo antes de salir a la cancha.',
+    desc: 'Rondo dinámico sin presión excesiva para activar confianza y soltura del grupo antes de salir a la cancha.',
     rules: '1. Aplaudir cada 5 pases. 2. Sonrisas y concentración.',
     img: 'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?auto=format&fit=crop&w=500&q=80',
     video: VIDEO_CLIPS[6]
@@ -843,7 +843,7 @@ const CAT_MAP = {
 };
 
 // ══════════════════════════════════════════════════════════════════════════
-// RENDERIZADO DE LA BIBLIOTECA DE 70 EJERCICIOS POR SECCIONES ORGANIZADAS
+// RENDERIZADO DE LA BIBLIOTECA DE 70 EJERCICIOS DE 4 EN 4 POR SECCIONES
 // ══════════════════════════════════════════════════════════════════════════
 export function renderBibliotecaEjercicios() {
   const container = document.getElementById('drills-library-grid');
@@ -882,21 +882,19 @@ export function renderBibliotecaEjercicios() {
       const cardsHtml = items.map(d => `
         <div style="background:#111;border:1px solid #222;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:transform 0.2s, border-color 0.2s;" onmouseenter="this.style.borderColor='${accentColor}';this.style.transform='translateY(-3px)';" onmouseleave="this.style.borderColor='#222';this.style.transform='translateY(0)';">
           
-          <!-- CONTENEDOR VISUAL CON IMAGEN Y VÍDEO DEMOSTRATIVO INTEGRADO -->
-          <div style="position:relative;background:#0d0d0d;border-bottom:1px solid #222;">
-            <div style="height:110px;background:url('${d.img}') center/cover no-repeat;position:relative;">
-              <div style="position:absolute;top:6px;left:6px;background:rgba(0,0,0,0.85);color:#fff;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:800;border:1px solid ${catInfo.color};">
-                ${d.level === 'formativo' ? '👦 FORMATIVO' : '🏆 COMPETITIVO'}
-              </div>
-              <div style="position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,0.85);color:var(--oro);padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;">
-                ⏱️ ${d.dur}
-              </div>
+          <!-- PORTADA CON IMAGEN DE ALTA CALIDAD Y BADGES -->
+          <div style="height:115px;background:url('${d.img}') center/cover no-repeat;position:relative;border-bottom:1px solid #222;">
+            <div style="position:absolute;top:6px;left:6px;background:rgba(0,0,0,0.85);color:#fff;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:800;border:1px solid ${catInfo.color};">
+              ${d.level === 'formativo' ? '👦 FORMATIVO' : '🏆 COMPETITIVO'}
             </div>
-            
-            <!-- REPRODUCTOR DE VÍDEO DEMOSTRATIVO INTEGRADO -->
-            <div style="padding:6px;background:#080808;">
-              <video src="${d.video}" autoplay loop muted playsinline style="width:100%;height:85px;object-fit:cover;border-radius:6px;border:1px solid #222;"></video>
+            <div style="position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,0.85);color:var(--oro);padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;">
+              ⏱️ ${d.dur}
             </div>
+          </div>
+          
+          <!-- REPRODUCTOR DE VÍDEO DEMOSTRATIVO CON SILENCIO Y AUTOPLAY GARANTIZADO -->
+          <div style="padding:6px;background:#080808;border-bottom:1px solid #222;">
+            <video class="drill-card-video" src="${d.video}" autoplay loop muted playsinline preload="metadata" style="width:100%;height:95px;object-fit:cover;border-radius:6px;border:1px solid #222;display:block;"></video>
           </div>
 
           <div style="padding:12px;display:flex;flex-direction:column;flex:1;justify-content:space-between;gap:8px;">
@@ -913,12 +911,14 @@ export function renderBibliotecaEjercicios() {
       `).join('');
 
       return `
-        <div style="margin-bottom:16px;">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:${catInfo.color};margin-bottom:8px;display:flex;align-items:center;gap:6px;border-bottom:1px solid #222;padding-bottom:4px;">
+        <div style="margin-bottom:20px;">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:${catInfo.color};margin-bottom:10px;display:flex;align-items:center;gap:6px;border-bottom:1px solid #222;padding-bottom:4px;">
             <span>${catInfo.name}</span>
             <span style="font-size:11px;color:#777;">(${items.length} ejercicios)</span>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));gap:12px;">
+
+          <!-- GRILLA DE 4 EN 4 -->
+          <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:14px;">
             ${cardsHtml}
           </div>
         </div>
@@ -926,8 +926,8 @@ export function renderBibliotecaEjercicios() {
     }).join('');
 
     return `
-      <div style="background:#0a0a0a;border:1px solid #222;border-radius:12px;padding:16px;margin-bottom:20px;">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:${accentColor};margin-bottom:14px;display:flex;align-items:center;gap:8px;border-bottom:2px solid ${accentColor};padding-bottom:8px;">
+      <div style="background:#0a0a0a;border:1px solid #222;border-radius:12px;padding:18px;margin-bottom:24px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:${accentColor};margin-bottom:16px;display:flex;align-items:center;gap:8px;border-bottom:2px solid ${accentColor};padding-bottom:8px;">
           <span>${levelIcon} ${title}</span>
           <span style="font-size:12px;color:#aaa;font-weight:700;">(${drillsList.length} ejercicios)</span>
         </div>
@@ -945,10 +945,18 @@ export function renderBibliotecaEjercicios() {
   }
 
   container.innerHTML = html;
+
+  // Forzar reproducción de vídeos en navegadores que bloquean reproducción sin interacción previa
+  setTimeout(() => {
+    container.querySelectorAll('video').forEach(v => {
+      v.muted = true;
+      v.play().catch(() => {});
+    });
+  }, 100);
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// DETALLE DE EJERCICIO EN MODAL
+// DETALLE DE EJERCICIO EN MODAL CON VÍDEO
 // ══════════════════════════════════════════════════════════════════════════
 export function verDetalleEjercicio(id) {
   const catObj = getEntrenamientosData();
@@ -969,10 +977,10 @@ export function verDetalleEjercicio(id) {
   let videoEl = document.getElementById('drill-detail-video');
   if (!videoEl) {
     const videoContainer = document.createElement('div');
-    videoContainer.style.marginTop = '10px';
+    videoContainer.style.marginTop = '12px';
     videoContainer.innerHTML = `
       <div style="font-size:11px;color:var(--oro);font-weight:800;margin-bottom:4px;">🎥 VÍDEO DEMOSTRATIVO DEL EJERCICIO:</div>
-      <video id="drill-detail-video" src="" controls autoplay loop muted playsinline style="width:100%;height:200px;object-fit:cover;border-radius:8px;border:1px solid #333;"></video>
+      <video id="drill-detail-video" src="" controls autoplay loop muted playsinline style="width:100%;height:220px;object-fit:cover;border-radius:8px;border:1px solid #333;"></video>
     `;
     const rulesBox = document.getElementById('drill-detail-rules')?.parentElement;
     if (rulesBox && rulesBox.parentElement) {
@@ -983,6 +991,8 @@ export function verDetalleEjercicio(id) {
 
   if (videoEl) {
     videoEl.src = d.video;
+    videoEl.muted = true;
+    videoEl.play().catch(() => {});
   }
 
   modal.style.display = 'flex';
@@ -1121,15 +1131,111 @@ export async function eliminarSesion(index) {
 window._eliminarSesion = (i) => eliminarSesion(i);
 
 // ══════════════════════════════════════════════════════════════════════════
-// CONTROL DE ASISTENCIA DEL PLANTEL
+// CONTROL DE ASISTENCIA 1 POR 1 (PASAR LISTA WIZARD) Y VER LISTADO COMPLETO
 // ══════════════════════════════════════════════════════════════════════════
+let pasarListaJugadores = [];
+let pasarListaIndex = 0;
+let listadoCompletoVisible = false;
+
+export function iniciarPasarListaWizard() {
+  const catObj = getEntrenamientosData();
+  const activePlantel = catObj.plantel || plantel || {};
+  pasarListaJugadores = [];
+
+  ['por', 'def', 'med', 'del'].forEach(rol => {
+    if (activePlantel[rol] && Array.isArray(activePlantel[rol])) {
+      activePlantel[rol].forEach(j => {
+        const nombre = typeof j === 'object' ? j.nombre : j;
+        const rolTexto = rol === 'por' ? '🧤 Portero' : rol === 'def' ? '🛡️ Defensa' : rol === 'med' ? '🎯 Mediocampista' : '⚡ Delantero';
+        if (nombre && !pasarListaJugadores.some(x => x.nombre === nombre)) {
+          pasarListaJugadores.push({ nombre, rol: rolTexto });
+        }
+      });
+    }
+  });
+
+  if (pasarListaJugadores.length === 0) {
+    return mostrarNotificacionApp('Sin Jugadores', `No hay jugadores registrados en ${perfil.categoriaActiva}. Inscríbelos en PLANTEL.`, false);
+  }
+
+  pasarListaIndex = 0;
+  const modal = document.getElementById('modal-pasar-lista-wizard');
+  if (modal) modal.style.display = 'flex';
+  renderPasarListaStep();
+}
+
+export function renderPasarListaStep() {
+  if (pasarListaIndex >= pasarListaJugadores.length) {
+    const modal = document.getElementById('modal-pasar-lista-wizard');
+    if (modal) modal.style.display = 'none';
+    mostrarNotificacionApp('¡Lista Completada!', `🎉 Se tomó asistencia a los ${pasarListaJugadores.length} jugadores de ${perfil.categoriaActiva}.`);
+    renderAsistenciaUI();
+    return;
+  }
+
+  const jugador = pasarListaJugadores[pasarListaIndex];
+  const stepCounter = document.getElementById('pasar-lista-step-counter');
+  const playerName = document.getElementById('pasar-lista-player-name');
+  const playerRole = document.getElementById('pasar-lista-player-role');
+
+  if (stepCounter) stepCounter.textContent = `JUGADOR ${pasarListaIndex + 1} DE ${pasarListaJugadores.length}`;
+  if (playerName) playerName.textContent = `⚽ ${jugador.nombre}`;
+  if (playerRole) playerRole.textContent = `${jugador.rol} | Equipo: ${perfil.categoriaActiva}`;
+}
+
+export async function marcarAsistenciaIndividual(estado) {
+  if (pasarListaIndex >= pasarListaJugadores.length) return;
+
+  const jugador = pasarListaJugadores[pasarListaIndex];
+  const catObj = getEntrenamientosData();
+  const hoyFecha = new Date().toISOString().split('T')[0];
+  if (!catObj.asistencia[hoyFecha]) catObj.asistencia[hoyFecha] = {};
+
+  catObj.asistencia[hoyFecha][jugador.nombre] = estado;
+
+  if (estado === 'lesionado') {
+    abrirModalLesion(jugador.nombre);
+  }
+
+  pasarListaIndex++;
+  renderPasarListaStep();
+
+  autoSaveLocal();
+  await guardarFirebase();
+}
+
+window._iniciarPasarListaWizard = iniciarPasarListaWizard;
+window._marcarAsistenciaIndividual = (e) => marcarAsistenciaIndividual(e);
+
+export function toggleListadoCompleto() {
+  listadoCompletoVisible = !listadoCompletoVisible;
+  const container = document.getElementById('attendance-players-list');
+  const btn = document.getElementById('btn-toggle-listado-completo');
+
+  if (container) {
+    container.style.display = listadoCompletoVisible ? 'block' : 'none';
+  }
+  if (btn) {
+    btn.textContent = listadoCompletoVisible ? '📊 OCULTAR LISTADO COMPLETO' : '📊 VER LISTADO COMPLETO Y PORCENTAJES';
+  }
+  if (listadoCompletoVisible) {
+    renderAsistenciaUI();
+  }
+}
+
+window._toggleListadoCompleto = toggleListadoCompleto;
+
 export function renderAsistenciaUI() {
   const container = document.getElementById('attendance-players-list');
+  const dateBadge = document.getElementById('attendance-today-date');
   if (!container) return;
 
   const catObj = getEntrenamientosData();
   const asistenciaData = catObj.asistencia || {};
   const lesionesData = catObj.lesiones || {};
+
+  const hoyFecha = new Date().toISOString().split('T')[0];
+  if (dateBadge) dateBadge.textContent = `📅 ${hoyFecha}`;
 
   // Obtener lista completa de jugadores del plantel activo
   const activePlantel = catObj.plantel || plantel || {};
@@ -1147,41 +1253,49 @@ export function renderAsistenciaUI() {
   });
 
   if (listaJugadores.length === 0) {
-    container.innerHTML = `<div style="text-align:center;padding:30px;color:#666;font-size:13px;">No hay jugadores registrados en el plantel de ${perfil.categoriaActiva}. Ve a la pestaña PLANTEL para inscribir tus jugadores.</div>`;
+    container.innerHTML = `<div style="text-align:center;padding:20px;color:#666;font-size:12px;">No hay jugadores registrados en el plantel de ${perfil.categoriaActiva}. Ve a la pestaña PLANTEL para inscribir tus jugadores.</div>`;
     return;
   }
 
-  const hoyFecha = new Date().toISOString().split('T')[0];
   const registroHoy = asistenciaData[hoyFecha] || {};
 
   container.innerHTML = `
-    <div style="font-size:12px;color:var(--verde-campo);font-weight:800;margin-bottom:10px;">📅 Registro de Asistencia: ${hoyFecha} (${perfil.categoriaActiva})</div>
     <div style="display:flex;flex-direction:column;gap:8px;">
       ${listaJugadores.map(nombre => {
         const estado = registroHoy[nombre] || (lesionesData[nombre] ? 'lesionado' : 'presente');
 
-        // Calcular porcentaje de asistencia acumulado
+        // Calcular asistencias, inasistencias y porcentaje
         let totalFechas = 0;
         let asistencias = 0;
+        let inasistencias = 0;
+        let justificadas = 0;
+
         Object.keys(asistenciaData).forEach(f => {
           if (asistenciaData[f][nombre]) {
             totalFechas++;
             if (asistenciaData[f][nombre] === 'presente') asistencias++;
+            if (asistenciaData[f][nombre] === 'ausente') inasistencias++;
+            if (asistenciaData[f][nombre] === 'justificada') justificadas++;
           }
         });
         const pct = totalFechas > 0 ? Math.round((asistencias / totalFechas) * 100) : 100;
 
         return `
-          <div style="background:#111;border:1px solid #222;border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <div style="background:#111;border:1px solid #222;border-radius:8px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
             <div>
-              <div style="font-size:14px;font-weight:700;color:#fff;">⚽ ${nombre}</div>
-              <div style="font-size:10px;color:#888;">Asistencia Acumulada: <strong style="color:${pct >= 80 ? '#50e3c2' : pct >= 60 ? 'var(--oro)' : '#ff5252'};">${pct}%</strong></div>
+              <div style="font-size:13px;font-weight:800;color:#fff;">⚽ ${nombre}</div>
+              <div style="font-size:10px;color:#aaa;margin-top:2px;">
+                🟢 Asistencias: <strong style="color:#50e3c2;">${asistencias}</strong> | 
+                🔴 Faltas: <strong style="color:#ff5252;">${inasistencias}</strong> | 
+                🟡 Justificadas: <strong style="color:var(--oro);">${justificadas}</strong> | 
+                % Asistencia: <strong style="color:${pct >= 80 ? '#50e3c2' : pct >= 60 ? 'var(--oro)' : '#ff5252'};">${pct}%</strong>
+              </div>
             </div>
             <div style="display:flex;gap:4px;">
-              <button onclick="window._setAsistenciaEstado('${nombre}', 'presente')" style="background:${estado === 'presente' ? '#4caf50' : '#1e1e1e'};color:${estado === 'presente' ? '#000' : '#888'};border:1px solid #333;padding:4px 8px;border-radius:4px;font-size:10px;font-weight:800;cursor:pointer;">🟢 Presente</button>
-              <button onclick="window._setAsistenciaEstado('${nombre}', 'justificada')" style="background:${estado === 'justificada' ? 'var(--oro)' : '#1e1e1e'};color:${estado === 'justificada' ? '#000' : '#888'};border:1px solid #333;padding:4px 8px;border-radius:4px;font-size:10px;font-weight:800;cursor:pointer;">🟡 Justificado</button>
-              <button onclick="window._setAsistenciaEstado('${nombre}', 'ausente')" style="background:${estado === 'ausente' ? '#ff5252' : '#1e1e1e'};color:${estado === 'ausente' ? '#fff' : '#888'};border:1px solid #333;padding:4px 8px;border-radius:4px;font-size:10px;font-weight:800;cursor:pointer;">🔴 Ausente</button>
-              <button onclick="window._setAsistenciaEstado('${nombre}', 'lesionado')" style="background:${estado === 'lesionado' ? '#9c27b0' : '#1e1e1e'};color:${estado === 'lesionado' ? '#fff' : '#888'};border:1px solid #333;padding:4px 8px;border-radius:4px;font-size:10px;font-weight:800;cursor:pointer;">🏥 Lesionado</button>
+              <button onclick="window._setAsistenciaEstado('${nombre}', 'presente')" style="background:${estado === 'presente' ? '#4caf50' : '#1e1e1e'};color:${estado === 'presente' ? '#000' : '#888'};border:1px solid #333;padding:4px 6px;border-radius:4px;font-size:9px;font-weight:800;cursor:pointer;">🟢 Pres.</button>
+              <button onclick="window._setAsistenciaEstado('${nombre}', 'justificada')" style="background:${estado === 'justificada' ? 'var(--oro)' : '#1e1e1e'};color:${estado === 'justificada' ? '#000' : '#888'};border:1px solid #333;padding:4px 6px;border-radius:4px;font-size:9px;font-weight:800;cursor:pointer;">🟡 Just.</button>
+              <button onclick="window._setAsistenciaEstado('${nombre}', 'ausente')" style="background:${estado === 'ausente' ? '#ff5252' : '#1e1e1e'};color:${estado === 'ausente' ? '#fff' : '#888'};border:1px solid #333;padding:4px 6px;border-radius:4px;font-size:9px;font-weight:800;cursor:pointer;">🔴 Aus.</button>
+              <button onclick="window._setAsistenciaEstado('${nombre}', 'lesionado')" style="background:${estado === 'lesionado' ? '#9c27b0' : '#1e1e1e'};color:${estado === 'lesionado' ? '#fff' : '#888'};border:1px solid #333;padding:4px 6px;border-radius:4px;font-size:9px;font-weight:800;cursor:pointer;">🏥 Les.</button>
             </div>
           </div>
         `;
@@ -1326,6 +1440,18 @@ export function initEntrenamientosUI() {
   const btnSaveMedical = document.getElementById('btn-save-medical-report');
   if (btnSaveMedical) {
     btnSaveMedical.onclick = guardarParteMedico;
+  }
+
+  // Listener para Iniciar Pasar Lista Wizard (1 por 1)
+  const btnInciarLista = document.getElementById('btn-iniciar-pasar-lista');
+  if (btnInciarLista) {
+    btnInciarLista.onclick = iniciarPasarListaWizard;
+  }
+
+  // Listener para Toggle Listado Completo
+  const btnToggleListado = document.getElementById('btn-toggle-listado-completo');
+  if (btnToggleListado) {
+    btnToggleListado.onclick = toggleListadoCompleto;
   }
 
   // Renderizar vistas iniciales
