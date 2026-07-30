@@ -383,7 +383,7 @@ body.theme-light .juego-programado-item {
   box-shadow: 0 4px 20px rgba(0,0,0,0.8);
 }
 
-/* CANCHA MITAD DE CAMPO (VISTA VERTICAL FIJA AL 100% DE LA PANTALLA CON MINI ESPACIO VERDE EXTERIOR) */
+/* CANCHA MITAD DE CAMPO (VISTA VERTICAL FIJA ENCOGIDA HORIZONTALMENTE CON MAYOR MARGEN LATERAL) */
 .campo-layout.fullscreen .cancha-wrapper.vista-mitad,
 .cancha-wrapper.vista-mitad,
 .cancha-wrapper.horizontal.vista-mitad {
@@ -405,7 +405,7 @@ body.theme-light .juego-programado-item {
   box-shadow: none !important;
   aspect-ratio: auto !important;
   z-index: 99999 !important;
-  background: #0c4520 url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='600' viewBox='0 0 400 600' preserveAspectRatio='none'><rect width='400' height='600' fill='%230c4520'/><rect y='0' width='400' height='100' fill='%230a3d1c'/><rect y='200' width='400' height='100' fill='%230a3d1c'/><rect y='400' width='400' height='100' fill='%230a3d1c'/><rect x='20' y='10' width='360' height='580' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='4'/><path d='M 130 10 A 70 70 0 0 0 270 10' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='4'/><circle cx='200' cy='10' r='5' fill='rgba(255,255,255,0.95)'/><rect x='85' y='410' width='230' height='180' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='4'/><rect x='135' y='505' width='130' height='85' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='4'/><circle cx='200' cy='480' r='5' fill='rgba(255,255,255,0.95)'/><path d='M 148 410 A 62 62 0 0 1 252 410' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='4'/></svg>") center center / 100% 100% no-repeat !important;
+  background: #0c4520 url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='600' viewBox='0 0 400 600' preserveAspectRatio='none'><rect width='400' height='600' fill='%230c4520'/><rect y='0' width='400' height='100' fill='%230a3d1c'/><rect y='200' width='400' height='100' fill='%230a3d1c'/><rect y='400' width='400' height='100' fill='%230a3d1c'/><rect x='38' y='10' width='324' height='580' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='4'/><path d='M 135 10 A 65 65 0 0 0 265 10' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='4'/><circle cx='200' cy='10' r='5' fill='rgba(255,255,255,0.95)'/><rect x='98' y='410' width='204' height='180' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='4'/><rect x='142' y='505' width='116' height='85' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='4'/><circle cx='200' cy='480' r='5' fill='rgba(255,255,255,0.95)'/><path d='M 152 410 A 55 55 0 0 1 248 410' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='4'/></svg>") center center / 100% 100% no-repeat !important;
 }
 
 /* JUGADORES RIVALES Y LIBRES */
