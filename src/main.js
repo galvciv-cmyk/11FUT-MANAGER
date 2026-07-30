@@ -2,7 +2,7 @@ import "./styles/main.css";
 import { perfil, setPinHash, setUserEmail, setCategoriaActiva, autoSaveLocal, historial, categoriasData, autoLoadLocal, plantel } from "./modules/state.js";
 import { auth, hashPin, cargarFirebase, guardarFirebase, cargarFirebasePublico } from "./services/firebase.js";
 import { cargarKits } from "./services/cloudinary.js";
-import { actualizarTactica, exportarPNG, setDrawingMode, setDrawingColor, setLineWidth, setLineDash, agregarMarcador, clearCanvas, toggleFullscreen, guardarEsquemaCustom, limpiarCanchaYBanco, setVistaCancha, setModoPizarra, agregarFichaLibre, limpiarFichasLibres, abrirModalSustitucion, ejecutarSustitucion } from "./modules/tactics.js";
+import { actualizarTactica, exportarPNG, setDrawingMode, setDrawingColor, setLineWidth, setLineDash, agregarMarcador, clearCanvas, toggleFullscreen, guardarEsquemaCustom, limpiarCanchaYBanco, setVistaCancha, setModoPizarra, agregarFichaLibre, limpiarFichasLibres, abrirModalSustitucion, ejecutarSustitucion, undoCanvas, grabarPasoAnimacion, reproducirAnimacion, detenerAnimacion } from "./modules/tactics.js";
 import { renderStats, guardarStatJugador, cerrarStatModal, renderRankings } from "./modules/stats.js";
 import { renderHistorial, formatFecha } from "./modules/history.js";
 import { initPlantelUI, aplicarPlantelUI, guardarSquad, descargarPlantilla, importarCSV, exportarPDF } from "./modules/squad.js";
@@ -378,7 +378,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('vista-cancha-fs-A')?.addEventListener('change', (e) => setVistaCancha('A', e.target.value));
   document.getElementById('modo-pizarra-fs-A')?.addEventListener('change', (e) => setModoPizarra('A', e.target.value));
   document.getElementById('btn-add-mi-jugador-fs-A')?.addEventListener('click', () => agregarFichaLibre('A', 'local'));
+  document.getElementById('btn-add-por-local-fs-A')?.addEventListener('click', () => agregarFichaLibre('A', 'por_local'));
   document.getElementById('btn-add-rival-fs-A')?.addEventListener('click', () => agregarFichaLibre('A', 'rival'));
+  document.getElementById('btn-add-por-rival-fs-A')?.addEventListener('click', () => agregarFichaLibre('A', 'por_rival'));
   document.getElementById('btn-limpiar-libres-fs-A')?.addEventListener('click', () => limpiarFichasLibres('A'));
   document.getElementById('btn-sustitucion-fs-A')?.addEventListener('click', () => abrirModalSustitucion('A'));
   document.getElementById('btn-sustitucion-A')?.addEventListener('click', () => abrirModalSustitucion('A'));
@@ -413,6 +415,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById(`btn-add-balon-fs-${eq}`)?.addEventListener('click', () => agregarMarcador(eq, 'balon'));
   document.getElementById(`btn-add-cono-fs-${eq}`)?.addEventListener('click', () => agregarMarcador(eq, 'cono'));
+  document.getElementById(`btn-add-valla-fs-${eq}`)?.addEventListener('click', () => agregarMarcador(eq, 'valla'));
 
   document.getElementById(`btn-fs-${eq}`)?.addEventListener('click', () => toggleFullscreen(eq));
   document.getElementById(`btn-exit-fs-${eq}`)?.addEventListener('click', () => toggleFullscreen(eq));
@@ -425,7 +428,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById(`btn-none-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'none'));
   document.getElementById(`btn-pencil-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'pencil'));
   document.getElementById(`btn-arrow-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'arrow'));
+  document.getElementById(`btn-dash-fs-${eq}`)?.addEventListener('click', (e) => {
+    const isDashed = !e.target.classList.contains('active');
+    setLineDash(eq, isDashed);
+  });
+  document.getElementById(`btn-undo-fs-${eq}`)?.addEventListener('click', () => undoCanvas(eq));
   document.getElementById(`btn-clear-fs-${eq}`)?.addEventListener('click', () => clearCanvas(eq));
+
+  document.getElementById(`btn-rec-step-fs-${eq}`)?.addEventListener('click', () => grabarPasoAnimacion(eq));
+  document.getElementById(`btn-play-anim-fs-${eq}`)?.addEventListener('click', () => reproducirAnimacion(eq));
+  document.getElementById(`btn-stop-anim-fs-${eq}`)?.addEventListener('click', () => detenerAnimacion(eq));
+
+  document.querySelectorAll(`#colors-fs-${eq} .color-dot`).forEach(dot => {
+    dot.addEventListener('click', (e) => {
+      document.querySelectorAll(`#colors-fs-${eq} .color-dot`).forEach(d => d.classList.remove('active'));
+      e.target.classList.add('active');
+      setDrawingColor(eq, e.target.dataset.color);
+    });
+  });
 
   document.querySelectorAll(`#colors-${eq} .color-dot`).forEach(el => {
     el.addEventListener('click', () => setDrawingColor(eq, el.dataset.color));

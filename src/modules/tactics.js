@@ -175,11 +175,14 @@ const DEFAULT_RED_KIT_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.o
 export function getImg(eq, tipo) {
   const kitId = perfil.kitA || 'predeterminado';
   const kitObj = (KITS && KITS.length) ? (KITS.find(k => k.id === kitId) || KITS[0]) : null;
+  if (tipo === 'por_rival' || tipo === 'portero_rival') {
+    return (kitObj && (kitObj.portero_visita || kitObj.visita)) ? (kitObj.portero_visita || kitObj.visita) : YELLOW_KIT_SVG;
+  }
   if (tipo === 'visitante' || tipo === 'rival') {
     return (kitObj && (kitObj.visita || kitObj.visitante)) ? (kitObj.visita || kitObj.visitante) : YELLOW_KIT_SVG;
   }
   if (!kitObj) return DEFAULT_RED_KIT_SVG;
-  if (tipo === 'por') return kitObj.portero_local || kitObj.local || DEFAULT_RED_KIT_SVG;
+  if (tipo === 'por' || tipo === 'por_local' || tipo === 'portero_local') return kitObj.portero_local || kitObj.local || DEFAULT_RED_KIT_SVG;
   if (tipo === 'sup') return kitObj.sup_local || kitObj.local || DEFAULT_RED_KIT_SVG;
   if (tipo === 'ct')  return kitObj.ct || 'https://res.cloudinary.com/djhpfdklk/image/upload/v1778985193/cuerpo_tecnico_ysxrjt.png';
   return kitObj.local || DEFAULT_RED_KIT_SVG;
@@ -214,10 +217,15 @@ export function setModoPizarra(eq, modo) {
 export function agregarFichaLibre(eq, tipo = 'local') {
   if (!fichasLibres[eq]) fichasLibres[eq] = [];
   const num = fichasLibres[eq].filter(f => f.tipo === tipo).length + 1;
-  const nombre = tipo === 'local' ? `L${num}` : `R${num}`;
+  let nombre = '';
+  if (tipo === 'local') nombre = `L${num}`;
+  else if (tipo === 'por_local') nombre = `POR L${num}`;
+  else if (tipo === 'rival') nombre = `R${num}`;
+  else if (tipo === 'por_rival') nombre = `POR R${num}`;
+  else nombre = `F${num}`;
   
   fichasLibres[eq].push({
-    id: Date.now().toString(),
+    id: Date.now().toString() + Math.random().toString().slice(2, 5),
     tipo,
     x: 35 + (Math.random() * 30),
     y: 35 + (Math.random() * 30),
@@ -321,7 +329,12 @@ export function agregarMarcador(eq, tipo) {
 
   const m = document.createElement('div');
   m.className = 'marcador-token';
-  m.textContent = tipo === 'balon' ? '⚽' : '🪧';
+  if (tipo === 'balon') m.textContent = '⚽';
+  else if (tipo === 'cono') m.textContent = '🪧';
+  else if (tipo === 'valla') m.textContent = '🚧';
+  else if (tipo === 'estaca') m.textContent = '🚩';
+  else m.textContent = '⚽';
+
   m.style.left = '50%';
   m.style.top = '50%';
 
@@ -364,11 +377,107 @@ function hacerMarcadorArrastrable(elem, contenedor) {
   window.addEventListener('touchend', onEnd);
 }
 
+// ── DESHACER TRAZOS (UNDO CANVAS) ──
+const canvasHistory = { A: [] };
+
+export function saveCanvasState(eq = 'A') {
+  const canvas = document.getElementById(`canvas-${eq}`);
+  if (!canvas) return;
+  if (!canvasHistory[eq]) canvasHistory[eq] = [];
+  if (canvasHistory[eq].length > 25) canvasHistory[eq].shift();
+  canvasHistory[eq].push(canvas.toDataURL());
+}
+
+export function undoCanvas(eq = 'A') {
+  const canvas = document.getElementById(`canvas-${eq}`);
+  if (!canvas || !canvasHistory[eq] || !canvasHistory[eq].length) return;
+  const ctx = canvas.getContext('2d');
+  canvasHistory[eq].pop(); // Remover estado actual
+  const prevState = canvasHistory[eq][canvasHistory[eq].length - 1];
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (prevState) {
+    const img = new Image();
+    img.onload = () => ctx.drawImage(img, 0, 0);
+    img.src = prevState;
+  }
+}
+
 export function clearCanvas(eq) {
   const canvas = document.getElementById(`canvas-${eq}`);
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  canvasHistory[eq] = [];
+}
+
+// ── MOTOR DE ANIMACIÓN DE JUGADAS ──
+const animState = {
+  A: { frames: [], currentFrame: 0, isPlaying: false, intervalId: null }
+};
+
+export function grabarPasoAnimacion(eq = 'A') {
+  if (!animState[eq]) animState[eq] = { frames: [], currentFrame: 0, isPlaying: false, intervalId: null };
+  const tokens = document.querySelectorAll(`#cancha-${eq} .jugador-token`);
+  const stepData = [];
+  tokens.forEach(t => {
+    stepData.push({
+      left: t.style.left,
+      top: t.style.top,
+      id: t.dataset.idx !== undefined ? `idx_${t.dataset.idx}` : `free_${t.dataset.freeId}`
+    });
+  });
+
+  animState[eq].frames.push(stepData);
+  mostrarNotificacionApp('Paso Táctico Grabado', `🎬 Paso #${animState[eq].frames.length} guardado.`);
+}
+
+export function reproducirAnimacion(eq = 'A') {
+  const st = animState[eq];
+  if (!st || !st.frames || !st.frames.length) {
+    mostrarNotificacionApp('Sin Animaciones', 'Graba al menos 1 paso con 🔴 PASO (+1) antes de reproducir.', false);
+    return;
+  }
+  detenerAnimacion(eq);
+  st.isPlaying = true;
+  st.currentFrame = 0;
+
+  st.intervalId = setInterval(() => {
+    if (!st.isPlaying) return;
+    const frame = st.frames[st.currentFrame];
+    if (frame) {
+      frame.forEach(item => {
+        let selector = '';
+        if (item.id.startsWith('idx_')) {
+          selector = `#cancha-${eq} .jugador-token[data-idx="${item.id.replace('idx_', '')}"]`;
+        } else {
+          selector = `#cancha-${eq} .jugador-token[data-free-id="${item.id.replace('free_', '')}"]`;
+        }
+        const token = document.querySelector(selector);
+        if (token) {
+          token.style.transition = 'left 0.8s ease-in-out, top 0.8s ease-in-out';
+          token.style.left = item.left;
+          token.style.top = item.top;
+        }
+      });
+    }
+    st.currentFrame = (st.currentFrame + 1) % st.frames.length;
+  }, 1200);
+
+  mostrarNotificacionApp('Reproduciendo Jugada', '▶️ Jugada animada en reproducción.');
+}
+
+export function detenerAnimacion(eq = 'A') {
+  const st = animState[eq];
+  if (!st) return;
+  st.isPlaying = false;
+  if (st.intervalId) {
+    clearInterval(st.intervalId);
+    st.intervalId = null;
+  }
+  document.querySelectorAll(`#cancha-${eq} .jugador-token`).forEach(t => {
+    t.style.transition = 'transform 0.05s ease-out';
+  });
 }
 
 export function initCanvas(eq) {
@@ -392,6 +501,7 @@ export function initCanvas(eq) {
     const state = drawingState[eq];
     if (!state || state.mode === 'none') return;
 
+    saveCanvasState(eq);
     state.isDrawing = true;
     const pos = getPos(e);
     state.startX = pos.x;
