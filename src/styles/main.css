@@ -488,11 +488,25 @@ body.theme-light .juego-programado-item {
   border-radius: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
-  background: #000 !important;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  background: #0c4520 !important;
+  display: block !important;
+}
+
+.campo-layout.fullscreen .cancha-wrapper {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  min-width: 100vw !important;
+  max-width: 100vw !important;
+  height: 100vh !important;
+  min-height: 100vh !important;
+  max-height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  aspect-ratio: auto !important;
 }
 
 .btn-exit-fs {
