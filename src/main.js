@@ -145,7 +145,6 @@ async function cargarPerfilPublico(publicId) {
 
   const cargado = await cargarFirebasePublico(publicId);
   if (!cargado) {
-    // Si no se encuentra el perfil en Firestore, inicializar un estado vacio oficial sin jugadores ficticios
     updatePerfil({ club: '11FUT MANAGER', logo: 'https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png', categorias: ['Sub-14'], categoriaActiva: 'Sub-14' });
     updateCategoriasData({
       'Sub-14': {
@@ -157,13 +156,32 @@ async function cargarPerfilPublico(publicId) {
     });
   }
 
+  // 1. Renderizar selector de categorías
   renderSelectorCategoria(true);
 
+  // 2. Establecer categoría activa oficial
   const selectPub = document.getElementById('pub-selector-categoria');
-  const catActiva = (selectPub && selectPub.value) ? selectPub.value : (perfil.categoriaActiva || "Sub-14");
+  const catActiva = (perfil.categoriaActiva && perfil.categorias.includes(perfil.categoriaActiva))
+    ? perfil.categoriaActiva
+    : (perfil.categorias[0] || 'Sub-14');
+
   setCategoriaActiva(catActiva);
 
-  document.getElementById('pub-header-club').textContent = perfil.club || '11FUT MANAGER';
+  if (selectPub) {
+    selectPub.value = catActiva;
+    selectPub.onchange = (e) => {
+      setCategoriaActiva(e.target.value);
+      renderRankingsPublico();
+      renderSquadPublico();
+      renderStatsPublico();
+      renderHistorialPublico();
+    };
+  }
+
+  // 3. Encabezado del Club y Logo
+  const pubHeader = document.getElementById('pub-header-club');
+  if (pubHeader) pubHeader.textContent = perfil.club || '11FUT MANAGER';
+
   if (perfil.logo) {
     const pubLogo = document.getElementById('pub-header-logo');
     if (pubLogo) pubLogo.src = perfil.logo;
@@ -179,27 +197,20 @@ async function cargarPerfilPublico(publicId) {
     }
   }
 
+  // 4. Renderizar todas las vistas del perfil público
   renderRankingsPublico();
   renderSquadPublico();
   renderStatsPublico();
   renderHistorialPublico();
-
-  if (selectPub) {
-    selectPub.value = catActiva;
-    selectPub.onchange = (e) => {
-      setCategoriaActiva(e.target.value);
-      renderRankingsPublico();
-      renderSquadPublico();
-      renderStatsPublico();
-      renderHistorialPublico();
-    };
-  }
-
 }
 
 function renderSquadPublico() {
   const cont = document.getElementById('pub-squad-container');
   if (!cont) return;
+
+  const activePlantel = (categoriasData && perfil.categoriaActiva && categoriasData[perfil.categoriaActiva])
+    ? categoriasData[perfil.categoriaActiva].plantel
+    : (plantel || {});
 
   const roles = [
     { key: 'por', title: '🧤 PORTEROS / GUARDAMETAS', color: 'var(--oro)' },
@@ -211,7 +222,7 @@ function renderSquadPublico() {
   let html = `<div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:12px;">`;
 
   roles.forEach(r => {
-    const lista = (plantel && plantel[r.key]) ? plantel[r.key] : [];
+    const lista = (activePlantel && activePlantel[r.key]) ? activePlantel[r.key] : [];
     html += `
       <div style="background:#0d0d0d;border:1px solid #222;border-radius:10px;padding:12px;">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;color:${r.color};margin-bottom:8px;border-bottom:1px solid #222;padding-bottom:4px;">
