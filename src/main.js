@@ -272,7 +272,7 @@ async function login() {
     restaurarPestanaDesdeURL();
   } catch (e) {
     console.error('Error de inicio de sesión:', e);
-    if (statusEl) statusEl.textContent = '❌ Correo o PIN incorrectos';
+    if (statusEl) statusEl.textContent = '❌ Correo o contraseña incorrectos';
   }
 }
 
@@ -302,11 +302,11 @@ async function ejecutarRegistroUsuario() {
   const pinConfirm = document.getElementById('reg-pin-confirm')?.value?.trim();
 
   if (!emailInput || !pinInput || pinInput.length < 6) {
-    return alert('❌ Por favor ingresa un correo válido y un PIN de al menos 6 dígitos.');
+    return alert('❌ Por favor ingresa un correo válido y una contraseña de al menos 6 caracteres.');
   }
 
   if (pinInput !== pinConfirm) {
-    return alert('❌ Los PINs ingresados no coinciden.');
+    return alert('❌ Las contraseñas ingresadas no coinciden.');
   }
 
   try {
@@ -333,7 +333,7 @@ async function ejecutarRecuperarPin() {
   try {
     await sendPasswordResetEmail(auth, emailInput);
     cerrarModalForgotPin();
-    alert('📩 Se ha enviado un correo con instrucciones para restablecer tu PIN de acceso.');
+    alert('📩 Se ha enviado un correo con instrucciones para restablecer tu contraseña de acceso.');
   } catch (e) {
     alert('Error: ' + e.message);
   }

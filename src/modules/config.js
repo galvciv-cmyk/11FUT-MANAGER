@@ -370,8 +370,8 @@ export async function cambiarPin() {
   const nuevo = document.getElementById('cfg-pin-nuevo')?.value.trim();
   const conf  = document.getElementById('cfg-pin-conf')?.value.trim();
 
-  if (!nuevo || nuevo.length < 6) return mostrarNotificacionApp('PIN Inválido', 'El PIN debe tener al menos 6 dígitos', false);
-  if (nuevo !== conf) return mostrarNotificacionApp('PIN No Coincide', 'Los PINs ingresados no coinciden', false);
+  if (!nuevo || nuevo.length < 6) return mostrarNotificacionApp('Contraseña Inválida', 'La contraseña debe tener al menos 6 caracteres', false);
+  if (nuevo !== conf) return mostrarNotificacionApp('No Coincide', 'Las contraseñas ingresadas no coinciden', false);
 
   const hashed = await hashPin(nuevo + perfil.email);
   setPinHash(hashed);
@@ -381,7 +381,7 @@ export async function cambiarPin() {
   if (document.getElementById('cfg-pin-nuevo')) document.getElementById('cfg-pin-nuevo').value = '';
   if (document.getElementById('cfg-pin-conf')) document.getElementById('cfg-pin-conf').value = '';
   cerrarConfig();
-  mostrarNotificacionApp('PIN Actualizado', '🔐 PIN actualizado exitosamente');
+  mostrarNotificacionApp('Contraseña Actualizada', '🔐 Contraseña actualizada exitosamente');
 }
 
 export function resetearStats() {
