@@ -42,16 +42,11 @@ const TAB_LABELS = {
 // TAB SWITCHING Y NAVEGACIÓN POR URL
 // ══════════════════════════════════════════
 export function switchTab(n, updateHash = true) {
-  document.querySelectorAll('.nav-dropdown-item').forEach((t, i) => t.classList.toggle('active', i + 1 === n));
+  document.querySelectorAll('.nav-horizontal-item').forEach((t, i) => t.classList.toggle('active', i + 1 === n));
   document.querySelectorAll('.seccion').forEach((s, i) => s.classList.toggle('active', i + 1 === n));
 
-  const labelEl = document.getElementById('nav-dropdown-label');
-  if (labelEl && TAB_LABELS[n]) {
-    labelEl.textContent = TAB_LABELS[n];
-  }
-
-  const wrapper = document.getElementById('nav-dropdown-wrapper');
-  if (wrapper) wrapper.classList.remove('open');
+  const navBar = document.getElementById('header-nav-bar');
+  if (navBar) navBar.classList.remove('open');
 
   if (updateHash && TAB_ROUTES[n]) {
     window.location.hash = TAB_ROUTES[n];
@@ -446,24 +441,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('squad-categoria-selector')?.addEventListener('change', (e) => cambiarCategoria(e.target.value));
   document.getElementById('stats-categoria-selector')?.addEventListener('change', (e) => cambiarCategoria(e.target.value));
 
-  // Bind Dropdown Navigation Menu
-  const navDropdownBtn = document.getElementById('btn-nav-dropdown');
-  const navDropdownWrapper = document.getElementById('nav-dropdown-wrapper');
+  // Bind Header Menu Button & Horizontal Nav Bar
+  const headerMenuBtn = document.getElementById('btn-header-menu');
+  const headerNavBar = document.getElementById('header-nav-bar');
 
-  if (navDropdownBtn && navDropdownWrapper) {
-    navDropdownBtn.addEventListener('click', (e) => {
+  if (headerMenuBtn && headerNavBar) {
+    headerMenuBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      navDropdownWrapper.classList.toggle('open');
+      headerNavBar.classList.toggle('open');
     });
 
     document.addEventListener('click', (e) => {
-      if (!navDropdownWrapper.contains(e.target)) {
-        navDropdownWrapper.classList.remove('open');
+      if (!headerNavBar.contains(e.target) && !headerMenuBtn.contains(e.target)) {
+        headerNavBar.classList.remove('open');
       }
     });
   }
 
-  // Bind Dropdown Items 1 to 5 Direct
+  // Bind Navigation Items 1 to 5 Direct
   [1, 2, 3, 4, 5].forEach(n => {
     const tabEl = document.getElementById(`tab-${n}`);
     tabEl?.addEventListener('click', () => switchTab(n));

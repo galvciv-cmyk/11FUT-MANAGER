@@ -296,109 +296,90 @@ body.theme-light .juego-programado-item {
   box-shadow: 0 0 10px rgba(212,175,55,0.2);
 }
 
-/* ── MENÚ DESPLEGABLE HACIA ABAJO PARA NAVEGACIÓN DE SECCIONES ── */
-.nav-dropdown-wrapper {
-  position: relative;
-  width: 100%;
-  max-width: 960px;
-  margin: 10px auto 14px auto;
-  z-index: 1000;
-  padding: 0 10px;
-}
-
-.nav-dropdown-btn {
-  width: 100%;
-  padding: 12px 18px;
-  background: var(--glass-card);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid var(--glass-border);
-  border-radius: 14px;
+/* ── BOTÓN DE MENÚ EN HEADER Y BARRA DE NAVEGACIÓN HORIZONTAL ── */
+.header-menu-btn {
+  background: rgba(212, 175, 55, 0.14);
+  border: 1px solid rgba(212, 175, 55, 0.35);
   color: var(--oro);
+  border-radius: 10px;
+  padding: 6px 12px;
   font-family: 'Barlow Condensed', sans-serif;
-  font-weight: 900;
-  font-size: 16px;
-  letter-spacing: 1px;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.5px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 6px;
   cursor: pointer;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+  transition: all 0.2s ease;
 }
 
-.nav-dropdown-btn:hover {
-  border-color: rgba(212, 175, 55, 0.55);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
+.header-menu-btn:hover {
+  background: rgba(212, 175, 55, 0.28);
+  border-color: var(--oro);
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.3);
 }
 
-.nav-dropdown-btn:active {
-  transform: scale(0.99);
+.header-nav-bar {
+  position: sticky;
+  top: 64px;
+  z-index: 99;
+  background: rgba(10, 14, 20, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  padding: 0 16px;
+  transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease, padding 0.25s ease;
 }
 
-.nav-dropdown-arrow {
-  font-size: 16px;
-  color: var(--oro);
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+.header-nav-bar.open {
+  max-height: 70px;
+  opacity: 1;
+  padding: 10px 16px;
 }
 
-.nav-dropdown-wrapper.open .nav-dropdown-arrow {
-  transform: rotate(180deg);
-}
-
-.nav-dropdown-menu {
-  display: none;
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 10px;
-  right: 10px;
-  background: rgba(12, 16, 24, 0.96);
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
-  border: 1px solid var(--glass-border);
-  border-radius: 16px;
-  padding: 8px;
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.9);
-  flex-direction: column;
-  gap: 4px;
-  z-index: 1001;
-  animation: fadeInDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.nav-dropdown-wrapper.open .nav-dropdown-menu {
+.header-nav-container {
   display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  max-width: 960px;
+  margin: 0 auto;
+  overflow-x: auto;
+  white-space: nowrap;
 }
 
-.nav-dropdown-item {
-  padding: 12px 16px;
+.nav-horizontal-item {
+  flex: 1;
+  text-align: center;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
   font-family: 'Barlow Condensed', sans-serif;
   font-weight: 800;
-  font-size: 15px;
+  font-size: 14px;
   letter-spacing: 0.5px;
   color: #ccc;
   cursor: pointer;
   transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
-.nav-dropdown-item:hover {
-  background: rgba(212, 175, 55, 0.15);
+.nav-horizontal-item:hover {
+  background: rgba(212, 175, 55, 0.18);
   color: var(--oro);
-  transform: translateX(4px);
+  border-color: rgba(212, 175, 55, 0.4);
 }
 
-.nav-dropdown-item.active {
-  background: linear-gradient(90deg, rgba(212, 175, 55, 0.25) 0%, rgba(212, 175, 55, 0.05) 100%);
+.nav-horizontal-item.active {
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.3) 0%, rgba(212, 175, 55, 0.1) 100%);
   color: var(--oro);
-  border-left: 3px solid var(--oro);
-}
-
-@keyframes fadeInDown {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
+  border-color: var(--oro);
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.3);
 }
 
 /* ── SECCIONES ── */
