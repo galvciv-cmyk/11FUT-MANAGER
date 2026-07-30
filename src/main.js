@@ -505,8 +505,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Bind Navigation Items 1 to 5 Direct
-  [1, 2, 3, 4, 5].forEach(n => {
+  // Bind Navigation Items 1 to 6 Direct
+  [1, 2, 3, 4, 5, 6].forEach(n => {
     const tabEl = document.getElementById(`tab-${n}`);
     tabEl?.addEventListener('click', () => switchTab(n));
   });
