@@ -967,6 +967,30 @@ function hacerTokenArrastrable(token, contenedor) {
   window.addEventListener('touchend', onEnd);
 }
 
+const STADIUM_SEAT_SVG = `
+<svg viewBox="0 0 60 70" class="stadium-seat-icon" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="30" cy="65" rx="22" ry="4" fill="rgba(0,0,0,0.5)"/>
+  <path d="M12 50 C12 46, 18 44, 30 44 C42 44, 48 46, 48 50 L46 60 C46 63, 40 64, 30 64 C20 64, 14 63, 14 60 Z" fill="#8f0f13" stroke="#540507" stroke-width="1.5"/>
+  <rect x="15" y="45" width="30" height="12" rx="4" fill="#d3191d" stroke="#8f0f13" stroke-width="1"/>
+  <line x1="30" y1="46" x2="30" y2="56" stroke="#8f0f13" stroke-width="1"/>
+  <path d="M16 10 C16 6, 20 4, 30 4 C40 4, 44 6, 44 10 L46 44 C46 47, 40 48, 30 48 C20 48, 14 47, 14 44 Z" fill="#d3191d" stroke="#68080b" stroke-width="1.5"/>
+  <rect x="18" y="6" width="24" height="10" rx="3" fill="#ff2b30" stroke="#8f0f13" stroke-width="1"/>
+  <path d="M16 14 C16 14, 20 25, 18 40" stroke="#68080b" stroke-width="2" stroke-linecap="round"/>
+  <path d="M44 14 C44 14, 40 25, 42 40" stroke="#68080b" stroke-width="2" stroke-linecap="round"/>
+</svg>
+`;
+
+const STADIUM_CT_SEAT_SVG = `
+<svg viewBox="0 0 60 70" class="stadium-seat-icon" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="30" cy="65" rx="22" ry="4" fill="rgba(0,0,0,0.5)"/>
+  <path d="M12 50 C12 46, 18 44, 30 44 C42 44, 48 46, 48 50 L46 60 C46 63, 40 64, 30 64 C20 64, 14 63, 14 60 Z" fill="#085226" stroke="#042d14" stroke-width="1.5"/>
+  <rect x="15" y="45" width="30" height="12" rx="4" fill="#00ab55" stroke="#06783d" stroke-width="1"/>
+  <line x1="30" y1="46" x2="30" y2="56" stroke="#085226" stroke-width="1"/>
+  <path d="M16 10 C16 6, 20 4, 30 4 C40 4, 44 6, 44 10 L46 44 C46 47, 40 48, 30 48 C20 48, 14 47, 14 44 Z" fill="#00ab55" stroke="#042d14" stroke-width="1.5"/>
+  <rect x="18" y="6" width="24" height="10" rx="3" fill="#2bd47d" stroke="#06783d" stroke-width="1"/>
+</svg>
+`;
+
 function renderSuplentes(eq) {
   const banco = document.getElementById(`banco-${eq}`);
   if (!banco) return;
@@ -981,11 +1005,14 @@ function renderSuplentes(eq) {
     const nombre = suplentes[i] || `SUP ${i + 1}`;
 
     slot.innerHTML = `
-      <div style="font-size:9px;color:var(--oro);margin-bottom:2px;font-weight:700;">#${i + 1}</div>
-      <div class="token-camisa" style="width:40px;height:40px;">
-        <img src="${getImg(eq, 'sup')}">
+      <div style="font-size:9px;color:var(--oro);margin-bottom:2px;font-weight:700;z-index:2;">#${i + 1}</div>
+      <div class="dugout-seat-wrapper">
+        ${STADIUM_SEAT_SVG}
+        <div class="token-camisa" style="width:36px;height:36px;z-index:2;position:relative;">
+          <img src="${getImg(eq, 'sup')}">
+        </div>
       </div>
-      <div class="nombre-label" style="font-size:10px;">${nombre}</div>
+      <div class="nombre-label" style="font-size:10px;z-index:2;margin-top:2px;">${nombre}</div>
     `;
 
     slot.onclick = () => abrirModalSuplente(eq, i);
@@ -1142,9 +1169,16 @@ export function renderCT(eq) {
     const slot = document.createElement('div');
     slot.className = 'ct-slot';
     slot.onclick = () => abrirModalCT(eq, i);
-    slot.innerHTML = `<img src="${getImg(eq, 'ct')}">
-      <span class="ct-label">${m.nombre || 'LIBRE'}</span>
-      <span class="ct-rol">${m.rol || ''}</span>`;
+    slot.innerHTML = `
+      <div style="font-size:9px;color:#00ab55;margin-bottom:2px;font-weight:700;z-index:2;">CT #${i + 1}</div>
+      <div class="dugout-seat-wrapper">
+        ${STADIUM_CT_SEAT_SVG}
+        <div class="token-camisa" style="width:36px;height:36px;z-index:2;position:relative;">
+          <img src="${getImg(eq, 'ct')}">
+        </div>
+      </div>
+      <span class="ct-label" style="font-size:10px;z-index:2;margin-top:2px;">${m.nombre || 'LIBRE'}</span>
+      <span class="ct-rol" style="font-size:9px;color:#aaa;z-index:2;">${m.rol || ''}</span>`;
     cont.appendChild(slot);
   });
 
