@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
+import { getFirestore, doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { perfil, plantel, stats, historial, pinHash, userEmail, setPinHash, setUserEmail, updatePerfil, updatePlantel, updateStats, updateHistorial, autoSaveLocal, categoriasData, updateCategoriasData } from "../modules/state.js";
 
@@ -15,6 +15,16 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+
+export async function limpiarDocumentosObsoletosFirebase() {
+  if (!db) return;
+  try {
+    const refGeneral = doc(db, 'publico', 'perfil_publico');
+    await deleteDoc(refGeneral);
+  } catch (e) {
+    // Ignorar si no existe o sin permisos
+  }
+}
 
 export async function hashPin(pin) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pin));

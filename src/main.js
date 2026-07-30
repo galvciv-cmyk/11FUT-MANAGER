@@ -1,6 +1,6 @@
 import "./styles/main.css";
 import { perfil, setPinHash, setUserEmail, setCategoriaActiva, autoSaveLocal, historial, categoriasData, autoLoadLocal, plantel } from "./modules/state.js";
-import { auth, hashPin, cargarFirebase, guardarFirebase, cargarFirebasePublico } from "./services/firebase.js";
+import { auth, hashPin, cargarFirebase, guardarFirebase, cargarFirebasePublico, limpiarDocumentosObsoletosFirebase } from "./services/firebase.js";
 import { cargarKits } from "./services/cloudinary.js";
 import { actualizarTactica, exportarPNG, setDrawingMode, setDrawingColor, setLineWidth, setLineDash, agregarMarcador, clearCanvas, toggleFullscreen, guardarEsquemaCustom, limpiarCanchaYBanco, setVistaCancha, setModoPizarra, agregarFichaLibre, limpiarFichasLibres, abrirModalSustitucion, ejecutarSustitucion, undoCanvas, grabarPasoAnimacion, reproducirAnimacion, detenerAnimacion } from "./modules/tactics.js";
 import { renderStats, guardarStatJugador, cerrarStatModal, renderRankings } from "./modules/stats.js";
@@ -398,6 +398,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (user) {
       setUserEmail(user.email);
       await cargarFirebase();
+      await limpiarDocumentosObsoletosFirebase();
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('main-app').style.display = 'block';
       aplicarPerfil();
