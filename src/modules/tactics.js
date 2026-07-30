@@ -383,6 +383,13 @@ export function toggleFullscreen(eq) {
     colBanca.style.display = isFS ? 'none' : 'flex';
   }
 
+  // Al salir de Fullscreen, restaurar estado limpio de modo partido para la vista normal
+  if (!isFS) {
+    modoPizarraActivo[eq] = 'partido';
+    vistaCanchaActiva[eq] = 'completa';
+    canchaWrapper.classList.remove('vista-mitad');
+  }
+
   const btn = document.getElementById(`btn-fs-${eq}`);
   if (btn) btn.textContent = isFS ? '🗗 SALIR FULLSCREEN' : '⛶ PANTALLA COMPLETA';
   
@@ -395,6 +402,7 @@ export function actualizarTactica(eq) {
   const esquemaVal = document.getElementById(`esquema-${eq}`)?.value || '1-4-4-2';
   const cancha = document.getElementById(`cancha-${eq}`);
   const banco = document.getElementById(`banco-${eq}`);
+  const layout = document.getElementById(`pizarra-${eq}`);
   const isHorizontal = cancha ? cancha.classList.contains('horizontal') : false;
   if (!cancha || !banco) return;
 
@@ -423,7 +431,9 @@ export function actualizarTactica(eq) {
 
   renderSelectorCapitanInCard(eq, titularesActuales);
 
-  const modoPizarra = modoPizarraActivo[eq] || 'partido';
+  // En modo normal (fuera de fullscreen), SIEMPRE se muestra el modo partido con los titulares
+  const isFS = layout ? layout.classList.contains('fullscreen') : false;
+  const modoPizarra = isFS ? (modoPizarraActivo[eq] || 'partido') : 'partido';
 
   if (modoPizarra === 'partido') {
     form.forEach((slot, i) => {
