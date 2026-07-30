@@ -170,18 +170,19 @@ window._confirmarGuardarEsquema = async (eq) => {
 };
 
 const YELLOW_KIT_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60"><path d="M 18,12 L 24,18 L 36,18 L 42,12 L 54,20 L 46,28 L 44,26 L 44,52 L 16,52 L 16,26 L 14,28 L 6,20 Z" fill="%23ffd700" stroke="%23222222" stroke-width="2.5"/><path d="M 24,18 Q 30,24 36,18" fill="none" stroke="%23222222" stroke-width="2.5"/></svg>`;
+const DEFAULT_RED_KIT_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60"><path d="M 18,12 L 24,18 L 36,18 L 42,12 L 54,20 L 46,28 L 44,26 L 44,52 L 16,52 L 16,26 L 14,28 L 6,20 Z" fill="%23e21e22" stroke="%23ffffff" stroke-width="2.5"/><path d="M 24,18 Q 30,24 36,18" fill="none" stroke="%23ffffff" stroke-width="2.5"/></svg>`;
 
 export function getImg(eq, tipo) {
   const kitId = perfil.kitA || 'predeterminado';
-  const kitObj = KITS.find(k => k.id === kitId) || KITS[0];
+  const kitObj = (KITS && KITS.length) ? (KITS.find(k => k.id === kitId) || KITS[0]) : null;
   if (tipo === 'visitante' || tipo === 'rival') {
     return (kitObj && (kitObj.visita || kitObj.visitante)) ? (kitObj.visita || kitObj.visitante) : YELLOW_KIT_SVG;
   }
-  if (!kitObj) return YELLOW_KIT_SVG;
-  if (tipo === 'por') return kitObj.portero_local || kitObj.local;
-  if (tipo === 'sup') return kitObj.sup_local || kitObj.local;
+  if (!kitObj) return DEFAULT_RED_KIT_SVG;
+  if (tipo === 'por') return kitObj.portero_local || kitObj.local || DEFAULT_RED_KIT_SVG;
+  if (tipo === 'sup') return kitObj.sup_local || kitObj.local || DEFAULT_RED_KIT_SVG;
   if (tipo === 'ct')  return kitObj.ct || 'https://res.cloudinary.com/djhpfdklk/image/upload/v1778985193/cuerpo_tecnico_ysxrjt.png';
-  return kitObj.local;
+  return kitObj.local || DEFAULT_RED_KIT_SVG;
 }
 
 export let vistaCanchaActiva = { A: 'completa' };
