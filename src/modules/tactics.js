@@ -541,6 +541,9 @@ function hacerTokenArrastrable(token, contenedor) {
 
   const onStart = (e) => {
     const eq = token.dataset.eq;
+    const isFS = contenedor.classList.contains('horizontal') || document.getElementById(`pizarra-${eq}`)?.classList.contains('fullscreen');
+    if (!isFS) return; // Fichas fijas en modo normal
+
     if (drawingState[eq].mode !== 'none') return;
 
     isDragging = true;
