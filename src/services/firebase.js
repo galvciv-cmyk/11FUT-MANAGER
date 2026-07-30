@@ -37,11 +37,11 @@ export function setSyncStatus(type, msg) {
 }
 
 export function getPublicId() {
-  if (auth && auth.currentUser && auth.currentUser.uid) {
-    return `usr_${auth.currentUser.uid}`;
-  }
   if (pinHash) {
     return `usr_${pinHash}`;
+  }
+  if (auth && auth.currentUser && auth.currentUser.uid) {
+    return `usr_${auth.currentUser.uid}`;
   }
   return 'perfil_demo';
 }
@@ -54,17 +54,20 @@ export async function guardarFirebase() {
       updatedAt: new Date().toISOString()
     };
 
-    const userKey = (auth && auth.currentUser && auth.currentUser.uid) ? auth.currentUser.uid : pinHash;
-
-    if (userKey) {
-      const ref = doc(db, 'usuarios', userKey);
-      await setDoc(ref, payload);
+    if (auth && auth.currentUser && auth.currentUser.uid) {
+      const refUid = doc(db, 'usuarios', auth.currentUser.uid);
+      await setDoc(refUid, payload);
+      
+      const refPubUid = doc(db, 'publicos', `usr_${auth.currentUser.uid}`);
+      await setDoc(refPubUid, payload);
     }
 
-    const pubId = getPublicId();
-    if (pubId && pubId !== 'perfil_demo') {
-      const refPub = doc(db, 'publicos', pubId);
-      await setDoc(refPub, payload);
+    if (pinHash) {
+      const refHash = doc(db, 'usuarios', pinHash);
+      await setDoc(refHash, payload);
+
+      const refPubHash = doc(db, 'publicos', `usr_${pinHash}`);
+      await setDoc(refPubHash, payload);
     }
 
     setSyncStatus('saved', '☁️ Sincronizado en la nube');
