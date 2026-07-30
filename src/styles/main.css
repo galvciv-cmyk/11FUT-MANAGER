@@ -383,6 +383,17 @@ body.theme-light .juego-programado-item {
   box-shadow: 0 4px 20px rgba(0,0,0,0.8);
 }
 
+/* CANCHA MITAD DE CAMPO (ZOOM TÁCTICO) */
+.cancha-wrapper.vista-mitad {
+  background-position: center top !important;
+  background-size: 100% 200% !important;
+}
+
+/* JUGADORES RIVALES Y LIBRES */
+.jugador-token.rival .token-camisa {
+  filter: drop-shadow(0 0 8px rgba(226, 30, 34, 0.85));
+}
+
 /* CANCHA HORIZONTAL EN FULLSCREEN (LLENADO 100% DE ANCHO 100vw Y ALTO 100vh) */
 .cancha-wrapper.horizontal {
   aspect-ratio: auto !important;

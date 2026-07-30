@@ -176,7 +176,98 @@ export function getImg(eq, tipo) {
   if (tipo === 'por') return kitObj.portero_local || kitObj.local;
   if (tipo === 'sup') return kitObj.sup_local || kitObj.local;
   if (tipo === 'ct')  return kitObj.ct || 'https://res.cloudinary.com/djhpfdklk/image/upload/v1778985193/cuerpo_tecnico_ysxrjt.png';
+  if (tipo === 'visitante' || tipo === 'rival') return kitObj.visitante || kitObj.local;
   return kitObj.local;
+}
+
+export let vistaCanchaActiva = { A: 'completa' };
+export let modoPizarraActivo = { A: 'partido' };
+export let fichasLibres = { A: [] };
+
+export function setVistaCancha(eq, vista) {
+  vistaCanchaActiva[eq] = vista;
+  const canchaWrapper = document.getElementById(`cancha-${eq}`);
+  if (canchaWrapper) {
+    canchaWrapper.classList.toggle('vista-mitad', vista === 'mitad');
+  }
+  actualizarTactica(eq);
+}
+
+export function setModoPizarra(eq, modo) {
+  modoPizarraActivo[eq] = modo;
+  const contLibre = document.getElementById(`cont-modo-libre-${eq}`);
+  if (contLibre) {
+    contLibre.style.display = modo === 'libre' ? 'flex' : 'none';
+  }
+  actualizarTactica(eq);
+}
+
+export function agregarFichaLibre(eq, tipo = 'local') {
+  if (!fichasLibres[eq]) fichasLibres[eq] = [];
+  const num = fichasLibres[eq].filter(f => f.tipo === tipo).length + 1;
+  const nombre = tipo === 'local' ? `L${num}` : `R${num}`;
+  
+  fichasLibres[eq].push({
+    id: Date.now().toString(),
+    tipo,
+    x: 35 + (Math.random() * 30),
+    y: 35 + (Math.random() * 30),
+    nombre
+  });
+  
+  actualizarTactica(eq);
+}
+
+export function limpiarFichasLibres(eq) {
+  fichasLibres[eq] = [];
+  actualizarTactica(eq);
+}
+
+export function abrirModalSustitucion(eq = 'A') {
+  const modalSub = document.getElementById('modal-sustitucion');
+  const selSale = document.getElementById('sub-sale-titular');
+  const selEntra = document.getElementById('sub-entra-suplente');
+  if (!modalSub || !selSale || !selEntra) return;
+
+  const titulares = (plantel[`tit_${eq}`] || []).map((n, i) => ({ nombre: n && n !== 'LIBRE' ? n : `Posición #${i+1}`, idx: i }));
+  const suplentes = (plantel[`sup_${eq}`] || []).map((n, i) => ({ nombre: n || `Suplente #${i+1}`, idx: i }));
+
+  selSale.innerHTML = titulares.map(t => `<option value="${t.idx}">${t.nombre}</option>`).join('');
+  selEntra.innerHTML = suplentes.map(s => `<option value="${s.idx}">${s.nombre}</option>`).join('');
+
+  modalSub.style.display = 'flex';
+}
+
+export function ejecutarSustitucion(eq = 'A') {
+  const selSale = document.getElementById('sub-sale-titular');
+  const selEntra = document.getElementById('sub-entra-suplente');
+  if (!selSale || !selEntra) return;
+
+  const saleIdx = parseInt(selSale.value);
+  const entraIdx = parseInt(selEntra.value);
+
+  if (isNaN(saleIdx) || isNaN(entraIdx)) return;
+
+  const titularQueSale = (plantel[`tit_${eq}`] || [])[saleIdx] || `Posición #${saleIdx+1}`;
+  const suplenteQueEntra = (plantel[`sup_${eq}`] || [])[entraIdx] || `Suplente #${entraIdx+1}`;
+
+  if (!plantel[`tit_${eq}`]) plantel[`tit_${eq}`] = [];
+  if (!plantel[`sup_${eq}`]) plantel[`sup_${eq}`] = [];
+
+  plantel[`tit_${eq}`][saleIdx] = suplenteQueEntra;
+  plantel[`sup_${eq}`][entraIdx] = titularQueSale;
+
+  if (plantel[`capitan_${eq}`] === titularQueSale) {
+    plantel[`capitan_${eq}`] = suplenteQueEntra;
+  }
+
+  document.getElementById('modal-sustitucion').style.display = 'none';
+  actualizarTactica(eq);
+  renderSuplentes(eq);
+  autoSaveLocal();
+  guardarFirebase();
+
+  mostrarNotificacionApp('Sustitución Realizada', `🔄 Sale ${titularQueSale} (🔴) ➔ Entra ${suplenteQueEntra} (🟢)`);
 }
 
 const drawingState = {
@@ -459,6 +550,37 @@ export function actualizarTactica(eq) {
     cancha.appendChild(token);
   });
 
+  // RENDERIZADO DE FICHAS LIBRES Y RIVALES (MODO LIBRE)
+  const modoPizarra = modoPizarraActivo[eq] || 'partido';
+  if (modoPizarra === 'libre') {
+    (fichasLibres[eq] || []).forEach(f => {
+      const token = document.createElement('div');
+      token.className = `jugador-token ${f.tipo === 'rival' ? 'rival' : ''}`;
+      token.style.left = `${f.x}%`;
+      token.style.top = `${f.y}%`;
+      token.dataset.eq = eq;
+      token.dataset.freeId = f.id;
+
+      const imgKit = getImg(eq, f.tipo === 'rival' ? 'visitante' : 'campo');
+
+      token.innerHTML = `
+        <div class="token-camisa">
+          <img src="${imgKit}">
+        </div>
+        <div class="nombre-label" style="font-weight:900;${f.tipo === 'rival' ? 'color:#ff5555;' : ''}">${f.nombre}</div>
+      `;
+
+      token.ondblclick = (e) => {
+        e.stopPropagation();
+        fichasLibres[eq] = fichasLibres[eq].filter(item => item.id !== f.id);
+        actualizarTactica(eq);
+      };
+
+      hacerTokenArrastrable(token, cancha);
+      cancha.appendChild(token);
+    });
+  }
+
   renderSuplentes(eq);
   renderCT(eq);
 }
@@ -568,6 +690,15 @@ function hacerTokenArrastrable(token, contenedor) {
       const origLeft = currentLeft;
       currentLeft = currentTop;
       currentTop = 100 - origLeft;
+    }
+
+    if (token.dataset.freeId) {
+      const fObj = (fichasLibres[eq] || []).find(f => f.id === token.dataset.freeId);
+      if (fObj) {
+        fObj.x = parseFloat(currentLeft.toFixed(1));
+        fObj.y = parseFloat(currentTop.toFixed(1));
+      }
+      return;
     }
 
     if (!plantel[`pos_custom_${eq}`]) plantel[`pos_custom_${eq}`] = {};

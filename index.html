@@ -95,8 +95,27 @@
               <div class="card-title">🏆 CATEGORÍA / EQUIPO</div>
               <select id="selector-categoria-tactica" class="select-categoria-header" style="width:100%;font-size:15px;padding:10px;margin-bottom:12px;"></select>
 
-              <div class="card-title" style="font-size:14px;margin-top:6px;">⚙️ ALINEACIÓN</div>
-              <label style="font-size:11px;color:#aaa;">Modo de Juego:</label>
+              <div class="card-title" style="font-size:14px;margin-top:6px;">⚙️ ALINEACIÓN Y VISTA</div>
+
+              <label style="font-size:11px;color:#aaa;">📐 Vista de Cancha:</label>
+              <select id="vista-cancha-A">
+                <option value="completa">🏟️ Cancha Completa</option>
+                <option value="mitad">🥅 Mitad de Cancha (Zoom Táctico)</option>
+              </select>
+
+              <label style="font-size:11px;color:#aaa;">🎮 Modo de Pizarra:</label>
+              <select id="modo-pizarra-A">
+                <option value="partido">📋 Modo Partido (11 Titulares + Suplentes)</option>
+                <option value="libre">⚔️ Modo Libre (1v1, 5v5, Rivales)</option>
+              </select>
+
+              <div id="cont-modo-libre-A" style="display:none;margin-top:6px;flex-direction:column;gap:4px;">
+                <button class="btn btn-blue" id="btn-add-mi-jugador-A" style="padding:8px;font-size:12px;">➕ AÑADIR MI JUGADOR (LOCAL)</button>
+                <button class="btn btn-red" id="btn-add-rival-A" style="padding:8px;font-size:12px;">🔴 AÑADIR RIVAL (VISITANTE)</button>
+                <button class="btn btn-gray" id="btn-limpiar-libres-A" style="padding:6px;font-size:11px;margin-top:2px;">🗑️ BORRAR FICHAS LIBRES</button>
+              </div>
+
+              <label style="font-size:11px;color:#aaa;margin-top:6px;display:block;">Formato de Juego:</label>
               <select id="modo-A">
                 <option value="11">Fútbol 11</option>
                 <option value="8">Fútbol 8</option>
@@ -113,7 +132,8 @@
               <label style="font-size:11px;color:var(--oro);font-weight:700;margin-top:4px;display:block;">⭐ CAPITÁN DEL EQUIPO (C):</label>
               <select id="select-capitan-A" style="border-color:var(--oro) !important;"></select>
 
-              <button class="btn btn-gold" id="btn-save-esquema-A" style="margin-top:6px;font-size:11px;">💾 GUARDAR ESQUEMA ACTUAL</button>
+              <button class="btn btn-gold" id="btn-sustitucion-A" style="margin-top:8px;padding:10px;">🔄 REALIZAR SUSTITUCIÓN</button>
+              <button class="btn btn-gray" id="btn-save-esquema-A" style="margin-top:6px;font-size:11px;">💾 GUARDAR ESQUEMA ACTUAL</button>
             </div>
 
             <!-- TOOLBAR DE DIBUJO Y MARCADORES -->
@@ -304,6 +324,24 @@
     <!-- MODAL GENERAL -->
     <div class="modal-overlay" id="modal">
       <div class="modal-body" id="modal-content"></div>
+    </div>
+
+    <!-- MODAL SUSTITUCIÓN DIRECTA -->
+    <div class="modal-overlay" id="modal-sustitucion">
+      <div class="modal-body" style="max-width:440px;width:90%;padding:20px;">
+        <div class="modal-title" style="font-size:18px;margin-bottom:14px;color:var(--oro);display:flex;align-items:center;justify-content:space-between;">
+          <span>🔄 REALIZAR SUSTITUCIÓN</span>
+          <button id="btn-cerrar-modal-sub" style="background:none;border:none;color:#aaa;font-size:20px;cursor:pointer;">❌</button>
+        </div>
+
+        <label style="font-size:12px;color:#ee282c;font-weight:700;margin-bottom:4px;display:block;">🔴 SALE DE CANCHA (TITULAR):</label>
+        <select id="sub-sale-titular" style="margin-bottom:12px;padding:10px;"></select>
+
+        <label style="font-size:12px;color:#00ab55;font-weight:700;margin-bottom:4px;display:block;">🟢 ENTRA AL CAMPO (SUPLENTE):</label>
+        <select id="sub-entra-suplente" style="margin-bottom:16px;padding:10px;"></select>
+
+        <button class="btn btn-green" id="btn-confirmar-sustitucion">⚡ CONFIRMAR CAMBIO</button>
+      </div>
     </div>
 
     <!-- MODAL DE STATS INDIVIDUAL -->

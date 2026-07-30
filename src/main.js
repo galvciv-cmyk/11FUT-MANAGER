@@ -2,7 +2,7 @@ import "./styles/main.css";
 import { perfil, setPinHash, setUserEmail, setCategoriaActiva, autoSaveLocal, historial, categoriasData, autoLoadLocal, plantel } from "./modules/state.js";
 import { auth, hashPin, cargarFirebase, guardarFirebase, cargarFirebasePublico } from "./services/firebase.js";
 import { cargarKits } from "./services/cloudinary.js";
-import { actualizarTactica, exportarPNG, setDrawingMode, setDrawingColor, setLineWidth, setLineDash, agregarMarcador, clearCanvas, toggleFullscreen, guardarEsquemaCustom, limpiarCanchaYBanco } from "./modules/tactics.js";
+import { actualizarTactica, exportarPNG, setDrawingMode, setDrawingColor, setLineWidth, setLineDash, agregarMarcador, clearCanvas, toggleFullscreen, guardarEsquemaCustom, limpiarCanchaYBanco, setVistaCancha, setModoPizarra, agregarFichaLibre, limpiarFichasLibres, abrirModalSustitucion, ejecutarSustitucion } from "./modules/tactics.js";
 import { renderStats, guardarStatJugador, cerrarStatModal, renderRankings } from "./modules/stats.js";
 import { renderHistorial, formatFecha } from "./modules/history.js";
 import { initPlantelUI, aplicarPlantelUI, guardarSquad, descargarPlantilla, importarCSV, exportarPDF } from "./modules/squad.js";
@@ -375,6 +375,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Bind Tactics & Save Custom Scheme
   const eq = 'A';
+  document.getElementById('vista-cancha-A')?.addEventListener('change', (e) => setVistaCancha('A', e.target.value));
+  document.getElementById('modo-pizarra-A')?.addEventListener('change', (e) => setModoPizarra('A', e.target.value));
+  document.getElementById('btn-add-mi-jugador-A')?.addEventListener('click', () => agregarFichaLibre('A', 'local'));
+  document.getElementById('btn-add-rival-A')?.addEventListener('click', () => agregarFichaLibre('A', 'rival'));
+  document.getElementById('btn-limpiar-libres-A')?.addEventListener('click', () => limpiarFichasLibres('A'));
+  document.getElementById('btn-sustitucion-A')?.addEventListener('click', () => abrirModalSustitucion('A'));
+  document.getElementById('btn-confirmar-sustitucion')?.addEventListener('click', () => ejecutarSustitucion('A'));
+  document.getElementById('btn-cerrar-modal-sub')?.addEventListener('click', () => {
+    const m = document.getElementById('modal-sustitucion');
+    if (m) m.style.display = 'none';
+  });
+
   document.getElementById('modo-A')?.addEventListener('change', () => actualizarTactica('A'));
   document.getElementById('esquema-A')?.addEventListener('change', () => actualizarTactica('A'));
   document.getElementById('btn-save-esquema-A')?.addEventListener('click', () => guardarEsquemaCustom('A'));
