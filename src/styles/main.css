@@ -383,15 +383,17 @@ body.theme-light .juego-programado-item {
   box-shadow: 0 4px 20px rgba(0,0,0,0.8);
 }
 
-/* CANCHA MITAD DE CAMPO (ZOOM TÁCTICO) */
-.cancha-wrapper.vista-mitad {
-  background-position: center top !important;
-  background-size: 100% 200% !important;
-}
-
+/* CANCHA MITAD DE CAMPO (VISTA VERTICAL QUE OCUPA EL 100% DEL ANCHO DISPONIBLE) */
+.cancha-wrapper.vista-mitad,
 .cancha-wrapper.horizontal.vista-mitad {
-  background-position: left center !important;
-  background-size: 200% 100% !important;
+  aspect-ratio: auto !important;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: #0c4520 url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='600' viewBox='0 0 400 600'><rect width='400' height='600' fill='%230c4520'/><rect y='0' width='400' height='100' fill='%230a3d1c'/><rect y='200' width='400' height='100' fill='%230a3d1c'/><rect y='400' width='400' height='100' fill='%230a3d1c'/><rect x='4' y='4' width='392' height='592' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='4'/><path d='M 120 4 A 80 80 0 0 0 280 4' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='4'/><circle cx='200' cy='4' r='5' fill='rgba(255,255,255,0.95)'/><rect x='80' y='410' width='240' height='186' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='4'/><rect x='130' y='505' width='140' height='91' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='4'/><circle cx='200' cy='480' r='5' fill='rgba(255,255,255,0.95)'/><path d='M 145 410 A 65 65 0 0 1 255 410' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='4'/></svg>") center center / 100% 100% no-repeat !important;
 }
 
 /* JUGADORES RIVALES Y LIBRES */

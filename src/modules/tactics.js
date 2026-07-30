@@ -195,8 +195,15 @@ export let fichasLibres = { A: [] };
 export function setVistaCancha(eq, vista) {
   vistaCanchaActiva[eq] = vista;
   const canchaWrapper = document.getElementById(`cancha-${eq}`);
+  const layout = document.getElementById(`pizarra-${eq}`);
+  const isFS = layout ? layout.classList.contains('fullscreen') : false;
+
   if (canchaWrapper) {
-    canchaWrapper.classList.toggle('vista-mitad', vista === 'mitad');
+    const isMitad = vista === 'mitad';
+    canchaWrapper.classList.toggle('vista-mitad', isMitad);
+    if (isFS) {
+      canchaWrapper.classList.toggle('horizontal', !isMitad);
+    }
   }
   const selFs = document.getElementById(`vista-cancha-fs-${eq}`);
   if (selFs && selFs.value !== vista) selFs.value = vista;
@@ -580,7 +587,10 @@ export function toggleFullscreen(eq) {
   if (!layout || !canchaWrapper) return;
 
   const isFS = layout.classList.toggle('fullscreen');
-  canchaWrapper.classList.toggle('horizontal', isFS);
+  const isMitad = vistaCanchaActiva[eq] === 'mitad';
+
+  canchaWrapper.classList.toggle('horizontal', isFS && !isMitad);
+  canchaWrapper.classList.toggle('vista-mitad', isMitad);
 
   if (colBanca) {
     colBanca.style.display = isFS ? 'none' : 'flex';
@@ -590,7 +600,7 @@ export function toggleFullscreen(eq) {
   if (!isFS) {
     modoPizarraActivo[eq] = 'partido';
     vistaCanchaActiva[eq] = 'completa';
-    canchaWrapper.classList.remove('vista-mitad');
+    canchaWrapper.classList.remove('vista-mitad', 'horizontal');
   }
 
   const btn = document.getElementById(`btn-fs-${eq}`);
