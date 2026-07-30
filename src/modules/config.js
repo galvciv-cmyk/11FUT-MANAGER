@@ -446,3 +446,200 @@ export function aplicarPerfil() {
   }
 }
 
+// ── ASISTENTE DE CONFIGURACIÓN INICIAL (ONBOARDING WIZARD 4 PASOS) ──
+let wizardStep = 1;
+let wizardTempCats = [];
+let wizardTempTorneos = {};
+let wizardTempKit = 'predeterminado';
+
+export function abrirOnboardingWizard() {
+  const modal = document.getElementById('modal-onboarding-wizard');
+  if (!modal) return;
+
+  wizardStep = 1;
+  wizardTempCats = Array.from(new Set([...(perfil.categorias || []), 'Sub-14'])).filter(Boolean);
+  wizardTempTorneos = {};
+  wizardTempCats.forEach(c => {
+    wizardTempTorneos[c] = (categoriasData[c] && categoriasData[c].torneo) ? categoriasData[c].torneo : 'Liga Oficial';
+  });
+  wizardTempKit = perfil.kitA || 'predeterminado';
+
+  const inputNombre = document.getElementById('wiz-club-nombre');
+  if (inputNombre) inputNombre.value = perfil.club || '';
+
+  const prevLogo = document.getElementById('prev-wiz-logo');
+  const imgLogo = document.getElementById('img-prev-wiz-logo');
+  const icoLogo = document.getElementById('ico-wiz-logo');
+  if (perfil.logo && imgLogo && prevLogo && icoLogo) {
+    imgLogo.src = perfil.logo;
+    prevLogo.style.display = 'block';
+    icoLogo.style.display = 'none';
+  }
+
+  modal.style.display = 'flex';
+  actualizarVistaWizard();
+}
+
+export function actualizarVistaWizard() {
+  [1, 2, 3, 4].forEach(step => {
+    const content = document.getElementById(`wizard-step-${step}`);
+    if (content) content.style.display = step === wizardStep ? 'block' : 'none';
+
+    const dot = document.getElementById(`step-dot-${step}`);
+    if (dot) dot.classList.toggle('active', step <= wizardStep);
+
+    if (step < 4) {
+      const line = document.getElementById(`step-line-${step}`);
+      if (line) line.classList.toggle('active', step < wizardStep);
+    }
+  });
+
+  const subtitle = document.getElementById('wizard-subtitle-text');
+  const btnPrev = document.getElementById('btn-wiz-prev');
+  const btnNext = document.getElementById('btn-wiz-next');
+
+  if (btnPrev) btnPrev.style.display = wizardStep > 1 ? 'block' : 'none';
+
+  if (wizardStep === 1) {
+    if (subtitle) subtitle.textContent = 'Paso 1 de 4: Identidad de tu Club';
+    if (btnNext) btnNext.textContent = 'SIGUIENTE →';
+  } else if (wizardStep === 2) {
+    if (subtitle) subtitle.textContent = 'Paso 2 de 4: Categorías y Equipos';
+    if (btnNext) btnNext.textContent = 'SIGUIENTE →';
+    renderWizardCategoriasUI();
+  } else if (wizardStep === 3) {
+    if (subtitle) subtitle.textContent = 'Paso 3 de 4: Torneos y Ligas';
+    if (btnNext) btnNext.textContent = 'SIGUIENTE →';
+    renderWizardTorneosUI();
+  } else if (wizardStep === 4) {
+    if (subtitle) subtitle.textContent = 'Paso 4 de 4: Kits y Uniformes';
+    if (btnNext) btnNext.textContent = '⚡ FINALIZAR Y ENTRAR';
+    renderWizardKitsUI();
+  }
+}
+
+export function siguientePasoWizard() {
+  if (wizardStep === 1) {
+    const nombre = document.getElementById('wiz-club-nombre')?.value?.trim();
+    if (nombre) perfil.club = nombre;
+    wizardStep = 2;
+    actualizarVistaWizard();
+  } else if (wizardStep === 2) {
+    if (!wizardTempCats.length) {
+      return mostrarNotificacionApp('Categorías Requeridas', 'Agrega al menos una categoría para tu club', false);
+    }
+    wizardStep = 3;
+    actualizarVistaWizard();
+  } else if (wizardStep === 3) {
+    wizardStep = 4;
+    actualizarVistaWizard();
+  } else if (wizardStep === 4) {
+    finalizarOnboardingWizard();
+  }
+}
+
+export function anteriorPasoWizard() {
+  if (wizardStep > 1) {
+    wizardStep--;
+    actualizarVistaWizard();
+  }
+}
+
+function renderWizardCategoriasUI() {
+  const container = document.getElementById('wiz-lista-cats');
+  if (!container) return;
+
+  container.innerHTML = wizardTempCats.map(c => `
+    <span class="cat-chip-wiz">
+      ${c}
+      ${wizardTempCats.length > 1 ? `<button onclick="window._eliminarCatWiz('${c}')" style="background:none;border:none;color:var(--rojo);cursor:pointer;font-weight:900;margin-left:4px;">✕</button>` : ''}
+    </span>
+  `).join('');
+}
+
+window._eliminarCatWiz = (cat) => {
+  if (wizardTempCats.length <= 1) return;
+  wizardTempCats = wizardTempCats.filter(c => c !== cat);
+  delete wizardTempTorneos[cat];
+  renderWizardCategoriasUI();
+};
+
+export function agregarCategoriaWiz() {
+  const input = document.getElementById('wiz-cat-input');
+  const val = input?.value?.trim();
+  if (!val) return;
+  if (!wizardTempCats.includes(val)) {
+    wizardTempCats.push(val);
+    wizardTempTorneos[val] = 'Liga Oficial';
+  }
+  if (input) input.value = '';
+  renderWizardCategoriasUI();
+}
+
+function renderWizardTorneosUI() {
+  const container = document.getElementById('wiz-lista-torneos');
+  if (!container) return;
+
+  container.innerHTML = wizardTempCats.map(c => `
+    <div style="background:rgba(0,0,0,0.4);padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);">
+      <label style="font-size:11px;color:var(--oro);font-weight:800;display:block;margin-bottom:4px;">⚽ Torneo / Liga para ${c}:</label>
+      <input type="text" value="${wizardTempTorneos[c] || 'Liga Oficial'}" onchange="window._guardarTorneoWiz('${c}', this.value)" placeholder="Nombre del torneo">
+    </div>
+  `).join('');
+}
+
+window._guardarTorneoWiz = (cat, val) => {
+  wizardTempTorneos[cat] = val.trim() || 'Liga Oficial';
+};
+
+function renderWizardKitsUI() {
+  const gallery = document.getElementById('wiz-kit-gallery');
+  if (!gallery) return;
+
+  const kitList = (KITS && KITS.length) ? KITS : [{ id: 'predeterminado', nombre: 'Kit Predeterminado' }];
+
+  gallery.innerHTML = kitList.map(k => {
+    const isSelected = wizardTempKit === k.id;
+    return `
+      <div class="card" style="border-color:${isSelected ? 'var(--oro)' : 'rgba(255,255,255,0.1)'};background:${isSelected ? 'rgba(212,175,55,0.12)' : 'rgba(0,0,0,0.4)'};padding:12px;cursor:pointer;" onclick="window._seleccionarKitWiz('${k.id}')">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div style="font-weight:800;color:${isSelected ? 'var(--oro)' : '#fff'};font-size:13px;">${k.nombre} ${isSelected ? '✓ (SELECCIONADO)' : ''}</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;justify-content:center;">
+          <img src="${k.local}" style="max-height:75px;object-fit:contain;" title="Camiseta Local">
+          <img src="${k.visita}" style="max-height:75px;object-fit:contain;" title="Camiseta Visitante">
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+window._seleccionarKitWiz = (kitId) => {
+  wizardTempKit = kitId;
+  renderWizardKitsUI();
+};
+
+export async function finalizarOnboardingWizard() {
+  const modal = document.getElementById('modal-onboarding-wizard');
+
+  perfil.categorias = wizardTempCats;
+  perfil.categoriaActiva = wizardTempCats[0];
+  perfil.kitA = wizardTempKit;
+
+  wizardTempCats.forEach(cat => {
+    if (!categoriasData[cat]) {
+      categoriasData[cat] = { torneo: wizardTempTorneos[cat] || 'Liga Oficial', torneosList: [wizardTempTorneos[cat] || 'Liga Oficial'] };
+    } else {
+      categoriasData[cat].torneo = wizardTempTorneos[cat] || 'Liga Oficial';
+    }
+  });
+
+  aplicarPerfil();
+  autoSaveLocal();
+  await guardarFirebase();
+
+  if (modal) modal.style.display = 'none';
+
+  mostrarNotificacionApp('¡Bienvenido a 11FUT!', `🏆 Configuración completada para ${perfil.club || 'tu Club'}.`);
+}
+

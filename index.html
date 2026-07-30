@@ -62,6 +62,90 @@
       </div>
     </div>
 
+    <!-- ══ ASISTENTE DE CONFIGURACIÓN INICIAL (ONBOARDING WIZARD 4 PASOS) ══ -->
+    <div class="modal-overlay" id="modal-onboarding-wizard">
+      <div class="modal-body wizard-modal-body">
+        
+        <!-- ENCABEZADO Y BARRA DE PASOS -->
+        <div class="wizard-header">
+          <div class="wizard-title">🚀 CONFIGURACIÓN INICIAL DEL CLUB</div>
+          <div class="wizard-subtitle" id="wizard-subtitle-text">Paso 1 de 4: Identidad de tu Club</div>
+        </div>
+
+        <div class="wizard-stepper">
+          <div class="wizard-step active" id="step-dot-1"><span class="step-num">1</span> <span class="step-lbl">Identidad</span></div>
+          <div class="wizard-step-line" id="step-line-1"></div>
+          <div class="wizard-step" id="step-dot-2"><span class="step-num">2</span> <span class="step-lbl">Categorías</span></div>
+          <div class="wizard-step-line" id="step-line-2"></div>
+          <div class="wizard-step" id="step-dot-3"><span class="step-num">3</span> <span class="step-lbl">Torneos</span></div>
+          <div class="wizard-step-line" id="step-line-3"></div>
+          <div class="wizard-step" id="step-dot-4"><span class="step-num">4</span> <span class="step-lbl">Kits</span></div>
+        </div>
+
+        <!-- PASO 1: IDENTIDAD DEL CLUB -->
+        <div class="wizard-step-content" id="wizard-step-1">
+          <div class="card">
+            <div class="card-title">🏆 NOMBRE Y LOGO DEL CLUB</div>
+            <label style="font-size:12px;color:var(--oro);font-weight:700;margin-bottom:4px;display:block;">Nombre del Club o Academia:</label>
+            <input type="text" id="wiz-club-nombre" placeholder="ej. Real Academia FC">
+            
+            <label style="font-size:12px;color:var(--oro);font-weight:700;margin-bottom:6px;display:block;margin-top:10px;">🏅 Logo Oficial del Club:</label>
+            <div class="upload-zone" id="uz-wiz-logo">
+              <div id="prev-wiz-logo" style="display:none;"><img id="img-prev-wiz-logo" src="" style="max-height:80px;"></div>
+              <span class="upload-icon" id="ico-wiz-logo">🏅</span>
+              <span class="upload-label">Toca para seleccionar logo</span>
+              <input type="file" id="up-wiz-logo" accept="image/*" style="display:none;">
+            </div>
+          </div>
+        </div>
+
+        <!-- PASO 2: CATEGORÍAS Y EQUIPOS -->
+        <div class="wizard-step-content" id="wizard-step-2" style="display:none;">
+          <div class="card">
+            <div class="card-title">👥 CATEGORÍAS DE TU CLUB</div>
+            <p style="font-size:12px;color:#aaa;margin-bottom:10px;">Agrega las categorías en las que compite tu institución:</p>
+
+            <div id="wiz-lista-cats" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;"></div>
+
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="wiz-cat-input" placeholder="Nueva Categoría (ej. Sub-16, Femenino)" style="margin-bottom:0;">
+              <button class="btn btn-green" id="btn-wiz-add-cat" style="width:auto;padding:10px 16px;white-space:nowrap;">➕ AÑADIR</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PASO 3: TORNEOS O LIGAS -->
+        <div class="wizard-step-content" id="wizard-step-3" style="display:none;">
+          <div class="card">
+            <div class="card-title">⚽ TORNEOS Y LIGAS DE COMPETENCIA</div>
+            <p style="font-size:12px;color:#aaa;margin-bottom:10px;">Asigna la liga o torneo correspondiente a cada categoría:</p>
+
+            <div id="wiz-lista-torneos" style="display:flex;flex-direction:column;gap:10px;"></div>
+          </div>
+        </div>
+
+        <!-- PASO 4: KITS Y UNIFORME -->
+        <div class="wizard-step-content" id="wizard-step-4" style="display:none;">
+          <div class="card">
+            <div class="card-title">🎽 SELECCIÓN Y CONFIGURACIÓN DE KITS</div>
+            <p style="font-size:12px;color:#aaa;margin-bottom:10px;">Elige tu uniforme predeterminado o solicita uno personalizado:</p>
+
+            <div id="wiz-kit-gallery" style="display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:12px;"></div>
+
+            <button class="btn btn-green" id="btn-wiz-soporte-wa" style="margin-top:6px;font-size:13px;padding:12px;">💬 SOLICITAR KIT PERSONALIZADO (SOPORTE WHATSAPP)</button>
+          </div>
+        </div>
+
+        <!-- BOTONES DE NAVEGACIÓN DEL WIZARD -->
+        <div class="wizard-footer">
+          <button class="btn btn-gray" id="btn-wiz-prev" style="display:none;width:auto;padding:12px 20px;">← ANTERIOR</button>
+          <div style="flex:1;"></div>
+          <button class="btn btn-gold" id="btn-wiz-next" style="width:auto;padding:12px 24px;">SIGUIENTE →</button>
+        </div>
+
+      </div>
+    </div>
+
     <!-- ══ PERFIL PÚBLICO COMPARTIBLE ══ -->
     <div id="public-profile-screen" style="display:none;">
       <div style="width:100%; max-width:960px; margin:0 auto; padding:10px;">

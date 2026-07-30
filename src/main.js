@@ -7,7 +7,8 @@ import { renderStats, guardarStatJugador, cerrarStatModal, renderRankings } from
 import { renderHistorial, formatFecha } from "./modules/history.js";
 import { initPlantelUI, aplicarPlantelUI, guardarSquad, descargarPlantilla, importarCSV, exportarPDF } from "./modules/squad.js";
 import { buscarMaps, enviarWA, renderTorneosCitacionUI } from "./modules/citacion.js";
-import { abrirConfig, cerrarConfig, guardarNombres, guardarKits, guardarLogo, guardarFondo, cambiarPin, resetearStats, borrarHistorial, cerrarSesion, aplicarPerfil, copiarEnlacePublico, agregarNuevaCategoriaConfig, abrirSoporteWhatsApp } from "./modules/config.js";
+import { abrirConfig, cerrarConfig, guardarNombres, guardarKits, guardarLogo, guardarFondo, cambiarPin, resetearStats, borrarHistorial, cerrarSesion, aplicarPerfil, copiarEnlacePublico, agregarNuevaCategoriaConfig, abrirSoporteWhatsApp, abrirOnboardingWizard, siguientePasoWizard, anteriorPasoWizard, agregarCategoriaWiz, finalizarOnboardingWizard } from "./modules/config.js";
+import { subirImagenCloudinary } from "./services/cloudinary.js";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged } from "firebase/auth";
 
 // ══════════════════════════════════════════
@@ -320,8 +321,12 @@ async function ejecutarRegistroUsuario() {
     await guardarFirebase();
 
     cerrarModalRegistro();
-    alert('✅ Cuenta creada exitosamente. Bienvenido a 11FUT MANAGER.');
-    login();
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('main-app').style.display = 'block';
+    aplicarPerfil();
+    renderSelectorCategoria();
+    refrescarTodaLaVista();
+    abrirOnboardingWizard();
   } catch (e) {
     alert('Error al registrar usuario: ' + e.message);
   }
@@ -393,6 +398,32 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-reset-pin')?.addEventListener('click', abrirModalForgotPin);
   document.getElementById('btn-cerrar-modal-forgot')?.addEventListener('click', cerrarModalForgotPin);
   document.getElementById('btn-confirm-forgot')?.addEventListener('click', ejecutarRecuperarPin);
+
+  // Bind Onboarding Wizard
+  document.getElementById('btn-wiz-next')?.addEventListener('click', siguientePasoWizard);
+  document.getElementById('btn-wiz-prev')?.addEventListener('click', anteriorPasoWizard);
+  document.getElementById('btn-wiz-add-cat')?.addEventListener('click', agregarCategoriaWiz);
+  document.getElementById('btn-wiz-soporte-wa')?.addEventListener('click', abrirSoporteWhatsApp);
+
+  // Bind Logo Upload in Wizard
+  document.getElementById('uz-wiz-logo')?.addEventListener('click', () => document.getElementById('up-wiz-logo')?.click());
+  document.getElementById('up-wiz-logo')?.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const url = await subirImagenCloudinary(file);
+      if (url) {
+        perfil.logo = url;
+        const prev = document.getElementById('prev-wiz-logo');
+        const img = document.getElementById('img-prev-wiz-logo');
+        const ico = document.getElementById('ico-wiz-logo');
+        if (img && prev && ico) {
+          img.src = url;
+          prev.style.display = 'block';
+          ico.style.display = 'none';
+        }
+      }
+    }
+  });
 
   // Bind Category Selectors (Táctica, Plantel, Stats)
   document.getElementById('selector-categoria-tactica')?.addEventListener('change', (e) => cambiarCategoria(e.target.value));

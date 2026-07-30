@@ -14,17 +14,19 @@ export async function cargarKits() {
       if (!url || !url.includes('cloudinary.com')) return url;
       return url.replace('/upload/', `/upload/w_${w},f_auto,q_auto/`);
     };
-    const kitsFinal = lista.map(k => ({
-      id:              k.id,
-      nombre:          k.nombre,
-      local:           optimizar(k.local           || BASE_URL + '/kits/' + k.id + '/local'),
-      visita:          optimizar(k.visita          || BASE_URL + '/kits/' + k.id + '/visita'),
-      portero_local:   optimizar(k.portero_local   || BASE_URL + '/kits/' + k.id + '/portero_local'),
-      portero_visita:  optimizar(k.portero_visita  || BASE_URL + '/kits/' + k.id + '/portero_visita'),
-      sup_local:       optimizar(k.sup_local       || BASE_URL + '/kits/' + k.id + '/sup_local'),
-      sup_visita:      optimizar(k.sup_visita      || BASE_URL + '/kits/' + k.id + '/sup_visita'),
-      ct:              optimizar(k.ct              || BASE_URL + '/kits/' + k.id + '/cuerpo_tecnico')
-    }));
+    const kitsFinal = lista
+      .filter(k => k.id !== 'estudiantes')
+      .map(k => ({
+        id:              k.id,
+        nombre:          k.nombre,
+        local:           optimizar(k.local           || BASE_URL + '/kits/' + k.id + '/local'),
+        visita:          optimizar(k.visita          || BASE_URL + '/kits/' + k.id + '/visita'),
+        portero_local:   optimizar(k.portero_local   || BASE_URL + '/kits/' + k.id + '/portero_local'),
+        portero_visita:  optimizar(k.portero_visita  || BASE_URL + '/kits/' + k.id + '/portero_visita'),
+        sup_local:       optimizar(k.sup_local       || BASE_URL + '/kits/' + k.id + '/sup_local'),
+        sup_visita:      optimizar(k.sup_visita      || BASE_URL + '/kits/' + k.id + '/sup_visita'),
+        ct:              optimizar(k.ct              || BASE_URL + '/kits/' + k.id + '/cuerpo_tecnico')
+      }));
     setKits(kitsFinal);
     console.log('✅ Kits cargados:', KITS.map(k => k.nombre));
     return kitsFinal;
