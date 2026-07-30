@@ -953,10 +953,10 @@ body.theme-light .juego-programado-item {
   margin-bottom: 8px;
 }
 
-.banca-container {
+.banca-container, .ct-container {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  gap: 6px;
   align-items: start;
 }
 
@@ -972,9 +972,9 @@ body.theme-light .juego-programado-item {
 }
 
 .dugout-roof {
-  background: linear-gradient(180deg, rgba(212, 175, 55, 0.2) 0%, rgba(10, 14, 20, 0.9) 100%);
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.25) 0%, rgba(10, 14, 20, 0.95) 100%);
   border-bottom: 2px solid var(--oro);
-  padding: 8px 12px;
+  padding: 10px 14px;
   border-radius: 12px 12px 0 0;
   margin: -14px -14px 12px -14px;
   display: flex;
@@ -984,11 +984,12 @@ body.theme-light .juego-programado-item {
 
 .dugout-roof-title {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 900;
   color: var(--oro);
-  letter-spacing: 1.5px;
+  letter-spacing: 2px;
   text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
 }
 
 .banca-slot, .ct-slot {
@@ -999,7 +1000,7 @@ body.theme-light .juego-programado-item {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  padding: 4px 2px;
+  padding: 2px;
   position: relative;
   transition: transform 0.2s ease;
 }
@@ -1009,9 +1010,9 @@ body.theme-light .juego-programado-item {
 }
 
 .banca-add-btn, .banca-remove-btn {
-  height: 62px;
+  height: 68px;
   border-radius: 12px;
-  font-size: 28px;
+  font-size: 30px;
   font-weight: 900;
   display: flex;
   align-items: center;
@@ -1024,7 +1025,7 @@ body.theme-light .juego-programado-item {
 
 .banca-add-btn {
   border: 2px dashed #00ab55 !important;
-  background: rgba(0, 171, 85, 0.15) !important;
+  background: rgba(0, 171, 85, 0.18) !important;
   color: #00ab55 !important;
 }
 
@@ -1037,7 +1038,7 @@ body.theme-light .juego-programado-item {
 
 .banca-remove-btn {
   border: 2px dashed #e21e22 !important;
-  background: rgba(226, 30, 34, 0.15) !important;
+  background: rgba(226, 30, 34, 0.18) !important;
   color: #e21e22 !important;
 }
 
@@ -1048,45 +1049,63 @@ body.theme-light .juego-programado-item {
   transform: translateY(-2px);
 }
 
-/* Panel Publicitario (Ad Wall Barrier) al pie del Banquillo */
+/* Panel Publicitario LED de Estadio con brillo animado */
 .dugout-ad-wall {
   margin-top: 14px;
-  background: linear-gradient(90deg, rgba(8, 12, 18, 0.95) 0%, rgba(18, 24, 36, 0.98) 50%, rgba(8, 12, 18, 0.95) 100%);
-  border: 1px solid rgba(212, 175, 55, 0.35);
+  background: radial-gradient(circle at 50% 50%, #0d1522 0%, #04070c 100%);
+  border: 1.5px solid rgba(212, 175, 55, 0.6);
   border-radius: 12px;
-  padding: 8px 12px;
+  padding: 10px 14px;
   display: flex;
   align-items: center;
   justify-content: space-around;
   gap: 10px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.35), inset 0 0 12px rgba(212, 175, 55, 0.15);
   position: relative;
+  overflow: hidden;
+}
+
+.dugout-ad-wall::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(212, 175, 55, 0.22) 50%, transparent 100%);
+  transform: skewX(-20deg);
+  animation: ledScan 4s infinite linear;
+}
+
+@keyframes ledScan {
+  0% { left: -100%; }
+  100% { left: 200%; }
 }
 
 .dugout-ad-brand {
   display: flex;
   align-items: center;
   gap: 6px;
+  z-index: 2;
 }
 
 .dugout-ad-img {
-  height: 22px;
+  height: 26px;
   width: auto;
   object-fit: contain;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+  filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.5));
 }
 
 .dugout-ad-divider {
-  width: 1px;
-  height: 24px;
+  width: 2px;
+  height: 28px;
   background: linear-gradient(180deg, transparent 0%, var(--oro) 50%, transparent 100%);
-  opacity: 0.6;
+  box-shadow: 0 0 10px var(--oro);
+  z-index: 2;
 }
 
 .dugout-seat-wrapper {
   position: relative;
-  width: 56px;
-  height: 64px;
+  width: 62px;
+  height: 70px;
   display: flex;
   align-items: center;
   justify-content: center;

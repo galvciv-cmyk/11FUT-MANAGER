@@ -1005,14 +1005,14 @@ function renderSuplentes(eq) {
     const nombre = suplentes[i] || `SUP ${i + 1}`;
 
     slot.innerHTML = `
-      <div style="font-size:10px;color:var(--oro);margin-bottom:0;font-weight:800;z-index:2;">#${i + 1}</div>
+      <div style="font-size:11px;color:var(--oro);margin-bottom:0;font-weight:900;z-index:2;">#${i + 1}</div>
       <div class="dugout-seat-wrapper">
         ${STADIUM_SEAT_SVG}
-        <div class="token-camisa" style="width:44px;height:44px;z-index:2;position:relative;margin-top:4px;">
+        <div class="token-camisa" style="width:48px;height:48px;z-index:2;position:relative;margin-top:2px;">
           <img src="${getImg(eq, 'sup')}">
         </div>
       </div>
-      <div class="nombre-label" style="font-size:10px;z-index:2;margin-top:0;">${nombre}</div>
+      <div class="nombre-label" style="font-size:11px;z-index:2;margin-top:0;font-weight:900;">${nombre}</div>
     `;
 
     slot.onclick = () => abrirModalSuplente(eq, i);
@@ -1170,15 +1170,15 @@ export function renderCT(eq) {
     slot.className = 'ct-slot';
     slot.onclick = () => abrirModalCT(eq, i);
     slot.innerHTML = `
-      <div style="font-size:10px;color:#00ab55;margin-bottom:0;font-weight:800;z-index:2;">CT #${i + 1}</div>
+      <div style="font-size:11px;color:#00ab55;margin-bottom:0;font-weight:900;z-index:2;">CT #${i + 1}</div>
       <div class="dugout-seat-wrapper">
         ${STADIUM_CT_SEAT_SVG}
-        <div class="token-camisa" style="width:44px;height:44px;z-index:2;position:relative;margin-top:4px;">
+        <div class="token-camisa" style="width:48px;height:48px;z-index:2;position:relative;margin-top:2px;">
           <img src="${getImg(eq, 'ct')}">
         </div>
       </div>
-      <span class="ct-label" style="font-size:10px;z-index:2;margin-top:0;">${m.nombre || 'LIBRE'}</span>
-      <span class="ct-rol" style="font-size:9px;color:#aaa;z-index:2;">${m.rol || ''}</span>`;
+      <span class="ct-label" style="font-size:11px;z-index:2;margin-top:0;font-weight:800;">${m.nombre || 'LIBRE'}</span>
+      <span class="ct-rol" style="font-size:10px;color:#aaa;z-index:2;font-weight:700;">${m.rol || ''}</span>`;
     cont.appendChild(slot);
   });
 
