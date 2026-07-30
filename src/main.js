@@ -276,12 +276,37 @@ async function login() {
   }
 }
 
-async function setupNuevoUsuario() {
-  const emailInput = prompt('Ingresa tu correo electrónico:');
-  const pinInput = prompt('Ingresa un nuevo PIN (mín. 6 dígitos):');
+export function abrirModalRegistro() {
+  const m = document.getElementById('modal-register');
+  if (m) m.style.display = 'flex';
+}
+
+export function cerrarModalRegistro() {
+  const m = document.getElementById('modal-register');
+  if (m) m.style.display = 'none';
+}
+
+export function abrirModalForgotPin() {
+  const m = document.getElementById('modal-forgot-pin');
+  if (m) m.style.display = 'flex';
+}
+
+export function cerrarModalForgotPin() {
+  const m = document.getElementById('modal-forgot-pin');
+  if (m) m.style.display = 'none';
+}
+
+async function ejecutarRegistroUsuario() {
+  const emailInput = document.getElementById('reg-email')?.value?.trim();
+  const pinInput = document.getElementById('reg-pin')?.value?.trim();
+  const pinConfirm = document.getElementById('reg-pin-confirm')?.value?.trim();
 
   if (!emailInput || !pinInput || pinInput.length < 6) {
-    return alert('❌ Correo o PIN inválidos.');
+    return alert('❌ Por favor ingresa un correo válido y un PIN de al menos 6 dígitos.');
+  }
+
+  if (pinInput !== pinConfirm) {
+    return alert('❌ Los PINs ingresados no coinciden.');
   }
 
   try {
@@ -294,19 +319,21 @@ async function setupNuevoUsuario() {
     perfil.email = emailInput;
     await guardarFirebase();
 
-    alert('✅ Usuario registrado exitosamente.');
+    cerrarModalRegistro();
+    alert('✅ Cuenta creada exitosamente. Bienvenido a 11FUT MANAGER.');
     login();
   } catch (e) {
     alert('Error al registrar usuario: ' + e.message);
   }
 }
 
-async function resetearPin() {
-  const emailInput = prompt('Ingresa tu correo para restablecer tu contraseña/PIN:');
-  if (!emailInput) return;
+async function ejecutarRecuperarPin() {
+  const emailInput = document.getElementById('forgot-email')?.value?.trim();
+  if (!emailInput) return alert('❌ Por favor ingresa tu correo electrónico registrado.');
   try {
     await sendPasswordResetEmail(auth, emailInput);
-    alert('📩 Se ha enviado un correo para restablecer tu PIN.');
+    cerrarModalForgotPin();
+    alert('📩 Se ha enviado un correo con instrucciones para restablecer tu PIN de acceso.');
   } catch (e) {
     alert('Error: ' + e.message);
   }
@@ -359,8 +386,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Bind Theme & Login
   document.getElementById('btn-toggle-theme')?.addEventListener('click', toggleTheme);
   document.getElementById('btn-login')?.addEventListener('click', login);
-  document.getElementById('btn-show-setup')?.addEventListener('click', setupNuevoUsuario);
-  document.getElementById('btn-reset-pin')?.addEventListener('click', resetearPin);
+  document.getElementById('btn-show-setup')?.addEventListener('click', abrirModalRegistro);
+  document.getElementById('btn-cerrar-modal-reg')?.addEventListener('click', cerrarModalRegistro);
+  document.getElementById('btn-confirm-register')?.addEventListener('click', ejecutarRegistroUsuario);
+
+  document.getElementById('btn-reset-pin')?.addEventListener('click', abrirModalForgotPin);
+  document.getElementById('btn-cerrar-modal-forgot')?.addEventListener('click', cerrarModalForgotPin);
+  document.getElementById('btn-confirm-forgot')?.addEventListener('click', ejecutarRecuperarPin);
 
   // Bind Category Selectors (Táctica, Plantel, Stats)
   document.getElementById('selector-categoria-tactica')?.addEventListener('change', (e) => cambiarCategoria(e.target.value));
