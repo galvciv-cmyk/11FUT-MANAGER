@@ -389,6 +389,11 @@ body.theme-light .juego-programado-item {
   background-size: 100% 200% !important;
 }
 
+.cancha-wrapper.horizontal.vista-mitad {
+  background-position: left center !important;
+  background-size: 200% 100% !important;
+}
+
 /* JUGADORES RIVALES Y LIBRES */
 .jugador-token.rival .token-camisa {
   filter: drop-shadow(0 0 8px rgba(226, 30, 34, 0.85));

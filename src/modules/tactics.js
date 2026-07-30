@@ -609,6 +609,9 @@ export function actualizarTactica(eq) {
   const isHorizontal = cancha ? cancha.classList.contains('horizontal') : false;
   if (!cancha || !banco) return;
 
+  const isMitad = vistaCanchaActiva[eq] === 'mitad';
+  cancha.classList.toggle('vista-mitad', isMitad);
+
   cancha.innerHTML = `<canvas id="canvas-${eq}" class="canvas-dibujo"></canvas>`;
   banco.innerHTML = '';
 
