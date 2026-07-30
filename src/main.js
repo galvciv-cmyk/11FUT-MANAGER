@@ -8,6 +8,7 @@ import { renderHistorial, formatFecha } from "./modules/history.js";
 import { initPlantelUI, aplicarPlantelUI, guardarSquad, descargarPlantilla, importarCSV, exportarPDF } from "./modules/squad.js";
 import { buscarMaps, enviarWA, renderTorneosCitacionUI } from "./modules/citacion.js";
 import { abrirConfig, cerrarConfig, guardarNombres, guardarKits, guardarLogo, guardarFondo, cambiarPin, resetearStats, borrarHistorial, cerrarSesion, aplicarPerfil, copiarEnlacePublico, agregarNuevaCategoriaConfig, abrirSoporteWhatsApp, abrirOnboardingWizard, siguientePasoWizard, anteriorPasoWizard, agregarCategoriaWiz, finalizarOnboardingWizard } from "./modules/config.js";
+import { initEntrenamientosUI, renderBibliotecaEjercicios, renderPlannerUI, renderAsistenciaUI, renderLesionesUI } from "./modules/training.js";
 import { subirImagenCloudinary } from "./services/cloudinary.js";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged } from "firebase/auth";
 
@@ -19,7 +20,8 @@ const TAB_ROUTES = {
   2: 'citacion',
   3: 'plantel',
   4: 'stats',
-  5: 'historial'
+  5: 'historial',
+  6: 'entrenamientos'
 };
 
 const ROUTE_TABS = {
@@ -27,7 +29,8 @@ const ROUTE_TABS = {
   '#citacion': 2,
   '#plantel': 3,
   '#stats': 4,
-  '#historial': 5
+  '#historial': 5,
+  '#entrenamientos': 6
 };
 
 const TAB_LABELS = {
@@ -35,7 +38,8 @@ const TAB_LABELS = {
   2: '✉️ CITACIÓN',
   3: '👥 PLANTEL',
   4: '📊 STATS',
-  5: '📚 HISTORIAL'
+  5: '📚 HISTORIAL',
+  6: '🏋️‍♂️ ENTRENAMIENTOS'
 };
 
 // ══════════════════════════════════════════
@@ -56,6 +60,7 @@ export function switchTab(n, updateHash = true) {
   if (n === 3) refrescarTodaLaVista();
   if (n === 4) renderStats();
   if (n === 5) renderHistorial();
+  if (n === 6) initEntrenamientosUI();
 }
 
 export function restaurarPestanaDesdeURL() {
@@ -133,6 +138,7 @@ function refrescarTodaLaVista() {
   renderTorneosCitacionUI();
   renderStats();
   renderHistorial();
+  initEntrenamientosUI();
 }
 
 // ══════════════════════════════════════════

@@ -212,6 +212,7 @@
           <div class="nav-horizontal-item" data-tab="3" id="tab-3">👥 PLANTEL</div>
           <div class="nav-horizontal-item" data-tab="4" id="tab-4">📊 STATS</div>
           <div class="nav-horizontal-item" data-tab="5" id="tab-5">📚 HISTORIAL</div>
+          <div class="nav-horizontal-item" data-tab="6" id="tab-6">🏋️‍♂️ ENTRENAMIENTOS</div>
         </div>
       </div>
 
@@ -518,6 +519,128 @@
         <div id="historial-list"></div>
       </div>
 
+      <!-- SECCIÓN 6: ENTRENAMIENTOS & PLANNER -->
+      <div id="s6" class="seccion">
+        <div style="display:grid;grid-template-columns:1fr 340px;gap:16px;">
+
+          <!-- COLUMNA IZQUIERDA: BIBLIOTECA DE 70 EJERCICIOS -->
+          <div>
+            <div class="card">
+              <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                <span>📚 BIBLIOTECA DE EJERCICIOS (70)</span>
+                <div style="display:flex;gap:8px;align-items:center;">
+                  <!-- Filtro Nivel -->
+                  <select id="filter-drill-level" style="font-size:12px;padding:6px 10px;background:#181818;border:1px solid #333;color:#fff;border-radius:6px;">
+                    <option value="all">🌟 Todos los Niveles (70)</option>
+                    <option value="formativo">👦 Fútbol Formativo (35)</option>
+                    <option value="competitivo">🏆 Fútbol Competitivo (35)</option>
+                  </select>
+
+                  <!-- Filtro Categoría Técnica -->
+                  <select id="filter-drill-cat" style="font-size:12px;padding:6px 10px;background:#181818;border:1px solid #333;color:#fff;border-radius:6px;">
+                    <option value="all">📁 Todas las Categorías</option>
+                    <option value="ludico">🎮 Juegos Lúdicos</option>
+                    <option value="pre_entreno">⚡ Pre-Entrenamiento</option>
+                    <option value="pre_partido">🔥 Pre-Partido</option>
+                    <option value="tactica">🎯 Táctica & Posesión</option>
+                    <option value="tecnica">⚽ Técnica & Remate</option>
+                    <option value="abp">🛡️ Balón Parado (ABP)</option>
+                    <option value="fisico">🏃‍♂️ Físico & Agilidad</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Rejilla de tarjetas de ejercicios -->
+              <div id="drills-library-grid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));gap:12px;margin-top:14px;"></div>
+            </div>
+          </div>
+
+          <!-- COLUMNA DERECHA: PLANNER, ASISTENCIA Y INFORME MÉDICO -->
+          <div style="display:flex;flex-direction:column;gap:16px;">
+            
+            <!-- PLANNER SEMANAL -->
+            <div class="card">
+              <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
+                <span>📅 PLANNER DE SESIÓN</span>
+                <select id="session-dia-input" style="font-size:11px;padding:4px 8px;width:auto;">
+                  <option value="Lunes">Lunes</option>
+                  <option value="Martes">Martes</option>
+                  <option value="Miércoles">Miércoles</option>
+                  <option value="Jueves">Jueves</option>
+                  <option value="Viernes">Viernes</option>
+                  <option value="Sábado">Sábado</option>
+                  <option value="Domingo">Domingo</option>
+                </select>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+                <input type="text" id="session-titulo-input" placeholder="Título de la sesión (ej. Posesión y Salida)">
+                <input type="text" id="session-enfoque-input" placeholder="Enfoque táctico o físico">
+                
+                <div style="font-size:11px;color:#aaa;font-weight:700;margin-top:4px;">EJERCICIOS SELECCIONADOS DE LA BIBLIOTECA:</div>
+                <div id="draft-session-drills-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+
+                <button class="btn btn-green" id="btn-save-session" style="margin-top:8px;font-size:12px;">💾 GUARDAR SESIÓN DE ENTRENAMIENTO</button>
+              </div>
+
+              <div class="card-title" style="font-size:13px;margin-top:16px;border-top:1px solid #222;padding-top:10px;">📋 SESIONES PROGRAMADAS DE LA CATEGORÍA</div>
+              <div id="planner-sessions-list" style="margin-top:8px;"></div>
+            </div>
+
+            <!-- DEPARTAMENTO MÉDICO & LESIONES -->
+            <div class="card" style="border-color:#9c27b0;">
+              <div class="card-title" style="color:#e1bee7;">🏥 INFORME MÉDICO / LESIONES</div>
+              <div id="medical-injuries-list" style="margin-top:8px;"></div>
+            </div>
+
+            <!-- CONTROL DE ASISTENCIA -->
+            <div class="card">
+              <div class="card-title">📋 CONTROL DE ASISTENCIA DEL PLANTEL</div>
+              <div id="attendance-players-list" style="margin-top:8px;"></div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- MODAL DETALLE DE EJERCICIO -->
+    <div class="modal-overlay" id="modal-drill-detail" style="display:none;">
+      <div class="modal-body" style="max-width:500px;width:92%;padding:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <h3 id="drill-detail-title" style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:var(--gold-color);margin:0;">DETALLE DE EJERCICIO</h3>
+          <button onclick="document.getElementById('modal-drill-detail').style.display='none';" style="background:none;border:none;color:#aaa;font-size:20px;cursor:pointer;">❌</button>
+        </div>
+        <img id="drill-detail-img" src="" alt="Ilustración del ejercicio" style="width:100%;height:180px;object-fit:cover;border-radius:8px;margin-bottom:12px;border:1px solid #333;">
+        <div style="font-size:12px;color:var(--verde-campo);font-weight:800;margin-bottom:6px;">⏱️ Duración Sugerida: <span id="drill-detail-dur" style="color:#fff;">15 min</span></div>
+        <div style="font-size:13px;color:#eee;line-height:1.4;margin-bottom:10px;" id="drill-detail-desc"></div>
+        <div style="background:#161616;border:1px solid #282828;border-radius:8px;padding:10px;font-size:12px;color:#aaa;line-height:1.4;">
+          <strong style="color:var(--oro);display:block;margin-bottom:4px;">📜 Consignas & Reglas del Ejercicio:</strong>
+          <span id="drill-detail-rules"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL PARTE MÉDICO -->
+    <div class="modal-overlay" id="modal-injury-report" style="display:none;">
+      <div class="modal-body" style="max-width:440px;width:90%;padding:20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#e1bee7;margin:0;">🏥 PARTE MÉDICO: <span id="injury-player-name">JUGADOR</span></h3>
+          <button onclick="document.getElementById('modal-injury-report').style.display='none';" style="background:none;border:none;color:#aaa;font-size:20px;cursor:pointer;">❌</button>
+        </div>
+        <label style="font-size:12px;color:#aaa;">Tipo de Lesión:</label>
+        <input type="text" id="injury-type-input" placeholder="ej. Esguince de tobillo, Sobrecarga muscular" style="margin-bottom:10px;">
+        
+        <label style="font-size:12px;color:#aaa;">Tiempo Estimado de Baja:</label>
+        <input type="text" id="injury-time-input" placeholder="ej. 7 días, 2 semanas" style="margin-bottom:10px;">
+
+        <label style="font-size:12px;color:#aaa;">Observaciones / Notas:</label>
+        <textarea id="injury-notes-input" placeholder="ej. En reposo e inflamación reducida. Tratamiento con hielo." style="height:60px;margin-bottom:14px;"></textarea>
+
+        <button class="btn" id="btn-save-medical-report" style="background:#9c27b0;color:#fff;">💾 GUARDAR PARTE MÉDICO</button>
+      </div>
     </div>
 
     <!-- MODAL GENERAL -->
