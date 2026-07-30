@@ -186,21 +186,21 @@
     <!-- ══ APP PRINCIPAL ══ -->
     <div id="main-app" style="display:none;">
 
-      <!-- Header Centrado con Botón de Menú de Secciones -->
+      <!-- Header Centrado con Botón de Menú de Secciones a la derecha -->
       <div class="app-header">
+        <div style="display:flex;align-items:center;">
+          <img id="header-logo" class="header-logo" src="/logo.png" alt="11FUT Logo" onerror="this.src='https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'">
+        </div>
+
+        <div class="header-title" id="header-club">11FUT MANAGER</div>
+
         <div style="display:flex;align-items:center;gap:8px;">
           <button class="header-menu-btn" id="btn-header-menu" title="Desplegar Menú de Secciones">
             <span class="menu-icon">☰</span>
             <span class="menu-label">MENÚ</span>
           </button>
-          <img id="header-logo" class="header-logo" src="/logo.png" alt="Logo" onerror="this.src='https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'">
-        </div>
-
-        <div class="header-title" id="header-club">11FUT MANAGER</div>
-
-        <div style="display:flex;align-items:center;gap:6px;">
           <button class="header-config" id="btn-toggle-theme" title="Alternar Modo Oscuro / Claro" style="font-size:18px;">☀️</button>
-          <button class="header-config" id="btn-config">⚙️</button>
+          <button class="header-config" id="btn-config" title="Configurar Perfil y Equipos">⚙️</button>
         </div>
       </div>
 
