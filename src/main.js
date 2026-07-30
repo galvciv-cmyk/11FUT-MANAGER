@@ -75,21 +75,19 @@ export function renderSelectorCategoria(isPublic = false) {
   const selectStats = document.getElementById('stats-categoria-selector');
   const selectPub = document.getElementById('pub-selector-categoria');
 
-  // Purga de categoría fantasma "Sub-14" cuando el usuario ya tiene categorías reales registradas
-  let userCats = (perfil.categorias || []).filter(Boolean);
-  const realCats = userCats.filter(c => c !== 'Sub-14');
+  let categorias = (perfil.categorias && perfil.categorias.length > 0) ? perfil.categorias.filter(Boolean) : ['Sub-14'];
   
-  if (realCats.length > 0) {
+  // Si el usuario tiene múltiples categorías y una es 'Sub-14' sin jugadores, remover 'Sub-14'
+  if (categorias.length > 1 && categorias.includes('Sub-14')) {
     const sub14Obj = categoriasData['Sub-14'];
     const sub14HasPlayers = sub14Obj && sub14Obj.plantel &&
       ['por','def','med','del'].some(k => sub14Obj.plantel[k] && sub14Obj.plantel[k].length > 0);
     if (!sub14HasPlayers) {
+      categorias = categorias.filter(c => c !== 'Sub-14');
       delete categoriasData['Sub-14'];
-      userCats = realCats;
     }
   }
 
-  let categorias = userCats.length ? userCats : ['Sub-14'];
   perfil.categorias = categorias;
 
   const activa = (perfil.categoriaActiva && categorias.includes(perfil.categoriaActiva)) 
@@ -97,6 +95,19 @@ export function renderSelectorCategoria(isPublic = false) {
     : categorias[0];
 
   perfil.categoriaActiva = activa;
+
+  // Asegurar estructura inicial en categoriasData para cada categoría activa
+  categorias.forEach(c => {
+    if (!categoriasData[c]) {
+      categoriasData[c] = {
+        plantel: JSON.parse(JSON.stringify(DEFAULT_PLANTEL)),
+        stats: {},
+        historial: [],
+        juegosProgramados: [],
+        torneo: 'Torneo Oficial'
+      };
+    }
+  });
 
   const html = categorias.map(c => `<option value="${c}" ${c === activa ? 'selected' : ''}>⚽ ${c}</option>`).join('');
 

@@ -627,21 +627,23 @@ export async function finalizarOnboardingWizard() {
   perfil.categoriaActiva = wizardTempCats[0];
   perfil.kitA = wizardTempKit;
 
-  // Purga de categorías huérfanas/fantasmas que no fueron seleccionadas en el asistente
+  // Purga de claves en categoriasData que no fueron seleccionadas por el usuario en el asistente
   Object.keys(categoriasData).forEach(catKey => {
     if (!wizardTempCats.includes(catKey)) {
-      const catObj = categoriasData[catKey];
-      const hasPlayers = catObj && catObj.plantel &&
-        ['por','def','med','del'].some(k => catObj.plantel[k] && catObj.plantel[k].length > 0);
-      if (!hasPlayers) {
-        delete categoriasData[catKey];
-      }
+      delete categoriasData[catKey];
     }
   });
 
   wizardTempCats.forEach(cat => {
     if (!categoriasData[cat]) {
-      categoriasData[cat] = { torneo: wizardTempTorneos[cat] || 'Liga Oficial', torneosList: [wizardTempTorneos[cat] || 'Liga Oficial'] };
+      categoriasData[cat] = {
+        plantel: JSON.parse(JSON.stringify(DEFAULT_PLANTEL)),
+        stats: {},
+        historial: [],
+        juegosProgramados: [],
+        torneo: wizardTempTorneos[cat] || 'Liga Oficial',
+        torneosList: [wizardTempTorneos[cat] || 'Liga Oficial']
+      };
     } else {
       categoriasData[cat].torneo = wizardTempTorneos[cat] || 'Liga Oficial';
     }
