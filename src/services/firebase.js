@@ -52,10 +52,6 @@ export async function guardarFirebase() {
       await setDoc(refPub, payload, { merge: true });
     }
 
-    // Copia pública general de respaldo
-    const refGeneral = doc(db, 'publico', 'perfil_publico');
-    await setDoc(refGeneral, payload, { merge: true });
-
     setSyncStatus('saved', '☁️ Sincronizado en la nube');
   } catch (e) {
     console.error('Error al guardar en Firebase:', e);
@@ -104,11 +100,6 @@ export async function cargarFirebasePublico(targetPublicId) {
       }
     }
 
-    if (!snap || !snap.exists()) {
-      const refFallback = doc(db, 'publico', 'perfil_publico');
-      snap = await getDoc(refFallback);
-    }
-
     if (snap && snap.exists()) {
       const data = snap.data();
       if (data.perfil) updatePerfil(data.perfil);
@@ -119,11 +110,10 @@ export async function cargarFirebasePublico(targetPublicId) {
         if (data.stats) updateStats(data.stats);
         if (data.historial) updateHistorial(data.historial);
       }
-      autoSaveLocal();
       return true;
     }
   } catch (e) {
-    console.error('Error al cargar perfil público de Firebase:', e);
+    console.error('Error al cargar perfil público:', e);
   }
   return false;
 }
