@@ -702,6 +702,16 @@ export function actualizarTactica(eq) {
   const isFS = layout ? layout.classList.contains('fullscreen') : false;
   const modoPizarra = isFS ? (modoPizarraActivo[eq] || 'partido') : 'partido';
 
+  // Mostrar/Ocultar el Panel Replegable del Banquillo en Fullscreen solo en Modo Partido
+  const drawerBench = document.getElementById(`fs-drawer-bench-${eq}`);
+  if (drawerBench) {
+    if (isFS && modoPizarra === 'partido') {
+      drawerBench.classList.add('modo-partido-activo');
+    } else {
+      drawerBench.classList.remove('modo-partido-activo', 'open');
+    }
+  }
+
   if (modoPizarra === 'partido') {
     form.forEach((slot, i) => {
       const token = document.createElement('div');
@@ -992,59 +1002,65 @@ const STADIUM_CT_SEAT_SVG = `
 `;
 
 function renderSuplentes(eq) {
-  const banco = document.getElementById(`banco-${eq}`);
-  if (!banco) return;
-  banco.innerHTML = '';
+  const containers = [
+    document.getElementById(`banco-${eq}`),
+    document.getElementById(`banco-fs-${eq}`)
+  ].filter(Boolean);
+
+  if (!containers.length) return;
 
   const suplentes = (plantel[`sup_${eq}`] || []);
   const maxSup = plantel[`maxSup_${eq}`] || 7;
 
-  for (let i = 0; i < maxSup; i++) {
-    const slot = document.createElement('div');
-    slot.className = 'banca-slot';
-    const nombre = suplentes[i] || `SUP ${i + 1}`;
+  containers.forEach(banco => {
+    banco.innerHTML = '';
+    for (let i = 0; i < maxSup; i++) {
+      const slot = document.createElement('div');
+      slot.className = 'banca-slot';
+      const nombre = suplentes[i] || `SUP ${i + 1}`;
 
-    slot.innerHTML = `
-      <div style="font-size:11px;color:var(--oro);margin-bottom:0;font-weight:900;z-index:2;">#${i + 1}</div>
-      <div class="dugout-seat-wrapper">
-        ${STADIUM_SEAT_SVG}
-        <div class="token-camisa" style="width:48px;height:48px;z-index:2;position:relative;margin-top:2px;">
-          <img src="${getImg(eq, 'sup')}">
+      slot.innerHTML = `
+        <div style="font-size:11px;color:var(--oro);margin-bottom:0;font-weight:900;z-index:2;">#${i + 1}</div>
+        <div class="dugout-seat-wrapper">
+          ${STADIUM_SEAT_SVG}
+          <div class="token-camisa" style="width:48px;height:48px;z-index:2;position:relative;margin-top:2px;">
+            <img src="${getImg(eq, 'sup')}">
+          </div>
         </div>
-      </div>
-      <div class="nombre-label" style="font-size:11px;z-index:2;margin-top:0;font-weight:900;">${nombre}</div>
+        <div class="nombre-label" style="font-size:11px;z-index:2;margin-top:0;font-weight:900;">${nombre}</div>
+      `;
+
+      slot.onclick = () => abrirModalSuplente(eq, i);
+      banco.appendChild(slot);
+    }
+
+    // BOTONES DE ACCIÓN + Y - (APILADOS VERTICALMENTE UNO ENCIMA DEL OTRO)
+    const actionsCol = document.createElement('div');
+    actionsCol.className = 'banca-actions-col';
+    actionsCol.innerHTML = `
+      <div class="banca-add-btn" title="Agregar asiento al banco">+</div>
+      ${maxSup > 1 ? `<div class="banca-remove-btn" title="Quitar asiento del banco">-</div>` : ''}
     `;
 
-    slot.onclick = () => abrirModalSuplente(eq, i);
-    banco.appendChild(slot);
-  }
-
-  // BOTONES DE ACCIÓN + Y - (APILADOS VERTICALMENTE UNO ENCIMA DEL OTRO)
-  const actionsCol = document.createElement('div');
-  actionsCol.className = 'banca-actions-col';
-  actionsCol.innerHTML = `
-    <div class="banca-add-btn" title="Agregar asiento al banco">+</div>
-    ${maxSup > 1 ? `<div class="banca-remove-btn" title="Quitar asiento del banco">-</div>` : ''}
-  `;
-
-  actionsCol.querySelector('.banca-add-btn').onclick = () => {
-    plantel[`maxSup_${eq}`] = (plantel[`maxSup_${eq}`] || 7) + 1;
-    renderSuplentes(eq);
-    autoSaveLocal();
-  };
-
-  if (maxSup > 1) {
-    actionsCol.querySelector('.banca-remove-btn').onclick = () => {
-      plantel[`maxSup_${eq}`] = Math.max(1, (plantel[`maxSup_${eq}`] || 7) - 1);
-      if (plantel[`sup_${eq}`] && plantel[`sup_${eq}`].length > plantel[`maxSup_${eq}`]) {
-        plantel[`sup_${eq}`].pop();
-      }
+    actionsCol.querySelector('.banca-add-btn').onclick = () => {
+      plantel[`maxSup_${eq}`] = (plantel[`maxSup_${eq}`] || 7) + 1;
       renderSuplentes(eq);
       autoSaveLocal();
     };
-  }
 
-  banco.appendChild(actionsCol);
+    if (maxSup > 1) {
+      actionsCol.querySelector('.banca-remove-btn').onclick = () => {
+        plantel[`maxSup_${eq}`] = Math.max(1, (plantel[`maxSup_${eq}`] || 7) - 1);
+        if (plantel[`sup_${eq}`] && plantel[`sup_${eq}`].length > plantel[`maxSup_${eq}`]) {
+          plantel[`sup_${eq}`].pop();
+        }
+        renderSuplentes(eq);
+        autoSaveLocal();
+      };
+    }
+
+    banco.appendChild(actionsCol);
+  });
 }
 
 let modalJugadorActivo = { eq: '', idx: -1, cat: '' };
@@ -1158,36 +1174,42 @@ window._seleccionarSuplente = (nombre) => {
 };
 
 export function renderCT(eq) {
-  const cont = document.getElementById('ct-' + eq);
-  if (!cont) return;
+  const containers = [
+    document.getElementById('ct-' + eq),
+    document.getElementById('ct-fs-' + eq)
+  ].filter(Boolean);
+
+  if (!containers.length) return;
   const misCT = (plantel['ct_' + eq] || []).slice(0, 5);
-  cont.innerHTML = '';
 
-  misCT.forEach((m, i) => {
-    const slot = document.createElement('div');
-    slot.className = 'ct-slot';
-    slot.onclick = () => abrirModalCT(eq, i);
-    slot.innerHTML = `
-      <div style="font-size:11px;color:#00ab55;margin-bottom:0;font-weight:900;z-index:2;">CT #${i + 1}</div>
-      <div class="dugout-seat-wrapper ct-seat-wrapper">
-        ${STADIUM_CT_SEAT_SVG}
-        <div class="token-camisa" style="width:54px;height:54px;z-index:2;position:relative;margin-top:2px;">
-          <img src="${getImg(eq, 'ct')}">
+  containers.forEach(cont => {
+    cont.innerHTML = '';
+    misCT.forEach((m, i) => {
+      const slot = document.createElement('div');
+      slot.className = 'ct-slot';
+      slot.onclick = () => abrirModalCT(eq, i);
+      slot.innerHTML = `
+        <div style="font-size:11px;color:#00ab55;margin-bottom:0;font-weight:900;z-index:2;">CT #${i + 1}</div>
+        <div class="dugout-seat-wrapper ct-seat-wrapper">
+          ${STADIUM_CT_SEAT_SVG}
+          <div class="token-camisa" style="width:54px;height:54px;z-index:2;position:relative;margin-top:2px;">
+            <img src="${getImg(eq, 'ct')}">
+          </div>
         </div>
-      </div>
-      <span class="ct-label" style="font-size:11px;z-index:2;margin-top:0;font-weight:800;">${m.nombre || 'LIBRE'}</span>
-      <span class="ct-rol" style="font-size:10px;color:#aaa;z-index:2;font-weight:700;">${m.rol || ''}</span>`;
-    cont.appendChild(slot);
-  });
+        <span class="ct-label" style="font-size:11px;z-index:2;margin-top:0;font-weight:800;">${m.nombre || 'LIBRE'}</span>
+        <span class="ct-rol" style="font-size:10px;color:#aaa;z-index:2;font-weight:700;">${m.rol || ''}</span>`;
+      cont.appendChild(slot);
+    });
 
-  if (misCT.length < 5) {
-    const add = document.createElement('div');
-    add.className = 'ct-slot';
-    add.onclick = () => abrirModalCT(eq, misCT.length);
-    add.innerHTML = `<div style="width:40px;height:40px;border:2px dashed #1a3a6e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;color:#1a3a6e;">+</div>
-      <span class="ct-rol" style="color:#1a3a6e;margin-top:2px;">AGREGAR</span>`;
-    cont.appendChild(add);
-  }
+    if (misCT.length < 5) {
+      const add = document.createElement('div');
+      add.className = 'ct-slot';
+      add.onclick = () => abrirModalCT(eq, misCT.length);
+      add.innerHTML = `<div style="width:40px;height:40px;border:2px dashed #1a3a6e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;color:#1a3a6e;">+</div>
+        <span class="ct-rol" style="color:#1a3a6e;margin-top:2px;">AGREGAR</span>`;
+      cont.appendChild(add);
+    }
+  });
 }
 
 const CT_ROLES = ['DT', 'ASIST.', 'PREP.F', 'UTILERO', 'OTRO'];

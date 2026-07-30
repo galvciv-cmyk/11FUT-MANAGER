@@ -520,6 +520,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (drawer) drawer.classList.toggle('open');
   });
 
+  document.getElementById(`btn-toggle-drawer-bench-fs-${eq}`)?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const drawerBench = document.getElementById(`fs-drawer-bench-${eq}`);
+    if (drawerBench) drawerBench.classList.toggle('open');
+  });
+
   document.getElementById(`btn-none-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'none'));
   document.getElementById(`btn-pencil-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'pencil'));
   document.getElementById(`btn-arrow-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'arrow'));
