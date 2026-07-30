@@ -161,71 +161,76 @@
               <button class="btn-exit-fs" id="btn-exit-fs-A">❌ SALIR PANTALLA COMPLETA</button>
               <button class="btn-toggle-tools-fs" id="btn-toggle-tools-fs-A">✏️ DIBUJO Y HERRAMIENTAS</button>
               
-              <div class="fs-toolbar-overlay" id="fs-tools-overlay-A">
-                <div style="margin-bottom:8px;">
-                  <label style="font-size:10px;color:var(--oro);display:block;margin-bottom:2px;font-weight:700;">📐 VISTA DE CANCHA:</label>
-                  <select id="vista-cancha-fs-A" style="font-size:12px;padding:6px;margin-bottom:6px;width:100%;background:#141414;color:#fff;border:1px solid #333;border-radius:6px;">
-                    <option value="completa">🏟️ Cancha Completa</option>
-                    <option value="mitad">🥅 Mitad de Cancha (Zoom)</option>
-                  </select>
+              <!-- PANEL REPLEGABLE LATERAL DERECHO EN FULLSCREEN -->
+              <div class="fs-drawer-right" id="fs-drawer-A">
+                <button class="fs-drawer-toggle" id="btn-toggle-tools-fs-A" title="Abrir/Cerrar Panel de Herramientas">
+                  <span class="drawer-icon">✏️</span>
+                </button>
 
-                  <label style="font-size:10px;color:var(--oro);display:block;margin-bottom:2px;font-weight:700;">🎮 MODO DE PIZARRA:</label>
-                  <select id="modo-pizarra-fs-A" style="font-size:12px;padding:6px;margin-bottom:6px;width:100%;background:#141414;color:#fff;border:1px solid #333;border-radius:6px;">
-                    <option value="partido">📋 Modo Partido (11 Titulares)</option>
-                    <option value="libre">⚔️ Modo Libre (1v1, 5v5, Rivales)</option>
-                  </select>
-                </div>
-
-                <!-- CONTROLES MODO LIBRE -->
-                <div id="cont-modo-libre-fs-A" style="display:none;margin-bottom:8px;flex-direction:column;gap:4px;">
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
-                    <button class="btn btn-blue" id="btn-add-mi-jugador-fs-A" style="padding:6px;font-size:10px;">➕ JUGADOR LOCAL</button>
-                    <button class="btn btn-gold" id="btn-add-por-local-fs-A" style="padding:6px;font-size:10px;">🧤 PORTERO LOCAL</button>
+                <div class="fs-drawer-content">
+                  <div class="drawer-section-title">📐 CANCHA Y MODO</div>
+                  <div style="display:flex;gap:6px;margin-bottom:8px;">
+                    <select id="vista-cancha-fs-A" class="drawer-select" title="Vista de Cancha">
+                      <option value="completa">🏟️ Completa</option>
+                      <option value="mitad">🥅 Mitad</option>
+                    </select>
+                    <select id="modo-pizarra-fs-A" class="drawer-select" title="Modo de Pizarra">
+                      <option value="partido">📋 Partido</option>
+                      <option value="libre">⚔️ Libre</option>
+                    </select>
                   </div>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
-                    <button class="btn btn-red" id="btn-add-rival-fs-A" style="padding:6px;font-size:10px;background:linear-gradient(180deg,#e5be3a,#8a6e1a);color:#000;">🔴 RIVAL AMARILLO</button>
-                    <button class="btn btn-red" id="btn-add-por-rival-fs-A" style="padding:6px;font-size:10px;background:linear-gradient(180deg,#d97706,#7c2d12);color:#fff;">🧤 PORTERO RIVAL</button>
+
+                  <!-- CONTROLES MODO LIBRE (ICONOS) -->
+                  <div id="cont-modo-libre-fs-A" style="display:none;margin-bottom:8px;flex-direction:column;gap:6px;">
+                    <div class="drawer-section-title">➕ FICHAS Y JUGADORES</div>
+                    <div class="icon-grid-4">
+                      <button class="icon-btn btn-blue" id="btn-add-mi-jugador-fs-A" title="Añadir Jugador Local">👕</button>
+                      <button class="icon-btn btn-gold" id="btn-add-por-local-fs-A" title="Añadir Portero Local">🧤</button>
+                      <button class="icon-btn btn-yellow-rival" id="btn-add-rival-fs-A" title="Añadir Rival Amarillo">🔴</button>
+                      <button class="icon-btn btn-orange-rival" id="btn-add-por-rival-fs-A" title="Añadir Portero Rival">🧤</button>
+                    </div>
+                    <button class="btn btn-gray" id="btn-limpiar-libres-fs-A" style="padding:4px;font-size:11px;" title="Borrar Fichas Libres">🗑️ Limpiar Libres</button>
                   </div>
-                  <button class="btn btn-gray" id="btn-limpiar-libres-fs-A" style="padding:4px;font-size:10px;">🗑️ BORRAR FICHAS LIBRES</button>
-                </div>
 
-                <button class="btn btn-gold" id="btn-sustitucion-fs-A" style="padding:6px;font-size:11px;margin-bottom:8px;width:100%;">🔄 REALIZAR SUSTITUCIÓN</button>
+                  <button class="btn btn-gold" id="btn-sustitucion-fs-A" style="padding:6px;font-size:11px;margin-bottom:8px;width:100%;">🔄 Sustitución</button>
 
-                <!-- DIBUJO Y PIZARRA -->
-                <div style="font-size:10px;color:var(--oro);font-weight:700;margin-bottom:4px;">✏️ TRAZOS Y DIBUJO:</div>
-                <div class="tool-btn-group">
-                  <button class="tool-btn active" id="btn-none-fs-A">🤚 MOVER</button>
-                  <button class="tool-btn" id="btn-pencil-fs-A">✏️ LÁPIZ</button>
-                  <button class="tool-btn" id="btn-arrow-fs-A">➔ FLECHA</button>
-                </div>
-                <div class="tool-btn-group" style="margin-top:4px;">
-                  <button class="tool-btn" id="btn-dash-fs-A">➖ PUNTEADA</button>
-                  <button class="tool-btn" id="btn-undo-fs-A">↩️ DESHACER</button>
-                  <button class="tool-btn" id="btn-clear-fs-A">🗑️ BORRAR</button>
-                </div>
+                  <!-- DIBUJO Y PIZARRA (ICONOS) -->
+                  <div class="drawer-section-title">✏️ TRAZOS Y DIBUJO</div>
+                  <div class="icon-grid-3">
+                    <button class="icon-btn tool-btn active" id="btn-none-fs-A" title="Mover / Selección">🤚</button>
+                    <button class="icon-btn tool-btn" id="btn-pencil-fs-A" title="Lápiz continuo">✏️</button>
+                    <button class="icon-btn tool-btn" id="btn-arrow-fs-A" title="Flecha táctica">➔</button>
+                    <button class="icon-btn tool-btn" id="btn-dash-fs-A" title="Línea punteada">➖</button>
+                    <button class="icon-btn tool-btn" id="btn-undo-fs-A" title="Deshacer trazo">↩️</button>
+                    <button class="icon-btn tool-btn" id="btn-clear-fs-A" title="Borrar todo el dibujo">🗑️</button>
+                  </div>
 
-                <!-- PALETA COLORES FLOTANTE -->
-                <div id="colors-fs-A" style="display:flex;gap:6px;margin-top:6px;align-items:center;justify-content:center;">
-                  <span class="color-dot active" data-color="#d4af37" style="background:#d4af37;"></span>
-                  <span class="color-dot" data-color="#ffffff" style="background:#ffffff;"></span>
-                  <span class="color-dot" data-color="#ff3333" style="background:#ff3333;"></span>
-                  <span class="color-dot" data-color="#3399ff" style="background:#3399ff;"></span>
-                </div>
+                  <!-- PALETA DE COLORES -->
+                  <div id="colors-fs-A" class="color-picker-row">
+                    <span class="color-dot active" data-color="#d4af37" style="background:#d4af37;" title="Dorado"></span>
+                    <span class="color-dot" data-color="#ffffff" style="background:#ffffff;" title="Blanco"></span>
+                    <span class="color-dot" data-color="#ff3333" style="background:#ff3333;" title="Rojo"></span>
+                    <span class="color-dot" data-color="#3399ff" style="background:#3399ff;" title="Azul"></span>
+                  </div>
 
-                <!-- ANIMACIÓN DE JUGADAS -->
-                <div style="font-size:10px;color:var(--oro);font-weight:700;margin-top:8px;margin-bottom:4px;">🎬 ANIMACIÓN TÁCTICA:</div>
-                <div class="tool-btn-group">
-                  <button class="tool-btn" id="btn-rec-step-fs-A" style="background:#7c2d12;color:#fff;">🔴 PASO (+1)</button>
-                  <button class="tool-btn" id="btn-play-anim-fs-A" style="background:#15803d;color:#fff;">▶️ VER</button>
-                  <button class="tool-btn" id="btn-stop-anim-fs-A" style="background:#333;color:#ccc;">⏹️ DETENER</button>
-                </div>
+                  <!-- ANIMACIÓN DE JUGADAS (ICONOS) -->
+                  <div class="drawer-section-title">🎬 ANIMACIÓN TÁCTICA</div>
+                  <div class="icon-grid-3">
+                    <button class="icon-btn" id="btn-rec-step-fs-A" style="background:#7c2d12;color:#fff;" title="Grabar Paso (+1)">🔴</button>
+                    <button class="icon-btn" id="btn-play-anim-fs-A" style="background:#15803d;color:#fff;" title="Ver Jugada Animada">▶️</button>
+                    <button class="icon-btn" id="btn-stop-anim-fs-A" style="background:#333;color:#ccc;" title="Detener Animación">⏹️</button>
+                  </div>
 
-                <!-- EQUIPAMIENTO -->
-                <div style="font-size:10px;color:var(--oro);font-weight:700;margin-top:8px;margin-bottom:4px;">🪧 EQUIPAMIENTO:</div>
-                <div class="tool-btn-group">
-                  <button class="tool-btn" id="btn-add-balon-fs-A">⚽ BALÓN</button>
-                  <button class="tool-btn" id="btn-add-cono-fs-A">🪧 CONO</button>
-                  <button class="tool-btn" id="btn-add-valla-fs-A">🚧 VALLA</button>
+                  <!-- EQUIPAMIENTO DE ENTRENAMIENTO COMPLETO (ICONOS) -->
+                  <div class="drawer-section-title">🪧 EQUIPAMIENTO DE ENTRENAMIENTO</div>
+                  <div class="icon-grid-3">
+                    <button class="icon-btn" id="btn-add-balon-fs-A" title="Añadir Balón">⚽</button>
+                    <button class="icon-btn" id="btn-add-cono-fs-A" title="Añadir Cono (Pequeño)">🪧</button>
+                    <button class="icon-btn" id="btn-add-mina-fs-A" title="Añadir Mina / Platillo">🏵️</button>
+                    <button class="icon-btn" id="btn-add-valla-fs-A" title="Añadir Valla Deportiva (Rotativa)">🚧</button>
+                    <button class="icon-btn" id="btn-add-porteria-grande-fs-A" title="Añadir Portería Grande (Girar + Tamaño)">🥅</button>
+                    <button class="icon-btn" id="btn-add-mini-porteria-fs-A" title="Añadir Mini Portería (Girar + Tamaño)">🥅 mini</button>
+                  </div>
                 </div>
               </div>
 

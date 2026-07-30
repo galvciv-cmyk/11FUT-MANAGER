@@ -172,7 +172,21 @@ window._confirmarGuardarEsquema = async (eq) => {
 const YELLOW_KIT_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60"><path d="M 18,12 L 24,18 L 36,18 L 42,12 L 54,20 L 46,28 L 44,26 L 44,52 L 16,52 L 16,26 L 14,28 L 6,20 Z" fill="%23ffd700" stroke="%23222222" stroke-width="2.5"/><path d="M 24,18 Q 30,24 36,18" fill="none" stroke="%23222222" stroke-width="2.5"/></svg>`;
 const DEFAULT_RED_KIT_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60"><path d="M 18,12 L 24,18 L 36,18 L 42,12 L 54,20 L 46,28 L 44,26 L 44,52 L 16,52 L 16,26 L 14,28 L 6,20 Z" fill="%23e21e22" stroke="%23ffffff" stroke-width="2.5"/><path d="M 24,18 Q 30,24 36,18" fill="none" stroke="%23ffffff" stroke-width="2.5"/></svg>`;
 
+const MINA_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><rect x="2" y="2" width="36" height="36" rx="8" fill="%23e65100" stroke="%23b71c1c" stroke-width="2"/><circle cx="20" cy="20" r="12" fill="%23ff9800"/><circle cx="20" cy="20" r="6" fill="%23e65100"/></svg>`;
+const VALLA_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="20" viewBox="0 0 60 20"><rect x="5" y="2" width="6" height="16" rx="2" fill="%23212121"/><rect x="49" y="2" width="6" height="16" rx="2" fill="%23212121"/><rect x="8" y="6" width="44" height="8" rx="2" fill="%23d50000" stroke="%23b71c1c" stroke-width="1"/></svg>`;
+const PORTERIA_GRANDE_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="40" viewBox="0 0 100 40"><rect x="5" y="5" width="90" height="30" fill="none" stroke="%23b0bec5" stroke-width="3"/><path d="M5 5 L95 5 M5 35 L95 35 M5 5 L5 35 M95 5 L95 35 M20 5 L20 35 M35 5 L35 35 M50 5 L50 35 M65 5 L65 35 M80 5 L80 35 M5 15 L95 15 M5 25 L95 25" stroke="rgba(255,255,255,0.7)" stroke-width="1.2"/><circle cx="5" cy="35" r="4" fill="none" stroke="%2337474f" stroke-width="2"/><circle cx="95" cy="35" r="4" fill="none" stroke="%2337474f" stroke-width="2"/></svg>`;
+const MINI_PORTERIA_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="30" viewBox="0 0 60 30"><path d="M 5 25 A 25 20 0 0 1 55 25 Z" fill="rgba(255,255,255,0.2)" stroke="%23546e7a" stroke-width="3"/><path d="M 5 25 A 25 20 0 0 1 55 25" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.2" stroke-dasharray="3 3"/><line x1="5" y1="25" x2="55" y2="25" stroke="%23d50000" stroke-width="4" stroke-linecap="round"/><circle cx="5" cy="25" r="3" fill="%23212121"/><circle cx="55" cy="25" r="3" fill="%23212121"/></svg>`;
+const CONO_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30"><polygon points="15,2 5,26 25,26" fill="%23ff6d00" stroke="%23e65100" stroke-width="1.5"/><rect x="3" y="24" width="24" height="4" rx="1" fill="%23e65100"/></svg>`;
+const BALON_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30"><circle cx="15" cy="15" r="13" fill="%23ffffff" stroke="%23212121" stroke-width="2"/><polygon points="15,7 19,10 17,15 13,15 11,10" fill="%23212121"/></svg>`;
+
 export function getImg(eq, tipo) {
+  if (tipo === 'mina') return MINA_SVG;
+  if (tipo === 'valla') return VALLA_SVG;
+  if (tipo === 'porteria_grande') return PORTERIA_GRANDE_SVG;
+  if (tipo === 'mini_porteria') return MINI_PORTERIA_SVG;
+  if (tipo === 'cono') return CONO_SVG;
+  if (tipo === 'balon') return BALON_SVG;
+
   const kitId = perfil.kitA || 'predeterminado';
   const kitObj = (KITS && KITS.length) ? (KITS.find(k => k.id === kitId) || KITS[0]) : null;
   if (tipo === 'por_rival' || tipo === 'portero_rival') {
@@ -229,17 +243,35 @@ export function agregarFichaLibre(eq, tipo = 'local') {
   else if (tipo === 'por_local') nombre = `POR L${num}`;
   else if (tipo === 'rival') nombre = `R${num}`;
   else if (tipo === 'por_rival') nombre = `POR R${num}`;
-  else nombre = `F${num}`;
+  else nombre = '';
   
   fichasLibres[eq].push({
     id: Date.now().toString() + Math.random().toString().slice(2, 5),
     tipo,
     x: 35 + (Math.random() * 30),
     y: 35 + (Math.random() * 30),
-    nombre
+    nombre,
+    rot: 0,
+    scale: 1.0
   });
   
   actualizarTactica(eq);
+}
+
+export function rotateFicha(eq, id, delta = 45) {
+  const item = (fichasLibres[eq] || []).find(f => f.id === id);
+  if (item) {
+    item.rot = ((item.rot || 0) + delta) % 360;
+    actualizarTactica(eq);
+  }
+}
+
+export function scaleFicha(eq, id, delta = 0.2) {
+  const item = (fichasLibres[eq] || []).find(f => f.id === id);
+  if (item) {
+    item.scale = Math.max(0.5, Math.min(2.5, (item.scale || 1.0) + delta));
+    actualizarTactica(eq);
+  }
 }
 
 export function limpiarFichasLibres(eq) {
@@ -584,6 +616,7 @@ export function toggleFullscreen(eq) {
   const layout = document.getElementById(`pizarra-${eq}`);
   const canchaWrapper = document.getElementById(`cancha-${eq}`);
   const colBanca = document.querySelector('.col-banca-der');
+  const drawer = document.getElementById(`fs-drawer-${eq}`);
   if (!layout || !canchaWrapper) return;
 
   const isFS = layout.classList.toggle('fullscreen');
@@ -591,6 +624,10 @@ export function toggleFullscreen(eq) {
 
   canchaWrapper.classList.toggle('horizontal', isFS && !isMitad);
   canchaWrapper.classList.toggle('vista-mitad', isMitad);
+
+  if (drawer) {
+    drawer.classList.toggle('open', isFS);
+  }
 
   if (colBanca) {
     colBanca.style.display = isFS ? 'none' : 'flex';
@@ -698,35 +735,79 @@ export function actualizarTactica(eq) {
       hacerTokenArrastrable(token, cancha);
       cancha.appendChild(token);
     });
-  } else if (modoPizarra === 'libre') {
-    // RENDERIZADO EXCLUSIVO DE FICHAS LIBRES Y RIVALES (CANCHA LIMPIA AL INICIO)
-    (fichasLibres[eq] || []).forEach(f => {
-      const token = document.createElement('div');
-      token.className = `jugador-token ${f.tipo === 'rival' ? 'rival' : ''}`;
-      token.style.left = `${f.x}%`;
-      token.style.top = `${f.y}%`;
-      token.dataset.eq = eq;
-      token.dataset.freeId = f.id;
+  }
 
-      const imgKit = getImg(eq, f.tipo === 'rival' ? 'visitante' : 'campo');
+  // RENDERIZADO DE FICHAS LIBRES Y EQUIPAMIENTO
+  (fichasLibres[eq] || []).forEach(f => {
+    const isEquip = ['balon', 'cono', 'mina', 'valla', 'porteria_grande', 'mini_porteria'].includes(f.tipo);
+    if (!isEquip && modoPizarra !== 'libre') return;
 
-      token.innerHTML = `
-        <div class="token-camisa">
-          <img src="${imgKit}">
+    const token = document.createElement('div');
+    token.className = `jugador-token ${isEquip ? 'equip-' + f.tipo : (f.tipo === 'rival' ? 'rival' : '')}`;
+    token.style.left = `${f.x}%`;
+    token.style.top = `${f.y}%`;
+
+    if (f.rot || f.scale) {
+      token.style.transform = `translate(-50%, -50%) rotate(${f.rot || 0}deg) scale(${f.scale || 1.0})`;
+    }
+
+    token.dataset.eq = eq;
+    token.dataset.freeId = f.id;
+
+    let imgKit = getImg(eq, f.tipo);
+
+    const isRotateAllowed = (f.tipo === 'valla' || f.tipo === 'porteria_grande' || f.tipo === 'mini_porteria');
+    const isScaleAllowed = (f.tipo === 'porteria_grande' || f.tipo === 'mini_porteria');
+
+    let controlsHtml = '';
+    if (isRotateAllowed || isScaleAllowed) {
+      controlsHtml = `
+        <div class="token-controls-overlay">
+          ${isRotateAllowed ? `<button class="ctrl-btn ctrl-rotate" title="Girar 45°">🔄</button>` : ''}
+          ${isScaleAllowed ? `<button class="ctrl-btn ctrl-scale-up" title="Agrandar">➕</button>` : ''}
+          ${isScaleAllowed ? `<button class="ctrl-btn ctrl-scale-down" title="Encoger">➖</button>` : ''}
+          <button class="ctrl-btn ctrl-delete" title="Borrar">🗑️</button>
         </div>
-        <div class="nombre-label" style="font-weight:900;${f.tipo === 'rival' ? 'color:#ffd700;' : ''}">${f.nombre}</div>
       `;
+    }
 
-      token.ondblclick = (e) => {
+    token.innerHTML = `
+      ${controlsHtml}
+      <div class="token-camisa">
+        <img src="${imgKit}">
+      </div>
+      ${f.nombre ? `<div class="nombre-label" style="font-weight:900;${f.tipo === 'rival' ? 'color:#ffd700;' : ''}">${f.nombre}</div>` : ''}
+    `;
+
+    if (isRotateAllowed || isScaleAllowed) {
+      token.querySelector('.ctrl-rotate')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        rotateFicha(eq, f.id, 45);
+      });
+      token.querySelector('.ctrl-scale-up')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        scaleFicha(eq, f.id, 0.2);
+      });
+      token.querySelector('.ctrl-scale-down')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        scaleFicha(eq, f.id, -0.2);
+      });
+      token.querySelector('.ctrl-delete')?.addEventListener('click', (e) => {
         e.stopPropagation();
         fichasLibres[eq] = fichasLibres[eq].filter(item => item.id !== f.id);
         actualizarTactica(eq);
-      };
+      });
+    }
 
-      hacerTokenArrastrable(token, cancha);
-      cancha.appendChild(token);
-    });
-  }
+    token.ondblclick = (e) => {
+      e.stopPropagation();
+      fichasLibres[eq] = fichasLibres[eq].filter(item => item.id !== f.id);
+      actualizarTactica(eq);
+    };
+
+    hacerTokenArrastrable(token, cancha);
+    cancha.appendChild(token);
+  });
 
   renderSuplentes(eq);
   renderCT(eq);

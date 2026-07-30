@@ -410,19 +410,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     setLineDash(eq, isDashed);
   });
 
-  document.getElementById(`btn-add-balon-${eq}`)?.addEventListener('click', () => agregarMarcador(eq, 'balon'));
-  document.getElementById(`btn-add-cono-${eq}`)?.addEventListener('click', () => agregarMarcador(eq, 'cono'));
+  document.getElementById(`btn-add-balon-${eq}`)?.addEventListener('click', () => agregarFichaLibre(eq, 'balon'));
+  document.getElementById(`btn-add-cono-${eq}`)?.addEventListener('click', () => agregarFichaLibre(eq, 'cono'));
 
-  document.getElementById(`btn-add-balon-fs-${eq}`)?.addEventListener('click', () => agregarMarcador(eq, 'balon'));
-  document.getElementById(`btn-add-cono-fs-${eq}`)?.addEventListener('click', () => agregarMarcador(eq, 'cono'));
-  document.getElementById(`btn-add-valla-fs-${eq}`)?.addEventListener('click', () => agregarMarcador(eq, 'valla'));
+  document.getElementById(`btn-add-balon-fs-${eq}`)?.addEventListener('click', () => agregarFichaLibre(eq, 'balon'));
+  document.getElementById(`btn-add-cono-fs-${eq}`)?.addEventListener('click', () => agregarFichaLibre(eq, 'cono'));
+  document.getElementById(`btn-add-mina-fs-${eq}`)?.addEventListener('click', () => agregarFichaLibre(eq, 'mina'));
+  document.getElementById(`btn-add-valla-fs-${eq}`)?.addEventListener('click', () => agregarFichaLibre(eq, 'valla'));
+  document.getElementById(`btn-add-porteria-grande-fs-${eq}`)?.addEventListener('click', () => agregarFichaLibre(eq, 'porteria_grande'));
+  document.getElementById(`btn-add-mini-porteria-fs-${eq}`)?.addEventListener('click', () => agregarFichaLibre(eq, 'mini_porteria'));
 
   document.getElementById(`btn-fs-${eq}`)?.addEventListener('click', () => toggleFullscreen(eq));
   document.getElementById(`btn-exit-fs-${eq}`)?.addEventListener('click', () => toggleFullscreen(eq));
 
   document.getElementById(`btn-toggle-tools-fs-${eq}`)?.addEventListener('click', () => {
-    const overlay = document.getElementById(`fs-tools-overlay-${eq}`);
-    if (overlay) overlay.style.display = overlay.style.display === 'block' ? 'none' : 'block';
+    const drawer = document.getElementById(`fs-drawer-${eq}`);
+    if (drawer) drawer.classList.toggle('open');
   });
 
   document.getElementById(`btn-none-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'none'));
