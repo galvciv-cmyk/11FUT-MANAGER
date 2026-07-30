@@ -328,12 +328,18 @@ const drawingState = {
 
 export function setDrawingMode(eq, mode) {
   drawingState[eq].mode = mode;
-  ['pencil', 'arrow', 'none'].forEach(m => {
+  ['pencil', 'arrow', 'eraser', 'none'].forEach(m => {
     const btn = document.getElementById(`btn-${m}-${eq}`);
     if (btn) btn.classList.toggle('active', m === mode);
     const btnFs = document.getElementById(`btn-${m}-fs-${eq}`);
     if (btnFs) btnFs.classList.toggle('active', m === mode);
   });
+
+  const canvas = document.getElementById(`canvas-${eq}`);
+  if (canvas) {
+    canvas.style.pointerEvents = mode === 'none' ? 'none' : 'auto';
+    canvas.style.cursor = mode === 'none' ? 'default' : 'crosshair';
+  }
 }
 
 export function setDrawingColor(eq, color) {
@@ -542,6 +548,7 @@ export function initCanvas(eq) {
     state.startY = pos.y;
 
     if (state.mode === 'pencil') {
+      ctx.globalCompositeOperation = 'source-over';
       ctx.beginPath();
       ctx.moveTo(pos.x, pos.y);
       ctx.strokeStyle = state.color;
@@ -549,6 +556,11 @@ export function initCanvas(eq) {
       if (state.isDashed) ctx.setLineDash([8, 8]);
       else ctx.setLineDash([]);
       ctx.lineCap = 'round';
+    } else if (state.mode === 'eraser') {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, 20, 0, Math.PI * 2);
+      ctx.fill();
     }
   };
 
@@ -560,6 +572,11 @@ export function initCanvas(eq) {
     if (state.mode === 'pencil') {
       ctx.lineTo(pos.x, pos.y);
       ctx.stroke();
+    } else if (state.mode === 'eraser') {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, 20, 0, Math.PI * 2);
+      ctx.fill();
     }
   };
 
@@ -569,9 +586,11 @@ export function initCanvas(eq) {
     state.isDrawing = false;
 
     if (state.mode === 'arrow') {
+      ctx.globalCompositeOperation = 'source-over';
       const pos = getPos(e.changedTouches ? e.changedTouches[0] : e);
       drawArrow(ctx, state.startX, state.startY, pos.x, pos.y, state.color, state.width || 4, state.isDashed);
     }
+    ctx.globalCompositeOperation = 'source-over';
   };
 
   canvas.onmousedown = startDraw;
@@ -792,6 +811,14 @@ export function actualizarTactica(eq) {
         actualizarTactica(eq);
       });
     }
+
+    token.onclick = (e) => {
+      if (drawingState[eq] && drawingState[eq].mode === 'eraser') {
+        e.stopPropagation();
+        fichasLibres[eq] = fichasLibres[eq].filter(item => item.id !== f.id);
+        actualizarTactica(eq);
+      }
+    };
 
     token.ondblclick = (e) => {
       e.stopPropagation();

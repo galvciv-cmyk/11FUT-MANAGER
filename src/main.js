@@ -423,7 +423,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById(`btn-fs-${eq}`)?.addEventListener('click', () => toggleFullscreen(eq));
   document.getElementById(`btn-exit-fs-${eq}`)?.addEventListener('click', () => toggleFullscreen(eq));
 
-  document.getElementById(`btn-toggle-tools-fs-${eq}`)?.addEventListener('click', () => {
+  document.getElementById(`btn-toggle-drawer-fs-${eq}`)?.addEventListener('click', (e) => {
+    e.stopPropagation();
     const drawer = document.getElementById(`fs-drawer-${eq}`);
     if (drawer) drawer.classList.toggle('open');
   });
@@ -431,6 +432,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById(`btn-none-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'none'));
   document.getElementById(`btn-pencil-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'pencil'));
   document.getElementById(`btn-arrow-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'arrow'));
+  document.getElementById(`btn-eraser-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'eraser'));
   document.getElementById(`btn-dash-fs-${eq}`)?.addEventListener('click', (e) => {
     const isDashed = !e.target.classList.contains('active');
     setLineDash(eq, isDashed);

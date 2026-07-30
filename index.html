@@ -118,52 +118,22 @@
               <button class="btn btn-gray" id="btn-save-esquema-A" style="margin-top:6px;font-size:11px;">💾 GUARDAR ESQUEMA ACTUAL</button>
             </div>
 
-            <!-- TOOLBAR DE DIBUJO Y MARCADORES -->
+            <!-- TOOLBAR DE DIBUJO Y MARCADORES (MODO COMPACTO) -->
             <div class="tactica-toolbar">
-              <div class="card-title" style="margin-bottom:4px;font-size:13px;">✏️ PIZARRA DE DIBUJO Y MARCADORES</div>
-              
-              <div class="tool-btn-group">
-                <button class="tool-btn active" id="btn-none-A">🤚 MOVER</button>
-                <button class="tool-btn" id="btn-pencil-A">✏️ LÁPIZ</button>
-                <button class="tool-btn" id="btn-arrow-A">➔ FLECHA</button>
-                <button class="tool-btn" id="btn-clear-A">🗑️ BORRAR</button>
-              </div>
-
-              <div class="tool-btn-group" style="margin-top:4px;">
-                <button class="tool-btn" id="btn-w2-A">🪡 FINA</button>
-                <button class="tool-btn active" id="btn-w4-A">✏️ MED</button>
-                <button class="tool-btn" id="btn-w7-A">🖊️ GRUESA</button>
-                <button class="tool-btn" id="btn-dash-A">🏁 PUNTEADA</button>
-              </div>
-
-              <div class="tool-btn-group" style="margin-top:4px;">
-                <button class="tool-btn" id="btn-add-balon-A" style="background:#222;color:#fff;">⚽ +BALÓN</button>
-                <button class="tool-btn" id="btn-add-cono-A" style="background:#222;color:#fa0;">🪧 +CONO</button>
-              </div>
-
-              <div class="tool-btn-group" id="colors-A" style="justify-content:center;margin-top:4px;">
-                <span class="color-dot active" data-color="#d4af37" style="background:#d4af37;"></span>
-                <span class="color-dot" data-color="#ffffff" style="background:#ffffff;"></span>
-                <span class="color-dot" data-color="#e21e22" style="background:#e21e22;"></span>
-                <span class="color-dot" data-color="#00eeff" style="background:#00eeff;"></span>
-              </div>
-
-              <button class="tool-btn" id="btn-fs-A" style="background:var(--azul);color:#fff;margin-top:6px;">⛶ PANTALLA COMPLETA</button>
+              <button class="btn btn-blue" id="btn-fs-A" style="padding:12px;font-size:13px;font-weight:900;">⛶ PANTALLA COMPLETA</button>
+              <button class="btn btn-gray" id="btn-export-png-A" style="padding:10px;">📸 GUARDAR IMAGEN TÁCTICA</button>
+              <button class="btn btn-red" id="btn-limpiar-cancha-A" style="padding:10px;margin-top:2px;">🧹 LIMPIAR CANCHA Y BANCO</button>
             </div>
-
-            <button class="btn btn-gray" id="btn-export-png-A" style="padding:10px;">📸 GUARDAR IMAGEN TÁCTICA</button>
-            <button class="btn btn-red" id="btn-limpiar-cancha-A" style="padding:10px;margin-top:6px;">🧹 LIMPIAR CANCHA Y BANCO</button>
           </div>
 
           <!-- COLUMNA CENTRO -->
           <div class="col-cancha-centro">
             <div class="campo-layout" id="pizarra-A">
               <button class="btn-exit-fs" id="btn-exit-fs-A">❌ SALIR PANTALLA COMPLETA</button>
-              <button class="btn-toggle-tools-fs" id="btn-toggle-tools-fs-A">✏️ DIBUJO Y HERRAMIENTAS</button>
               
               <!-- PANEL REPLEGABLE LATERAL IZQUIERDO SOLO EN FULLSCREEN -->
               <div class="fs-drawer-left" id="fs-drawer-A">
-                <button class="fs-drawer-toggle" id="btn-toggle-tools-fs-A" title="Abrir/Cerrar Panel de Herramientas">
+                <button class="fs-drawer-toggle" id="btn-toggle-drawer-fs-A" title="Abrir/Cerrar Panel de Herramientas">
                   <span class="drawer-icon">✏️</span>
                 </button>
 
@@ -194,12 +164,15 @@
 
                   <button class="btn btn-gold" id="btn-sustitucion-fs-A" style="padding:6px;font-size:11px;margin-bottom:8px;width:100%;">🔄 Sustitución</button>
 
-                  <!-- DIBUJO Y PIZARRA (ICONOS) -->
-                  <div class="drawer-section-title">✏️ TRAZOS Y DIBUJO</div>
-                  <div class="icon-grid-3">
+                  <!-- DIBUJO Y PIZARRA (ICONOS INCLUYENDO BORRADOR) -->
+                  <div class="drawer-section-title">✏️ TRAZOS Y BORRADOR</div>
+                  <div class="icon-grid-4">
                     <button class="icon-btn tool-btn active" id="btn-none-fs-A" title="Mover / Selección">🤚</button>
                     <button class="icon-btn tool-btn" id="btn-pencil-fs-A" title="Lápiz continuo">✏️</button>
                     <button class="icon-btn tool-btn" id="btn-arrow-fs-A" title="Flecha táctica">➔</button>
+                    <button class="icon-btn tool-btn" id="btn-eraser-fs-A" title="Modo Borrador (Toca para eliminar elementos o trazos)">🧽</button>
+                  </div>
+                  <div class="icon-grid-3" style="margin-top:6px;">
                     <button class="icon-btn tool-btn" id="btn-dash-fs-A" title="Línea punteada">➖</button>
                     <button class="icon-btn tool-btn" id="btn-undo-fs-A" title="Deshacer trazo">↩️</button>
                     <button class="icon-btn tool-btn" id="btn-clear-fs-A" title="Borrar todo el dibujo">🗑️</button>
