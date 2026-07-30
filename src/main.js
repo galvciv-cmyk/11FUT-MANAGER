@@ -375,11 +375,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Bind Tactics & Save Custom Scheme
   const eq = 'A';
-  document.getElementById('vista-cancha-A')?.addEventListener('change', (e) => setVistaCancha('A', e.target.value));
-  document.getElementById('modo-pizarra-A')?.addEventListener('change', (e) => setModoPizarra('A', e.target.value));
-  document.getElementById('btn-add-mi-jugador-A')?.addEventListener('click', () => agregarFichaLibre('A', 'local'));
-  document.getElementById('btn-add-rival-A')?.addEventListener('click', () => agregarFichaLibre('A', 'rival'));
-  document.getElementById('btn-limpiar-libres-A')?.addEventListener('click', () => limpiarFichasLibres('A'));
+  document.getElementById('vista-cancha-fs-A')?.addEventListener('change', (e) => setVistaCancha('A', e.target.value));
+  document.getElementById('modo-pizarra-fs-A')?.addEventListener('change', (e) => setModoPizarra('A', e.target.value));
+  document.getElementById('btn-add-mi-jugador-fs-A')?.addEventListener('click', () => agregarFichaLibre('A', 'local'));
+  document.getElementById('btn-add-rival-fs-A')?.addEventListener('click', () => agregarFichaLibre('A', 'rival'));
+  document.getElementById('btn-limpiar-libres-fs-A')?.addEventListener('click', () => limpiarFichasLibres('A'));
+  document.getElementById('btn-sustitucion-fs-A')?.addEventListener('click', () => abrirModalSustitucion('A'));
   document.getElementById('btn-sustitucion-A')?.addEventListener('click', () => abrirModalSustitucion('A'));
   document.getElementById('btn-confirmar-sustitucion')?.addEventListener('click', () => ejecutarSustitucion('A'));
   document.getElementById('btn-cerrar-modal-sub')?.addEventListener('click', () => {

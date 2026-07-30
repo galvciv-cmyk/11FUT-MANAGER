@@ -169,14 +169,18 @@ window._confirmarGuardarEsquema = async (eq) => {
   actualizarTactica(eq);
 };
 
+const YELLOW_KIT_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60"><path d="M 18,12 L 24,18 L 36,18 L 42,12 L 54,20 L 46,28 L 44,26 L 44,52 L 16,52 L 16,26 L 14,28 L 6,20 Z" fill="%23ffd700" stroke="%23222222" stroke-width="2.5"/><path d="M 24,18 Q 30,24 36,18" fill="none" stroke="%23222222" stroke-width="2.5"/></svg>`;
+
 export function getImg(eq, tipo) {
   const kitId = perfil.kitA || 'predeterminado';
   const kitObj = KITS.find(k => k.id === kitId) || KITS[0];
-  if (!kitObj) return '';
+  if (tipo === 'visitante' || tipo === 'rival') {
+    return (kitObj && (kitObj.visita || kitObj.visitante)) ? (kitObj.visita || kitObj.visitante) : YELLOW_KIT_SVG;
+  }
+  if (!kitObj) return YELLOW_KIT_SVG;
   if (tipo === 'por') return kitObj.portero_local || kitObj.local;
   if (tipo === 'sup') return kitObj.sup_local || kitObj.local;
   if (tipo === 'ct')  return kitObj.ct || 'https://res.cloudinary.com/djhpfdklk/image/upload/v1778985193/cuerpo_tecnico_ysxrjt.png';
-  if (tipo === 'visitante' || tipo === 'rival') return kitObj.visitante || kitObj.local;
   return kitObj.local;
 }
 
@@ -190,15 +194,19 @@ export function setVistaCancha(eq, vista) {
   if (canchaWrapper) {
     canchaWrapper.classList.toggle('vista-mitad', vista === 'mitad');
   }
+  const selFs = document.getElementById(`vista-cancha-fs-${eq}`);
+  if (selFs && selFs.value !== vista) selFs.value = vista;
   actualizarTactica(eq);
 }
 
 export function setModoPizarra(eq, modo) {
   modoPizarraActivo[eq] = modo;
-  const contLibre = document.getElementById(`cont-modo-libre-${eq}`);
-  if (contLibre) {
-    contLibre.style.display = modo === 'libre' ? 'flex' : 'none';
+  const contLibreFs = document.getElementById(`cont-modo-libre-fs-${eq}`);
+  if (contLibreFs) {
+    contLibreFs.style.display = modo === 'libre' ? 'flex' : 'none';
   }
+  const selFs = document.getElementById(`modo-pizarra-fs-${eq}`);
+  if (selFs && selFs.value !== modo) selFs.value = modo;
   actualizarTactica(eq);
 }
 
@@ -360,108 +368,20 @@ export function clearCanvas(eq) {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  document.querySelectorAll(`#cancha-${eq} .marcador-token`).forEach(el => el.remove());
-}
-
-export function initCanvas(eq) {
-  const canvas = document.getElementById(`canvas-${eq}`);
-  const cancha = document.getElementById(`cancha-${eq}`);
-  if (!canvas || !cancha) return;
-
-  canvas.width = cancha.clientWidth;
-  canvas.height = cancha.clientHeight;
-
-  const ctx = canvas.getContext('2d');
-
-  const getPos = (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    return { x: clientX - rect.left, y: clientY - rect.top };
-  };
-
-  const startDraw = (e) => {
-    const state = drawingState[eq];
-    if (state.mode === 'none') return;
-
-    state.isDrawing = true;
-    const pos = getPos(e);
-    state.startX = pos.x;
-    state.startY = pos.y;
-
-    if (state.mode === 'pencil') {
-      ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y);
-      ctx.strokeStyle = state.color;
-      ctx.lineWidth = state.width || 4;
-      if (state.isDashed) ctx.setLineDash([8, 8]);
-      else ctx.setLineDash([]);
-      ctx.lineCap = 'round';
-    }
-  };
-
-  const draw = (e) => {
-    const state = drawingState[eq];
-    if (!state.isDrawing || state.mode === 'none') return;
-    const pos = getPos(e);
-
-    if (state.mode === 'pencil') {
-      ctx.lineTo(pos.x, pos.y);
-      ctx.stroke();
-    }
-  };
-
-  const stopDraw = (e) => {
-    const state = drawingState[eq];
-    if (!state.isDrawing) return;
-    state.isDrawing = false;
-
-    if (state.mode === 'arrow') {
-      const pos = getPos(e.changedTouches ? e.changedTouches[0] : e);
-      drawArrow(ctx, state.startX, state.startY, pos.x, pos.y, state.color, state.width || 4, state.isDashed);
-    }
-  };
-
-  canvas.onmousedown = startDraw;
-  canvas.onmousemove = draw;
-  canvas.onmouseup = stopDraw;
-
-  canvas.ontouchstart = startDraw;
-  canvas.ontouchmove = draw;
-  canvas.ontouchend = stopDraw;
-}
-
-function drawArrow(ctx, fromX, fromY, toX, toY, color, width = 4, isDashed = false) {
-  const headlen = 14;
-  const angle = Math.atan2(toY - fromY, toX - fromX);
-
-  ctx.beginPath();
-  if (isDashed) ctx.setLineDash([8, 8]);
-  else ctx.setLineDash([]);
-
-  ctx.moveTo(fromX, fromY);
-  ctx.lineTo(toX, toY);
-  ctx.strokeStyle = color;
-  ctx.lineWidth = width;
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.setLineDash([]);
-  ctx.moveTo(toX, toY);
-  ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
-  ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
-  ctx.lineTo(toX, toY);
-  ctx.fillStyle = color;
-  ctx.fill();
 }
 
 export function toggleFullscreen(eq) {
   const layout = document.getElementById(`pizarra-${eq}`);
   const canchaWrapper = document.getElementById(`cancha-${eq}`);
+  const colBanca = document.querySelector('.col-banca-der');
   if (!layout || !canchaWrapper) return;
 
   const isFS = layout.classList.toggle('fullscreen');
   canchaWrapper.classList.toggle('horizontal', isFS);
+
+  if (colBanca) {
+    colBanca.style.display = isFS ? 'none' : 'flex';
+  }
 
   const btn = document.getElementById(`btn-fs-${eq}`);
   if (btn) btn.textContent = isFS ? '🗗 SALIR FULLSCREEN' : '⛶ PANTALLA COMPLETA';
@@ -503,56 +423,57 @@ export function actualizarTactica(eq) {
 
   renderSelectorCapitanInCard(eq, titularesActuales);
 
-  form.forEach((slot, i) => {
-    const token = document.createElement('div');
-    token.className = 'jugador-token';
-
-    const savedPos = customPos[i];
-    let posX = Math.max(5, Math.min(95, savedPos ? savedPos.x : slot.x));
-    let posY = Math.max(5, Math.min(95, savedPos ? savedPos.y : slot.y));
-
-    // Conversión bidireccional si la cancha está en modo horizontal
-    if (isHorizontal) {
-      const origX = posX;
-      posX = Math.max(5, Math.min(95, 100 - posY));
-      posY = Math.max(5, Math.min(95, origX));
-    }
-
-    token.style.left = `${posX}%`;
-    token.style.top = `${posY}%`;
-    token.dataset.idx = i;
-    token.dataset.eq = eq;
-
-    const nombreGuardado = titularesActuales[i];
-    const esLibre = !nombreGuardado || nombreGuardado === 'LIBRE';
-    const esCapitan = !esLibre && capitanActual === nombreGuardado;
-    const textoLabel = esLibre ? slot.pos : nombreGuardado;
-
-    token.innerHTML = `
-      <div class="token-camisa">
-        <img src="${getImg(eq, slot.cat === 'por' ? 'por' : 'campo')}">
-        ${esCapitan ? `<span class="capitan-badge">C</span>` : ''}
-      </div>
-      <div class="nombre-label" style="${esLibre ? 'opacity:0.75;font-style:italic;' : ''}">${textoLabel}</div>
-    `;
-
-    token.onclick = (e) => {
-      e.stopPropagation();
-      if (window._justDragged || token.dataset.wasDragged === 'true') {
-        token.dataset.wasDragged = 'false';
-        window._justDragged = false;
-        return;
-      }
-      abrirModalJugador(eq, i, slot.cat);
-    };
-
-    hacerTokenArrastrable(token, cancha);
-    cancha.appendChild(token);
-  });
-
-  // RENDERIZADO DE FICHAS LIBRES Y RIVALES (MODO LIBRE)
   const modoPizarra = modoPizarraActivo[eq] || 'partido';
-  if (modoPizarra === 'libre') {
+
+  if (modoPizarra === 'partido') {
+    form.forEach((slot, i) => {
+      const token = document.createElement('div');
+      token.className = 'jugador-token';
+
+      const savedPos = customPos[i];
+      let posX = Math.max(5, Math.min(95, savedPos ? savedPos.x : slot.x));
+      let posY = Math.max(5, Math.min(95, savedPos ? savedPos.y : slot.y));
+
+      // Conversión bidireccional si la cancha está en modo horizontal
+      if (isHorizontal) {
+        const origX = posX;
+        posX = Math.max(5, Math.min(95, 100 - posY));
+        posY = Math.max(5, Math.min(95, origX));
+      }
+
+      token.style.left = `${posX}%`;
+      token.style.top = `${posY}%`;
+      token.dataset.idx = i;
+      token.dataset.eq = eq;
+
+      const nombreGuardado = titularesActuales[i];
+      const esLibre = !nombreGuardado || nombreGuardado === 'LIBRE';
+      const esCapitan = !esLibre && capitanActual === nombreGuardado;
+      const textoLabel = esLibre ? slot.pos : nombreGuardado;
+
+      token.innerHTML = `
+        <div class="token-camisa">
+          <img src="${getImg(eq, slot.cat === 'por' ? 'por' : 'campo')}">
+          ${esCapitan ? `<span class="capitan-badge">C</span>` : ''}
+        </div>
+        <div class="nombre-label" style="${esLibre ? 'opacity:0.75;font-style:italic;' : ''}">${textoLabel}</div>
+      `;
+
+      token.onclick = (e) => {
+        e.stopPropagation();
+        if (window._justDragged || token.dataset.wasDragged === 'true') {
+          token.dataset.wasDragged = 'false';
+          window._justDragged = false;
+          return;
+        }
+        abrirModalJugador(eq, i, slot.cat);
+      };
+
+      hacerTokenArrastrable(token, cancha);
+      cancha.appendChild(token);
+    });
+  } else if (modoPizarra === 'libre') {
+    // RENDERIZADO EXCLUSIVO DE FICHAS LIBRES Y RIVALES (CANCHA LIMPIA AL INICIO)
     (fichasLibres[eq] || []).forEach(f => {
       const token = document.createElement('div');
       token.className = `jugador-token ${f.tipo === 'rival' ? 'rival' : ''}`;
@@ -567,7 +488,7 @@ export function actualizarTactica(eq) {
         <div class="token-camisa">
           <img src="${imgKit}">
         </div>
-        <div class="nombre-label" style="font-weight:900;${f.tipo === 'rival' ? 'color:#ff5555;' : ''}">${f.nombre}</div>
+        <div class="nombre-label" style="font-weight:900;${f.tipo === 'rival' ? 'color:#ffd700;' : ''}">${f.nombre}</div>
       `;
 
       token.ondblclick = (e) => {

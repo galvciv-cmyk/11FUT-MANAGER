@@ -95,27 +95,9 @@
               <div class="card-title">🏆 CATEGORÍA / EQUIPO</div>
               <select id="selector-categoria-tactica" class="select-categoria-header" style="width:100%;font-size:15px;padding:10px;margin-bottom:12px;"></select>
 
-              <div class="card-title" style="font-size:14px;margin-top:6px;">⚙️ ALINEACIÓN Y VISTA</div>
+              <div class="card-title" style="font-size:14px;margin-top:6px;">⚙️ ALINEACIÓN</div>
 
-              <label style="font-size:11px;color:#aaa;">📐 Vista de Cancha:</label>
-              <select id="vista-cancha-A">
-                <option value="completa">🏟️ Cancha Completa</option>
-                <option value="mitad">🥅 Mitad de Cancha (Zoom Táctico)</option>
-              </select>
-
-              <label style="font-size:11px;color:#aaa;">🎮 Modo de Pizarra:</label>
-              <select id="modo-pizarra-A">
-                <option value="partido">📋 Modo Partido (11 Titulares + Suplentes)</option>
-                <option value="libre">⚔️ Modo Libre (1v1, 5v5, Rivales)</option>
-              </select>
-
-              <div id="cont-modo-libre-A" style="display:none;margin-top:6px;flex-direction:column;gap:4px;">
-                <button class="btn btn-blue" id="btn-add-mi-jugador-A" style="padding:8px;font-size:12px;">➕ AÑADIR MI JUGADOR (LOCAL)</button>
-                <button class="btn btn-red" id="btn-add-rival-A" style="padding:8px;font-size:12px;">🔴 AÑADIR RIVAL (VISITANTE)</button>
-                <button class="btn btn-gray" id="btn-limpiar-libres-A" style="padding:6px;font-size:11px;margin-top:2px;">🗑️ BORRAR FICHAS LIBRES</button>
-              </div>
-
-              <label style="font-size:11px;color:#aaa;margin-top:6px;display:block;">Formato de Juego:</label>
+              <label style="font-size:11px;color:#aaa;">Formato de Juego:</label>
               <select id="modo-A">
                 <option value="11">Fútbol 11</option>
                 <option value="8">Fútbol 8</option>
@@ -177,9 +159,31 @@
           <div class="col-cancha-centro">
             <div class="campo-layout" id="pizarra-A">
               <button class="btn-exit-fs" id="btn-exit-fs-A">❌ SALIR PANTALLA COMPLETA</button>
-              <button class="btn-toggle-tools-fs" id="btn-toggle-tools-fs-A">✏️ DIBUJO</button>
+              <button class="btn-toggle-tools-fs" id="btn-toggle-tools-fs-A">✏️ DIBUJO Y HERRAMIENTAS</button>
               
               <div class="fs-toolbar-overlay" id="fs-tools-overlay-A">
+                <div style="margin-bottom:8px;">
+                  <label style="font-size:10px;color:#aaa;display:block;margin-bottom:2px;">📐 VISTA DE CANCHA:</label>
+                  <select id="vista-cancha-fs-A" style="font-size:12px;padding:6px;margin-bottom:6px;">
+                    <option value="completa">🏟️ Cancha Completa</option>
+                    <option value="mitad">🥅 Mitad de Cancha (Zoom)</option>
+                  </select>
+
+                  <label style="font-size:10px;color:#aaa;display:block;margin-bottom:2px;">🎮 MODO DE PIZARRA:</label>
+                  <select id="modo-pizarra-fs-A" style="font-size:12px;padding:6px;margin-bottom:6px;">
+                    <option value="partido">📋 Modo Partido (11 Titulares)</option>
+                    <option value="libre">⚔️ Modo Libre (1v1, 5v5, Rivales)</option>
+                  </select>
+                </div>
+
+                <div id="cont-modo-libre-fs-A" style="display:none;margin-bottom:8px;flex-direction:column;gap:4px;">
+                  <button class="btn btn-blue" id="btn-add-mi-jugador-fs-A" style="padding:6px;font-size:11px;">➕ AÑADIR MI JUGADOR (LOCAL)</button>
+                  <button class="btn btn-red" id="btn-add-rival-fs-A" style="padding:6px;font-size:11px;background:linear-gradient(180deg,#e5be3a,#8a6e1a);color:#000;">🔴 AÑADIR RIVAL (AMARILLO)</button>
+                  <button class="btn btn-gray" id="btn-limpiar-libres-fs-A" style="padding:4px;font-size:10px;">🗑️ BORRAR FICHAS LIBRES</button>
+                </div>
+
+                <button class="btn btn-gold" id="btn-sustitucion-fs-A" style="padding:6px;font-size:11px;margin-bottom:8px;">🔄 REALIZAR SUSTITUCIÓN</button>
+
                 <div class="tool-btn-group">
                   <button class="tool-btn active" id="btn-none-fs-A">🤚 MOVER</button>
                   <button class="tool-btn" id="btn-pencil-fs-A">✏️ LÁPIZ</button>
