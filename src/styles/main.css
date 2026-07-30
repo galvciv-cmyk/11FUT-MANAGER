@@ -996,30 +996,56 @@ body.theme-light .juego-programado-item {
   flex-direction: column;
   align-items: center;
   cursor: pointer;
-  background: linear-gradient(180deg, #2b1114 0%, #15090b 60%, #0d0405 100%);
-  border: 1px solid rgba(226, 30, 34, 0.4);
-  border-radius: 14px 14px 8px 8px;
-  padding: 8px 4px 6px 4px;
-  box-shadow: inset 0 3px 6px rgba(255, 255, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.6);
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 4px 2px;
   position: relative;
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease;
 }
 
-.banca-slot:hover {
-  border-color: var(--oro);
-  transform: translateY(-3px) scale(1.03);
-  box-shadow: inset 0 3px 6px rgba(255, 215, 0, 0.15), 0 6px 16px rgba(212, 175, 55, 0.3);
+.banca-slot:hover, .ct-slot:hover {
+  transform: translateY(-3px) scale(1.06);
 }
 
-.ct-slot {
-  background: linear-gradient(180deg, #121c2b 0%, #090f18 60%, #04070c 100%);
-  border-color: rgba(0, 171, 85, 0.4);
+.banca-add-btn, .banca-remove-btn {
+  height: 62px;
+  border-radius: 12px;
+  font-size: 28px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  margin-top: 4px;
 }
 
-.ct-slot:hover {
-  border-color: #00ab55;
-  transform: translateY(-3px) scale(1.03);
-  box-shadow: inset 0 3px 6px rgba(0, 171, 85, 0.15), 0 6px 16px rgba(0, 171, 85, 0.3);
+.banca-add-btn {
+  border: 2px dashed #00ab55 !important;
+  background: rgba(0, 171, 85, 0.15) !important;
+  color: #00ab55 !important;
+}
+
+.banca-add-btn:hover {
+  background: #00ab55 !important;
+  color: #fff !important;
+  box-shadow: 0 6px 18px rgba(0, 171, 85, 0.4);
+  transform: translateY(-2px);
+}
+
+.banca-remove-btn {
+  border: 2px dashed #e21e22 !important;
+  background: rgba(226, 30, 34, 0.15) !important;
+  color: #e21e22 !important;
+}
+
+.banca-remove-btn:hover {
+  background: #e21e22 !important;
+  color: #fff !important;
+  box-shadow: 0 6px 18px rgba(226, 30, 34, 0.4);
+  transform: translateY(-2px);
 }
 
 /* Panel Publicitario (Ad Wall Barrier) al pie del Banquillo */
