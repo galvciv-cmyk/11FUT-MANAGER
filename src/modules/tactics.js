@@ -371,6 +371,98 @@ export function clearCanvas(eq) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
+export function initCanvas(eq) {
+  const canvas = document.getElementById(`canvas-${eq}`);
+  const cancha = document.getElementById(`cancha-${eq}`);
+  if (!canvas || !cancha) return;
+
+  canvas.width = cancha.clientWidth || 300;
+  canvas.height = cancha.clientHeight || 450;
+
+  const ctx = canvas.getContext('2d');
+
+  const getPos = (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  };
+
+  const startDraw = (e) => {
+    const state = drawingState[eq];
+    if (!state || state.mode === 'none') return;
+
+    state.isDrawing = true;
+    const pos = getPos(e);
+    state.startX = pos.x;
+    state.startY = pos.y;
+
+    if (state.mode === 'pencil') {
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+      ctx.strokeStyle = state.color;
+      ctx.lineWidth = state.width || 4;
+      if (state.isDashed) ctx.setLineDash([8, 8]);
+      else ctx.setLineDash([]);
+      ctx.lineCap = 'round';
+    }
+  };
+
+  const draw = (e) => {
+    const state = drawingState[eq];
+    if (!state || !state.isDrawing || state.mode === 'none') return;
+    const pos = getPos(e);
+
+    if (state.mode === 'pencil') {
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+    }
+  };
+
+  const stopDraw = (e) => {
+    const state = drawingState[eq];
+    if (!state || !state.isDrawing) return;
+    state.isDrawing = false;
+
+    if (state.mode === 'arrow') {
+      const pos = getPos(e.changedTouches ? e.changedTouches[0] : e);
+      drawArrow(ctx, state.startX, state.startY, pos.x, pos.y, state.color, state.width || 4, state.isDashed);
+    }
+  };
+
+  canvas.onmousedown = startDraw;
+  canvas.onmousemove = draw;
+  canvas.onmouseup = stopDraw;
+
+  canvas.ontouchstart = startDraw;
+  canvas.ontouchmove = draw;
+  canvas.ontouchend = stopDraw;
+}
+
+function drawArrow(ctx, fromX, fromY, toX, toY, color, width = 4, isDashed = false) {
+  const headlen = 14;
+  const angle = Math.atan2(toY - fromY, toX - fromX);
+
+  ctx.beginPath();
+  if (isDashed) ctx.setLineDash([8, 8]);
+  else ctx.setLineDash([]);
+
+  ctx.moveTo(fromX, fromY);
+  ctx.lineTo(toX, toY);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.setLineDash([]);
+  ctx.moveTo(toX, toY);
+  ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
+  ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
+  ctx.lineTo(toX, toY);
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
 export function toggleFullscreen(eq) {
   const layout = document.getElementById(`pizarra-${eq}`);
   const canchaWrapper = document.getElementById(`cancha-${eq}`);

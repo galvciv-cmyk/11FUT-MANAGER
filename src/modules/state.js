@@ -149,8 +149,24 @@ export function autoLoadLocal() {
   }
 }
 
-export const KITS = [];
+const DEFAULT_PREDETERMINADO_KIT = {
+  id: 'predeterminado',
+  nombre: 'Kit Predeterminado',
+  local:          'https://res.cloudinary.com/djhpfdklk/image/upload/v1778985169/local_dn49kw.png',
+  visita:         'https://res.cloudinary.com/djhpfdklk/image/upload/v1778985176/visita_yz8bqb.png',
+  portero_local:  'https://res.cloudinary.com/djhpfdklk/image/upload/v1778985175/portero_local_rzumqz.png',
+  portero_visita: 'https://res.cloudinary.com/djhpfdklk/image/upload/v1778985180/portero_visita_ogzknu.png',
+  sup_local:      'https://res.cloudinary.com/djhpfdklk/image/upload/v1778985188/sup_local_imtl2l.png',
+  sup_visita:     'https://res.cloudinary.com/djhpfdklk/image/upload/v1778985184/sup_visita_wr75el.png',
+  ct:             'https://res.cloudinary.com/djhpfdklk/image/upload/v1778985193/cuerpo_tecnico_ysxrjt.png'
+};
+
+export const KITS = [DEFAULT_PREDETERMINADO_KIT];
 export function setKits(kitsArray) {
   KITS.length = 0;
-  KITS.push(...kitsArray);
+  if (kitsArray && kitsArray.length) {
+    KITS.push(...kitsArray);
+  } else {
+    KITS.push(DEFAULT_PREDETERMINADO_KIT);
+  }
 }
