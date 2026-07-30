@@ -521,13 +521,22 @@
 
       <!-- SECCIÓN 6: ENTRENAMIENTOS & PLANNER -->
       <div id="s6" class="seccion">
+        <!-- BARRA SUPERIOR DE SELECTOR DE CATEGORÍA DE PLANIFICACIÓN -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;background:#111;border:1px solid #222;border-radius:10px;padding:12px 16px;flex-wrap:wrap;gap:10px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:var(--oro);">🏆 PLANIFICACIÓN Y SEGUIMIENTO PARA:</span>
+            <select id="training-categoria-selector" class="select-categoria-header" style="font-size:14px;padding:6px 12px;"></select>
+          </div>
+          <div style="font-size:12px;color:#888;">Planifica sesiones, toma asistencia e informa lesiones para este equipo</div>
+        </div>
+
         <div style="display:grid;grid-template-columns:1fr 340px;gap:16px;">
 
-          <!-- COLUMNA IZQUIERDA: BIBLIOTECA DE 70 EJERCICIOS -->
+          <!-- COLUMNA IZQUIERDA: BIBLIOTECA DE 70 EJERCICIOS POR SECCIONES -->
           <div>
             <div class="card">
               <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
-                <span>📚 BIBLIOTECA DE EJERCICIOS (70)</span>
+                <span>📚 BIBLIOTECA DE EJERCICIOS ORGANIZADA (70)</span>
                 <div style="display:flex;gap:8px;align-items:center;">
                   <!-- Filtro Nivel -->
                   <select id="filter-drill-level" style="font-size:12px;padding:6px 10px;background:#181818;border:1px solid #333;color:#fff;border-radius:6px;">

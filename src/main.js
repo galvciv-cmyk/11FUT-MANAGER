@@ -78,6 +78,7 @@ export function renderSelectorCategoria(isPublic = false) {
   const selectTactica = document.getElementById('selector-categoria-tactica');
   const selectPlantel = document.getElementById('squad-categoria-selector');
   const selectStats = document.getElementById('stats-categoria-selector');
+  const selectTraining = document.getElementById('training-categoria-selector');
   const selectPub = document.getElementById('pub-selector-categoria');
 
   let categorias = (perfil.categorias && perfil.categorias.length > 0) ? perfil.categorias.filter(Boolean) : ['Sub-14'];
@@ -119,6 +120,7 @@ export function renderSelectorCategoria(isPublic = false) {
   if (selectTactica) selectTactica.innerHTML = html;
   if (selectPlantel) selectPlantel.innerHTML = html;
   if (selectStats) selectStats.innerHTML = html;
+  if (selectTraining) selectTraining.innerHTML = html;
   if (selectPub) selectPub.innerHTML = html;
 }
 
@@ -483,10 +485,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Bind Category Selectors (Táctica, Plantel, Stats)
+  // Bind Category Selectors (Táctica, Plantel, Stats, Entrenamientos)
   document.getElementById('selector-categoria-tactica')?.addEventListener('change', (e) => cambiarCategoria(e.target.value));
   document.getElementById('squad-categoria-selector')?.addEventListener('change', (e) => cambiarCategoria(e.target.value));
   document.getElementById('stats-categoria-selector')?.addEventListener('change', (e) => cambiarCategoria(e.target.value));
+  document.getElementById('training-categoria-selector')?.addEventListener('change', (e) => cambiarCategoria(e.target.value));
 
   // Bind Header Menu Button & Horizontal Nav Bar
   const headerMenuBtn = document.getElementById('btn-header-menu');

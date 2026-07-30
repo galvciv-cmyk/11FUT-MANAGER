@@ -6,6 +6,17 @@ import { perfil, categoriasData, plantel, setCategoriaActiva, autoSaveLocal } fr
 import { guardarFirebase } from '../services/firebase.js';
 import { mostrarNotificacionApp } from './config.js';
 
+// URLS DE VIDEOS DEMOSTRATIVOS DE ENTRENAMIENTO DE FÚTBOL
+const VIDEO_CLIPS = [
+  'https://assets.mixkit.co/videos/preview/mixkit-young-football-players-training-42931-large.mp4',
+  'https://assets.mixkit.co/videos/preview/mixkit-football-player-dribbling-the-ball-42932-large.mp4',
+  'https://assets.mixkit.co/videos/preview/mixkit-soccer-players-passing-the-ball-42933-large.mp4',
+  'https://assets.mixkit.co/videos/preview/mixkit-boys-playing-football-in-a-field-42930-large.mp4',
+  'https://assets.mixkit.co/videos/preview/mixkit-football-team-doing-stretching-exercises-42934-large.mp4',
+  'https://assets.mixkit.co/videos/preview/mixkit-football-players-running-on-the-field-42935-large.mp4',
+  'https://assets.mixkit.co/videos/preview/mixkit-soccer-player-kicking-a-penalty-42936-large.mp4'
+];
+
 // BASE DE DATOS DE 70 EJERCICIOS (35 COMPETITIVOS + 35 FORMATIVOS)
 export const EJERCICIOS_DB = [
   // ──────────────────────────────────────────────────────────────────────────
@@ -19,7 +30,8 @@ export const EJERCICIOS_DB = [
     dur: '12 min',
     desc: 'Carrera de relevos por equipos de 3. Los jugadores deben correr con petos y colocarlos en una cuadrícula de conos de 3x3 para formar 3 en raya antes que el equipo rival.',
     rules: '1. Sale un jugador por turno. 2. Si hay 3 petos colocados, el siguiente debe mover uno de su color.',
-    img: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[0]
   },
   {
     id: 'lud_f2',
@@ -29,7 +41,8 @@ export const EJERCICIOS_DB = [
     dur: '10 min',
     desc: 'Un jugador (Zorro) conduce el balón dentro del área tratando de tocar a los demás con la mano mientras los demás intentan quitarle la pelota.',
     rules: '1. El zorro no puede perder el control de su balón. 2. Quien pierda la pelota pasa a ser zorro.',
-    img: 'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[1]
   },
   {
     id: 'lud_f3',
@@ -39,7 +52,8 @@ export const EJERCICIOS_DB = [
     dur: '15 min',
     desc: 'Cada niño conduce su balón llevando una cinta/peto colgado en la parte trasera del pantalón. Deben quitar la cinta a los rivales sin descuidar su propio balón.',
     rules: '1. Quien pierda el balón sale temporalmente a hacer 5 dominadas. 2. Gana quien junte más cintas.',
-    img: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[2]
   },
   {
     id: 'lud_f4',
@@ -49,7 +63,8 @@ export const EJERCICIOS_DB = [
     dur: '15 min',
     desc: 'Parejas jugando sobre una red baja o conos. Permite un pique en el suelo por cada toque de balón.',
     rules: '1. Máximo 3 toques por equipo. 2. Obligatorio usar ambas piernas.',
-    img: 'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[3]
   },
   {
     id: 'lud_f5',
@@ -59,7 +74,8 @@ export const EJERCICIOS_DB = [
     dur: '12 min',
     desc: 'Dos equipos frente a frente separados por 15 metros. En el centro hay 5 conos altos. Deben dar pases raseados intentando derribar los conos rivales.',
     rules: '1. No se puede invadir el área del centro. 2. Un punto por cada cono derribado.',
-    img: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[4]
   },
   {
     id: 'lud_c1',
@@ -69,7 +85,8 @@ export const EJERCICIOS_DB = [
     dur: '12 min',
     desc: 'Rondo de integración a máxima velocidad con castigo recreativo (flexiones/túnel) para quienes pierdan el balón tras 20 pases seguidos.',
     rules: '1. Máximo 1 toque obligatorio. 2. Si hay caño (túnel), se suma 1 ronda extra adentro.',
-    img: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[5]
   },
   {
     id: 'lud_c2',
@@ -79,7 +96,8 @@ export const EJERCICIOS_DB = [
     dur: '15 min',
     desc: 'Partido en cancha reducida a 2.5m de altura de red. Se aplica en sesiones de recuperación post-partido.',
     rules: '1. Sin piques en el suelo. 2. Remate de cabeza o volea únicamente.',
-    img: 'https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[6]
   },
   {
     id: 'lud_c3',
@@ -89,7 +107,8 @@ export const EJERCICIOS_DB = [
     dur: '10 min',
     desc: 'Competición de precisión a 20 metros de la portería para pegarle al travesaño con diferentes zonas del pie.',
     rules: '1. Cada acierto otorga 2 puntos. 2. El equipo perdedor recoge los materiales.',
-    img: 'https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[0]
   },
   {
     id: 'lud_c4',
@@ -99,7 +118,8 @@ export const EJERCICIOS_DB = [
     dur: '15 min',
     desc: 'Juego de reacción rápida usando paredes o vallas para hacer rebotar la pelota con control de pecho y muslo.',
     rules: '1. Máximo 2 toques por jugador. 2. Gol directo tras rebote vale doble.',
-    img: 'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[1]
   },
   {
     id: 'lud_c5',
@@ -109,7 +129,8 @@ export const EJERCICIOS_DB = [
     dur: '12 min',
     desc: 'Carreras de obstáculos: dominadas en movimiento + eslalon + pase a mini-portería de 30 metros.',
     rules: '1. Si la pelota toca el suelo en dominadas, se reinicia la estación. 2. Gana el equipo con menor tiempo.',
-    img: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[2]
   },
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -123,7 +144,8 @@ export const EJERCICIOS_DB = [
     dur: '10 min',
     desc: 'Los niños trotan suavemente en diferentes direcciones. A la señal sonora o de color (cono azul=salto, verde=skipping, rojo=freno seco), realizan el estímulo.',
     rules: '1. Reacción rápida sin chocar. 2. Cambios de dirección constantes.',
-    img: 'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[3]
   },
   {
     id: 'pre_e_f2',
@@ -133,7 +155,8 @@ export const EJERCICIOS_DB = [
     dur: '12 min',
     desc: 'Pasadas de frecuencia de apoyos en escalera (1 dentro 1 fuera, lateral) + pase corto al compañero que espera en el cono.',
     rules: '1. Coordinación visual antes que velocidad. 2. Apoyo sobre metatarsos.',
-    img: 'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[4]
   },
   {
     id: 'pre_e_f3',
@@ -143,7 +166,8 @@ export const EJERCICIOS_DB = [
     dur: '8 min',
     desc: 'Círculo de equipo ejecutando aductores hacia adentro/afuera, balanceo de piernas, y skipping progresivo.',
     rules: '1. Ejecución fluida sin rebotes abruptos. 2. Respiración rítmica.',
-    img: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[5]
   },
   {
     id: 'pre_e_f4',
@@ -153,7 +177,8 @@ export const EJERCICIOS_DB = [
     dur: '10 min',
     desc: 'Rondo suave en espacio de 8x8m donde el entrenador levanta un cono de color y el poseedor del balón debe gritar el color mientras pasa.',
     rules: '1. Estimulación de la visión periférica. 2. Pases rasos a 2 toques.',
-    img: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[6]
   },
   {
     id: 'pre_e_f5',
@@ -163,7 +188,8 @@ export const EJERCICIOS_DB = [
     dur: '10 min',
     desc: 'Circuito lúdico de agilidad con 4 vallas infantiles (15cm) + aceleración de 5 metros a buscar un balón rodando.',
     rules: '1. Caída suave sobre dos pies. 2. Aceleración con la vista arriba.',
-    img: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[0]
   },
   {
     id: 'pre_e_c1',
@@ -173,7 +199,8 @@ export const EJERCICIOS_DB = [
     dur: '12 min',
     desc: 'Trabajo de glúteo medio y estabilidad de rodilla con minibands + saltos unipodales en hexágono.',
     rules: '1. Enfoque en prevención de LCA e isquiotibiales. 2. 3 series de 6 repeticiones.',
-    img: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[1]
   },
   {
     id: 'pre_e_c2',
@@ -183,7 +210,8 @@ export const EJERCICIOS_DB = [
     dur: '10 min',
     desc: 'Parejas a 10 metros intercambiando pases rasos aumentando la potencia de golpeo gradualmente mientras realizan desplazamientos laterales.',
     rules: '1. Control tenso de primera. 2. Mantener cadencia alta.',
-    img: 'https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[2]
   },
   {
     id: 'pre_e_c3',
@@ -193,7 +221,8 @@ export const EJERCICIOS_DB = [
     dur: '12 min',
     desc: 'Recorrido en Z con conos a 45 grados enfocando desaceleración y frenado fuerte con pierna exterior.',
     rules: '1. Centro de gravedad bajo en giros. 2. Salida explosiva.',
-    img: 'https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[3]
   },
   {
     id: 'pre_e_c4',
@@ -203,7 +232,8 @@ export const EJERCICIOS_DB = [
     dur: '10 min',
     desc: 'Espacio reducidísimo (6x6m). 4 jugadores por fuera a 1 toque con intensidades variables según silbato.',
     rules: '1. Al silbato largo, cambio de rondo al esprint 10m.',
-    img: 'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[4]
   },
   {
     id: 'pre_e_c5',
@@ -213,7 +243,8 @@ export const EJERCICIOS_DB = [
     dur: '10 min',
     desc: 'Estaciones de plancha frontal/lateral activando zona media + devolución inmediata de aire con frente.',
     rules: '1. Mantener bloque lumbar firme. 2. Golpeo de cabeza con ojos abiertos.',
-    img: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[5]
   },
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -225,9 +256,10 @@ export const EJERCICIOS_DB = [
     level: 'formativo',
     cat: 'pre_partido',
     dur: '8 min',
-    desc: 'Rondo dinámico sin presión excesiva para activar confianza y soltura del grupo antes de salir a la cancha.',
+    desc: 'Rondo dinámico sin presión excessive para activar confianza y soltura del grupo antes de salir a la cancha.',
     rules: '1. Aplaudir cada 5 pases. 2. Sonrisas y concentración.',
-    img: 'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[6]
   },
   {
     id: 'pre_p_f2',
@@ -237,7 +269,8 @@ export const EJERCICIOS_DB = [
     dur: '6 min',
     desc: 'Filas de 3 jugadores alineados. Al silbato arrancan 5 metros a máxima velocidad y frenan progresivo.',
     rules: '1. Salida con apoyo fuerte. 2. Mantener la alineación.',
-    img: 'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[0]
   },
   {
     id: 'pre_p_f3',
@@ -247,7 +280,8 @@ export const EJERCICIOS_DB = [
     dur: '10 min',
     desc: 'El entrenador hace de pared en la frontal del área, el niño le entrega el balón, recibe la devolución y remata raso.',
     rules: '1. Buscar el poste lejano. 2. El portero calienta blocajes bajos.',
-    img: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[1]
   },
   {
     id: 'pre_p_f4',
@@ -257,7 +291,8 @@ export const EJERCICIOS_DB = [
     dur: '8 min',
     desc: 'Los titulares forman una figura octogonal y realizan pases cruzados a 2 toques activando la comunicación verbal ("¡Mía!", "¡Voy!").',
     rules: '1. Llamar al compañero por su nombre. 2. Balón firme al pie.',
-    img: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[2]
   },
   {
     id: 'pre_p_f5',
@@ -267,7 +302,8 @@ export const EJERCICIOS_DB = [
     dur: '6 min',
     desc: 'En parejas frente a frente a 1 metro. El DT nombra partes del cuerpo (cabeza, rodilla). Al decir "¡BALÓN!", gana quien agarre la pelota primero.',
     rules: '1. Máxima atención auditiva. 2. Risas y enfoque competitivo sano.',
-    img: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[3]
   },
   {
     id: 'pre_p_c1',
@@ -277,7 +313,8 @@ export const EJERCICIOS_DB = [
     dur: '12 min',
     desc: 'Partido en espacio de 20x20m entre titulares y suplentes a 1-2 toques buscando intensidad real de partido.',
     rules: '1. Presión tras pérdida inmediata (5 segundos). 2. Intensidad 100%.',
-    img: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[4]
   },
   {
     id: 'pre_p_c2',
@@ -287,7 +324,8 @@ export const EJERCICIOS_DB = [
     dur: '6 min',
     desc: 'Pasadas de 10m al 80% + freno seco + esprint final de 5m al 100% simular disputas reales de partido.',
     rules: '1. 4 repeticiones por jugador con 45s de pausa activa.',
-    img: 'https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[5]
   },
   {
     id: 'pre_p_c3',
@@ -297,7 +335,8 @@ export const EJERCICIOS_DB = [
     dur: '10 min',
     desc: 'La defensa de 4 titulares realiza basculaciones a lo ancho del campo mientras extremos y delanteros ensayan centros y remates en carrera.',
     rules: '1. Sincronizar el desmarque al segundo palo. 2. Comunicación del portero en balones aéreos.',
-    img: 'https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[6]
   },
   {
     id: 'pre_p_c4',
@@ -307,7 +346,8 @@ export const EJERCICIOS_DB = [
     dur: '8 min',
     desc: 'Rondo de alta intensidad. Al completar 6 pases, el jugador debe meter un cambio de frente largo de 25m a otra celda.',
     rules: '1. Balón tenso por el aire. 2. Control de pecho/muslo del receptor.',
-    img: 'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[0]
   },
   {
     id: 'pre_p_c5',
@@ -317,7 +357,8 @@ export const EJERCICIOS_DB = [
     dur: '10 min',
     desc: 'El preparador de porteros realiza remates a quemarropa desde 7 metros con rebotes previos en vallas o muñecos.',
     rules: '1. Agilidad de manos y postura baja. 2. Desvío hacia los laterales.',
-    img: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[1]
   },
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -331,7 +372,8 @@ export const EJERCICIOS_DB = [
     dur: '15 min',
     desc: '4v4 en un cuadrado de 20x20m con 4 pequeñas porterías de conos (portales). Se hace gol conduciendo o pasando a través de un portal.',
     rules: '1. Fomentar la búsqueda de espacios libres. 2. Cambios de frente hacia el portal desguarnecido.',
-    img: 'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[2]
   },
   {
     id: 'tac_f2',
@@ -341,7 +383,8 @@ export const EJERCICIOS_DB = [
     dur: '15 min',
     desc: 'Mantener la posesión apoyándose en dos jugadores neutrales colocados en las líneas laterales que juegan siempre con el equipo poseedor.',
     rules: '1. Los comodines juegan a 1 toque. 2. Obligatorio pasar por banda antes de hacer gol.',
-    img: 'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[3]
   },
   {
     id: 'tac_f3',
@@ -351,7 +394,8 @@ export const EJERCICIOS_DB = [
     dur: '15 min',
     desc: '3 atacantes salen en velocidad contra 2 defensores. Si los defensores roban, deben cruzar la línea de mitad de campo conduciendo.',
     rules: '1. Finalizar la jugada en menos de 12 segundos. 2. Aprovechar la superioridad numérica.',
-    img: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[4]
   },
   {
     id: 'tac_f4',
@@ -361,7 +405,8 @@ export const EJERCICIOS_DB = [
     dur: '15 min',
     desc: 'Parejas de atacantes contra 1 defensor. Un atacante se acerca a pedir el balón (apoyo) atrae la marca y el otro pica al espacio vacío (ruptura).',
     rules: '1. Comunicación gestual previa. 2. Pase al pie o al espacio según movimiento.',
-    img: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[5]
   },
   {
     id: 'tac_f5',
@@ -371,7 +416,8 @@ export const EJERCICIOS_DB = [
     dur: '15 min',
     desc: 'El campo se divide en 4 cuadrantes. En cada cuadrante debe haber mínimo un jugador de cada equipo para enseñar la ocupación racional del espacio.',
     rules: '1. No puede haber más de 2 compañeros en la misma zona. 2. Pases cruzados entre zonas.',
-    img: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[6]
   },
   {
     id: 'tac_f6',
@@ -381,7 +427,8 @@ export const EJERCICIOS_DB = [
     dur: '12 min',
     desc: 'Sale 1v1 hacia la portería. A los 3 segundos se incorpora un segundo atacante desde atrás obligando a tomar decisiones rápidas.',
     rules: '1. Decidir si tirar o dar pase al libre. 2. Reacción inmediata.',
-    img: 'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[0]
   },
   {
     id: 'tac_c1',
@@ -391,7 +438,8 @@ export const EJERCICIOS_DB = [
     dur: '20 min',
     desc: 'Cuadrado de 25x25m. 3 comodines (Pivote interior y 2 Extremos) para generar siempre ventaja numérica 7v4 en posesión.',
     rules: '1. Encontrar al tercer hombre libre. 2. Presión tras pérdida en menos de 4 segundos.',
-    img: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[1]
   },
   {
     id: 'tac_c2',
@@ -401,7 +449,8 @@ export const EJERCICIOS_DB = [
     dur: '20 min',
     desc: 'Línea defensiva (2 Centrales + 2 Laterales) con Portero saliendo jugando contra 3 delanteros que presionan intensos.',
     rules: '1. Atraer marca para filtrar a espalda de presionantes. 2. Si hay robo, tiro directo.',
-    img: 'https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[2]
   },
   {
     id: 'tac_c3',
@@ -411,7 +460,8 @@ export const EJERCICIOS_DB = [
     dur: '20 min',
     desc: 'Línea de 4 defensas sincronizando basculación y achique cuando el rival intenta filtrar pases interlineales.',
     rules: '1. Distancia máxima entre defensas: 8 metros. 2. Salir a achicar solo cuando el rival mira el balón.',
-    img: 'https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[3]
   },
   {
     id: 'tac_c4',
@@ -421,7 +471,8 @@ export const EJERCICIOS_DB = [
     dur: '18 min',
     desc: 'Robo en campo propio y salida vertical inmediata de 3 atacantes contra 2 defensores replegando a máxima velocidad.',
     rules: '1. Máximo 3 pases antes de rematar. 2. Límite de tiempo: 8 segundos.',
-    img: 'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[4]
   },
   {
     id: 'tac_c5',
@@ -431,7 +482,8 @@ export const EJERCICIOS_DB = [
     dur: '20 min',
     desc: 'Circulaciones de balón de lado a lado para desorganizar al rival cerrado y doblar por banda con lateral volante.',
     rules: '1. Buscar ventaja 2v1 en banda. 2. Cargar el área con 3 rematadores a diferentes alturas.',
-    img: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[5]
   },
   {
     id: 'tac_c6',
@@ -441,7 +493,8 @@ export const EJERCICIOS_DB = [
     dur: '18 min',
     desc: 'Espacio reducido. Al perder el balón, los 3 jugadores más cercanos saltan a asfixiar al poseedor en 3 segundos.',
     rules: '1. Acortar ángulos de pase. 2. Si no se recupera en 5s, armar bloque de nuevo.',
-    img: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[6]
   },
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -455,7 +508,8 @@ export const EJERCICIOS_DB = [
     dur: '15 min',
     desc: 'Estaciones en triangulo. Jugador A pasa a B con borde interno, B realiza control orientado hacia su pierna hábil y perfila a C.',
     rules: '1. Atacar el balón antes de recibirlo. 2. Cambiar de perfil en cada vuelta.',
-    img: 'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[0]
   },
   {
     id: 'tec_f2',
@@ -465,7 +519,8 @@ export const EJERCICIOS_DB = [
     dur: '12 min',
     desc: 'Recorrido entre 6 conos utilizando empeine exterior para esquivar y borde interno para recortar.',
     rules: '1. Mirada levantada entre cono y cono. 2. Usar ambas piernas obligatoriamente.',
-    img: 'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[1]
   },
   {
     id: 'tec_f3',
@@ -475,7 +530,8 @@ export const EJERCICIOS_DB = [
     dur: '15 min',
     desc: 'Pase bombeado desde la esquina del área para que el compañero impacte de primera con empeine antes de tocar suelo.',
     rules: '1. Apuntar abajo hacia las esquinas. 2. Mantener tronco inclinado sobre el balón.',
-    img: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[2]
   },
   {
     id: 'tec_f4',
@@ -485,7 +541,8 @@ export const EJERCICIOS_DB = [
     dur: '15 min',
     desc: 'Pasillo estrecho (8x15m). El atacante debe encarar al defensor realizando bicicleta, amago de cuerpo o cambio de ritmo.',
     rules: '1. Si supera al rival tiene 3 segundos para tirar. 2. El defensor gana punto si roba.',
-    img: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[3]
   },
   {
     id: 'tec_f5',
@@ -495,7 +552,8 @@ export const EJERCICIOS_DB = [
     dur: '12 min',
     desc: 'El compañero lanza el balón suavemente con las manos. El rematador salta con un pie, impacta frontal con ojos abiertos.',
     rules: '1. Golpeo con la frente, nunca coronilla. 2. Dirigir al suelo picado.',
-    img: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[4]
   },
   {
     id: 'tec_f6',
@@ -505,7 +563,8 @@ export const EJERCICIOS_DB = [
     dur: '12 min',
     desc: 'Pases por alto en parejas. Amortiguar con muslo o pecho para dejar la pelota lista para el pase raso inmediato.',
     rules: '1. Absorber el impacto con el cuerpo suave. 2. Sin usar las manos.',
-    img: 'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[5]
   },
   {
     id: 'tec_c1',
@@ -515,7 +574,8 @@ export const EJERCICIOS_DB = [
     dur: '15 min',
     desc: 'Secuencia de doble pared rápida al borde del área a 1 toque finalizando con disparo colocado de borde interno.',
     rules: '1. Máxima precisión y potencia en el pase. 2. Definición al segundo palo.',
-    img: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[6]
   },
   {
     id: 'tec_c2',
@@ -525,7 +585,8 @@ export const EJERCICIOS_DB = [
     dur: '18 min',
     desc: 'El extremo pisa línea de fondo y lanza centro con rosca hacia afuera para el desmarque del 9 entre centrales.',
     rules: '1. Centro entre portero y defensa. 2. Remate potente picado al piso.',
-    img: 'https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[0]
   },
   {
     id: 'tec_c3',
@@ -535,7 +596,8 @@ export const EJERCICIOS_DB = [
     dur: '15 min',
     desc: 'El delantero recibe de espaldas al marco con marca pegada, realiza giro rápido hacia su pierna fuerte y dispara en 1.5 segundos.',
     rules: '1. Proteger el balón con el cuerpo antes de girar. 2. Sorprender con tiro rápido.',
-    img: 'https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[1]
   },
   {
     id: 'tec_c4',
@@ -545,7 +607,8 @@ export const EJERCICIOS_DB = [
     dur: '15 min',
     desc: 'Parejas a 35 metros ensayando cambios de orientación por alto impactando con empeine total sin que el balón pique en exceso.',
     rules: '1. El receptor debe amortiguar en 1 toque. 2. Trayectoria limpia sin rosca descontrolada.',
-    img: 'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[2]
   },
   {
     id: 'tec_c5',
@@ -555,7 +618,8 @@ export const EJERCICIOS_DB = [
     dur: '15 min',
     desc: 'El delantero arranca con 2 metros de ventaja perseguido por un defensa central. Debe definir ante la salida del arquero.',
     rules: '1. Resolver en máximo 3 toques. 2. Decidir entre vaselina, regate o tiro bajo.',
-    img: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[3]
   },
   {
     id: 'tec_c6',
@@ -565,7 +629,8 @@ export const EJERCICIOS_DB = [
     dur: '15 min',
     desc: 'El balón sale despejado desde el área chica hacia el frente del área. El mediocampista llega en carrera y remata de volea sin picar.',
     rules: '1. Coordinación ojo-pie impecable. 2. Mantener la mirada en el balón hasta el impacto.',
-    img: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[4]
   },
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -579,7 +644,8 @@ export const EJERCICIOS_DB = [
     dur: '10 min',
     desc: 'Enseñar la técnica correcta de saque de banda (ambas manos detrás de la cabeza, pies apoyados) buscando apoyo en corto y pared.',
     rules: '1. No levantar los pies del suelo. 2. Ofrecer siempre dos opciones de pase.',
-    img: 'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[5]
   },
   {
     id: 'abp_f2',
@@ -589,7 +655,8 @@ export const EJERCICIOS_DB = [
     dur: '12 min',
     desc: 'Cobrar el tiro de esquina mediante un pase en corto al compañero que viene a mostrarse para buscar centro raseado peligroso.',
     rules: '1. Engañar al rival simulando disparo directo. 2. Centro potente al área chica.',
-    img: 'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[6]
   },
   {
     id: 'abp_f3',
@@ -599,7 +666,8 @@ export const EJERCICIOS_DB = [
     dur: '12 min',
     desc: 'Enseñar a los defensores infantiles a colocarse en línea mirando el balón y atacarlo en lugar de quedarse estáticos.',
     rules: '1. Despejar hacia los laterales. 2. Comunicación del portero ("¡Mía!").',
-    img: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[0]
   },
   {
     id: 'abp_f4',
@@ -609,7 +677,8 @@ export const EJERCICIOS_DB = [
     dur: '10 min',
     desc: 'Práctica de tiro libre a 16 metros con una barrera de 2 muñecos/conos altos aprendiendo a superar la altura con rosca interior.',
     rules: '1. Colocar el pie de apoyo al lado del balón. 2. Acompañar el movimiento.',
-    img: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[1]
   },
   {
     id: 'abp_c1',
@@ -619,7 +688,8 @@ export const EJERCICIOS_DB = [
     dur: '15 min',
     desc: 'Movimiento ensayado donde dos atacantes hacen bloqueo al marcador central para liberar al rematador que entra como un rayo al primer palo.',
     rules: '1. Salida en abanico coordinada. 2. El cobrador busca la cabeza del libre.',
-    img: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[2]
   },
   {
     id: 'abp_c2',
@@ -629,7 +699,8 @@ export const EJERCICIOS_DB = [
     dur: '15 min',
     desc: 'Estrategia donde un atacante se agacha en la barrera rival y se abre justo antes del impacto permitiendo filtrar el balón raso.',
     rules: '1. Sincronización milimétrica. 2. El rematador ejecuta pase/tiro bajo.',
-    img: 'https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[3]
   },
   {
     id: 'abp_c3',
@@ -639,7 +710,8 @@ export const EJERCICIOS_DB = [
     dur: '12 min',
     desc: 'Saque de banda largo impulsado con fuerza hacia el punto penal para peinar hacia atrás buscando la llegada de la segunda línea.',
     rules: '1. Peinar con el occipital. 2. Los extremos atacan los rebotes.',
-    img: 'https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[4]
   },
   {
     id: 'abp_c4',
@@ -649,7 +721,8 @@ export const EJERCICIOS_DB = [
     dur: '15 min',
     desc: '3 mejores cabeceadores defienden zona chica + 3 defensores marcan al hombre a los peligrosos rivales.',
     rules: '1. No perder de vista la marca asignada. 2. Salida rápida en bloque al despeje.',
-    img: 'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[5]
   },
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -663,7 +736,8 @@ export const EJERCICIOS_DB = [
     dur: '15 min',
     desc: 'Paso por aros (pata coja, dos pies), salto sobre mini-vallas y aceleración suave de 8 metros para disparar.',
     rules: '1. Coordinación visual y motriz. 2. Caída con rodillas semi-flectadas.',
-    img: 'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[6]
   },
   {
     id: 'fis_f2',
@@ -673,7 +747,8 @@ export const EJERCICIOS_DB = [
     dur: '12 min',
     desc: 'Relevos por equipos sorteando estacas/conos a máxima velocidad llevando el balón pegado al pie.',
     rules: '1. Dar el pase al compañero de atrás antes de cruzar la meta. 2. Diversión y esfuerzo.',
-    img: 'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1526232761682-d26e03ac148e?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[0]
   },
   {
     id: 'fis_f3',
@@ -683,7 +758,8 @@ export const EJERCICIOS_DB = [
     dur: '10 min',
     desc: 'En parejas frente a frente a 2m. El atacante hace movimientos laterales rápidos y el defensor debe imitar sus movimientos sin tocarlo.',
     rules: '1. Mantener posición defensiva flexionada. 2. Cambios de ritmo repentinos.',
-    img: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[1]
   },
   {
     id: 'fis_f4',
@@ -693,7 +769,8 @@ export const EJERCICIOS_DB = [
     dur: '12 min',
     desc: 'Jugadores echados boca abajo en el suelo. Al silbato se levantan en explosión y corren 10m a tomar un banderín en el centro.',
     rules: '1. Salida rápida desde el suelo. 2. Trabajo de potencia de piernas.',
-    img: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[2]
   },
   {
     id: 'fis_c1',
@@ -703,7 +780,8 @@ export const EJERCICIOS_DB = [
     dur: '18 min',
     desc: 'Estaciones de alta intensidad: Esprint 15m + Freno + Pase tenso + Pliometría + Tiro a puerta en 12 segundos.',
     rules: '1. Pausa de recuperación 1:3. 2. Mantener la técnica bajo fatiga.',
-    img: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[3]
   },
   {
     id: 'fis_c2',
@@ -713,7 +791,8 @@ export const EJERCICIOS_DB = [
     dur: '15 min',
     desc: 'Duelo 1v1 intensísimo durante 45 segundos seguidos. Apenas sale la pelota el DT mete otro balón inmediatamente.',
     rules: '1. Exigencia aeróbica-anaeróbica máxima. 2. Mantener intensidad defensiva.',
-    img: 'https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1551958219-acbc608c6377?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[4]
   },
   {
     id: 'fis_c3',
@@ -723,7 +802,8 @@ export const EJERCICIOS_DB = [
     dur: '15 min',
     desc: 'Carrera de 5 metros con resistencia de liga elástica sujetada por compañero + liberación para esprintar 10m libres.',
     rules: '1. Postura de zancada potente. 2. Transferencia a la velocidad pura.',
-    img: 'https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[5]
   },
   {
     id: 'fis_c4',
@@ -733,11 +813,12 @@ export const EJERCICIOS_DB = [
     dur: '12 min',
     desc: 'Ejercicio nórdico de isquiotibiales de rodillas frenando la caída del tronco hacia adelante con asistencia de compañero.',
     rules: '1. Mantener cadera extendida. 2. 3 series de 5 repeticiones.',
-    img: 'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=500&q=80'
+    img: 'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?auto=format&fit=crop&w=500&q=80',
+    video: VIDEO_CLIPS[6]
   }
 ];
 
-// ESTADO INTERNO DEL MÓDULO DE ENTRENAMIENTO
+// ESTADO INTERNO DEL MÓDULO DE ENTRENAMIENTOS
 let currentLevelFilter = 'all';
 let currentCatFilter = 'all';
 
@@ -750,8 +831,19 @@ export function getEntrenamientosData() {
   return catObj;
 }
 
+// MAPEO DE NOMBRES Y BADGES DE CATEGORÍAS
+const CAT_MAP = {
+  ludico: { name: '🎮 Juegos Lúdicos & Recreativos', color: '#50e3c2' },
+  pre_entreno: { name: '⚡ Activación Neuromuscular Pre-Entreno', color: 'var(--oro)' },
+  pre_partido: { name: '🔥 Activación Neuromuscular Pre-Partido', color: '#ff5252' },
+  tactica: { name: '🎯 Táctica & Posesión', color: '#4a90e2' },
+  tecnica: { name: '⚽ Técnica & Remate', color: '#e65100' },
+  abp: { name: '🛡️ Balón Parado (ABP)', color: '#9c27b0' },
+  fisico: { name: '🏃‍♂️ Físico, Coordinación & Psicomotricidad', color: '#00ab55' }
+};
+
 // ══════════════════════════════════════════════════════════════════════════
-// RENDERIZADO DE LA BIBLIOTECA DE 70 EJERCICIOS
+// RENDERIZADO DE LA BIBLIOTECA DE 70 EJERCICIOS POR SECCIONES ORGANIZADAS
 // ══════════════════════════════════════════════════════════════════════════
 export function renderBibliotecaEjercicios() {
   const container = document.getElementById('drills-library-grid');
@@ -766,51 +858,93 @@ export function renderBibliotecaEjercicios() {
     return matchLevel && matchCat;
   });
 
-  const levelBadge = (lvl) => lvl === 'formativo' 
-    ? `<span style="background:rgba(80,227,194,0.15);color:#50e3c2;border:1px solid #50e3c2;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:800;">👦 FORMATIVO</span>`
-    : `<span style="background:rgba(212,175,55,0.15);color:var(--oro);border:1px solid var(--oro);padding:2px 8px;border-radius:12px;font-size:10px;font-weight:800;">🏆 COMPETITIVO</span>`;
-
-  const catBadge = (c) => {
-    const map = {
-      ludico: '🎮 Lúdico',
-      pre_entreno: '⚡ Pre-Entreno',
-      pre_partido: '🔥 Pre-Partido',
-      tactica: '🎯 Táctica',
-      tecnica: '⚽ Técnica',
-      abp: '🛡️ ABP',
-      fisico: '🏃‍♂️ Físico'
-    };
-    return `<span style="background:#222;color:#eee;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600;">${map[c] || c}</span>`;
-  };
-
   if (filtered.length === 0) {
-    container.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#777;font-size:14px;">No hay ejercicios que coincidan con los filtros seleccionados.</div>`;
+    container.innerHTML = `<div style="text-align:center;padding:40px;color:#777;font-size:14px;">No hay ejercicios que coincidan con los filtros seleccionados.</div>`;
     return;
   }
 
-  container.innerHTML = filtered.map(d => `
-    <div style="background:#111;border:1px solid #222;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:transform 0.2s, border-color 0.2s;" onmouseenter="this.style.borderColor='var(--verde-campo)';this.style.transform='translateY(-3px)';" onmouseleave="this.style.borderColor='#222';this.style.transform='translateY(0)';">
-      <div style="height:120px;background:url('${d.img}') center/cover no-repeat;position:relative;">
-        <div style="position:absolute;top:8px;left:8px;display:flex;gap:6px;flex-wrap:wrap;">
-          ${levelBadge(d.level)}
-          ${catBadge(d.cat)}
+  // Agrupar por Nivel (Formativo vs Competitivo)
+  const formativos = filtered.filter(d => d.level === 'formativo');
+  const competitivos = filtered.filter(d => d.level === 'competitivo');
+
+  const renderSection = (title, levelIcon, drillsList, accentColor) => {
+    if (drillsList.length === 0) return '';
+
+    // Agrupar por subcategoría técnica
+    const subcats = ['ludico', 'pre_entreno', 'pre_partido', 'tactica', 'tecnica', 'abp', 'fisico'];
+
+    const subSectionsHtml = subcats.map(subKey => {
+      const items = drillsList.filter(d => d.cat === subKey);
+      if (items.length === 0) return '';
+
+      const catInfo = CAT_MAP[subKey] || { name: subKey, color: '#fff' };
+
+      const cardsHtml = items.map(d => `
+        <div style="background:#111;border:1px solid #222;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:transform 0.2s, border-color 0.2s;" onmouseenter="this.style.borderColor='${accentColor}';this.style.transform='translateY(-3px)';" onmouseleave="this.style.borderColor='#222';this.style.transform='translateY(0)';">
+          
+          <!-- CONTENEDOR VISUAL CON IMAGEN Y VÍDEO DEMOSTRATIVO INTEGRADO -->
+          <div style="position:relative;background:#0d0d0d;border-bottom:1px solid #222;">
+            <div style="height:110px;background:url('${d.img}') center/cover no-repeat;position:relative;">
+              <div style="position:absolute;top:6px;left:6px;background:rgba(0,0,0,0.85);color:#fff;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:800;border:1px solid ${catInfo.color};">
+                ${d.level === 'formativo' ? '👦 FORMATIVO' : '🏆 COMPETITIVO'}
+              </div>
+              <div style="position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,0.85);color:var(--oro);padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;">
+                ⏱️ ${d.dur}
+              </div>
+            </div>
+            
+            <!-- REPRODUCTOR DE VÍDEO DEMOSTRATIVO INTEGRADO -->
+            <div style="padding:6px;background:#080808;">
+              <video src="${d.video}" autoplay loop muted playsinline style="width:100%;height:85px;object-fit:cover;border-radius:6px;border:1px solid #222;"></video>
+            </div>
+          </div>
+
+          <div style="padding:12px;display:flex;flex-direction:column;flex:1;justify-content:space-between;gap:8px;">
+            <div>
+              <h4 style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff;margin:0 0 4px 0;">${d.title}</h4>
+              <p style="font-size:11px;color:#aaa;line-height:1.35;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${d.desc}</p>
+            </div>
+            <div style="display:flex;gap:6px;margin-top:6px;">
+              <button onclick="window._verDetalleEjercicio('${d.id}')" style="flex:1;background:#1a1a1a;border:1px solid #333;color:#eee;padding:6px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">🔍 Ver Detalle & Vídeo</button>
+              <button onclick="window._agregarEjercicioASesion('${d.id}')" style="background:var(--verde-campo);border:none;color:#000;padding:6px 10px;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;">+ Añadir</button>
+            </div>
+          </div>
         </div>
-        <div style="position:absolute;bottom:8px;right:8px;background:rgba(0,0,0,0.75);color:#fff;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;">
-          ⏱️ ${d.dur}
+      `).join('');
+
+      return `
+        <div style="margin-bottom:16px;">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:${catInfo.color};margin-bottom:8px;display:flex;align-items:center;gap:6px;border-bottom:1px solid #222;padding-bottom:4px;">
+            <span>${catInfo.name}</span>
+            <span style="font-size:11px;color:#777;">(${items.length} ejercicios)</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(230px, 1fr));gap:12px;">
+            ${cardsHtml}
+          </div>
         </div>
+      `;
+    }).join('');
+
+    return `
+      <div style="background:#0a0a0a;border:1px solid #222;border-radius:12px;padding:16px;margin-bottom:20px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:${accentColor};margin-bottom:14px;display:flex;align-items:center;gap:8px;border-bottom:2px solid ${accentColor};padding-bottom:8px;">
+          <span>${levelIcon} ${title}</span>
+          <span style="font-size:12px;color:#aaa;font-weight:700;">(${drillsList.length} ejercicios)</span>
+        </div>
+        ${subSectionsHtml}
       </div>
-      <div style="padding:14px;display:flex;flex-direction:column;flex:1;justify-content:space-between;gap:10px;">
-        <div>
-          <h4 style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:#fff;margin:0 0 6px 0;">${d.title}</h4>
-          <p style="font-size:12px;color:#aaa;line-height:1.4;margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">${d.desc}</p>
-        </div>
-        <div style="display:flex;gap:8px;margin-top:4px;">
-          <button onclick="window._verDetalleEjercicio('${d.id}')" style="flex:1;background:#1e1e1e;border:1px solid #333;color:#eee;padding:6px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">🔍 Ver Detalle</button>
-          <button onclick="window._agregarEjercicioASesion('${d.id}')" style="background:var(--verde-campo);border:none;color:#000;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;">+ Añadir</button>
-        </div>
-      </div>
-    </div>
-  `).join('');
+    `;
+  };
+
+  let html = '';
+  if (currentLevelFilter === 'all' || currentLevelFilter === 'formativo') {
+    html += renderSection('SECCIÓN 1: FÚTBOL FORMATIVO / INICIACIÓN (SEMILLEROS)', '👦', formativos, '#50e3c2');
+  }
+  if (currentLevelFilter === 'all' || currentLevelFilter === 'competitivo') {
+    html += renderSection('SECCIÓN 2: FÚTBOL COMPETITIVO / SENIOR', '🏆', competitivos, 'var(--oro)');
+  }
+
+  container.innerHTML = html;
 }
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -830,6 +964,26 @@ export function verDetalleEjercicio(id) {
   document.getElementById('drill-detail-dur').textContent = d.dur;
   document.getElementById('drill-detail-desc').textContent = d.desc;
   document.getElementById('drill-detail-rules').textContent = d.rules || 'Sin consignas específicas.';
+
+  // Actualizar reproductor de vídeo del modal
+  let videoEl = document.getElementById('drill-detail-video');
+  if (!videoEl) {
+    const videoContainer = document.createElement('div');
+    videoContainer.style.marginTop = '10px';
+    videoContainer.innerHTML = `
+      <div style="font-size:11px;color:var(--oro);font-weight:800;margin-bottom:4px;">🎥 VÍDEO DEMOSTRATIVO DEL EJERCICIO:</div>
+      <video id="drill-detail-video" src="" controls autoplay loop muted playsinline style="width:100%;height:200px;object-fit:cover;border-radius:8px;border:1px solid #333;"></video>
+    `;
+    const rulesBox = document.getElementById('drill-detail-rules')?.parentElement;
+    if (rulesBox && rulesBox.parentElement) {
+      rulesBox.parentElement.appendChild(videoContainer);
+    }
+    videoEl = document.getElementById('drill-detail-video');
+  }
+
+  if (videoEl) {
+    videoEl.src = d.video;
+  }
 
   modal.style.display = 'flex';
 }
@@ -1001,7 +1155,7 @@ export function renderAsistenciaUI() {
   const registroHoy = asistenciaData[hoyFecha] || {};
 
   container.innerHTML = `
-    <div style="font-size:12px;color:var(--verde-campo);font-weight:800;margin-bottom:10px;">📅 Registro de Asistencia: ${hoyFecha}</div>
+    <div style="font-size:12px;color:var(--verde-campo);font-weight:800;margin-bottom:10px;">📅 Registro de Asistencia: ${hoyFecha} (${perfil.categoriaActiva})</div>
     <div style="display:flex;flex-direction:column;gap:8px;">
       ${listaJugadores.map(nombre => {
         const estado = registroHoy[nombre] || (lesionesData[nombre] ? 'lesionado' : 'presente');
