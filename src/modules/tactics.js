@@ -178,7 +178,7 @@ const EQUIPMENT_SVGS = {
   porteria_grande: `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="35" viewBox="0 0 100 40"><rect x="5" y="5" width="90" height="30" fill="none" stroke="#b0bec5" stroke-width="3.5"/><path d="M5 5 L95 5 M5 35 L95 35 M5 5 L5 35 M95 5 L95 35 M20 5 L20 35 M35 5 L35 35 M50 5 L50 35 M65 5 L65 35 M80 5 L80 35 M5 15 L95 15 M5 25 L95 25" stroke="#ffffff" stroke-width="1.2"/><circle cx="5" cy="35" r="4" fill="none" stroke="#37474f" stroke-width="2.5"/><circle cx="95" cy="35" r="4" fill="none" stroke="#37474f" stroke-width="2.5"/></svg>`,
   mini_porteria: `<svg xmlns="http://www.w3.org/2000/svg" width="50" height="28" viewBox="0 0 60 30"><path d="M 5 25 A 25 20 0 0 1 55 25 Z" fill="rgba(255,255,255,0.25)" stroke="#546e7a" stroke-width="3"/><path d="M 5 25 A 25 20 0 0 1 55 25" fill="none" stroke="#ffffff" stroke-width="1.2" stroke-dasharray="3 3"/><line x1="5" y1="25" x2="55" y2="25" stroke="#d50000" stroke-width="4.5" stroke-linecap="round"/><circle cx="5" cy="25" r="3.5" fill="#212121"/><circle cx="55" cy="25" r="3.5" fill="#212121"/></svg>`,
   cono: `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 30 30"><polygon points="15,2 5,26 25,26" fill="#ff6d00" stroke="#e65100" stroke-width="1.5"/><rect x="3" y="24" width="24" height="4" rx="1" fill="#e65100"/></svg>`,
-  balon: `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 30 30"><circle cx="15" cy="15" r="13" fill="#ffffff" stroke="#212121" stroke-width="2"/><polygon points="15,7 19,10 17,15 13,15 11,10" fill="#212121"/></svg>`
+  balon: `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#ffffff" stroke="#111111" stroke-width="2.5"/><polygon points="20,13 25,17 23,23 17,23 15,17" fill="#111111"/><line x1="20" y1="13" x2="20" y2="3" stroke="#111111" stroke-width="2"/><polygon points="16,3 24,3 20,7" fill="#111111"/><line x1="25" y1="17" x2="35" y2="13" stroke="#111111" stroke-width="2"/><polygon points="35,13 38,19 32,20" fill="#111111"/><line x1="23" y1="23" x2="31" y2="32" stroke="#111111" stroke-width="2"/><polygon points="31,32 25,37 25,31" fill="#111111"/><line x1="17" y1="23" x2="9" y2="32" stroke="#111111" stroke-width="2"/><polygon points="9,32 15,37 15,31" fill="#111111"/><line x1="15" y1="17" x2="5" y2="13" stroke="#111111" stroke-width="2"/><polygon points="5,13 2,19 8,20" fill="#111111"/><circle cx="20" cy="20" r="18" fill="none" stroke="#111111" stroke-width="2"/></svg>`
 };
 
 export function getImg(eq, tipo) {
@@ -253,7 +253,7 @@ export function agregarFichaLibre(eq, tipo = 'local') {
   actualizarTactica(eq);
 }
 
-export function rotateFicha(eq, id, delta = 45) {
+export function rotateFicha(eq, id, delta = 10) {
   const item = (fichasLibres[eq] || []).find(f => f.id === id);
   if (item) {
     item.rot = ((item.rot || 0) + delta) % 360;
@@ -261,10 +261,10 @@ export function rotateFicha(eq, id, delta = 45) {
   }
 }
 
-export function scaleFicha(eq, id, delta = 0.2) {
+export function scaleFicha(eq, id, delta = 0.1) {
   const item = (fichasLibres[eq] || []).find(f => f.id === id);
   if (item) {
-    item.scale = Math.max(0.5, Math.min(2.5, (item.scale || 1.0) + delta));
+    item.scale = Math.max(0.4, Math.min(2.8, (item.scale || 1.0) + delta));
     actualizarTactica(eq);
   }
 }
@@ -741,10 +741,7 @@ export function actualizarTactica(eq) {
     token.className = `jugador-token ${isEquip ? 'equip-' + f.tipo : (f.tipo === 'rival' ? 'rival' : '')}`;
     token.style.left = `${f.x}%`;
     token.style.top = `${f.y}%`;
-
-    if (f.rot || f.scale) {
-      token.style.transform = `translate(-50%, -50%) rotate(${f.rot || 0}deg) scale(${f.scale || 1.0})`;
-    }
+    token.style.transform = `translate(-50%, -50%)`;
 
     token.dataset.eq = eq;
     token.dataset.freeId = f.id;
@@ -758,7 +755,7 @@ export function actualizarTactica(eq) {
     if (isRotateAllowed || isScaleAllowed) {
       controlsHtml = `
         <div class="token-controls-overlay">
-          ${isRotateAllowed ? `<button class="ctrl-btn ctrl-rotate" title="Girar 45°">🔄</button>` : ''}
+          ${isRotateAllowed ? `<button class="ctrl-btn ctrl-rotate" title="Girar 10°">🔄</button>` : ''}
           ${isScaleAllowed ? `<button class="ctrl-btn ctrl-scale-up" title="Agrandar">➕</button>` : ''}
           ${isScaleAllowed ? `<button class="ctrl-btn ctrl-scale-down" title="Encoger">➖</button>` : ''}
           <button class="ctrl-btn ctrl-delete" title="Borrar">🗑️</button>
@@ -770,7 +767,7 @@ export function actualizarTactica(eq) {
 
     token.innerHTML = `
       ${controlsHtml}
-      <div class="token-camisa">
+      <div class="token-camisa" style="transform: rotate(${f.rot || 0}deg) scale(${f.scale || 1.0}); transform-origin: center center;">
         ${equipSvg ? equipSvg : `<img src="${imgKit}">`}
       </div>
       ${f.nombre ? `<div class="nombre-label" style="font-weight:900;${f.tipo === 'rival' ? 'color:#ffd700;' : ''}">${f.nombre}</div>` : ''}
@@ -779,15 +776,15 @@ export function actualizarTactica(eq) {
     if (isRotateAllowed || isScaleAllowed) {
       token.querySelector('.ctrl-rotate')?.addEventListener('click', (e) => {
         e.stopPropagation();
-        rotateFicha(eq, f.id, 45);
+        rotateFicha(eq, f.id, 10);
       });
       token.querySelector('.ctrl-scale-up')?.addEventListener('click', (e) => {
         e.stopPropagation();
-        scaleFicha(eq, f.id, 0.2);
+        scaleFicha(eq, f.id, 0.1);
       });
       token.querySelector('.ctrl-scale-down')?.addEventListener('click', (e) => {
         e.stopPropagation();
-        scaleFicha(eq, f.id, -0.2);
+        scaleFicha(eq, f.id, -0.1);
       });
       token.querySelector('.ctrl-delete')?.addEventListener('click', (e) => {
         e.stopPropagation();
