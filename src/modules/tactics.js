@@ -172,21 +172,16 @@ window._confirmarGuardarEsquema = async (eq) => {
 const YELLOW_KIT_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60"><path d="M 18,12 L 24,18 L 36,18 L 42,12 L 54,20 L 46,28 L 44,26 L 44,52 L 16,52 L 16,26 L 14,28 L 6,20 Z" fill="%23ffd700" stroke="%23222222" stroke-width="2.5"/><path d="M 24,18 Q 30,24 36,18" fill="none" stroke="%23222222" stroke-width="2.5"/></svg>`;
 const DEFAULT_RED_KIT_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60"><path d="M 18,12 L 24,18 L 36,18 L 42,12 L 54,20 L 46,28 L 44,26 L 44,52 L 16,52 L 16,26 L 14,28 L 6,20 Z" fill="%23e21e22" stroke="%23ffffff" stroke-width="2.5"/><path d="M 24,18 Q 30,24 36,18" fill="none" stroke="%23ffffff" stroke-width="2.5"/></svg>`;
 
-const MINA_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><rect x="2" y="2" width="36" height="36" rx="8" fill="%23e65100" stroke="%23b71c1c" stroke-width="2"/><circle cx="20" cy="20" r="12" fill="%23ff9800"/><circle cx="20" cy="20" r="6" fill="%23e65100"/></svg>`;
-const VALLA_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="20" viewBox="0 0 60 20"><rect x="5" y="2" width="6" height="16" rx="2" fill="%23212121"/><rect x="49" y="2" width="6" height="16" rx="2" fill="%23212121"/><rect x="8" y="6" width="44" height="8" rx="2" fill="%23d50000" stroke="%23b71c1c" stroke-width="1"/></svg>`;
-const PORTERIA_GRANDE_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="40" viewBox="0 0 100 40"><rect x="5" y="5" width="90" height="30" fill="none" stroke="%23b0bec5" stroke-width="3"/><path d="M5 5 L95 5 M5 35 L95 35 M5 5 L5 35 M95 5 L95 35 M20 5 L20 35 M35 5 L35 35 M50 5 L50 35 M65 5 L65 35 M80 5 L80 35 M5 15 L95 15 M5 25 L95 25" stroke="rgba(255,255,255,0.7)" stroke-width="1.2"/><circle cx="5" cy="35" r="4" fill="none" stroke="%2337474f" stroke-width="2"/><circle cx="95" cy="35" r="4" fill="none" stroke="%2337474f" stroke-width="2"/></svg>`;
-const MINI_PORTERIA_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="30" viewBox="0 0 60 30"><path d="M 5 25 A 25 20 0 0 1 55 25 Z" fill="rgba(255,255,255,0.2)" stroke="%23546e7a" stroke-width="3"/><path d="M 5 25 A 25 20 0 0 1 55 25" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="1.2" stroke-dasharray="3 3"/><line x1="5" y1="25" x2="55" y2="25" stroke="%23d50000" stroke-width="4" stroke-linecap="round"/><circle cx="5" cy="25" r="3" fill="%23212121"/><circle cx="55" cy="25" r="3" fill="%23212121"/></svg>`;
-const CONO_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30"><polygon points="15,2 5,26 25,26" fill="%23ff6d00" stroke="%23e65100" stroke-width="1.5"/><rect x="3" y="24" width="24" height="4" rx="1" fill="%23e65100"/></svg>`;
-const BALON_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30"><circle cx="15" cy="15" r="13" fill="%23ffffff" stroke="%23212121" stroke-width="2"/><polygon points="15,7 19,10 17,15 13,15 11,10" fill="%23212121"/></svg>`;
+const EQUIPMENT_SVGS = {
+  mina: `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 40 40"><rect x="2" y="2" width="36" height="36" rx="8" fill="#e65100" stroke="#b71c1c" stroke-width="2.5"/><circle cx="20" cy="20" r="12" fill="#ff9800"/><circle cx="20" cy="20" r="6" fill="#e65100"/></svg>`,
+  valla: `<svg xmlns="http://www.w3.org/2000/svg" width="44" height="20" viewBox="0 0 60 20"><rect x="4" y="2" width="6" height="16" rx="2" fill="#212121"/><rect x="50" y="2" width="6" height="16" rx="2" fill="#212121"/><rect x="8" y="6" width="44" height="8" rx="2" fill="#d50000" stroke="#b71c1c" stroke-width="1.5"/></svg>`,
+  porteria_grande: `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="35" viewBox="0 0 100 40"><rect x="5" y="5" width="90" height="30" fill="none" stroke="#b0bec5" stroke-width="3.5"/><path d="M5 5 L95 5 M5 35 L95 35 M5 5 L5 35 M95 5 L95 35 M20 5 L20 35 M35 5 L35 35 M50 5 L50 35 M65 5 L65 35 M80 5 L80 35 M5 15 L95 15 M5 25 L95 25" stroke="#ffffff" stroke-width="1.2"/><circle cx="5" cy="35" r="4" fill="none" stroke="#37474f" stroke-width="2.5"/><circle cx="95" cy="35" r="4" fill="none" stroke="#37474f" stroke-width="2.5"/></svg>`,
+  mini_porteria: `<svg xmlns="http://www.w3.org/2000/svg" width="50" height="28" viewBox="0 0 60 30"><path d="M 5 25 A 25 20 0 0 1 55 25 Z" fill="rgba(255,255,255,0.25)" stroke="#546e7a" stroke-width="3"/><path d="M 5 25 A 25 20 0 0 1 55 25" fill="none" stroke="#ffffff" stroke-width="1.2" stroke-dasharray="3 3"/><line x1="5" y1="25" x2="55" y2="25" stroke="#d50000" stroke-width="4.5" stroke-linecap="round"/><circle cx="5" cy="25" r="3.5" fill="#212121"/><circle cx="55" cy="25" r="3.5" fill="#212121"/></svg>`,
+  cono: `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 30 30"><polygon points="15,2 5,26 25,26" fill="#ff6d00" stroke="#e65100" stroke-width="1.5"/><rect x="3" y="24" width="24" height="4" rx="1" fill="#e65100"/></svg>`,
+  balon: `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 30 30"><circle cx="15" cy="15" r="13" fill="#ffffff" stroke="#212121" stroke-width="2"/><polygon points="15,7 19,10 17,15 13,15 11,10" fill="#212121"/></svg>`
+};
 
 export function getImg(eq, tipo) {
-  if (tipo === 'mina') return MINA_SVG;
-  if (tipo === 'valla') return VALLA_SVG;
-  if (tipo === 'porteria_grande') return PORTERIA_GRANDE_SVG;
-  if (tipo === 'mini_porteria') return MINI_PORTERIA_SVG;
-  if (tipo === 'cono') return CONO_SVG;
-  if (tipo === 'balon') return BALON_SVG;
-
   const kitId = perfil.kitA || 'predeterminado';
   const kitObj = (KITS && KITS.length) ? (KITS.find(k => k.id === kitId) || KITS[0]) : null;
   if (tipo === 'por_rival' || tipo === 'portero_rival') {
@@ -771,10 +766,12 @@ export function actualizarTactica(eq) {
       `;
     }
 
+    const equipSvg = EQUIPMENT_SVGS[f.tipo];
+
     token.innerHTML = `
       ${controlsHtml}
       <div class="token-camisa">
-        <img src="${imgKit}">
+        ${equipSvg ? equipSvg : `<img src="${imgKit}">`}
       </div>
       ${f.nombre ? `<div class="nombre-label" style="font-weight:900;${f.tipo === 'rival' ? 'color:#ffd700;' : ''}">${f.nombre}</div>` : ''}
     `;
