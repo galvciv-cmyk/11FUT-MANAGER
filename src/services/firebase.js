@@ -37,6 +37,9 @@ export function setSyncStatus(type, msg) {
 }
 
 export function getPublicId() {
+  if (auth && auth.currentUser && auth.currentUser.uid) {
+    return `usr_${auth.currentUser.uid.slice(0, 16)}`;
+  }
   if (pinHash) {
     return `usr_${pinHash.slice(0, 16)}`;
   }
@@ -51,8 +54,10 @@ export async function guardarFirebase() {
       updatedAt: new Date().toISOString()
     };
 
-    if (pinHash) {
-      const ref = doc(db, 'usuarios', pinHash);
+    const userKey = (auth && auth.currentUser && auth.currentUser.uid) ? auth.currentUser.uid : pinHash;
+
+    if (userKey) {
+      const ref = doc(db, 'usuarios', userKey);
       await setDoc(ref, payload, { merge: true });
     }
 
@@ -70,9 +75,11 @@ export async function guardarFirebase() {
 }
 
 export async function cargarFirebase() {
-  if (!db || !pinHash) return false;
+  if (!db) return false;
+  const userKey = (auth && auth.currentUser && auth.currentUser.uid) ? auth.currentUser.uid : pinHash;
+  if (!userKey) return false;
   try {
-    const ref = doc(db, 'usuarios', pinHash);
+    const ref = doc(db, 'usuarios', userKey);
     const snap = await getDoc(ref);
     if (snap.exists()) {
       const data = snap.data();
