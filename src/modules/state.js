@@ -75,22 +75,32 @@ export function setCategoriaActiva(catNombre) {
 export function updateCategoriasData(newData) {
   if (newData && typeof newData === 'object' && Object.keys(newData).length > 0) {
     categoriasData = newData;
+    const catsClaves = Object.keys(categoriasData);
 
-    // Purga de categorías huérfanas o fantasmas que no figuran en perfil.categorias
-    if (perfil.categorias && perfil.categorias.length > 0) {
-      Object.keys(categoriasData).forEach(k => {
-        if (!perfil.categorias.includes(k)) {
-          delete categoriasData[k];
-        }
-      });
-    } else {
-      perfil.categorias = Object.keys(categoriasData);
+    // Sincronizar bidireccionalmente perfil.categorias con las claves de categoriasData
+    const setCats = new Set([
+      ...(perfil.categorias || []),
+      ...catsClaves
+    ]);
+
+    let categorias = Array.from(setCats).filter(Boolean);
+    
+    // Si existen categorías personalizadas del usuario, remover 'Sub-14' si está vacía
+    if (categorias.length > 1 && categorias.includes('Sub-14')) {
+      const sub14Obj = categoriasData['Sub-14'];
+      const sub14HasPlayers = sub14Obj && sub14Obj.plantel &&
+        ['por','def','med','del'].some(k => sub14Obj.plantel[k] && sub14Obj.plantel[k].length > 0);
+      if (!sub14HasPlayers) {
+        categorias = categorias.filter(c => c !== 'Sub-14');
+        delete categoriasData['Sub-14'];
+      }
     }
 
-    const catsClaves = Object.keys(categoriasData);
+    perfil.categorias = categorias;
+
     const catActual = (perfil.categoriaActiva && categoriasData[perfil.categoriaActiva]) 
       ? perfil.categoriaActiva 
-      : (catsClaves[0] || 'Sub-14');
+      : (perfil.categorias[0] || 'Sub-14');
     
     setCategoriaActiva(catActual);
   }
