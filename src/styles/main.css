@@ -239,30 +239,31 @@ body.theme-light .juego-programado-item {
 /* ── HEADER MÁS ALTO Y CENTRADO GLASSMORPHISM ── */
 .app-header {
   position: sticky; top: 0; z-index: 100;
-  background: rgba(10, 14, 20, 0.82);
-  border-bottom: 1px solid rgba(212, 175, 55, 0.25);
-  padding: 12px 20px;
-  min-height: 64px;
+  background: rgba(10, 14, 20, 0.88);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.35);
+  padding: 18px 24px;
+  min-height: 78px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
 }
 
 .header-logo {
-  height: 42px;
-  width: 42px;
+  height: 48px;
+  width: 48px;
   object-fit: contain;
-  border-radius: 6px;
+  border-radius: 8px;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
 }
 
 .header-title {
   font-family: 'Barlow Condensed', sans-serif;
   font-weight: 900;
-  font-size: 22px;
-  letter-spacing: 2px;
+  font-size: 25px;
+  letter-spacing: 2.5px;
   background: linear-gradient(180deg, #ffffff 0%, #d4af37 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -272,7 +273,7 @@ body.theme-light .juego-programado-item {
 }
 
 .header-config {
-  background: none; border: none; font-size: 22px; cursor: pointer; color: var(--oro);
+  background: none; border: none; font-size: 24px; cursor: pointer; color: var(--oro);
   padding: 4px;
   transition: transform 0.2s ease;
 }
@@ -322,7 +323,7 @@ body.theme-light .juego-programado-item {
 
 .header-nav-bar {
   position: sticky;
-  top: 64px;
+  top: 78px;
   z-index: 99;
   background: rgba(10, 14, 20, 0.94);
   backdrop-filter: blur(20px);
