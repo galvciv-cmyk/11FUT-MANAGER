@@ -1169,9 +1169,9 @@ export function renderCT(eq) {
     slot.onclick = () => abrirModalCT(eq, i);
     slot.innerHTML = `
       <div style="font-size:11px;color:#00ab55;margin-bottom:0;font-weight:900;z-index:2;">CT #${i + 1}</div>
-      <div class="dugout-seat-wrapper">
+      <div class="dugout-seat-wrapper ct-seat-wrapper">
         ${STADIUM_CT_SEAT_SVG}
-        <div class="token-camisa" style="width:48px;height:48px;z-index:2;position:relative;margin-top:2px;">
+        <div class="token-camisa" style="width:54px;height:54px;z-index:2;position:relative;margin-top:2px;">
           <img src="${getImg(eq, 'ct')}">
         </div>
       </div>

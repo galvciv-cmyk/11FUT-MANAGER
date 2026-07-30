@@ -1124,6 +1124,11 @@ body.theme-light .juego-programado-item {
   margin: 0;
 }
 
+.ct-seat-wrapper {
+  width: 68px !important;
+  height: 76px !important;
+}
+
 .stadium-seat-icon {
   position: absolute;
   inset: 0;
