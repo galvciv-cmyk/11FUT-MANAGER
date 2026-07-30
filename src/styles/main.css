@@ -954,10 +954,11 @@ body.theme-light .juego-programado-item {
 }
 
 .banca-container, .ct-container {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-  align-items: start;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0px 1px;
 }
 
 /* ── BANQUILLO DE SUPLENTES ESTILO ESTADIO PROFESIONAL (DUGOUT) ── */
@@ -1000,19 +1001,30 @@ body.theme-light .juego-programado-item {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  padding: 2px;
+  padding: 0px;
+  margin: 0px;
   position: relative;
   transition: transform 0.2s ease;
 }
 
 .banca-slot:hover, .ct-slot:hover {
   transform: translateY(-3px) scale(1.06);
+  z-index: 10;
+}
+
+.banca-actions-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-self: center;
+  margin-left: 6px;
 }
 
 .banca-add-btn, .banca-remove-btn {
-  height: 68px;
-  border-radius: 12px;
-  font-size: 30px;
+  width: 44px;
+  height: 38px;
+  border-radius: 8px;
+  font-size: 22px;
   font-weight: 900;
   display: flex;
   align-items: center;
@@ -1020,12 +1032,12 @@ body.theme-light .juego-programado-item {
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-  margin-top: 4px;
+  margin: 0;
 }
 
 .banca-add-btn {
   border: 2px dashed #00ab55 !important;
-  background: rgba(0, 171, 85, 0.18) !important;
+  background: rgba(0, 171, 85, 0.2) !important;
   color: #00ab55 !important;
 }
 
@@ -1038,7 +1050,7 @@ body.theme-light .juego-programado-item {
 
 .banca-remove-btn {
   border: 2px dashed #e21e22 !important;
-  background: rgba(226, 30, 34, 0.18) !important;
+  background: rgba(226, 30, 34, 0.2) !important;
   color: #e21e22 !important;
 }
 

@@ -1019,25 +1019,22 @@ function renderSuplentes(eq) {
     banco.appendChild(slot);
   }
 
-  // BOTÓN + (AGREGAR ASIENTO)
-  const addBtn = document.createElement('div');
-  addBtn.className = 'banca-add-btn';
-  addBtn.textContent = '+';
-  addBtn.title = 'Agregar asiento al banco';
-  addBtn.onclick = () => {
+  // BOTONES DE ACCIÓN + Y - (APILADOS VERTICALMENTE UNO ENCIMA DEL OTRO)
+  const actionsCol = document.createElement('div');
+  actionsCol.className = 'banca-actions-col';
+  actionsCol.innerHTML = `
+    <div class="banca-add-btn" title="Agregar asiento al banco">+</div>
+    ${maxSup > 1 ? `<div class="banca-remove-btn" title="Quitar asiento del banco">-</div>` : ''}
+  `;
+
+  actionsCol.querySelector('.banca-add-btn').onclick = () => {
     plantel[`maxSup_${eq}`] = (plantel[`maxSup_${eq}`] || 7) + 1;
     renderSuplentes(eq);
     autoSaveLocal();
   };
-  banco.appendChild(addBtn);
 
-  // BOTÓN - (QUITAR ASIENTO / SUPLENTE)
   if (maxSup > 1) {
-    const removeBtn = document.createElement('div');
-    removeBtn.className = 'banca-remove-btn';
-    removeBtn.textContent = '-';
-    removeBtn.title = 'Quitar asiento del banco';
-    removeBtn.onclick = () => {
+    actionsCol.querySelector('.banca-remove-btn').onclick = () => {
       plantel[`maxSup_${eq}`] = Math.max(1, (plantel[`maxSup_${eq}`] || 7) - 1);
       if (plantel[`sup_${eq}`] && plantel[`sup_${eq}`].length > plantel[`maxSup_${eq}`]) {
         plantel[`sup_${eq}`].pop();
@@ -1045,8 +1042,9 @@ function renderSuplentes(eq) {
       renderSuplentes(eq);
       autoSaveLocal();
     };
-    banco.appendChild(removeBtn);
   }
+
+  banco.appendChild(actionsCol);
 }
 
 let modalJugadorActivo = { eq: '', idx: -1, cat: '' };
