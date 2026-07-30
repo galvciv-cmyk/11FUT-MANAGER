@@ -197,11 +197,22 @@ export async function agregarNuevaCategoriaConfig() {
   if (perfil.categorias.includes(catVal)) return mostrarNotificacionApp('Categoría existente', 'Esta categoría ya existe', false);
 
   perfil.categorias.push(catVal);
-  setCategoriaActiva(catVal);
 
-  if (!categoriasData[catVal]) categoriasData[catVal] = {};
-  categoriasData[catVal].torneos = [torVal || 'Torneo Oficial'];
-  categoriasData[catVal].torneo = torVal || 'Torneo Oficial';
+  if (!categoriasData[catVal]) {
+    categoriasData[catVal] = {
+      plantel: JSON.parse(JSON.stringify(DEFAULT_PLANTEL)),
+      stats: {},
+      historial: [],
+      juegosProgramados: [],
+      torneos: [torVal || 'Torneo Oficial'],
+      torneo: torVal || 'Torneo Oficial'
+    };
+  } else {
+    categoriasData[catVal].torneos = [torVal || 'Torneo Oficial'];
+    categoriasData[catVal].torneo = torVal || 'Torneo Oficial';
+  }
+
+  setCategoriaActiva(catVal);
 
   inputCat.value = '';
   if (inputTor) inputTor.value = '';
@@ -212,7 +223,7 @@ export async function agregarNuevaCategoriaConfig() {
   }
   autoSaveLocal();
   await guardarFirebase();
-  mostrarNotificacionApp('Categoría Creada', `Categoría "${catVal}" creada con éxito para el torneo "${torVal}".`);
+  mostrarNotificacionApp('Categoría Creada', `Categoría "${catVal}" creada con éxito.`);
 }
 
 export function eliminarCategoriaConfig(catNombre) {
@@ -233,7 +244,6 @@ export function eliminarCategoriaConfig(catNombre) {
     }
     autoSaveLocal();
     await guardarFirebase();
-    location.reload();
   });
 }
 
