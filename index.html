@@ -196,13 +196,20 @@
         </div>
       </div>
 
-      <!-- Tabs Limpias (1 a 5) -->
-      <div class="tabs">
-        <div class="tab active" id="tab-1">TÁCTICA</div>
-        <div class="tab" id="tab-2">CITACIÓN</div>
-        <div class="tab" id="tab-3">PLANTEL</div>
-        <div class="tab" id="tab-4">STATS</div>
-        <div class="tab" id="tab-5">HISTORIAL</div>
+      <!-- MENÚ DESPLEGABLE HACIA ABAJO PARA NAVEGACIÓN DE SECCIONES -->
+      <div class="nav-dropdown-wrapper" id="nav-dropdown-wrapper">
+        <button class="nav-dropdown-btn" id="btn-nav-dropdown" title="Cambiar Sección de la Aplicación">
+          <span id="nav-dropdown-label">📋 TÁCTICA</span>
+          <span class="nav-dropdown-arrow">▾</span>
+        </button>
+
+        <div class="nav-dropdown-menu" id="nav-dropdown-menu">
+          <div class="nav-dropdown-item active" data-tab="1" id="tab-1">📋 TÁCTICA</div>
+          <div class="nav-dropdown-item" data-tab="2" id="tab-2">✉️ CITACIÓN</div>
+          <div class="nav-dropdown-item" data-tab="3" id="tab-3">👥 PLANTEL</div>
+          <div class="nav-dropdown-item" data-tab="4" id="tab-4">📊 STATS</div>
+          <div class="nav-dropdown-item" data-tab="5" id="tab-5">📚 HISTORIAL</div>
+        </div>
       </div>
 
       <!-- SECCIÓN 1: TÁCTICA -->
