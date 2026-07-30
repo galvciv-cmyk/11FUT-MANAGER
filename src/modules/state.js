@@ -43,6 +43,19 @@ export function setCategoriaActiva(catNombre) {
   if (!catNombre) return;
   perfil.categoriaActiva = catNombre;
 
+  if (!perfil.categorias || !perfil.categorias.length) {
+    perfil.categorias = [catNombre];
+  } else if (!perfil.categorias.includes(catNombre)) {
+    perfil.categorias.push(catNombre);
+  }
+
+  // Purga de categorías huérfanas/fantasmas en categoriasData que no pertenezcan a perfil.categorias
+  Object.keys(categoriasData).forEach(key => {
+    if (!perfil.categorias.includes(key)) {
+      delete categoriasData[key];
+    }
+  });
+
   if (!categoriasData[catNombre]) {
     categoriasData[catNombre] = {
       plantel: JSON.parse(JSON.stringify(DEFAULT_PLANTEL)),
@@ -52,12 +65,6 @@ export function setCategoriaActiva(catNombre) {
       torneo: 'Torneo Oficial'
     };
   }
-
-  const todas = new Set([
-    ...(perfil.categorias || []),
-    ...Object.keys(categoriasData)
-  ]);
-  perfil.categorias = Array.from(todas).filter(Boolean);
 
   plantel = categoriasData[catNombre].plantel;
   stats = categoriasData[catNombre].stats;

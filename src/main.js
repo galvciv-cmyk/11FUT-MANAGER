@@ -75,13 +75,21 @@ export function renderSelectorCategoria(isPublic = false) {
   const selectStats = document.getElementById('stats-categoria-selector');
   const selectPub = document.getElementById('pub-selector-categoria');
 
-  const catsSet = new Set([
-    ...(perfil.categorias || []),
-    ...Object.keys(categoriasData || {})
-  ]);
-  let categorias = Array.from(catsSet).filter(Boolean);
-  if (!categorias.length) categorias = ["Sub-14"];
+  // Purga de categoría fantasma "Sub-14" cuando el usuario ya tiene categorías reales registradas
+  let userCats = (perfil.categorias || []).filter(Boolean);
+  const realCats = userCats.filter(c => c !== 'Sub-14');
+  
+  if (realCats.length > 0) {
+    const sub14Obj = categoriasData['Sub-14'];
+    const sub14HasPlayers = sub14Obj && sub14Obj.plantel &&
+      ['por','def','med','del'].some(k => sub14Obj.plantel[k] && sub14Obj.plantel[k].length > 0);
+    if (!sub14HasPlayers) {
+      delete categoriasData['Sub-14'];
+      userCats = realCats;
+    }
+  }
 
+  let categorias = userCats.length ? userCats : ['Sub-14'];
   perfil.categorias = categorias;
 
   const activa = (perfil.categoriaActiva && categorias.includes(perfil.categoriaActiva)) 

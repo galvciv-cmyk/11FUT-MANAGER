@@ -457,7 +457,8 @@ export function abrirOnboardingWizard() {
   if (!modal) return;
 
   wizardStep = 1;
-  wizardTempCats = Array.from(new Set([...(perfil.categorias || []), 'Sub-14'])).filter(Boolean);
+  const currentCats = (perfil.categorias || []).filter(Boolean);
+  wizardTempCats = currentCats.length ? [...currentCats] : ['Sub-14'];
   wizardTempTorneos = {};
   wizardTempCats.forEach(c => {
     wizardTempTorneos[c] = (categoriasData[c] && categoriasData[c].torneo) ? categoriasData[c].torneo : 'Liga Oficial';
@@ -625,6 +626,18 @@ export async function finalizarOnboardingWizard() {
   perfil.categorias = wizardTempCats;
   perfil.categoriaActiva = wizardTempCats[0];
   perfil.kitA = wizardTempKit;
+
+  // Purga de categorías huérfanas/fantasmas que no fueron seleccionadas en el asistente
+  Object.keys(categoriasData).forEach(catKey => {
+    if (!wizardTempCats.includes(catKey)) {
+      const catObj = categoriasData[catKey];
+      const hasPlayers = catObj && catObj.plantel &&
+        ['por','def','med','del'].some(k => catObj.plantel[k] && catObj.plantel[k].length > 0);
+      if (!hasPlayers) {
+        delete categoriasData[catKey];
+      }
+    }
+  });
 
   wizardTempCats.forEach(cat => {
     if (!categoriasData[cat]) {
