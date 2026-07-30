@@ -686,36 +686,39 @@
       </div>
     </div>
 
-    <!-- MODAL BIBLIOTECA COMPLETA DE EJERCICIOS (70) -->
+    <!-- MODAL BIBLIOTECA COMPLETA CON BOTONES HORIZONTALES DE SECCIONES -->
     <div class="modal-overlay" id="modal-biblioteca-completa" style="display:none;">
-      <div class="modal-body" style="max-width:1300px;width:96%;height:90vh;padding:24px;display:flex;flex-direction:column;background:#0d0d0d;border:1px solid #333;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid #222;padding-bottom:12px;flex-wrap:wrap;gap:10px;">
+      <div class="modal-body" style="max-width:980px;width:94%;height:86vh;padding:20px;display:flex;flex-direction:column;background:#0d0d0d;border:1px solid #333;border-radius:14px;">
+        <!-- HEADER DEL MODAL -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;border-bottom:1px solid #222;padding-bottom:10px;">
           <div>
-            <h2 style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--oro);margin:0;">📚 BIBLIOTECA PROFESIONAL DE ENTRENAMIENTOS (70 EJERCICIOS)</h2>
-            <div style="font-size:12px;color:#aaa;margin-top:2px;">Fútbol Formativo e Iniciación (35) + Fútbol Competitivo & Senior (35)</div>
+            <h2 style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--oro);margin:0;">📚 BIBLIOTECA PROFESIONAL DE ENTRENAMIENTOS</h2>
+            <div style="font-size:12px;color:#aaa;margin-top:2px;">70 Ejercicios Guiados con Demostración Táctica Animada</div>
           </div>
-          <div style="display:flex;gap:10px;align-items:center;">
-            <select id="modal-filter-level" style="font-size:13px;padding:8px 12px;background:#181818;border:1px solid #444;color:#fff;border-radius:6px;">
-              <option value="all">🌟 Todos los Niveles (70)</option>
-              <option value="formativo">👦 Fútbol Formativo (35)</option>
-              <option value="competitivo">🏆 Fútbol Competitivo (35)</option>
-            </select>
-            <select id="modal-filter-cat" style="font-size:13px;padding:8px 12px;background:#181818;border:1px solid #444;color:#fff;border-radius:6px;">
-              <option value="all">📁 Todas las Categorías</option>
-              <option value="ludico">🎮 Juegos Lúdicos</option>
-              <option value="pre_entreno">⚡ Pre-Entrenamiento</option>
-              <option value="pre_partido">🔥 Pre-Partido</option>
-              <option value="tactica">🎯 Táctica & Posesión</option>
-              <option value="tecnica">⚽ Técnica & Remate</option>
-              <option value="abp">🛡️ Balón Parado (ABP)</option>
-              <option value="fisico">🏃‍♂️ Físico & Agilidad</option>
-            </select>
-            <button onclick="document.getElementById('modal-biblioteca-completa').style.display='none';" style="background:none;border:none;color:#aaa;font-size:24px;cursor:pointer;padding:0 8px;">❌</button>
-          </div>
+          <button onclick="document.getElementById('modal-biblioteca-completa').style.display='none';" style="background:none;border:none;color:#aaa;font-size:24px;cursor:pointer;padding:4px 8px;">❌</button>
+        </div>
+
+        <!-- FILA DE BOTONES ANCHOS DE SECCIÓN DE NIVEL -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;width:100%;">
+          <button class="btn-modal-section-tab active" data-level="all" id="tab-lvl-all" style="padding:10px;font-size:13px;font-weight:900;background:var(--oro);color:#000;border:none;border-radius:8px;cursor:pointer;width:100%;">🌟 TODOS (70)</button>
+          <button class="btn-modal-section-tab" data-level="formativo" id="tab-lvl-formativo" style="padding:10px;font-size:13px;font-weight:900;background:#1a1a1a;color:#eee;border:1px solid #333;border-radius:8px;cursor:pointer;width:100%;">👦 FÚTBOL FORMATIVO (35)</button>
+          <button class="btn-modal-section-tab" data-level="competitivo" id="tab-lvl-competitivo" style="padding:10px;font-size:13px;font-weight:900;background:#1a1a1a;color:#eee;border:1px solid #333;border-radius:8px;cursor:pointer;width:100%;">🏆 FÚTBOL COMPETITIVO (35)</button>
+        </div>
+
+        <!-- FILA DE BOTONES ANCHOS DE SUBSECCIÓN TÉCNICA -->
+        <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:14px;width:100%;border-bottom:1px solid #222;" id="modal-subcat-tabs-bar">
+          <button class="subtab-btn active" data-cat="all" style="padding:6px 12px;font-size:11px;font-weight:800;border-radius:20px;background:#50e3c2;color:#000;border:none;white-space:nowrap;cursor:pointer;">🌟 Todas las Categorías</button>
+          <button class="subtab-btn" data-cat="ludico" style="padding:6px 12px;font-size:11px;font-weight:800;border-radius:20px;background:#181818;color:#ccc;border:1px solid #333;white-space:nowrap;cursor:pointer;">🎮 Juegos Lúdicos</button>
+          <button class="subtab-btn" data-cat="pre_entreno" style="padding:6px 12px;font-size:11px;font-weight:800;border-radius:20px;background:#181818;color:#ccc;border:1px solid #333;white-space:nowrap;cursor:pointer;">⚡ Pre-Entrenamiento</button>
+          <button class="subtab-btn" data-cat="pre_partido" style="padding:6px 12px;font-size:11px;font-weight:800;border-radius:20px;background:#181818;color:#ccc;border:1px solid #333;white-space:nowrap;cursor:pointer;">🔥 Pre-Partido</button>
+          <button class="subtab-btn" data-cat="tactica" style="padding:6px 12px;font-size:11px;font-weight:800;border-radius:20px;background:#181818;color:#ccc;border:1px solid #333;white-space:nowrap;cursor:pointer;">🎯 Táctica & Posesión</button>
+          <button class="subtab-btn" data-cat="tecnica" style="padding:6px 12px;font-size:11px;font-weight:800;border-radius:20px;background:#181818;color:#ccc;border:1px solid #333;white-space:nowrap;cursor:pointer;">⚽ Técnica & Remate</button>
+          <button class="subtab-btn" data-cat="abp" style="padding:6px 12px;font-size:11px;font-weight:800;border-radius:20px;background:#181818;color:#ccc;border:1px solid #333;white-space:nowrap;cursor:pointer;">🛡️ Balón Parado (ABP)</button>
+          <button class="subtab-btn" data-cat="fisico" style="padding:6px 12px;font-size:11px;font-weight:800;border-radius:20px;background:#181818;color:#ccc;border:1px solid #333;white-space:nowrap;cursor:pointer;">🏃‍♂️ Físico & Agilidad</button>
         </div>
 
         <!-- CONTENEDOR DESPLAZABLE DE LA BIBLIOTECA COMPLETA -->
-        <div id="modal-drills-container" style="flex:1;overflow-y:auto;padding-right:8px;"></div>
+        <div id="modal-drills-container" style="flex:1;overflow-y:auto;padding-right:4px;"></div>
       </div>
     </div>
 
