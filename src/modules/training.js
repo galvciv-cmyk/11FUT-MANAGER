@@ -6,15 +6,15 @@ import { perfil, categoriasData, plantel, setCategoriaActiva, autoSaveLocal } fr
 import { guardarFirebase } from '../services/firebase.js';
 import { mostrarNotificacionApp } from './config.js';
 
-// URLS DE VIDEOS DEMOSTRATIVOS ROBUSTOS Y DIRECTOS DE ENTRENAMIENTO DE FÚTBOL
+// URLS DE VIDEOS DEMOSTRATIVOS DE ALTA COMPATIBILIDAD SIN BLOQUEOS CORS
 const VIDEO_CLIPS = [
-  'https://assets.mixkit.co/videos/preview/mixkit-young-football-players-training-42931-large.mp4',
-  'https://assets.mixkit.co/videos/preview/mixkit-football-player-dribbling-the-ball-42932-large.mp4',
-  'https://assets.mixkit.co/videos/preview/mixkit-soccer-players-passing-the-ball-42933-large.mp4',
-  'https://assets.mixkit.co/videos/preview/mixkit-boys-playing-football-in-a-field-42930-large.mp4',
-  'https://assets.mixkit.co/videos/preview/mixkit-football-team-doing-stretching-exercises-42934-large.mp4',
-  'https://assets.mixkit.co/videos/preview/mixkit-football-players-running-on-the-field-42935-large.mp4',
-  'https://assets.mixkit.co/videos/preview/mixkit-soccer-player-kicking-a-penalty-42936-large.mp4'
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyshakes.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutback2017.mp4'
 ];
 
 // BASE DE DATOS DE 70 EJERCICIOS (35 COMPETITIVOS + 35 FORMATIVOS)
@@ -821,6 +821,8 @@ export const EJERCICIOS_DB = [
 // ESTADO INTERNO DEL MÓDULO DE ENTRENAMIENTOS
 let currentLevelFilter = 'all';
 let currentCatFilter = 'all';
+let modalLevelFilter = 'all';
+let modalCatFilter = 'all';
 
 export function getEntrenamientosData() {
   const catObj = categoriasData[perfil.categoriaActiva] || {};
@@ -843,7 +845,45 @@ const CAT_MAP = {
 };
 
 // ══════════════════════════════════════════════════════════════════════════
-// RENDERIZADO DE LA BIBLIOTECA DE 70 EJERCICIOS DE 4 EN 4 POR SECCIONES
+// GENERADOR DE HTML DE TARJETAS DE EJERCICIO CON VÍDEO E ILUSTRACIÓN
+// ══════════════════════════════════════════════════════════════════════════
+function buildDrillCardHTML(d, accentColor) {
+  const catInfo = CAT_MAP[d.cat] || { name: d.cat, color: '#fff' };
+  
+  return `
+    <div style="background:#111;border:1px solid #222;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:transform 0.2s, border-color 0.2s;" onmouseenter="this.style.borderColor='${accentColor}';this.style.transform='translateY(-3px)';" onmouseleave="this.style.borderColor='#222';this.style.transform='translateY(0)';">
+      
+      <!-- PORTADA CON IMAGEN DE ALTA CALIDAD Y BADGES -->
+      <div style="height:120px;background:url('${d.img}') center/cover no-repeat;position:relative;border-bottom:1px solid #222;">
+        <div style="position:absolute;top:6px;left:6px;background:rgba(0,0,0,0.85);color:#fff;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:800;border:1px solid ${catInfo.color};">
+          ${d.level === 'formativo' ? '👦 FORMATIVO' : '🏆 COMPETITIVO'}
+        </div>
+        <div style="position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,0.85);color:var(--oro);padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;">
+          ⏱️ ${d.dur}
+        </div>
+      </div>
+      
+      <!-- REPRODUCTOR DE VÍDEO DE ALTA PERFORMANCE CON AUTO-PLAY Y REPRODUCCIÓN CONTINUA -->
+      <div style="padding:6px;background:#080808;border-bottom:1px solid #222;">
+        <video class="drill-card-video" src="${d.video}" autoplay loop muted playsinline preload="auto" controls style="width:100%;height:105px;object-fit:cover;border-radius:6px;border:1px solid #222;display:block;"></video>
+      </div>
+
+      <div style="padding:12px;display:flex;flex-direction:column;flex:1;justify-content:space-between;gap:8px;">
+        <div>
+          <h4 style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff;margin:0 0 4px 0;">${d.title}</h4>
+          <p style="font-size:11px;color:#aaa;line-height:1.35;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${d.desc}</p>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:6px;">
+          <button onclick="window._verDetalleEjercicio('${d.id}')" style="flex:1;background:#1a1a1a;border:1px solid #333;color:#eee;padding:6px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">🔍 Ver Detalle & Vídeo</button>
+          <button onclick="window._agregarEjercicioASesion('${d.id}')" style="background:var(--verde-campo);border:none;color:#000;padding:6px 10px;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;">+ Añadir</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// RENDERIZADO DE LA BIBLIOTECA DE 70 EJERCICIOS POR SECCIONES ORGANIZADAS
 // ══════════════════════════════════════════════════════════════════════════
 export function renderBibliotecaEjercicios() {
   const container = document.getElementById('drills-library-grid');
@@ -863,14 +903,12 @@ export function renderBibliotecaEjercicios() {
     return;
   }
 
-  // Agrupar por Nivel (Formativo vs Competitivo)
   const formativos = filtered.filter(d => d.level === 'formativo');
   const competitivos = filtered.filter(d => d.level === 'competitivo');
 
   const renderSection = (title, levelIcon, drillsList, accentColor) => {
     if (drillsList.length === 0) return '';
 
-    // Agrupar por subcategoría técnica
     const subcats = ['ludico', 'pre_entreno', 'pre_partido', 'tactica', 'tecnica', 'abp', 'fisico'];
 
     const subSectionsHtml = subcats.map(subKey => {
@@ -878,47 +916,17 @@ export function renderBibliotecaEjercicios() {
       if (items.length === 0) return '';
 
       const catInfo = CAT_MAP[subKey] || { name: subKey, color: '#fff' };
-
-      const cardsHtml = items.map(d => `
-        <div style="background:#111;border:1px solid #222;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:transform 0.2s, border-color 0.2s;" onmouseenter="this.style.borderColor='${accentColor}';this.style.transform='translateY(-3px)';" onmouseleave="this.style.borderColor='#222';this.style.transform='translateY(0)';">
-          
-          <!-- PORTADA CON IMAGEN DE ALTA CALIDAD Y BADGES -->
-          <div style="height:115px;background:url('${d.img}') center/cover no-repeat;position:relative;border-bottom:1px solid #222;">
-            <div style="position:absolute;top:6px;left:6px;background:rgba(0,0,0,0.85);color:#fff;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:800;border:1px solid ${catInfo.color};">
-              ${d.level === 'formativo' ? '👦 FORMATIVO' : '🏆 COMPETITIVO'}
-            </div>
-            <div style="position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,0.85);color:var(--oro);padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;">
-              ⏱️ ${d.dur}
-            </div>
-          </div>
-          
-          <!-- REPRODUCTOR DE VÍDEO DEMOSTRATIVO CON SILENCIO Y AUTOPLAY GARANTIZADO -->
-          <div style="padding:6px;background:#080808;border-bottom:1px solid #222;">
-            <video class="drill-card-video" src="${d.video}" autoplay loop muted playsinline preload="metadata" style="width:100%;height:95px;object-fit:cover;border-radius:6px;border:1px solid #222;display:block;"></video>
-          </div>
-
-          <div style="padding:12px;display:flex;flex-direction:column;flex:1;justify-content:space-between;gap:8px;">
-            <div>
-              <h4 style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:#fff;margin:0 0 4px 0;">${d.title}</h4>
-              <p style="font-size:11px;color:#aaa;line-height:1.35;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${d.desc}</p>
-            </div>
-            <div style="display:flex;gap:6px;margin-top:6px;">
-              <button onclick="window._verDetalleEjercicio('${d.id}')" style="flex:1;background:#1a1a1a;border:1px solid #333;color:#eee;padding:6px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">🔍 Ver Detalle & Vídeo</button>
-              <button onclick="window._agregarEjercicioASesion('${d.id}')" style="background:var(--verde-campo);border:none;color:#000;padding:6px 10px;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;">+ Añadir</button>
-            </div>
-          </div>
-        </div>
-      `).join('');
+      const cardsHtml = items.map(d => buildDrillCardHTML(d, accentColor)).join('');
 
       return `
-        <div style="margin-bottom:20px;">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:${catInfo.color};margin-bottom:10px;display:flex;align-items:center;gap:6px;border-bottom:1px solid #222;padding-bottom:4px;">
+        <div style="margin-bottom:24px;">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:${catInfo.color};margin-bottom:12px;display:flex;align-items:center;gap:6px;border-bottom:1px solid #222;padding-bottom:4px;">
             <span>${catInfo.name}</span>
             <span style="font-size:11px;color:#777;">(${items.length} ejercicios)</span>
           </div>
 
-          <!-- GRILLA DE 4 EN 4 -->
-          <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:14px;">
+          <!-- GRILLA ESPACIOSA DE 4 COLUMNAS CON GAP AMPLIADO -->
+          <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:16px;">
             ${cardsHtml}
           </div>
         </div>
@@ -926,8 +934,8 @@ export function renderBibliotecaEjercicios() {
     }).join('');
 
     return `
-      <div style="background:#0a0a0a;border:1px solid #222;border-radius:12px;padding:18px;margin-bottom:24px;">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:${accentColor};margin-bottom:16px;display:flex;align-items:center;gap:8px;border-bottom:2px solid ${accentColor};padding-bottom:8px;">
+      <div style="background:#0a0a0a;border:1px solid #222;border-radius:12px;padding:20px;margin-bottom:28px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:${accentColor};margin-bottom:18px;display:flex;align-items:center;gap:8px;border-bottom:2px solid ${accentColor};padding-bottom:8px;">
           <span>${levelIcon} ${title}</span>
           <span style="font-size:12px;color:#aaa;font-weight:700;">(${drillsList.length} ejercicios)</span>
         </div>
@@ -946,17 +954,105 @@ export function renderBibliotecaEjercicios() {
 
   container.innerHTML = html;
 
-  // Forzar reproducción de vídeos en navegadores que bloquean reproducción sin interacción previa
+  // Iniciar reproducción de vídeos
   setTimeout(() => {
     container.querySelectorAll('video').forEach(v => {
       v.muted = true;
       v.play().catch(() => {});
     });
-  }, 100);
+  }, 150);
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// DETALLE DE EJERCICIO EN MODAL CON VÍDEO
+// RENDERIZADO DEL MODAL PANTALLA COMPLETA DE LA BIBLIOTECA (70)
+// ══════════════════════════════════════════════════════════════════════════
+export function abrirModalBibliotecaCompleta() {
+  const modal = document.getElementById('modal-biblioteca-completa');
+  if (!modal) return;
+
+  modal.style.display = 'flex';
+  renderBibliotecaModal();
+}
+
+export function renderBibliotecaModal() {
+  const container = document.getElementById('modal-drills-container');
+  if (!container) return;
+
+  const catObj = getEntrenamientosData();
+  const allDrills = [...EJERCICIOS_DB, ...(catObj.customDrills || [])];
+
+  const filtered = allDrills.filter(d => {
+    const matchLevel = (modalLevelFilter === 'all') || (d.level === modalLevelFilter);
+    const matchCat = (modalCatFilter === 'all') || (d.cat === modalCatFilter);
+    return matchLevel && matchCat;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:50px;color:#777;font-size:15px;">No hay ejercicios que coincidan en el modal.</div>`;
+    return;
+  }
+
+  const formativos = filtered.filter(d => d.level === 'formativo');
+  const competitivos = filtered.filter(d => d.level === 'competitivo');
+
+  const renderSectionModal = (title, levelIcon, drillsList, accentColor) => {
+    if (drillsList.length === 0) return '';
+
+    const subcats = ['ludico', 'pre_entreno', 'pre_partido', 'tactica', 'tecnica', 'abp', 'fisico'];
+
+    const subSectionsHtml = subcats.map(subKey => {
+      const items = drillsList.filter(d => d.cat === subKey);
+      if (items.length === 0) return '';
+
+      const catInfo = CAT_MAP[subKey] || { name: subKey, color: '#fff' };
+      const cardsHtml = items.map(d => buildDrillCardHTML(d, accentColor)).join('');
+
+      return `
+        <div style="margin-bottom:28px;">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:${catInfo.color};margin-bottom:14px;display:flex;align-items:center;gap:6px;border-bottom:1px solid #222;padding-bottom:6px;">
+            <span>${catInfo.name}</span>
+            <span style="font-size:12px;color:#777;">(${items.length} ejercicios)</span>
+          </div>
+
+          <!-- GRILLA MODAL AMPLIA DE 4 COLUMNAS DE ALTA LECTURA -->
+          <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:18px;">
+            ${cardsHtml}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div style="background:#111;border:1px solid #282828;border-radius:14px;padding:24px;margin-bottom:32px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:${accentColor};margin-bottom:20px;display:flex;align-items:center;gap:8px;border-bottom:2px solid ${accentColor};padding-bottom:10px;">
+          <span>${levelIcon} ${title}</span>
+          <span style="font-size:13px;color:#aaa;font-weight:700;">(${drillsList.length} ejercicios)</span>
+        </div>
+        ${subSectionsHtml}
+      </div>
+    `;
+  };
+
+  let html = '';
+  if (modalLevelFilter === 'all' || modalLevelFilter === 'formativo') {
+    html += renderSectionModal('SECCIÓN 1: FÚTBOL FORMATIVO / INICIACIÓN (SEMILLEROS)', '👦', formativos, '#50e3c2');
+  }
+  if (modalLevelFilter === 'all' || modalLevelFilter === 'competitivo') {
+    html += renderSectionModal('SECCIÓN 2: FÚTBOL COMPETITIVO / SENIOR', '🏆', competitivos, 'var(--oro)');
+  }
+
+  container.innerHTML = html;
+
+  setTimeout(() => {
+    container.querySelectorAll('video').forEach(v => {
+      v.muted = true;
+      v.play().catch(() => {});
+    });
+  }, 150);
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// DETALLE DE EJERCICIO EN MODAL CON VÍDEO COMPLETO
 // ══════════════════════════════════════════════════════════════════════════
 export function verDetalleEjercicio(id) {
   const catObj = getEntrenamientosData();
@@ -973,14 +1069,13 @@ export function verDetalleEjercicio(id) {
   document.getElementById('drill-detail-desc').textContent = d.desc;
   document.getElementById('drill-detail-rules').textContent = d.rules || 'Sin consignas específicas.';
 
-  // Actualizar reproductor de vídeo del modal
   let videoEl = document.getElementById('drill-detail-video');
   if (!videoEl) {
     const videoContainer = document.createElement('div');
     videoContainer.style.marginTop = '12px';
     videoContainer.innerHTML = `
       <div style="font-size:11px;color:var(--oro);font-weight:800;margin-bottom:4px;">🎥 VÍDEO DEMOSTRATIVO DEL EJERCICIO:</div>
-      <video id="drill-detail-video" src="" controls autoplay loop muted playsinline style="width:100%;height:220px;object-fit:cover;border-radius:8px;border:1px solid #333;"></video>
+      <video id="drill-detail-video" src="" controls autoplay loop muted playsinline preload="auto" style="width:100%;height:220px;object-fit:cover;border-radius:8px;border:1px solid #333;"></video>
     `;
     const rulesBox = document.getElementById('drill-detail-rules')?.parentElement;
     if (rulesBox && rulesBox.parentElement) {
@@ -1237,7 +1332,6 @@ export function renderAsistenciaUI() {
   const hoyFecha = new Date().toISOString().split('T')[0];
   if (dateBadge) dateBadge.textContent = `📅 ${hoyFecha}`;
 
-  // Obtener lista completa de jugadores del plantel activo
   const activePlantel = catObj.plantel || plantel || {};
   let listaJugadores = [];
 
@@ -1264,7 +1358,6 @@ export function renderAsistenciaUI() {
       ${listaJugadores.map(nombre => {
         const estado = registroHoy[nombre] || (lesionesData[nombre] ? 'lesionado' : 'presente');
 
-        // Calcular asistencias, inasistencias y porcentaje
         let totalFechas = 0;
         let asistencias = 0;
         let inasistencias = 0;
@@ -1412,7 +1505,7 @@ window._darAltaMedica = (n) => darAltaMedica(n);
 // INICIALIZACIÓN DE EVENT LISTENERS DE LA SECCIÓN DE ENTRENAMIENTOS
 // ══════════════════════════════════════════════════════════════════════════
 export function initEntrenamientosUI() {
-  // Listener de filtro de Nivel (Todos / Formativo / Competitivo)
+  // Listener de filtro de Nivel en vista principal
   const levelSelect = document.getElementById('filter-drill-level');
   if (levelSelect) {
     levelSelect.onchange = (e) => {
@@ -1421,12 +1514,35 @@ export function initEntrenamientosUI() {
     };
   }
 
-  // Listener de filtro de Categoría Técnica
+  // Listener de filtro de Categoría Técnica en vista principal
   const catSelect = document.getElementById('filter-drill-cat');
   if (catSelect) {
     catSelect.onchange = (e) => {
       currentCatFilter = e.target.value;
       renderBibliotecaEjercicios();
+    };
+  }
+
+  // Listener de abrir modal biblioteca completa
+  const btnAbrirModalBiblio = document.getElementById('btn-abrir-modal-biblioteca');
+  if (btnAbrirModalBiblio) {
+    btnAbrirModalBiblio.onclick = abrirModalBibliotecaCompleta;
+  }
+
+  // Listeners de filtros del modal
+  const modalLevelSelect = document.getElementById('modal-filter-level');
+  if (modalLevelSelect) {
+    modalLevelSelect.onchange = (e) => {
+      modalLevelFilter = e.target.value;
+      renderBibliotecaModal();
+    };
+  }
+
+  const modalCatSelect = document.getElementById('modal-filter-cat');
+  if (modalCatSelect) {
+    modalCatSelect.onchange = (e) => {
+      modalCatFilter = e.target.value;
+      renderBibliotecaModal();
     };
   }
 
