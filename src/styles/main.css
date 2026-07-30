@@ -1085,12 +1085,12 @@ body.theme-light .juego-programado-item {
 
 .dugout-seat-wrapper {
   position: relative;
-  width: 48px;
-  height: 56px;
+  width: 56px;
+  height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 2px 0;
+  margin: 0;
 }
 
 .stadium-seat-icon {
