@@ -75,15 +75,23 @@ export function setCategoriaActiva(catNombre) {
 export function updateCategoriasData(newData) {
   if (newData && typeof newData === 'object' && Object.keys(newData).length > 0) {
     categoriasData = newData;
-    const catsClaves = Object.keys(categoriasData);
-    if (!perfil.categorias || !perfil.categorias.length) {
-      perfil.categorias = catsClaves;
-    } else {
-      catsClaves.forEach(c => {
-        if (!perfil.categorias.includes(c)) perfil.categorias.push(c);
+
+    // Purga de categorías huérfanas o fantasmas que no figuran en perfil.categorias
+    if (perfil.categorias && perfil.categorias.length > 0) {
+      Object.keys(categoriasData).forEach(k => {
+        if (!perfil.categorias.includes(k)) {
+          delete categoriasData[k];
+        }
       });
+    } else {
+      perfil.categorias = Object.keys(categoriasData);
     }
-    const catActual = perfil.categoriaActiva && categoriasData[perfil.categoriaActiva] ? perfil.categoriaActiva : catsClaves[0];
+
+    const catsClaves = Object.keys(categoriasData);
+    const catActual = (perfil.categoriaActiva && categoriasData[perfil.categoriaActiva]) 
+      ? perfil.categoriaActiva 
+      : (catsClaves[0] || 'Sub-14');
+    
     setCategoriaActiva(catActual);
   }
 }

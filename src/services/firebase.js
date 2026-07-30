@@ -38,10 +38,10 @@ export function setSyncStatus(type, msg) {
 
 export function getPublicId() {
   if (auth && auth.currentUser && auth.currentUser.uid) {
-    return `usr_${auth.currentUser.uid.slice(0, 16)}`;
+    return `usr_${auth.currentUser.uid}`;
   }
   if (pinHash) {
-    return `usr_${pinHash.slice(0, 16)}`;
+    return `usr_${pinHash}`;
   }
   return 'perfil_demo';
 }
@@ -58,13 +58,13 @@ export async function guardarFirebase() {
 
     if (userKey) {
       const ref = doc(db, 'usuarios', userKey);
-      await setDoc(ref, payload, { merge: true });
+      await setDoc(ref, payload);
     }
 
     const pubId = getPublicId();
     if (pubId && pubId !== 'perfil_demo') {
       const refPub = doc(db, 'publicos', pubId);
-      await setDoc(refPub, payload, { merge: true });
+      await setDoc(refPub, payload);
     }
 
     setSyncStatus('saved', '☁️ Sincronizado en la nube');
@@ -101,23 +101,12 @@ export async function cargarFirebase() {
 }
 
 export async function cargarFirebasePublico(targetPublicId) {
-  if (!db) return false;
+  if (!db || !targetPublicId || targetPublicId === 'true' || targetPublicId === 'perfil_demo') return false;
   try {
-    let snap;
-    if (targetPublicId && targetPublicId !== 'true' && targetPublicId !== 'perfil_demo') {
-      const refPub = doc(db, 'publicos', targetPublicId);
-      snap = await getDoc(refPub);
-    }
+    const refPub = doc(db, 'publicos', targetPublicId);
+    const snap = await getDoc(refPub);
 
-    if (!snap || !snap.exists()) {
-      const pubId = getPublicId();
-      if (pubId && pubId !== 'perfil_demo') {
-        const refUserPub = doc(db, 'publicos', pubId);
-        snap = await getDoc(refUserPub);
-      }
-    }
-
-    if (snap && snap.exists()) {
+    if (snap.exists()) {
       const data = snap.data();
       if (data.perfil) updatePerfil(data.perfil);
       if (data.categoriasData && Object.keys(data.categoriasData).length > 0) {

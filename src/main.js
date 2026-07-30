@@ -134,7 +134,16 @@ async function cargarPerfilPublico(publicId) {
 
   const cargado = await cargarFirebasePublico(publicId);
   if (!cargado) {
-    autoLoadLocal();
+    // Si no se encuentra el perfil en Firestore, inicializar un estado vacio oficial sin jugadores ficticios
+    updatePerfil({ club: '11FUT MANAGER', logo: 'https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png', categorias: ['Sub-14'], categoriaActiva: 'Sub-14' });
+    updateCategoriasData({
+      'Sub-14': {
+        plantel: { por: [], def: [], med: [], del: [], tit_A: [], sup_A: [], ct_A: [], pos_custom_A: {}, maxSup_A: 7 },
+        stats: {},
+        historial: [],
+        juegosProgramados: []
+      }
+    });
   }
 
   renderSelectorCategoria(true);
@@ -398,6 +407,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (user) {
       setUserEmail(user.email);
       await cargarFirebase();
+      await guardarFirebase();
       await limpiarDocumentosObsoletosFirebase();
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('main-app').style.display = 'block';
