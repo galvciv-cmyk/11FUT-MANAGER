@@ -108,7 +108,6 @@ export async function cargarFirebasePublico(targetPublicId) {
 
     if (snap.exists()) {
       const data = snap.data();
-      if (data.perfil) updatePerfil(data.perfil);
       if (data.categoriasData && Object.keys(data.categoriasData).length > 0) {
         updateCategoriasData(data.categoriasData);
       } else {
@@ -116,6 +115,7 @@ export async function cargarFirebasePublico(targetPublicId) {
         if (data.stats) updateStats(data.stats);
         if (data.historial) updateHistorial(data.historial);
       }
+      if (data.perfil) updatePerfil(data.perfil);
       return true;
     }
   } catch (e) {
