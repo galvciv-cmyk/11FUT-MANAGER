@@ -615,10 +615,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (drawerBench) drawerBench.classList.toggle('open');
   });
 
-  document.getElementById(`btn-none-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'none'));
-  document.getElementById(`btn-pencil-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'pencil'));
-  document.getElementById(`btn-arrow-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'arrow'));
-  document.getElementById(`btn-eraser-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'eraser'));
+  // Herramientas de dibujo en Fullscreen invocadas por onclick nativo en HTML para evitar doble disparo
   document.getElementById(`btn-dash-fs-${eq}`)?.addEventListener('click', (e) => {
     const isDashed = !e.target.classList.contains('active');
     setLineDash(eq, isDashed);
