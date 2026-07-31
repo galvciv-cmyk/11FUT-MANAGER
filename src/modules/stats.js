@@ -1,8 +1,10 @@
-import { stats, updateStats, autoSaveLocal, plantel, perfil } from "./state.js";
+import { stats, updateStats, autoSaveLocal, plantel, perfil, historial } from "./state.js";
 import { guardarFirebase } from "../services/firebase.js";
 import { mostrarNotificacionApp } from "./config.js";
 
 export function renderStats(targetId = 'stats-list') {
+  renderDashboardColectivo();
+
   const cont = document.getElementById(targetId) || document.getElementById('stats-list');
   if (!cont) return;
 
@@ -211,3 +213,132 @@ export async function guardarStatJugador() {
   renderStats();
   mostrarNotificacionApp('Estadísticas Guardadas', `Estadísticas de ${jugadorStatEdicion} guardadas.`);
 }
+
+// ══════════════════════════════════════════════════════════════════════════
+// DASHBOARD COLECTIVO DE RENDIMIENTO DEL EQUIPO
+// ══════════════════════════════════════════════════════════════════════════
+export function renderDashboardColectivo(targetId = 'dashboard-colectivo-container') {
+  const cont = document.getElementById(targetId);
+  if (!cont) return;
+
+  const partidos = Array.isArray(historial) ? historial : [];
+
+  let pj = partidos.length;
+  let pg = 0;
+  let pe = 0;
+  let pp = 0;
+  let gf = 0;
+  let gc = 0;
+  let vallas = 0;
+
+  partidos.forEach(m => {
+    const mGf = parseInt(m.gf, 10) || 0;
+    const mGc = parseInt(m.gc, 10) || 0;
+    gf += mGf;
+    gc += mGc;
+
+    if (mGf > mGc) pg++;
+    else if (mGf === mGc) pe++;
+    else pp++;
+
+    if (mGc === 0) vallas++;
+  });
+
+  const pctVic = pj > 0 ? Math.round((pg / pj) * 100) : 0;
+  const pctEmp = pj > 0 ? Math.round((pe / pj) * 100) : 0;
+  const pctDer = pj > 0 ? Math.round((pp / pj) * 100) : 0;
+
+  const difGoles = gf - gc;
+  const avgGf = pj > 0 ? (gf / pj).toFixed(1) : '0.0';
+  const avgGc = pj > 0 ? (gc / pj).toFixed(1) : '0.0';
+  const pctValla = pj > 0 ? Math.round((vallas / pj) * 100) : 0;
+
+  // Racha últimos 5 partidos
+  const ultimos5 = partidos.slice(-5).reverse();
+  const rachaHtml = ultimos5.length > 0 ? ultimos5.map(m => {
+    const mGf = parseInt(m.gf, 10) || 0;
+    const mGc = parseInt(m.gc, 10) || 0;
+    if (mGf > mGc) return `<span title="${m.rival} (${mGf}-${mGc})" style="background:#092113;border:1px solid var(--verde-campo);color:var(--verde-campo);padding:3px 8px;border-radius:4px;font-size:11px;font-weight:900;">🟢 V</span>`;
+    if (mGf === mGc) return `<span title="${m.rival} (${mGf}-${mGc})" style="background:#262006;border:1px solid var(--oro);color:var(--oro);padding:3px 8px;border-radius:4px;font-size:11px;font-weight:900;">🟡 E</span>`;
+    return `<span title="${m.rival} (${mGf}-${mGc})" style="background:#230808;border:1px solid var(--rojo);color:var(--rojo);padding:3px 8px;border-radius:4px;font-size:11px;font-weight:900;">🔴 D</span>`;
+  }).join(' ') : `<span style="font-size:11px;color:#777;">Sin partidos registrados</span>`;
+
+  cont.innerHTML = `
+    <div class="card" style="border:1px solid var(--verde-campo);background:linear-gradient(135deg, rgba(9,33,19,0.85) 0%, rgba(15,15,15,0.95) 100%);">
+      <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <span>📊 DASHBOARD COLECTIVO DE RENDIMIENTO DEL EQUIPO (${perfil.categoriaActiva || 'Equipo'})</span>
+        <div style="font-size:12px;color:var(--oro);font-weight:800;">
+          ⚽ ${pj} PARTIDOS REGISTRADOS
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:14px;margin-top:14px;">
+        
+        <!-- CARD 1: % VICTORIAS & BALANCE -->
+        <div style="background:#111;border:1px solid #262626;border-radius:10px;padding:12px;">
+          <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:6px;">📈 EFECTIVIDAD DE VICTORIAS</div>
+          <div style="display:flex;align-items:baseline;gap:8px;">
+            <span style="font-size:28px;font-weight:900;color:var(--verde-campo);font-family:'Barlow Condensed',sans-serif;">${pctVic}%</span>
+            <span style="font-size:11px;color:#ccc;">VICTORIAS</span>
+          </div>
+
+          <!-- Barra de Rendimiento Tri-color -->
+          <div style="height:8px;background:#222;border-radius:4px;overflow:hidden;display:flex;margin:8px 0 6px 0;">
+            <div style="width:${pctVic}%;background:var(--verde-campo);" title="Victorias: ${pg}"></div>
+            <div style="width:${pctEmp}%;background:var(--oro);" title="Empates: ${pe}"></div>
+            <div style="width:${pctDer}%;background:var(--rojo);" title="Derrotas: ${pp}"></div>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:#aaa;font-weight:700;">
+            <span style="color:var(--verde-campo);">🟢 ${pg} PG</span>
+            <span style="color:var(--oro);">🟡 ${pe} PE</span>
+            <span style="color:var(--rojo);">🔴 ${pp} PP</span>
+          </div>
+        </div>
+
+        <!-- CARD 2: GOLES & PROMEDIOS -->
+        <div style="background:#111;border:1px solid #262626;border-radius:10px;padding:12px;">
+          <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:6px;">⚽ BALANCE GOLEADOR</div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;">
+            <span style="font-size:24px;font-weight:900;color:#fff;font-family:'Barlow Condensed',sans-serif;">${gf} <span style="font-size:14px;color:#888;">GF</span> / ${gc} <span style="font-size:14px;color:#888;">GC</span></span>
+            <span style="font-size:12px;font-weight:900;color:${difGoles >= 0 ? 'var(--verde-campo)' : 'var(--rojo)'};">${difGoles >= 0 ? '+' : ''}${difGoles} DIF</span>
+          </div>
+
+          <div style="display:flex;gap:12px;margin-top:10px;font-size:11px;color:#ccc;">
+            <div><span style="color:var(--verde-campo);font-weight:900;">${avgGf}</span> Goles Favor/Partido</div>
+            <div><span style="color:var(--rojo);font-weight:900;">${avgGc}</span> Recibidos/Partido</div>
+          </div>
+        </div>
+
+        <!-- CARD 3: VALLA INVICTA & DEFENSA -->
+        <div style="background:#111;border:1px solid #262626;border-radius:10px;padding:12px;">
+          <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:6px;">🧤 SOLIDEZ DEFENSIVA</div>
+          <div style="display:flex;align-items:baseline;gap:8px;">
+            <span style="font-size:28px;font-weight:900;color:var(--oro);font-family:'Barlow Condensed',sans-serif;">${vallas}</span>
+            <span style="font-size:11px;color:#ccc;">PARTIDOS ARCO IMBATIDO</span>
+          </div>
+
+          <div style="height:6px;background:#222;border-radius:3px;overflow:hidden;margin:8px 0 6px 0;">
+            <div style="width:${pctValla}%;height:100%;background:var(--oro);"></div>
+          </div>
+
+          <div style="font-size:10px;color:var(--oro);font-weight:700;">
+            ${pctValla}% de los partidos sin recibir gol
+          </div>
+        </div>
+
+        <!-- CARD 4: RACHA RECIENTE (ÚLTIMOS 5) -->
+        <div style="background:#111;border:1px solid #262626;border-radius:10px;padding:12px;">
+          <div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:8px;">🔥 FORMA RECIENTE (ÚLTIMOS 5)</div>
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+            ${rachaHtml}
+          </div>
+          <div style="font-size:10px;color:#777;margin-top:10px;">Pasa el cursor sobre cada resultado para ver rival</div>
+        </div>
+
+      </div>
+    </div>
+  `;
+}
+
+window._renderDashboardColectivo = renderDashboardColectivo;
