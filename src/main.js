@@ -3,7 +3,7 @@ import { perfil, setPinHash, setUserEmail, setCategoriaActiva, autoSaveLocal, hi
 import { auth, hashPin, cargarFirebase, guardarFirebase, cargarFirebasePublico, limpiarDocumentosObsoletosFirebase } from "./services/firebase.js";
 import { cargarKits } from "./services/cloudinary.js";
 import { actualizarTactica, exportarPNG, setDrawingMode, setDrawingColor, setLineWidth, setLineDash, agregarMarcador, clearCanvas, toggleFullscreen, guardarEsquemaCustom, limpiarCanchaYBanco, setVistaCancha, setModoPizarra, agregarFichaLibre, limpiarFichasLibres, abrirModalSustitucion, ejecutarSustitucion, undoCanvas, grabarPasoAnimacion, reproducirAnimacion, detenerAnimacion } from "./modules/tactics.js";
-import { renderStats, guardarStatJugador, cerrarStatModal, renderRankings } from "./modules/stats.js";
+import { renderStats, guardarStatJugador, cerrarStatModal, renderRankings, renderDashboardColectivo } from "./modules/stats.js";
 import { renderHistorial, formatFecha } from "./modules/history.js";
 import { initPlantelUI, aplicarPlantelUI, guardarSquad, descargarPlantilla, importarCSV, exportarPDF } from "./modules/squad.js";
 import { buscarMaps, enviarWA, renderTorneosCitacionUI } from "./modules/citacion.js";
@@ -206,11 +206,44 @@ async function cargarPerfilPublico(publicId) {
   }
 
   // 4. Renderizar todas las vistas del perfil público
+  renderDashboardColectivo('pub-dashboard-colectivo-container');
   renderRankingsPublico();
   renderSquadPublico();
   renderStatsPublico();
   renderHistorialPublico();
 }
+
+export function switchPubTab(tabId) {
+  document.querySelectorAll('.pub-tab-btn').forEach(btn => {
+    if (btn.dataset.tab === tabId) {
+      btn.style.background = 'var(--oro)';
+      btn.style.color = '#000';
+      btn.style.border = 'none';
+      btn.classList.add('active');
+    } else {
+      btn.style.background = '#181818';
+      btn.style.color = '#ccc';
+      btn.style.border = '1px solid #333';
+      btn.classList.remove('active');
+    }
+  });
+
+  document.querySelectorAll('.pub-tab-content').forEach(sec => {
+    sec.style.display = sec.id === tabId ? 'block' : 'none';
+  });
+}
+
+window._switchPubTab = switchPubTab;
+
+export function compartirPerfilWhatsApp() {
+  const url = window.location.href;
+  const clubNombre = perfil.club || '11FUT MANAGER';
+  const texto = `🏆 *${clubNombre.toUpperCase()}* - Perfil Oficial Institucional\n\nConsulta el plantel, estadísticas de jugadores y resultados oficiales de nuestro equipo aquí:\n🔗 ${url}`;
+  const waUrl = `https://wa.me/?text=${encodeURIComponent(texto)}`;
+  window.open(waUrl, '_blank');
+}
+
+window._compartirPerfilWhatsApp = compartirPerfilWhatsApp;
 
 function renderSquadPublico() {
   const cont = document.getElementById('pub-squad-container');

@@ -146,40 +146,76 @@
       </div>
     </div>
 
-    <!-- ══ PERFIL PÚBLICO COMPARTIBLE ══ -->
-    <div id="public-profile-screen" style="display:none;">
-      <div style="width:100%; max-width:960px; margin:0 auto; padding:10px;">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; border-bottom:1px solid #222; padding-bottom:12px;">
-          <div style="display:flex; align-items:center; gap:12px;">
-            <img id="pub-header-logo" class="header-logo" src="/logo.png" alt="Logo" onerror="this.src='https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'">
-            <div>
-              <div style="font-family:'Barlow Condensed',sans-serif; font-size:24px; font-weight:900; color:var(--oro);" id="pub-header-club">11FUT MANAGER</div>
-              <div style="font-size:12px; color:#777;">Perfil Público de la Academia</div>
+    <!-- ══ PERFIL PÚBLICO COMPARTIBLE (HERO HEADER & NAVEGACIÓN POR PESTAÑAS) ══ -->
+    <div id="public-profile-screen" style="display:none;background:#0a0a0a;min-height:100vh;padding-bottom:40px;">
+      <div style="width:100%; max-width:960px; margin:0 auto; padding:16px;">
+        
+        <!-- HERO BANNER DEL CLUB EN VISTA PÚBLICA -->
+        <div style="background:linear-gradient(135deg, rgba(20,20,20,0.95) 0%, rgba(9,33,19,0.9) 100%);border:1px solid var(--verde-campo);border-radius:16px;padding:20px;margin-bottom:20px;box-shadow:0 8px 30px rgba(0,0,0,0.6);position:relative;overflow:hidden;">
+          <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
+            <div style="display:flex; align-items:center; gap:16px;">
+              <img id="pub-header-logo" style="width:64px;height:64px;object-fit:contain;border-radius:12px;background:#0d0d0d;padding:4px;border:1px solid var(--oro);" src="/logo.png" alt="Logo" onerror="this.src='https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'">
+              <div>
+                <div style="font-family:'Barlow Condensed',sans-serif; font-size:28px; font-weight:900; color:var(--oro);letter-spacing:0.5px;" id="pub-header-club">11FUT MANAGER</div>
+                <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+                  <span style="font-size:11px;background:#092113;color:var(--verde-campo);border:1px solid var(--verde-campo);padding:2px 8px;border-radius:12px;font-weight:900;">✅ CLUB OFICIAL VERIFICADO</span>
+                  <span style="font-size:11px;color:#aaa;">Portal Institucional</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <div style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,0.6);padding:6px 12px;border-radius:8px;border:1px solid #333;">
+                <span style="font-size:11px;color:#aaa;font-weight:700;">Categoría:</span>
+                <select id="pub-selector-categoria" class="select-categoria-header" style="font-size:12px;padding:4px 8px;"></select>
+              </div>
+              <button onclick="window._compartirPerfilWhatsApp()" style="background:#25D366;color:#000;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:900;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 0 12px rgba(37,211,102,0.3);">
+                📲 Compartir por WhatsApp
+              </button>
             </div>
           </div>
         </div>
 
-        <div style="margin-bottom:16px; display:flex; align-items:center; gap:8px;">
-          <span style="font-size:12px; color:#aaa;">Categoría / Equipo:</span>
-          <select id="pub-selector-categoria" class="select-categoria-header"></select>
+        <!-- DASHBOARD COLECTIVO DE RENDIMIENTO EN VISTA PÚBLICA -->
+        <div id="pub-dashboard-colectivo-container" style="margin-bottom:20px;"></div>
+
+        <!-- PESTAÑAS NAVEGABLES DEL PERFIL PÚBLICO -->
+        <div style="display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px;" id="pub-tabs-bar">
+          <button class="pub-tab-btn active" data-tab="pub-tab-plantel" onclick="window._switchPubTab('pub-tab-plantel')" style="padding:10px 16px;border-radius:8px;background:var(--oro);color:#000;border:none;font-weight:900;font-size:12px;cursor:pointer;white-space:nowrap;">👥 PLANTEL OFICIAL</button>
+          <button class="pub-tab-btn" data-tab="pub-tab-stats" onclick="window._switchPubTab('pub-tab-stats')" style="padding:10px 16px;border-radius:8px;background:#181818;color:#ccc;border:1px solid #333;font-weight:900;font-size:12px;cursor:pointer;white-space:nowrap;">📊 STATS INDIVIDUALES</button>
+          <button class="pub-tab-btn" data-tab="pub-tab-rankings" onclick="window._switchPubTab('pub-tab-rankings')" style="padding:10px 16px;border-radius:8px;background:#181818;color:#ccc;border:1px solid #333;font-weight:900;font-size:12px;cursor:pointer;white-space:nowrap;">🏆 RANKINGS TEMPORADA</button>
+          <button class="pub-tab-btn" data-tab="pub-tab-historial" onclick="window._switchPubTab('pub-tab-historial')" style="padding:10px 16px;border-radius:8px;background:#181818;color:#ccc;border:1px solid #333;font-weight:900;font-size:12px;cursor:pointer;white-space:nowrap;">📚 PARTIDOS & RESULTADOS</button>
         </div>
 
-        <div id="pub-rankings-container" style="margin-bottom:16px;"></div>
-
-        <div class="card" style="margin-bottom:16px;">
-          <div class="card-title">👥 PLANTEL DE JUGADORES DISPONIBLES</div>
-          <div id="pub-squad-container"></div>
+        <!-- PESTAÑA 1: PLANTEL -->
+        <div id="pub-tab-plantel" class="pub-tab-content" style="display:block;">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-title">👥 PLANTEL DE JUGADORES REGISTRADOS</div>
+            <div id="pub-squad-container"></div>
+          </div>
         </div>
 
-        <div class="card" style="margin-bottom:16px;">
-          <div class="card-title">📊 ESTADÍSTICAS INDIVIDUALES DE JUGADORES</div>
-          <div id="pub-stats-container"></div>
+        <!-- PESTAÑA 2: STATS INDIVIDUALES -->
+        <div id="pub-tab-stats" class="pub-tab-content" style="display:none;">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-title">📊 ESTADÍSTICAS INDIVIDUALES DE JUGADORES</div>
+            <div id="pub-stats-container"></div>
+          </div>
         </div>
 
-        <div class="card">
-          <div class="card-title">📚 ÚLTIMOS PARTIDOS Y RESULTADOS</div>
-          <div id="pub-historial-list"></div>
+        <!-- PESTAÑA 3: RANKINGS TEMPORADA -->
+        <div id="pub-tab-rankings" class="pub-tab-content" style="display:none;">
+          <div id="pub-rankings-container" style="margin-bottom:16px;"></div>
         </div>
+
+        <!-- PESTAÑA 4: PARTIDOS & RESULTADOS -->
+        <div id="pub-tab-historial" class="pub-tab-content" style="display:none;">
+          <div class="card">
+            <div class="card-title">📚 ÚLTIMOS PARTIDOS Y RESULTADOS</div>
+            <div id="pub-historial-list"></div>
+          </div>
+        </div>
+
       </div>
     </div>
 
