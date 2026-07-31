@@ -7,7 +7,10 @@ import { renderStats, guardarStatJugador, cerrarStatModal, renderRankings, rende
 import { renderHistorial, formatFecha } from "./modules/history.js";
 import { initPlantelUI, aplicarPlantelUI, guardarSquad, descargarPlantilla, importarCSV, exportarPDF } from "./modules/squad.js";
 import { buscarMaps, enviarWA, renderTorneosCitacionUI } from "./modules/citacion.js";
-import { abrirConfig, cerrarConfig, guardarNombres, guardarKits, guardarLogo, guardarFondo, cambiarPin, resetearStats, borrarHistorial, cerrarSesion, aplicarPerfil, copiarEnlacePublico, agregarNuevaCategoriaConfig, abrirSoporteWhatsApp, abrirOnboardingWizard, siguientePasoWizard, anteriorPasoWizard, agregarCategoriaWiz, finalizarOnboardingWizard, renderEsquemaPredeterminadoUI, guardarEsquemaPredeterminadoConfig } from "./modules/config.js";
+import { abrirConfig, cerrarConfig, guardarNombres, guardarKits, guardarLogo, guardarFondo, cambiarPin, resetearStats, borrarHistorial, cerrarSesion, aplicarPerfil, copiarEnlacePublico, agregarNuevaCategoriaConfig, abrirSoporteWhatsApp, abrirOnboardingWizard, siguientePasoWizard, anteriorPasoWizard, agregarCategoriaWiz, finalizarOnboardingWizard, renderEsquemaPredeterminadoUI, guardarEsquemaPredeterminadoConfig, renderPerfilesPinsUI, guardarPinsConfig } from "./modules/config.js";
+import { renderProfileSelector } from "./modules/profileSelector.js";
+import { renderAdminDashboard } from "./modules/adminDashboard.js";
+import { currentProfile, setCurrentProfile, getCurrentProfile } from "./modules/state.js";
 import { initEntrenamientosUI, renderBibliotecaEjercicios, renderPlannerUI, renderAsistenciaUI, renderLesionesUI } from "./modules/training.js";
 import { subirImagenCloudinary } from "./services/cloudinary.js";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged } from "firebase/auth";
@@ -21,7 +24,8 @@ const TAB_ROUTES = {
   3: 'plantel',
   4: 'stats',
   5: 'historial',
-  6: 'entrenamientos'
+  6: 'entrenamientos',
+  7: 'admin'
 };
 
 const ROUTE_TABS = {
@@ -30,7 +34,8 @@ const ROUTE_TABS = {
   '#plantel': 3,
   '#stats': 4,
   '#historial': 5,
-  '#entrenamientos': 6
+  '#entrenamientos': 6,
+  '#admin': 7
 };
 
 const TAB_LABELS = {
@@ -39,7 +44,8 @@ const TAB_LABELS = {
   3: '👥 PLANTEL',
   4: '📊 STATS',
   5: '📚 HISTORIAL',
-  6: '🏋️‍♂️ ENTRENAMIENTOS'
+  6: '🏋️‍♂️ ENTRENAMIENTOS',
+  7: '👑 PANEL ADMIN'
 };
 
 // ══════════════════════════════════════════
@@ -61,6 +67,7 @@ export function switchTab(n, updateHash = true) {
   if (n === 4) renderStats();
   if (n === 5) renderHistorial();
   if (n === 6) initEntrenamientosUI();
+  if (n === 7) renderAdminDashboard(document.getElementById('admin-dashboard-container'));
 }
 
 export function restaurarPestanaDesdeURL() {
@@ -465,6 +472,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  function handleProfileSelected(prof) {
+    const tabAdmin = document.getElementById('tab-7');
+    if (prof && prof.rol === 'ADMIN') {
+      if (tabAdmin) tabAdmin.style.display = 'block';
+      switchTab(7);
+    } else {
+      if (tabAdmin) tabAdmin.style.display = 'none';
+      if (prof && prof.categoria) {
+        setCategoriaActiva(prof.categoria);
+        renderSelectorCategoria();
+        refrescarTodaLaVista();
+      }
+      switchTab(1);
+    }
+  }
+
   // Persistencia de Sesión con Firebase Auth (No se cierra al recargar F5)
   onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -477,7 +500,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       aplicarPerfil();
       renderSelectorCategoria();
       refrescarTodaLaVista();
-      restaurarPestanaDesdeURL();
+
+      renderProfileSelector(handleProfileSelected);
     }
   });
 
@@ -661,6 +685,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-soporte-wa-kit')?.addEventListener('click', abrirSoporteWhatsApp);
   document.getElementById('btn-cfg-add-cat')?.addEventListener('click', agregarNuevaCategoriaConfig);
   document.getElementById('btn-cfg-nombres')?.addEventListener('click', guardarNombres);
+  document.getElementById('btn-switch-profile')?.addEventListener('click', () => {
+    renderProfileSelector((prof) => {
+      const tabAdmin = document.getElementById('tab-7');
+      if (prof && prof.rol === 'ADMIN') {
+        if (tabAdmin) tabAdmin.style.display = 'block';
+        switchTab(7);
+      } else {
+        if (tabAdmin) tabAdmin.style.display = 'none';
+        if (prof && prof.categoria) {
+          setCategoriaActiva(prof.categoria);
+          renderSelectorCategoria();
+          refrescarTodaLaVista();
+        }
+        switchTab(1);
+      }
+    });
+  });
+  document.getElementById('btn-cfg-guardar-pins')?.addEventListener('click', guardarPinsConfig);
   document.getElementById('cfg-modo-predeterminado')?.addEventListener('change', renderEsquemaPredeterminadoUI);
   document.getElementById('btn-cfg-guardar-esquema-pred')?.addEventListener('click', guardarEsquemaPredeterminadoConfig);
   document.getElementById('btn-cfg-kits')?.addEventListener('click', guardarKits);

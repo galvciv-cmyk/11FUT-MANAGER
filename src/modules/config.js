@@ -65,6 +65,7 @@ export function abrirConfig() {
   renderCategoriasConfigUI();
   renderKitGallery('A');
   renderEsquemaPredeterminadoUI();
+  renderPerfilesPinsUI();
 
   const imgPrev = document.getElementById('img-prev-cfg-logo');
   const divPrev = document.getElementById('prev-cfg-logo');
@@ -122,6 +123,66 @@ export function guardarEsquemaPredeterminadoConfig() {
 }
 
 window._guardarEsquemaPredeterminadoConfig = guardarEsquemaPredeterminadoConfig;
+
+export function renderPerfilesPinsUI() {
+  const cont = document.getElementById('cfg-lista-perfiles-pins');
+  if (!cont) return;
+
+  const cats = perfil.categorias || ["Sub-14"];
+  if (!perfil.profiles) perfil.profiles = [];
+
+  if (!perfil.profiles.find(p => p.rol === 'ADMIN')) {
+    perfil.profiles.unshift({
+      id: "admin",
+      nombre: "Director Deportivo",
+      rol: "ADMIN",
+      pin: "1234",
+      avatar: perfil.logo
+    });
+  }
+
+  cats.forEach(c => {
+    let dtProf = perfil.profiles.find(p => p.categoria === c);
+    if (!dtProf) {
+      perfil.profiles.push({
+        id: `dt_${c.replace(/\s+/g, '_').toLowerCase()}`,
+        nombre: `DT ${c}`,
+        rol: "DT",
+        categoria: c,
+        pin: "1234",
+        avatar: perfil.logo
+      });
+    }
+  });
+
+  cont.innerHTML = perfil.profiles.map(p => `
+    <div style="background:#0d0d0d;border:1px solid #222;padding:10px;border-radius:8px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:${p.rol === 'ADMIN' ? 'var(--oro)' : '#2ecc71'};">${p.nombre} (${p.rol})</div>
+        <div style="font-size:10px;color:#888;">${p.categoria ? 'Categoría: ' + p.categoria : 'Acceso Total al Club'}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <label style="font-size:10px;color:#aaa;">PIN (4 dígitos):</label>
+        <input type="text" id="cfg-pin-input-${p.id}" value="${p.pin || '1234'}" maxlength="4" style="width:65px;text-align:center;font-size:14px;font-weight:900;letter-spacing:2px;padding:4px;background:#181818;border:1px solid #444;color:#fff;border-radius:6px;">
+      </div>
+    </div>
+  `).join('');
+}
+
+export function guardarPinsConfig() {
+  if (!perfil.profiles) return;
+
+  perfil.profiles.forEach(p => {
+    const input = document.getElementById(`cfg-pin-input-${p.id}`);
+    if (input && input.value) {
+      p.pin = input.value.trim();
+    }
+  });
+
+  autoSaveLocal();
+  guardarFirebase();
+  mostrarNotificacionApp('PINs Guardados', '🔑 Se han actualizado los PINs de acceso para los perfiles de entrenador.');
+}
 
 window._abrirConfig = abrirConfig;
 

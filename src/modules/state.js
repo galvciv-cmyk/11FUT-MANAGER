@@ -20,12 +20,43 @@ export const DEFAULT_PERFIL = {
   categorias: ["Sub-14"],
   modoPredeterminado: "11",
   esquemaPredeterminado: "1-4-4-2",
+  profiles: [
+    {
+      id: "admin",
+      nombre: "Director Deportivo",
+      rol: "ADMIN",
+      pin: "1234",
+      avatar: "https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png"
+    },
+    {
+      id: "dt_sub14",
+      nombre: "DT Sub-14",
+      rol: "DT",
+      categoria: "Sub-14",
+      pin: "1234",
+      avatar: "https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png"
+    }
+  ],
   esquemasCustom: []
 };
 
 export let perfil = { ...DEFAULT_PERFIL };
+export let currentProfile = null;
 export let pinHash = localStorage.getItem('11fut_pinhash') || "";
 export let userEmail = "";
+
+export function setCurrentProfile(prof) {
+  currentProfile = prof;
+  if (prof) {
+    localStorage.setItem("11fut_current_profile_id", prof.id);
+  } else {
+    localStorage.removeItem("11fut_current_profile_id");
+  }
+}
+
+export function getCurrentProfile() {
+  return currentProfile;
+}
 
 export let categoriasData = {
   "Sub-14": {

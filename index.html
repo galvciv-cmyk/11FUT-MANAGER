@@ -231,6 +231,7 @@
         <div class="header-title" id="header-club">11FUT MANAGER</div>
 
         <div style="display:flex;align-items:center;gap:8px;">
+          <button class="header-config" id="btn-switch-profile" title="Cambiar Perfil de Entrenador / Admin" style="font-size:12px;padding:6px 10px;font-weight:700;color:var(--oro);border-color:var(--oro);">👤 PERFIL</button>
           <button class="header-menu-btn" id="btn-header-menu" title="Desplegar Menú de Secciones">
             <span class="menu-icon">☰</span>
             <span class="menu-label">MENÚ</span>
@@ -249,6 +250,7 @@
           <div class="nav-horizontal-item" data-tab="4" id="tab-4">📊 STATS</div>
           <div class="nav-horizontal-item" data-tab="5" id="tab-5">📚 HISTORIAL</div>
           <div class="nav-horizontal-item" data-tab="6" id="tab-6">🏋️‍♂️ ENTRENAMIENTOS</div>
+          <div class="nav-horizontal-item" data-tab="7" id="tab-7" style="display:none;background:rgba(255,215,0,0.15);color:var(--oro);font-weight:700;">👑 PANEL ADMIN</div>
         </div>
       </div>
 
@@ -799,6 +801,11 @@
       </div>
     </div>
 
+    <!-- SECCIÓN 7: PANEL ADMIN -->
+    <div id="s7" class="seccion">
+      <div id="admin-dashboard-container"></div>
+    </div>
+
     <!-- MODAL PARTE MÉDICO -->
     <div class="modal-overlay" id="modal-injury-report" style="display:none;">
       <div class="modal-body" style="max-width:440px;width:90%;padding:20px;">
@@ -948,6 +955,12 @@
             <input type="text" id="cfg-nuevo-torneo-input" placeholder="Torneo (ej. LIGA DISTRITAL GEMA - LIGUILLA J3)">
             <button class="btn btn-green" id="btn-cfg-add-cat" style="font-size:12px;margin-top:4px;">➕ AGREGAR CATEGORÍA</button>
           </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🔑 PERFILES DE ENTRENADORES Y PINS</div>
+          <div id="cfg-lista-perfiles-pins" style="margin-bottom:8px;"></div>
+          <button class="btn btn-gold" id="btn-cfg-guardar-pins" style="margin-top:6px;font-size:12px;">💾 GUARDAR PINS DE ACCESO</button>
         </div>
 
         <div class="card">
