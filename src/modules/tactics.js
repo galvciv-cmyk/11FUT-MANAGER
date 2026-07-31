@@ -724,14 +724,21 @@ export function initCanvas(eq) {
 
   const getPos = (e) => {
     const rect = canvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    let touch = e;
+    if (e.touches && e.touches.length > 0) {
+      touch = e.touches[0];
+    } else if (e.changedTouches && e.changedTouches.length > 0) {
+      touch = e.changedTouches[0];
+    }
+    const clientX = touch.clientX !== undefined ? touch.clientX : (e.clientX || 0);
+    const clientY = touch.clientY !== undefined ? touch.clientY : (e.clientY || 0);
     return { x: clientX - rect.left, y: clientY - rect.top };
   };
 
   const startDraw = (e) => {
     const state = drawingState[eq];
     if (!state || state.mode === 'none') return;
+    if (e.cancelable) e.preventDefault();
 
     saveCanvasState(eq);
     state.isDrawing = true;
@@ -764,6 +771,7 @@ export function initCanvas(eq) {
   const draw = (e) => {
     const state = drawingState[eq];
     if (!state || !state.isDrawing || state.mode === 'none') return;
+    if (e.cancelable) e.preventDefault();
     const pos = getPos(e);
 
     if (state.mode === 'pencil') {
@@ -782,10 +790,11 @@ export function initCanvas(eq) {
   const stopDraw = (e) => {
     const state = drawingState[eq];
     if (!state || !state.isDrawing) return;
+    if (e.cancelable) e.preventDefault();
     state.isDrawing = false;
 
     if (state.mode === 'pencil' && state.pencilStyle === 'blocked') {
-      const pos = getPos(e.changedTouches ? e.changedTouches[0] : e);
+      const pos = getPos(e);
       const capLen = 14;
       const angle = Math.atan2(pos.y - state.lastY, pos.x - state.lastX);
       const perpAngle = angle + Math.PI / 2;
@@ -799,7 +808,7 @@ export function initCanvas(eq) {
       ctx.stroke();
     } else if (state.mode === 'arrow') {
       ctx.globalCompositeOperation = 'source-over';
-      const pos = getPos(e.changedTouches ? e.changedTouches[0] : e);
+      const pos = getPos(e);
       drawArrow(ctx, state.startX, state.startY, pos.x, pos.y, state.color, state.width || 4, state.arrowStyle || 'solid');
     }
     ctx.globalCompositeOperation = 'source-over';
@@ -808,6 +817,10 @@ export function initCanvas(eq) {
   canvas.onmousedown = startDraw;
   canvas.onmousemove = draw;
   canvas.onmouseup = stopDraw;
+
+  canvas.addEventListener('touchstart', startDraw, { passive: false });
+  canvas.addEventListener('touchmove', draw, { passive: false });
+  canvas.addEventListener('touchend', stopDraw, { passive: false });
 
   canvas.ontouchstart = startDraw;
   canvas.ontouchmove = draw;
