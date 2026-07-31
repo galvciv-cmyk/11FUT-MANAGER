@@ -331,11 +331,11 @@
                   <!-- DIBUJO Y HERRAMIENTAS EXCLUSIVAS DE FULLSCREEN -->
                   <div class="drawer-section-title">✏️ HERRAMIENTAS DE DIBUJO</div>
                   <div style="display:grid;grid-template-columns:repeat(5, 1fr);gap:4px;">
-                    <button class="icon-btn tool-btn active" id="btn-none-fs-A" title="Mover / Selección">🤚</button>
-                    <button class="icon-btn tool-btn" id="btn-pencil-fs-A" title="Lápiz / Trazo Libre">✏️</button>
-                    <button class="icon-btn tool-btn" id="btn-arrow-fs-A" title="Flechas Tácticas">➔</button>
-                    <button class="icon-btn tool-btn" id="btn-line-fs-A" title="Línea Ajustable (2 Puntos)">➖</button>
-                    <button class="icon-btn tool-btn" id="btn-eraser-fs-A" title="Modo Borrador">🧽</button>
+                    <button class="icon-btn tool-btn active" id="btn-none-fs-A" onclick="window._setDrawingMode('A', 'none')" title="Mover / Selección">🤚</button>
+                    <button class="icon-btn tool-btn" id="btn-pencil-fs-A" onclick="window._setDrawingMode('A', 'pencil')" title="Lápiz / Trazo Libre">✏️</button>
+                    <button class="icon-btn tool-btn" id="btn-arrow-fs-A" onclick="window._setDrawingMode('A', 'arrow')" title="Flechas Tácticas">➔</button>
+                    <button class="icon-btn tool-btn" id="btn-line-fs-A" onclick="window._setDrawingMode('A', 'line')" title="Línea Ajustable (2 Puntos)">➖</button>
+                    <button class="icon-btn tool-btn" id="btn-eraser-fs-A" onclick="window._setDrawingMode('A', 'eraser')" title="Modo Borrador">🧽</button>
                   </div>
 
                   <!-- SUB-PANEL EXPANDIBLE DE LÁPIZ -->

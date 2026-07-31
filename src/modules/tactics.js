@@ -427,6 +427,7 @@ export function setDrawingMode(eq, mode) {
     canvas.style.cursor = mode === 'none' ? 'default' : 'crosshair';
   }
 }
+window._setDrawingMode = setDrawingMode;
 
 export function agregarLineaAjustable(eq = 'A', style = 'solid') {
   const cancha = document.getElementById(`cancha-${eq}`);
@@ -1116,10 +1117,10 @@ export function actualizarTactica(eq) {
     });
   }
 
-  // RENDERIZADO DE FICHAS LIBRES Y EQUIPAMIENTO
+  // RENDERIZADO DE FICHAS LIBRES Y EQUIPAMIENTO (EXCLUSIVO MODO FULLSCREEN)
   (fichasLibres[eq] || []).forEach(f => {
+    if (!isFS) return;
     const isEquip = ['balon', 'cono', 'mina', 'valla', 'porteria_grande', 'mini_porteria'].includes(f.tipo);
-    if (!isEquip && modoPizarra !== 'libre') return;
 
     const token = document.createElement('div');
     token.className = `jugador-token ${isEquip ? 'equip-' + f.tipo : (f.tipo === 'rival' ? 'rival' : '')}`;
@@ -1228,7 +1229,8 @@ function hacerTokenArrastrable(token, contenedor) {
 
   const onStart = (e) => {
     const eq = token.dataset.eq;
-    if (drawingState[eq].mode !== 'none') return;
+    if (drawingState[eq] && drawingState[eq].mode !== 'none') return;
+    if (e.target && e.target.closest && e.target.closest('.ctrl-btn')) return;
 
     isDragging = true;
     token.dataset.wasDragged = 'false';
@@ -1251,6 +1253,7 @@ function hacerTokenArrastrable(token, contenedor) {
 
   const onMove = (e) => {
     if (!isDragging) return;
+    if (e.cancelable) e.preventDefault();
 
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
@@ -1258,7 +1261,7 @@ function hacerTokenArrastrable(token, contenedor) {
     const deltaX = clientX - startX;
     const deltaY = clientY - startY;
 
-    if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
+    if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) {
       token.dataset.wasDragged = 'true';
       window._justDragged = true;
     }
@@ -1267,8 +1270,8 @@ function hacerTokenArrastrable(token, contenedor) {
     let newLeft = initialLeft + (deltaX / containerRect.width) * 100;
     let newTop = initialTop + (deltaY / containerRect.height) * 100;
 
-    newLeft = Math.max(5, Math.min(95, newLeft));
-    newTop = Math.max(5, Math.min(95, newTop));
+    newLeft = Math.max(3, Math.min(97, newLeft));
+    newTop = Math.max(3, Math.min(97, newTop));
 
     token.style.left = `${newLeft}%`;
     token.style.top = `${newTop}%`;
@@ -1321,8 +1324,8 @@ function hacerTokenArrastrable(token, contenedor) {
   window.addEventListener('mousemove', onMove);
   window.addEventListener('mouseup', onEnd);
 
-  token.addEventListener('touchstart', onStart, { passive: true });
-  window.addEventListener('touchmove', onMove, { passive: true });
+  token.addEventListener('touchstart', onStart, { passive: false });
+  window.addEventListener('touchmove', onMove, { passive: false });
   window.addEventListener('touchend', onEnd);
 }
 
