@@ -2,7 +2,7 @@ import "./styles/main.css";
 import { perfil, setPinHash, setUserEmail, setCategoriaActiva, autoSaveLocal, historial, categoriasData, autoLoadLocal, plantel } from "./modules/state.js";
 import { auth, hashPin, cargarFirebase, guardarFirebase, cargarFirebasePublico, limpiarDocumentosObsoletosFirebase } from "./services/firebase.js";
 import { cargarKits } from "./services/cloudinary.js";
-import { actualizarTactica, exportarPNG, setDrawingMode, setDrawingColor, setLineWidth, setLineDash, agregarMarcador, clearCanvas, toggleFullscreen, guardarEsquemaCustom, limpiarCanchaYBanco, setVistaCancha, setModoPizarra, agregarFichaLibre, limpiarFichasLibres, abrirModalSustitucion, ejecutarSustitucion, undoCanvas, grabarPasoAnimacion, reproducirAnimacion, detenerAnimacion } from "./modules/tactics.js";
+import { actualizarTactica, exportarPNG, setDrawingMode, setDrawingColor, setLineWidth, setLineDash, agregarMarcador, clearCanvas, toggleFullscreen, salirFullscreenTotal, guardarEsquemaCustom, limpiarCanchaYBanco, setVistaCancha, setModoPizarra, agregarFichaLibre, limpiarFichasLibres, abrirModalSustitucion, ejecutarSustitucion, undoCanvas, grabarPasoAnimacion, reproducirAnimacion, detenerAnimacion } from "./modules/tactics.js";
 import { renderStats, guardarStatJugador, cerrarStatModal, renderRankings, renderDashboardColectivo } from "./modules/stats.js";
 import { renderHistorial, formatFecha } from "./modules/history.js";
 import { initPlantelUI, aplicarPlantelUI, guardarSquad, descargarPlantilla, importarCSV, exportarPDF } from "./modules/squad.js";
@@ -595,7 +595,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById(`btn-add-mini-porteria-fs-${eq}`)?.addEventListener('click', () => agregarFichaLibre(eq, 'mini_porteria'));
 
   document.getElementById(`btn-fs-${eq}`)?.addEventListener('click', () => toggleFullscreen(eq));
-  document.getElementById(`btn-exit-fs-${eq}`)?.addEventListener('click', () => toggleFullscreen(eq));
+  document.getElementById(`btn-exit-fs-${eq}`)?.addEventListener('click', () => salirFullscreenTotal(eq));
 
   document.getElementById(`btn-toggle-drawer-fs-${eq}`)?.addEventListener('click', (e) => {
     e.stopPropagation();

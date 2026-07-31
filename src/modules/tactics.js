@@ -626,6 +626,44 @@ function drawArrow(ctx, fromX, fromY, toX, toY, color, width = 4, isDashed = fal
   ctx.fill();
 }
 
+export function salirFullscreenTotal(eq = 'A') {
+  const layout = document.getElementById(`pizarra-${eq}`);
+  const canchaWrapper = document.getElementById(`cancha-${eq}`);
+  const colBanca = document.querySelector('.col-banca-der');
+  const drawer = document.getElementById(`fs-drawer-${eq}`);
+
+  if (document.exitFullscreen && (document.fullscreenElement || document.webkitFullscreenElement)) {
+    document.exitFullscreen().catch(() => {});
+  } else if (document.webkitExitFullscreen && document.webkitFullscreenElement) {
+    document.webkitExitFullscreen();
+  }
+
+  if (layout) layout.classList.remove('fullscreen');
+  document.body.classList.remove('body-fullscreen-active');
+
+  if (canchaWrapper) {
+    canchaWrapper.classList.remove('vista-mitad', 'horizontal');
+  }
+
+  if (drawer) {
+    drawer.classList.remove('open');
+  }
+
+  if (colBanca) {
+    colBanca.style.display = 'flex';
+  }
+
+  modoPizarraActivo[eq] = 'partido';
+  vistaCanchaActiva[eq] = 'completa';
+
+  const btn = document.getElementById(`btn-fs-${eq}`);
+  if (btn) btn.textContent = '⛶ PANTALLA COMPLETA';
+
+  actualizarTactica(eq);
+}
+
+window._salirFullscreenTotal = salirFullscreenTotal;
+
 export function toggleFullscreen(eq) {
   const layout = document.getElementById(`pizarra-${eq}`);
   const canchaWrapper = document.getElementById(`cancha-${eq}`);
@@ -634,9 +672,10 @@ export function toggleFullscreen(eq) {
   if (!layout || !canchaWrapper) return;
 
   const isNativeFS = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+  const isFS = layout.classList.contains('fullscreen');
 
-  if (!isNativeFS) {
-    // Activar Fullscreen Nativo del Navegador (Estilo YouTube / Video)
+  if (!isNativeFS && !isFS) {
+    // Entrar a Fullscreen Nativo del Navegador (Estilo YouTube / Video)
     const target = layout;
     if (target.requestFullscreen) {
       target.requestFullscreen().catch(() => {});
@@ -647,54 +686,32 @@ export function toggleFullscreen(eq) {
     }
     layout.classList.add('fullscreen');
     document.body.classList.add('body-fullscreen-active');
+    
+    const isMitad = vistaCanchaActiva[eq] === 'mitad';
+    canchaWrapper.classList.toggle('horizontal', !isMitad);
+    canchaWrapper.classList.toggle('vista-mitad', isMitad);
+
+    if (drawer) drawer.classList.add('open');
+    if (colBanca) colBanca.style.display = 'none';
+
+    const btn = document.getElementById(`btn-fs-${eq}`);
+    if (btn) btn.textContent = '🗗 SALIR FULLSCREEN';
+    
+    actualizarTactica(eq);
   } else {
-    // Salir de Fullscreen Nativo del Navegador
-    if (document.exitFullscreen) {
-      document.exitFullscreen().catch(() => {});
-    } else if (document.webkitExitFullscreen) {
-      document.webkitExitFullscreen();
-    } else if (document.msExitFullscreen) {
-      document.msExitFullscreen();
-    }
-    layout.classList.remove('fullscreen');
-    document.body.classList.remove('body-fullscreen-active');
+    // Salir del Modo Fullscreen de forma unificada
+    salirFullscreenTotal(eq);
   }
-
-  const isFS = layout.classList.contains('fullscreen');
-  const isMitad = vistaCanchaActiva[eq] === 'mitad';
-
-  canchaWrapper.classList.toggle('horizontal', isFS && !isMitad);
-  canchaWrapper.classList.toggle('vista-mitad', isMitad);
-
-  if (drawer) {
-    drawer.classList.toggle('open', isFS);
-  }
-
-  if (colBanca) {
-    colBanca.style.display = isFS ? 'none' : 'flex';
-  }
-
-  // Al salir de Fullscreen, restaurar estado limpio de modo partido para la vista normal
-  if (!isFS) {
-    modoPizarraActivo[eq] = 'partido';
-    vistaCanchaActiva[eq] = 'completa';
-    canchaWrapper.classList.remove('vista-mitad', 'horizontal');
-  }
-
-  const btn = document.getElementById(`btn-fs-${eq}`);
-  if (btn) btn.textContent = isFS ? '🗗 SALIR FULLSCREEN' : '⛶ PANTALLA COMPLETA';
-  
-  actualizarTactica(eq);
 }
 
-// Sincronización del estado al presionar la tecla ESC nativa del sistema
+// Handler de eventos nativos del sistema al presionar ESC o el botón (X) flotante del navegador
 if (typeof document !== 'undefined') {
   const syncFullscreenExit = () => {
     const isNativeFS = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
     if (!isNativeFS) {
-      document.querySelectorAll('.campo-layout').forEach(el => el.classList.remove('fullscreen'));
-      document.body.classList.remove('body-fullscreen-active');
-      document.querySelectorAll('[id^="btn-fs-"]').forEach(btn => btn.textContent = '⛶ PANTALLA COMPLETA');
+      ['A'].forEach(eq => {
+        salirFullscreenTotal(eq);
+      });
     }
   };
 
