@@ -1237,7 +1237,7 @@ export function actualizarTactica(eq) {
     form = (FORMACIONES[modo] && FORMACIONES[modo][esquemaVal]) || FORMACIONES["11"]["1-4-4-2"];
   }
 
-  const customPos = (plantel[`pos_custom_${eq}`] || {});
+  const customPos = (esquemaVal && esquemaVal.startsWith('custom_')) ? (plantel[`pos_custom_${eq}`] || {}) : {};
   const capitanActual = plantel[`capitan_${eq}`] || '';
 
   const titularesActuales = form.map((slot, i) => {
