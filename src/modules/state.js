@@ -18,6 +18,8 @@ export const DEFAULT_PERFIL = {
   email: "",
   categoriaActiva: "Sub-14",
   categorias: ["Sub-14"],
+  modoPredeterminado: "11",
+  esquemaPredeterminado: "1-4-4-2",
   esquemasCustom: []
 };
 

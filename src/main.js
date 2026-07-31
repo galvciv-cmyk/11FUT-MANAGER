@@ -7,7 +7,7 @@ import { renderStats, guardarStatJugador, cerrarStatModal, renderRankings, rende
 import { renderHistorial, formatFecha } from "./modules/history.js";
 import { initPlantelUI, aplicarPlantelUI, guardarSquad, descargarPlantilla, importarCSV, exportarPDF } from "./modules/squad.js";
 import { buscarMaps, enviarWA, renderTorneosCitacionUI } from "./modules/citacion.js";
-import { abrirConfig, cerrarConfig, guardarNombres, guardarKits, guardarLogo, guardarFondo, cambiarPin, resetearStats, borrarHistorial, cerrarSesion, aplicarPerfil, copiarEnlacePublico, agregarNuevaCategoriaConfig, abrirSoporteWhatsApp, abrirOnboardingWizard, siguientePasoWizard, anteriorPasoWizard, agregarCategoriaWiz, finalizarOnboardingWizard } from "./modules/config.js";
+import { abrirConfig, cerrarConfig, guardarNombres, guardarKits, guardarLogo, guardarFondo, cambiarPin, resetearStats, borrarHistorial, cerrarSesion, aplicarPerfil, copiarEnlacePublico, agregarNuevaCategoriaConfig, abrirSoporteWhatsApp, abrirOnboardingWizard, siguientePasoWizard, anteriorPasoWizard, agregarCategoriaWiz, finalizarOnboardingWizard, renderEsquemaPredeterminadoUI, guardarEsquemaPredeterminadoConfig } from "./modules/config.js";
 import { initEntrenamientosUI, renderBibliotecaEjercicios, renderPlannerUI, renderAsistenciaUI, renderLesionesUI } from "./modules/training.js";
 import { subirImagenCloudinary } from "./services/cloudinary.js";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged } from "firebase/auth";
@@ -661,6 +661,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-soporte-wa-kit')?.addEventListener('click', abrirSoporteWhatsApp);
   document.getElementById('btn-cfg-add-cat')?.addEventListener('click', agregarNuevaCategoriaConfig);
   document.getElementById('btn-cfg-nombres')?.addEventListener('click', guardarNombres);
+  document.getElementById('cfg-modo-predeterminado')?.addEventListener('change', renderEsquemaPredeterminadoUI);
+  document.getElementById('btn-cfg-guardar-esquema-pred')?.addEventListener('click', guardarEsquemaPredeterminadoConfig);
   document.getElementById('btn-cfg-kits')?.addEventListener('click', guardarKits);
 
   document.getElementById('uz-cfg-logo')?.addEventListener('click', () => document.getElementById('up-cfg-logo')?.click());

@@ -1,11 +1,11 @@
-import { perfil, setPinHash, setCategoriaActiva, autoSaveLocal, updateStats, updateHistorial, categoriasData } from "./state.js";
+import { perfil, setPinHash, setCategoriaActiva, autoSaveLocal, updateStats, updateHistorial, categoriasData, plantel } from "./state.js";
 import { guardarFirebase, hashPin, getPublicId, auth } from "../services/firebase.js";
 import { signOut } from "firebase/auth";
 import { KITS } from "./state.js";
 import { subirImagenCloudinary } from "../services/cloudinary.js";
 import { renderStats } from "./stats.js";
 import { renderHistorial } from "./history.js";
-import { actualizarTactica } from "./tactics.js";
+import { actualizarTactica, FORMACIONES } from "./tactics.js";
 
 const DEFAULT_LOGO = "https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png";
 
@@ -64,6 +64,7 @@ export function abrirConfig() {
 
   renderCategoriasConfigUI();
   renderKitGallery('A');
+  renderEsquemaPredeterminadoUI();
 
   const imgPrev = document.getElementById('img-prev-cfg-logo');
   const divPrev = document.getElementById('prev-cfg-logo');
@@ -76,6 +77,51 @@ export function abrirConfig() {
 
   modal.style.display = 'flex';
 }
+
+export function renderEsquemaPredeterminadoUI() {
+  const modoSelect = document.getElementById('cfg-modo-predeterminado');
+  const esqSelect = document.getElementById('cfg-esquema-predeterminado');
+  if (!modoSelect || !esqSelect) return;
+
+  const modoActual = modoSelect.value || perfil.modoPredeterminado || '11';
+  modoSelect.value = modoActual;
+
+  const formacionesModo = FORMACIONES[modoActual] || FORMACIONES['11'];
+  const esqActual = perfil.esquemaPredeterminado || '1-4-4-2';
+
+  let html = '';
+  Object.keys(formacionesModo).forEach(key => {
+    html += `<option value="${key}" ${key === esqActual ? 'selected' : ''}>${key}</option>`;
+  });
+
+  esqSelect.innerHTML = html;
+}
+
+window._renderEsquemaPredeterminadoUI = renderEsquemaPredeterminadoUI;
+
+export function guardarEsquemaPredeterminadoConfig() {
+  const modoSelect = document.getElementById('cfg-modo-predeterminado');
+  const esqSelect = document.getElementById('cfg-esquema-predeterminado');
+  if (!modoSelect || !esqSelect) return;
+
+  perfil.modoPredeterminado = modoSelect.value;
+  perfil.esquemaPredeterminado = esqSelect.value;
+
+  autoSaveLocal();
+  guardarFirebase();
+
+  const modoA = document.getElementById('modo-A');
+  const esquemaA = document.getElementById('esquema-A');
+  if (modoA) modoA.value = perfil.modoPredeterminado;
+  if (esquemaA) esquemaA.value = perfil.esquemaPredeterminado;
+
+  if (plantel) delete plantel.pos_custom_A;
+  actualizarTactica('A');
+
+  mostrarNotificacionApp('Esquema Predeterminado Guardado', `⭐ Se estableció **${perfil.esquemaPredeterminado}** (Fútbol ${perfil.modoPredeterminado}) como el esquema táctico predeterminado del club.`);
+}
+
+window._guardarEsquemaPredeterminadoConfig = guardarEsquemaPredeterminadoConfig;
 
 window._abrirConfig = abrirConfig;
 
@@ -448,6 +494,15 @@ export function aplicarPerfil() {
   if (loginLogo) {
     loginLogo.src = logoUrl;
     loginLogo.onerror = () => { loginLogo.src = DEFAULT_LOGO; };
+  }
+
+  if (perfil.modoPredeterminado) {
+    const modoA = document.getElementById('modo-A');
+    if (modoA) modoA.value = perfil.modoPredeterminado;
+  }
+  if (perfil.esquemaPredeterminado) {
+    const esquemaA = document.getElementById('esquema-A');
+    if (esquemaA) esquemaA.value = perfil.esquemaPredeterminado;
   }
 
   if (perfil.bg) {

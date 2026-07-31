@@ -957,6 +957,23 @@
         </div>
 
         <div class="card">
+          <div class="card-title">📋 ESQUEMA TÁCTICO PREDETERMINADO</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <label style="font-size:11px;color:#aaa;">Formato Predeterminado:</label>
+            <select id="cfg-modo-predeterminado">
+              <option value="11">Fútbol 11</option>
+              <option value="8">Fútbol 8</option>
+              <option value="5">Fútbol 5</option>
+            </select>
+
+            <label style="font-size:11px;color:#aaa;">Esquema / Formación Predeterminada:</label>
+            <select id="cfg-esquema-predeterminado"></select>
+
+            <button class="btn btn-gold" id="btn-cfg-guardar-esquema-pred" style="margin-top:6px;">💾 GUARDAR ESQUEMA PREDETERMINADO</button>
+          </div>
+        </div>
+
+        <div class="card">
           <div class="card-title">🎽 KITS Y UNIFORME</div>
           <div id="cfg-kit-gallery-A" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:8px;"></div>
           <button class="btn btn-gold" id="btn-cfg-kits" style="margin-top:6px;">💾 GUARDAR UNIFORME</button>
