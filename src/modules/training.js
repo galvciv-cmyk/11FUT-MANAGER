@@ -8,735 +8,102 @@ import { mostrarNotificacionApp } from './config.js';
 
 // BASE DE DATOS DE 70 EJERCICIOS (35 COMPETITIVOS + 35 FORMATIVOS)
 export const EJERCICIOS_DB = [
-  // ──────────────────────────────────────────────────────────────────────────
-  // 🎮 JUEGOS LÚDICOS Y RECREATIVOS (5 FORMATIVOS + 5 COMPETITIVOS)
-  // ──────────────────────────────────────────────────────────────────────────
-  {
-    id: 'lud_f1',
-    title: 'Tres en Raya Humano a Velocidad',
-    level: 'formativo',
-    cat: 'ludico',
-    dur: '12 min',
-    desc: 'Carrera de relevos por equipos de 3 jugadores. Cada equipo sale en velocidad desde la línea de partida llevando un peto distintivo. Al llegar a la cuadrícula de conos de 3x3m ubicada a 15 metros, deben colocar el peto en un casillero estratégico y regresar para dar el relevo chocado de manos al siguiente compañero. Gana el primer equipo que logre formar una línea recta de 3 petos (horizontal, vertical o diagonal). Si tras colocar 3 petos no hay ganador, el cuarto corredor debe mover un peto de su propio color a un casillero adyacente libre.',
-    rules: '1. Salida estricta tras la línea tras chocar manos con el compañero. 2. Si hay 3 petos colocados en cancha, los siguientes corredores deben mover un peto existente a un casillero vacío. 3. Prohibido lanzar el peto a distancia; debe colocarse con la mano.',
-    materials: '🎒 9 Conos Bajos Chinos (Cuadrícula 3x3), 6 Petos de 2 Colores Diferentes (3 Verdes + 3 Rojos), 1 Silbato'
-  },
-  {
-    id: 'lud_f2',
-    title: 'El Zorro y los Cazadores de Balón',
-    level: 'formativo',
-    cat: 'ludico',
-    dur: '10 min',
-    desc: 'Se delimita un cuadrado de 20x20 metros. Un jugador seleccionado (designado como "El Zorro") conduce su balón dentro del área e intenta tocar con la mano la espalda de los demás niños. Todos los demás jugadores ("Los Cazadores") conducen libremente su propio balón tratando de esquivar al Zorro mientras intentan con la vista arriba quitarle el balón al Zorro de un puntapié suave. Si el Zorro toca a alguien o le quitan el balón, el rol cambia inmediatamente.',
-    rules: '1. El Zorro debe mantener la pelota pegada al pie en todo momento mientras persigue. 2. Quien se salga del límite de 20x20m se convierte automáticamente en Zorro. 3. Fomentar la protección de balón con el cuerpo.',
-    materials: '🎒 1 Balón por Jugador (12-16 Balones N°4/5), 8 Conos de Delimitación Zonal, 1 Peto Fluorescente de Zorro'
-  },
-  {
-    id: 'lud_f3',
-    title: 'Robo de Colas con Conducción',
-    level: 'formativo',
-    cat: 'ludico',
-    dur: '15 min',
-    desc: 'Cada niño conduce su balón dentro del rectángulo de juego llevando una cinta o peto colgado en la parte trasera de la cintura (cola). El objetivo es quitarle la cinta trasera a los compañeros utilizando la mano libre, sin descuidar el control del propio balón al pie. Al robar una cinta, el jugador se la coloca en la cintura acumulando "vidas".',
-    rules: '1. Quien pierda la cinta y su balón debe salir 30 segundos fuera del cuadro a realizar 5 dominadas antes de reingresar. 2. Prohibido usar los brazos para empujar o empuñar la cinta. 3. Gana el jugador con más cintas acumuladas.',
-    materials: '🎒 16 Cintas/Petos para Cintura, 1 Balón por Jugador, 8 Conos Chinos de Esquina'
-  },
-  {
-    id: 'lud_f4',
-    title: 'Fútbol-Tenis Adaptado Infantil',
-    level: 'formativo',
-    cat: 'ludico',
-    dur: '15 min',
-    desc: 'Enfrentamiento en parejas en minicanchas de 6x4m divididas por una red baja de 80cm o una fila de conos altos. Cada pareja dispone de un máximo de 3 toques entre ellos y se permite 1 pique en el suelo antes de devolver la pelota al campo contrario con el pie, muslo o cabeza.',
-    rules: '1. Permitido máximo 1 pique entre toques de la misma pareja. 2. El saque se efectúa de volea desde la línea de fondo. 3. Obligatorio que ambos integrantes toquen el balón antes de pasarlo al campo rival.',
-    materials: '🎒 2 Redes Bajas de Fútbol-Tenis (o 8 Conos Altos de 50cm), 4 Balones N°4/5 con Presión Adecuada, 1 Cinta Métrica'
-  },
-  {
-    id: 'lud_f5',
-    title: 'Derribar el Cono del Castillo',
-    level: 'formativo',
-    cat: 'ludico',
-    dur: '12 min',
-    desc: 'Dos equipos frente a frente separados por una franja neutral de 5 metros a una distancia de 15 metros. En la franja central se colocan 5 conos altos (el Castillo). Los jugadores de ambos lados deben realizar pases rasos potentes e intencionados intentando golpear y derribar los conos centrales. Cada cono derribado otorga 1 punto.',
-    rules: '1. Prohibido invadir la franja neutral central. 2. Los disparos deben ser estrictamente rasantes. 3. El equipo que derribe el último cono gana la ronda.',
-    materials: '🎒 5 Conos Altos de 40cm (Castillo), 12 Conos Bajos de Franja, 6 Balones N°4/5'
-  },
-  {
-    id: 'lud_c1',
-    title: 'Rondo Recreativo 7v2 a Un Toque',
-    level: 'competitivo',
-    cat: 'ludico',
-    dur: '12 min',
-    desc: 'Rondo de integración en círculo de 10 metros de diámetro. 7 jugadores exteriores mueven la pelota a 1 solo toque obligatorio mientras 2 defensores centrales buscan interceptar. Si los exteriores completan 20 pases seguidos, los 2 defensores pagan una prenda recreativa (5 flexiones o pasarela). Si hay un caño (túnel), el jugador afectado suma 1 ronda extra adentro.',
-    rules: '1. Obligatorio jugar a 1 solo toque. 2. Si el pase es defectuoso y sale del círculo, entra al centro quien dio el mal pase. 3. Fomentar la velocidad de circulación y el buen ambiente.',
-    materials: '🎒 10 Conos de Círculo, 4 Balones N°5 de Competición, 2 Petos para Defensores'
-  },
-  {
-    id: 'lud_c2',
-    title: 'Fútbol Vóley de Competición 3v3',
-    level: 'competitivo',
-    cat: 'ludico',
-    dur: '15 min',
-    desc: 'Partido 3v3 en cancha de 8x6m con red suspendida a 2.20 metros de altura. No se permite ningún pique en el suelo. Los jugadores deben controlar y pasar utilizando únicamente el pecho, muslo, cabeza y volea de pie. Ideal para sesiones de recuperación post-partido o activación técnica de alta coordinación.',
-    rules: '1. Máximo 3 toques por equipo sin que la pelota toque el césped. 2. El punto termina si el balón toca el suelo o la red. 3. Saque aéreo desde el fondo.',
-    materials: '🎒 1 Red de Vóley Ajustable (2.20m), 4 Balones de Competición N°5, 6 Petos de 2 Colores'
-  },
-  {
-    id: 'lud_c3',
-    title: 'Desafío del Travesaño en Grupo',
-    level: 'competitivo',
-    cat: 'ludico',
-    dur: '10 min',
-    desc: 'Competencia de golpeo de precisión a 20 metros de la portería dividida en 2 equipos. Cada jugador realiza 3 lanzamientos alternados buscando pegarle al travesaño con diferentes superficies (borde interno, empeine total, rosca). Cada impacto directo en el larguero suma 2 puntos. El equipo perdedor se encarga de recoger los balones y estacas del entrenamiento.',
-    rules: '1. El disparo debe ejecutarse tras la línea de 20m en balón parado o en leve movimiento. 2. El bote previo en el suelo anula el punto.',
-    materials: '🎒 1 Portería Reglamentaria con Travesaño, 10 Balones Oficiales N°5, 2 Conos de Fila'
-  },
-  {
-    id: 'lud_c4',
-    title: 'Pádel-Fútbol de Parejas',
-    level: 'competitivo',
-    cat: 'ludico',
-    dur: '15 min',
-    desc: 'Juego dinámico por parejas utilizando vallas o paredes perimetrales de rebote en cancha reducida de 10x6m. El balón debe rebotar obligatoriamente en la pared antes de pasar al campo rival, exigiendo controles orientados instantáneos de pecho o muslo.',
-    rules: '1. Máximo 2 toques por jugador. 2. El gol que proviene de rebote directo en pared vale 2 puntos. 3. Mantener cadencia máxima.'
-  },
-  {
-    id: 'lud_c5',
-    title: 'Relevos Combinados de Habilidad',
-    level: 'competitivo',
-    cat: 'ludico',
-    dur: '12 min',
-    desc: 'Circuito por equipos: Estación 1 (10 dominadas en movimiento sin caer), Estación 2 (eslalon veloz entre 6 estacas), Estación 3 (pase de precisión a mini-portería de 25 metros). Tras acertar, el jugador esprinta a dar la mano a su compañero de fila.',
-    rules: '1. Si la pelota toca el suelo en las dominadas, el jugador debe reiniciar la estación. 2. Gana el equipo con menor tiempo total de ronda.',
-    materials: '🎒 12 Estacas de Eslalon, 2 Mini-Porterías, 6 Balones N°5, 1 Cronómetro'
-  },
+  // 🎮 JUEGOS LÚDICOS Y RECREATIVOS
+  { id: 'lud_f1', title: 'Tres en Raya Humano a Velocidad', level: 'formativo', cat: 'ludico', dur: '12 min', desc: 'Carrera de relevos por equipos de 3 jugadores. Cada equipo sale en velocidad desde la línea de partida llevando un peto distintivo. Al llegar a la cuadrícula de conos de 3x3m ubicada a 15 metros, deben colocar el peto en un casillero estratégico y regresar para dar el relevo chocado de manos al siguiente compañero. Gana el primer equipo que logre formar una línea recta de 3 petos (horizontal, vertical o diagonal). Si tras colocar 3 petos no hay ganador, el cuarto corredor debe mover un peto de su propio color a un casillero adyacente libre.', rules: '1. Salida estricta tras la línea tras chocar manos con el compañero. 2. Si hay 3 petos colocados en cancha, los siguientes corredores deben mover un peto existente a un casillero vacío. 3. Prohibido lanzar el peto a distancia; debe colocarse con la mano.', materials: '🎒 9 Conos Bajos Chinos (Cuadrícula 3x3), 6 Petos de 2 Colores Diferentes (3 Verdes + 3 Rojos), 1 Silbato' },
+  { id: 'lud_f2', title: 'El Zorro y los Cazadores de Balón', level: 'formativo', cat: 'ludico', dur: '10 min', desc: 'Se delimita un cuadrado de 20x20 metros. Un jugador seleccionado (designado como "El Zorro") conduce su balón dentro del área e intenta tocar con la mano la espalda de los demás niños. Todos los demás jugadores ("Los Cazadores") conducen libremente su propio balón tratando de esquivar al Zorro mientras intentan con la vista arriba quitarle el balón al Zorro de un puntapié suave. Si el Zorro toca a alguien o le quitan el balón, el rol cambia inmediatamente.', rules: '1. El Zorro debe mantener la pelota pegada al pie en todo momento mientras persigue. 2. Quien se salga del límite de 20x20m se convierte automáticamente en Zorro. 3. Fomentar la protección de balón con el cuerpo.', materials: '🎒 1 Balón por Jugador (12-16 Balones N°4/5), 8 Conos de Delimitación Zonal, 1 Peto Fluorescente de Zorro' },
+  { id: 'lud_f3', title: 'Robo de Colas con Conducción', level: 'formativo', cat: 'ludico', dur: '15 min', desc: 'Cada niño conduce su balón dentro del rectángulo de juego llevando una cinta o peto colgado en la parte trasera de la cintura (cola). El objetivo es quitarle la cinta trasera a los compañeros utilizando la mano libre, sin descuidar el control del propio balón al pie. Al robar una cinta, el jugador se la coloca en la cintura acumulando "vidas".', rules: '1. Quien pierda la cinta y su balón debe salir 30 segundos fuera del cuadro a realizar 5 dominadas antes de reingresar. 2. Prohibido usar los brazos para empujar o empuñar la cinta. 3. Gana el jugador con más cintas acumuladas.', materials: '🎒 16 Cintas/Petos para Cintura, 1 Balón por Jugador, 8 Conos Chinos de Esquina' },
+  { id: 'lud_f4', title: 'Fútbol-Tenis Adaptado Infantil', level: 'formativo', cat: 'ludico', dur: '15 min', desc: 'Enfrentamiento en parejas en minicanchas de 6x4m divididas por una red baja de 80cm o una fila de conos altos. Cada pareja dispone de un máximo de 3 toques entre ellos y se permite 1 pique en el suelo antes de devolver la pelota al campo contrario con el pie, muslo o cabeza.', rules: '1. Permitido máximo 1 pique entre toques de la misma pareja. 2. El saque se efectúa de volea desde la línea de fondo. 3. Obligatorio que ambos integrantes toquen el balón antes de pasarlo al campo rival.', materials: '🎒 2 Redes Bajas de Fútbol-Tenis (o 8 Conos Altos de 50cm), 4 Balones N°4/5 con Presión Adecuada, 1 Cinta Métrica' },
+  { id: 'lud_f5', title: 'Derribar el Cono del Castillo', level: 'formativo', cat: 'ludico', dur: '12 min', desc: 'Dos equipos frente a frente separados por una franja neutral de 5 metros a una distancia de 15 metros. En la franja central se colocan 5 conos altos (el Castillo). Los jugadores de ambos lados deben realizar pases rasos potentes e intencionados intentando golpear y derribar los conos centrales. Cada cono derribado otorga 1 punto.', rules: '1. Prohibido invadir la franja neutral central. 2. Los disparos deben ser estrictamente rasantes. 3. El equipo que derribe el último cono gana la ronda.', materials: '🎒 5 Conos Altos de 40cm (Castillo), 12 Conos Bajos de Franja, 6 Balones N°4/5' },
+  { id: 'lud_c1', title: 'Rondo Recreativo 7v2 a Un Toque', level: 'competitivo', cat: 'ludico', dur: '12 min', desc: 'Rondo de integración en círculo de 10 metros de diámetro. 7 jugadores exteriores mueven la pelota a 1 solo toque obligatorio mientras 2 defensores centrales buscan interceptar. Si los exteriores completan 20 pases seguidos, los 2 defensores pagan una prenda recreativa (5 flexiones o pasarela). Si hay un caño (túnel), el jugador afectado suma 1 ronda extra adentro.', rules: '1. Obligatorio jugar a 1 solo toque. 2. Si el pase es defectuoso y sale del círculo, entra al centro quien dio el mal pase. 3. Fomentar la velocidad de circulación y el buen ambiente.', materials: '🎒 10 Conos de Círculo, 4 Balones N°5 de Competición, 2 Petos para Defensores' },
+  { id: 'lud_c2', title: 'Fútbol Vóley de Competición 3v3', level: 'competitivo', cat: 'ludico', dur: '15 min', desc: 'Partido 3v3 en cancha de 8x6m con red suspendida a 2.20 metros de altura. No se permite ningún pique en el suelo. Los jugadores deben controlar y pasar utilizando únicamente el pecho, muslo, cabeza y volea de pie. Ideal para sesiones de recuperación post-partido o activación técnica de alta coordinación.', rules: '1. Máximo 3 toques por equipo sin que la pelota toque el césped. 2. El punto termina si el balón toca el suelo o la red. 3. Saque aéreo desde el fondo.', materials: '🎒 1 Red de Vóley Ajustable (2.20m), 4 Balones de Competición N°5, 6 Petos de 2 Colores' },
+  { id: 'lud_c3', title: 'Desafío del Travesaño en Grupo', level: 'competitivo', cat: 'ludico', dur: '10 min', desc: 'Competencia de golpeo de precisión a 20 metros de la portería dividida en 2 equipos. Cada jugador realiza 3 lanzamientos alternados buscando pegarle al travesaño con diferentes superficies (borde interno, empeine total, rosca). Cada impacto directo en el larguero suma 2 puntos. El equipo perdedor se encarga de recoger los balones y estacas del entrenamiento.', rules: '1. El disparo debe ejecutarse tras la línea de 20m en balón parado o en leve movimiento. 2. El bote previo en el suelo anula el punto.', materials: '🎒 1 Portería Reglamentaria con Travesaño, 10 Balones Oficiales N°5, 2 Conos de Fila' },
+  { id: 'lud_c4', title: 'Pádel-Fútbol de Parejas', level: 'competitivo', cat: 'ludico', dur: '15 min', desc: 'Juego dinámico por parejas utilizando vallas o paredes perimetrales de rebote en cancha reducida de 10x6m. El balón debe rebotar obligatoriamente en la pared antes de pasar al campo rival, exigiendo controles orientados instantáneos de pecho o muslo.', rules: '1. Máximo 2 toques por jugador. 2. El gol que proviene de rebote directo en pared vale 2 puntos. 3. Mantener cadencia máxima.', materials: '🎒 2 Paredes/Vallas de Rebote Rígidas, 4 Balones de Competición, 6 Conos' },
+  { id: 'lud_c5', title: 'Relevos Combinados de Habilidad', level: 'competitivo', cat: 'ludico', dur: '12 min', desc: 'Circuito por equipos: Estación 1 (10 dominadas en movimiento sin caer), Estación 2 (eslalon veloz entre 6 estacas), Estación 3 (pase de precisión a mini-portería de 25 metros). Tras acertar, el jugador esprinta a dar la mano a su compañero de fila.', rules: '1. Si la pelota toca el suelo en las dominadas, el jugador debe reiniciar la estación. 2. Gana el equipo con menor tiempo total de ronda.', materials: '🎒 12 Estacas de Eslalon, 2 Mini-Porterías, 6 Balones N°5, 1 Cronómetro' },
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // ⚡ ACTIVACIÓN NEUROMUSCULAR PRE-ENTRENAMIENTO (5 FORMATIVOS + 5 COMPETITIVOS)
-  // ──────────────────────────────────────────────────────────────────────────
-  {
-    id: 'pre_e_f1',
-    title: 'Simón Dice Neuromuscular Infantil',
-    level: 'formativo',
-    cat: 'pre_entreno',
-    dur: '10 min',
-    desc: 'Los niños trotan suavemente en espacio libre. A la señal del entrenador mediante conos de colores levantados (Cono Azul = Salto dos pies, Cono Verde = Skipping rápido 3s, Cono Rojo = Freno seco e isometría de 2s), realizan la respuesta motriz inmediata sin chocar.',
-    rules: '1. Reacción en menos de 1 segundo tras la señal visual. 2. Mantener la cabeza erguida buscando espacios libres. 3. Excelente trabajo de prevención coordinativo.',
-    materials: '🎒 4 Conos de Colores (Azul, Verde, Rojo, Amarillo), 12 Conos de Perímetro, 1 Silbato'
-  },
-  {
-    id: 'pre_e_f2',
-    title: 'Escalera de Coordinación + Conducción Rápida',
-    level: 'formativo',
-    cat: 'pre_entreno',
-    dur: '12 min',
-    desc: 'Recorrido coordinativo: Pasadas en escalera de agilidad (1 dentro 1 fuera, paso lateral de frecuencia de apoyos) + salida explosiva a buscar un balón colocado en un cono + conducción veloz de 10 metros y pase raso al compañero que espera en fila.',
-    rules: '1. Apoyos veloces sobre metatarsos sin pisar los peldaños. 2. Conducción con la mirada levantada. 3. Rotación continua por filas.',
-    materials: '🎒 2 Escaleras de Coordinación (6m), 8 Conos Chinos, 6 Balones N°4/5'
-  },
-  {
-    id: 'pre_e_f3',
-    title: 'Movilidad Articular Dinámica en Círculo',
-    level: 'formativo',
-    cat: 'pre_entreno',
-    dur: '8 min',
-    desc: 'Círculo general de equipo. Secuencia guiada de movilidad activa: aductores hacia adentro/afuera, balanceo frontal y lateral de pierna, paso cruzado y skipping progresivo del 50% al 90%. Prepara la cápsula articular y eleva la temperatura corporal.',
-    rules: '1. Movimientos fluidos sin estiramientos estáticos prolongados. 2. Respiración rítmica coordinada.',
-    materials: '🎒 10 Conos Bajos para Marcar Círculo, 1 Silbato'
-  },
-  {
-    id: 'pre_e_f4',
-    title: 'Rondo 3v1 con Estímulo Visual de Colores',
-    level: 'formativo',
-    cat: 'pre_entreno',
-    dur: '10 min',
-    desc: 'Rondo suave en 8x8m. El entrenador se ubica fuera del cuadro levantando conos de colores. El jugador que va a dar el pase debe cantar en voz alta el color del cono visible antes de entregar el balón a 2 toques rasos.',
-    rules: '1. Estimular la visión periférica obligando a desglosar la mirada del balón. 2. Pases rasos bien perfilados.',
-    materials: '🎒 4 Conos de Colores para el Entrenador, 4 Conos de Rondo (8x8m), 4 Balones N°4/5, 1 Peto'
-  },
-  {
-    id: 'pre_e_f5',
-    title: 'Esquiva de Conos y Salto de Vallas Bajas',
-    level: 'formativo',
-    cat: 'pre_entreno',
-    dur: '10 min',
-    desc: 'Circuito lúdico pliométrico con 4 mini-vallas infantiles de 15cm (saltos a dos pies) + eslalon de agilidad + esprint final de 5 metros a controlar un balón en movimiento enviado por el DT.',
-    rules: '1. Recepción suave amortiguada en saltos sobre metatarsos. 2. Aceleración con la vista arriba al salir de las vallas.',
-    materials: '🎒 4 Mini-Vallas Infantiles (15cm), 6 Conos Chinos, 4 Balones N°4/5'
-  },
-  {
-    id: 'pre_e_c1',
-    title: 'Activación con Bandas Elásticas y Pliometría',
-    level: 'competitivo',
-    cat: 'pre_entreno',
-    dur: '12 min',
-    desc: 'Estaciones de activación neuromuscular profunda: Trabajo de glúteo medio y estabilidad de rodilla utilizando minibands elásticas en tobillos + saltos unipodales en hexágono pliométrico con caída amortiguada.',
-    rules: '1. Enfoque preventivo de rodilla e isquiotibiales (LCA). 2. 3 series de 6 repeticiones por pierna.',
-    materials: '🎒 6 Minibands de Resistencia Media/Alta, 2 Hexágonos Pliométricos, 6 Conos'
-  },
-  {
-    id: 'pre_e_c2',
-    title: 'Pases Dinámicos de Tensión Progresiva',
-    level: 'competitivo',
-    cat: 'pre_entreno',
-    dur: '10 min',
-    desc: 'Parejas a 10 metros desplazándose lateralmente en paralelo. Intercambio de pases tensos a 1 toque aumentando progresivamente la fuerza del golpeo con borde interno.',
-    rules: '1. Control tenso de primera sin que la pelota se levante. 2. Cadencia de desplazamiento constante.',
-    materials: '🎒 8 Conos de Pasillo Lateral, 4 Balones N°5 Oficiales'
-  },
-  {
-    id: 'pre_e_c3',
-    title: 'Circuito de Agilidad con Cambio de Dirección (COD)',
-    level: 'competitivo',
-    cat: 'pre_entreno',
-    dur: '12 min',
-    desc: 'Recorrido veloz en Z con conos colocados a 45 grados. Énfasis en la desaceleración fuerte con la pierna exterior, inclinación de tronco y aceleración explosiva en el nuevo ángulo.',
-    rules: '1. Centro de gravedad bajo en las curvas. 2. Apoyo fuerte sobre pie exterior.',
-    materials: '🎒 8 Conos Chinos de Agilidad, 1 Cronómetro, 4 Balones N°5'
-  },
-  {
-    id: 'pre_e_c4',
-    title: 'Rondo Posicional 4v2 con Cambios de Ritmo',
-    level: 'competitivo',
-    cat: 'pre_entreno',
-    dur: '10 min',
-    desc: 'Rondo en espacio reducido (6x6m) a 1 toque. Al silbato del DT, los 4 exteriores rompen en esprint de 10 metros fuera de la celda y regresan a presionar en cambio de rol.',
-    rules: '1. Máxima velocidad de circulación en el rondo. 2. Reacción inmediata al silbato.',
-    materials: '🎒 6 Conos de Celda 6x6m, 2 Petos de Color, 4 Balones N°5'
-  },
-  {
-    id: 'pre_e_c5',
-    title: 'Core Estabilidad + Pase Aéreo de Cabeza',
-    level: 'competitivo',
-    cat: 'pre_entreno',
-    dur: '10 min',
-    desc: 'Estaciones de plancha isométricas (frontal/lateral) activando pared abdominal y zona lumbar por 15 segundos + incorporación explosiva para devolver 3 balones aéreos de cabeza lanzados por el compañero.',
-    rules: '1. Mantener bloque lumbar neutro en la plancha. 2. Golpeo de cabeza con ojos abiertos e impulso de cuello.',
-    materials: '🎒 4 Colchonetas/Esterillas, 6 Balones N°5 Oficiales'
-  },
+  // ⚡ ACTIVACIÓN PRE-ENTRENO
+  { id: 'pre_e_f1', title: 'Simón Dice Neuromuscular Infantil', level: 'formativo', cat: 'pre_entreno', dur: '10 min', desc: 'Los niños trotan suavemente en espacio libre. A la señal del entrenador mediante conos de colores levantados (Cono Azul = Salto dos pies, Cono Verde = Skipping rápido 3s, Cono Rojo = Freno seco e isometría de 2s), realizan la respuesta motriz inmediata sin chocar.', rules: '1. Reacción en menos de 1 segundo tras la señal visual. 2. Mantener la cabeza erguida buscando espacios libres. 3. Excelente trabajo de prevención coordinativo.', materials: '🎒 4 Conos de Colores (Azul, Verde, Rojo, Amarillo), 12 Conos de Perímetro, 1 Silbato' },
+  { id: 'pre_e_f2', title: 'Escalera de Coordinación + Conducción Rápida', level: 'formativo', cat: 'pre_entreno', dur: '12 min', desc: 'Recorrido coordinativo: Pasadas en escalera de agilidad (1 dentro 1 fuera, paso lateral de frecuencia de apoyos) + salida explosiva a buscar un balón colocado en un cono + conducción veloz de 10 metros y pase raso al compañero que espera en fila.', rules: '1. Apoyos veloces sobre metatarsos sin pisar los peldaños. 2. Conducción con la mirada levantada. 3. Rotación continua por filas.', materials: '🎒 2 Escaleras de Coordinación (6m), 8 Conos Chinos, 6 Balones N°4/5' },
+  { id: 'pre_e_f3', title: 'Movilidad Articular Dinámica en Círculo', level: 'formativo', cat: 'pre_entreno', dur: '8 min', desc: 'Círculo general de equipo. Secuencia guiada de movilidad activa: aductores hacia adentro/afuera, balanceo frontal y lateral de pierna, paso cruzado y skipping progresivo del 50% al 90%. Prepara la cápsula articular y eleva la temperatura corporal.', rules: '1. Movimientos fluidos sin estiramientos estáticos prolongados. 2. Respiración rítmica coordinada.', materials: '🎒 10 Conos Bajos para Marcar Círculo, 1 Silbato' },
+  { id: 'pre_e_f4', title: 'Rondo 3v1 con Estímulo Visual de Colores', level: 'formativo', cat: 'pre_entreno', dur: '10 min', desc: 'Rondo suave en 8x8m. El entrenador se ubica fuera del cuadro levantando conos de colores. El jugador que va a dar el pase debe cantar en voz alta el color del cono visible antes de entregar el balón a 2 toques rasos.', rules: '1. Estimular la visión periférica obligando a desglosar la mirada del balón. 2. Pases rasos bien perfilados.', materials: '🎒 4 Conos de Colores para el Entrenador, 4 Conos de Rondo (8x8m), 4 Balones N°4/5, 1 Peto' },
+  { id: 'pre_e_f5', title: 'Esquiva de Conos y Salto de Vallas Bajas', level: 'formativo', cat: 'pre_entreno', dur: '10 min', desc: 'Circuito lúdico pliométrico con 4 mini-vallas infantiles de 15cm (saltos a dos pies) + eslalon de agilidad + esprint final de 5 metros a controlar un balón en movimiento enviado por el DT.', rules: '1. Recepción suave amortiguada en saltos sobre metatarsos. 2. Aceleración con la vista arriba al salir de las vallas.', materials: '🎒 4 Mini-Vallas Infantiles (15cm), 6 Conos Chinos, 4 Balones N°4/5' },
+  { id: 'pre_e_c1', title: 'Activación con Bandas Elásticas y Pliometría', level: 'competitivo', cat: 'pre_entreno', dur: '12 min', desc: 'Estaciones de activación neuromuscular profunda: Trabajo de glúteo medio y estabilidad de rodilla utilizando minibands elásticas en tobillos + saltos unipodales en hexágono pliométrico con caída amortiguada.', rules: '1. Enfoque preventivo de rodilla e isquiotibiales (LCA). 2. 3 series de 6 repeticiones por pierna.', materials: '🎒 6 Minibands de Resistencia Media/Alta, 2 Hexágonos Pliométricos, 6 Conos' },
+  { id: 'pre_e_c2', title: 'Pases Dinámicos de Tensión Progresiva', level: 'competitivo', cat: 'pre_entreno', dur: '10 min', desc: 'Parejas a 10 metros desplazándose lateralmente en paralelo. Intercambio de pases tensos a 1 toque aumentando progresivamente la fuerza del golpeo con borde interno.', rules: '1. Control tenso de primera sin que la pelota se levante. 2. Cadencia de desplazamiento constante.', materials: '🎒 8 Conos de Pasillo Lateral, 4 Balones N°5 Oficiales' },
+  { id: 'pre_e_c3', title: 'Circuito de Agilidad con Cambio de Dirección (COD)', level: 'competitivo', cat: 'pre_entreno', dur: '12 min', desc: 'Recorrido veloz en Z con conos colocados a 45 grados. Énfasis en la desaceleración fuerte con la pierna exterior, inclinación de tronco y aceleración explosiva en el nuevo ángulo.', rules: '1. Centro de gravedad bajo en las curvas. 2. Apoyo fuerte sobre pie exterior.', materials: '🎒 8 Conos Chinos de Agilidad, 1 Cronómetro, 4 Balones N°5' },
+  { id: 'pre_e_c4', title: 'Rondo Posicional 4v2 con Cambios de Ritmo', level: 'competitivo', cat: 'pre_entreno', dur: '10 min', desc: 'Rondo en espacio reducido (6x6m) a 1 toque. Al silbato del DT, los 4 exteriores rompen en esprint de 10 metros fuera de la celda y regresan a presionar en cambio de rol.', rules: '1. Máxima velocidad de circulación en el rondo. 2. Reacción inmediata al silbato.', materials: '🎒 6 Conos de Celda 6x6m, 2 Petos de Color, 4 Balones N°5' },
+  { id: 'pre_e_c5', title: 'Core Estabilidad + Pase Aéreo de Cabeza', level: 'competitivo', cat: 'pre_entreno', dur: '10 min', desc: 'Estaciones de plancha isométricas (frontal/lateral) activando pared abdominal y zona lumbar por 15 segundos + incorporación explosiva para devolver 3 balones aéreos de cabeza lanzados por el compañero.', rules: '1. Mantener bloque lumbar neutro en la plancha. 2. Golpeo de cabeza con ojos abiertos e impulso de cuello.', materials: '🎒 4 Colchonetas/Esterillas, 6 Balones N°5 Oficiales' },
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // 🔥 ACTIVACIÓN NEUROMUSCULAR PRE-PARTIDO (5 FORMATIVOS + 5 COMPETITIVOS)
-  // ──────────────────────────────────────────────────────────────────────────
-  {
-    id: 'pre_p_f1',
-    title: 'Rondo Alegre Pre-Partido Niños 5v2',
-    level: 'formativo',
-    cat: 'pre_partido',
-    dur: '8 min',
-    desc: 'Rondo dinámico de integración a 2 toques sin presión asfixiante, enfocado en activar la confianza, la soltura y las buenas sensaciones tácticas del grupo titular minutos antes de ingresar a competir.',
-    rules: '1. Aplaudir y alentar cada secuencia de 5 pases. 2. Comunicación alegre y enfoque positivo.',
-    materials: '🎒 6 Conos de Rondo, 2 Petos, 3 Balones N°4/5'
-  },
-  {
-    id: 'pre_p_f2',
-    title: 'Aceleraciones de 5m con Salida al Silbato',
-    level: 'formativo',
-    cat: 'pre_partido',
-    dur: '6 min',
-    desc: 'Filas de 3 jugadores alineados tras la línea de banda. Al silbato del DT, arrancan los 3 en paralelo a máxima velocidad durante 5 metros, frenando progresivamente en los siguientes 5 metros.',
-    rules: '1. Salida en explosión con apoyo de metatarso. 2. Mantener la alineación en paralelo.',
-    materials: '🎒 6 Conos de Salida y Llegada, 1 Silbato'
-  },
-  {
-    id: 'pre_p_f3',
-    title: 'Paredes y Tiros a Puerta de Animación',
-    level: 'formativo',
-    cat: 'pre_partido',
-    dur: '10 min',
-    desc: 'El entrenador se ubica como pared fija en la medialuna del área. El jugador le entrega un pase raso tenso, recibe la devolución de primera y remata colocado buscando el poste lejano de la portería.',
-    rules: '1. Rematar raso buscando la red lateral. 2. El portero calienta blocajes bajos de calentamiento.',
-    materials: '🎒 1 Portería Principal, 10 Balones Oficiales de Partido, 4 Conos'
-  },
-  {
-    id: 'pre_p_f4',
-    title: 'Circuito de Pases Cruzados en Octógono',
-    level: 'formativo',
-    cat: 'pre_partido',
-    dur: '8 min',
-    desc: '8 jugadores titulares se ubican en los vértices de un octógono e intercambian pases cruzados a 2 toques activando la comunicación verbal firme llamándose por su nombre ("¡Mía!", "¡Voy!").',
-    rules: '1. Nombre obligatorio antes de pasar. 2. Control orientado perfilado hacia el siguiente pase.',
-    materials: '🎒 8 Conos de Octógono, 4 Balones N°4/5'
-  },
-  {
-    id: 'pre_p_f5',
-    title: 'Juego de Reacción "Toca el Cono Rápido"',
-    level: 'formativo',
-    cat: 'pre_partido',
-    dur: '6 min',
-    desc: 'En parejas frente a frente a 1 metro de distancia con un balón sobre un cono entre ambos. El DT nombra zonas del cuerpo (cabeza, rodillas, tobillos). Al gritar "¡BALÓN!", gana quien agarre la pelota primero.',
-    rules: '1. Máxima atención e intensidad auditiva. 2. Competencia sana y risas activadoras.',
-    materials: '🎒 6 Conos Chinos, 6 Balones N°4/5'
-  },
-  {
-    id: 'pre_p_c1',
-    title: 'Calentamiento Específico Competitivo de Posesión 6v6',
-    level: 'competitivo',
-    cat: 'pre_partido',
-    dur: '12 min',
-    desc: 'Mini-partido de posesión en 20x20m titulares vs suplentes a 1-2 toques buscando replicar el ritmo, la presión tras pérdida y la agresividad táctica que encontrarán en el partido oficial.',
-    rules: '1. Presión tras pérdida en menos de 4 segundos. 2. Intensidad real de partido al 100%.',
-    materials: '🎒 8 Conos de Delimitación, 6 Petos de Titular, 6 Balones Oficiales de Partido'
-  },
-  {
-    id: 'pre_p_c2',
-    title: 'Esprint Progresivo con Frenado y Aceleración Secundaria',
-    level: 'competitivo',
-    cat: 'pre_partido',
-    dur: '6 min',
-    desc: 'Pasadas de 10m al 80% de intensidad + freno seco e isometría + aceleración secundaria al 100% por 5 metros para simular disputas intensas de balones divididos.',
-    rules: '1. 4 repeticiones por jugador con 45s de pausa activa entre pasadas.',
-    materials: '🎒 6 Conos de Pasada, 1 Cronómetro, 1 Silbato'
-  },
-  {
-    id: 'pre_p_c3',
-    title: 'Ensayo de Basculación y Centro-Remate Progresivo',
-    level: 'competitivo',
-    cat: 'pre_partido',
-    dur: '10 min',
-    desc: 'La defensa de 4 titulares realiza basculaciones coordinadas a lo ancho del área mientras los extremos doblan por banda lanzando centros con rosca para el remate aéreo del 9 y llegada del volante.',
-    rules: '1. Sincronizar el desmarque de ruptura al segundo palo. 2. Voz de mando del portero ("¡Mía!").',
-    materials: '🎒 1 Portería Oficial, 10 Balones N°5 de Partido, 4 Petos Defensivos'
-  },
-  {
-    id: 'pre_p_c4',
-    title: 'Rondo de Tensión 4v2 con Cambios de Orientación',
-    level: 'competitivo',
-    cat: 'pre_partido',
-    dur: '8 min',
-    desc: 'Rondo de alta frecuencia. Al completar 6 pases seguidos a 1 toque, el poseedor debe conectar un cambio de frente largo de 25m hacia la otra celda donde aguarda la segunda línea.',
-    rules: '1. Balón tenso por el aire. 2. Control de pecho/muslo obligatorio del receptor.',
-    materials: '🎒 8 Conos de Celda Doble (25m de distancia), 4 Balones de Competición, 4 Petos'
-  },
-  {
-    id: 'pre_p_c5',
-    title: 'Activación de Porteros: Disparos de Reacción en Corto',
-    level: 'competitivo',
-    cat: 'pre_partido',
-    dur: '10 min',
-    desc: 'El preparador de porteros ejecuta remates potentes a quemarropa desde 7-8 metros con desvíos previos en mini-vallas para activar los reflejos, la agilidad de manos y la recuperación baja del guardameta.',
-    rules: '1. Postura agazapada con centro de gravedad bajo. 2. Desviar siempre hacia las bandas fuera del área chica.',
-    materials: '🎒 2 Mini-Vallas para Rebote de Balón, 8 Balones Oficiales de Partido N°5'
-  },
+  // 🔥 ACTIVACIÓN PRE-PARTIDO
+  { id: 'pre_p_f1', title: 'Rondo Alegre Pre-Partido Niños 5v2', level: 'formativo', cat: 'pre_partido', dur: '8 min', desc: 'Rondo dinámico de integración a 2 toques sin presión asfixiante, enfocado en activar la confianza, la soltura y las buenas sensaciones tácticas del grupo titular minutos antes de ingresar a competir.', rules: '1. Aplaudir y alentar cada secuencia de 5 pases. 2. Comunicación alegre y enfoque positivo.', materials: '🎒 6 Conos de Rondo, 2 Petos, 3 Balones N°4/5' },
+  { id: 'pre_p_f2', title: 'Aceleraciones de 5m con Salida al Silbato', level: 'formativo', cat: 'pre_partido', dur: '6 min', desc: 'Filas de 3 jugadores alineados tras la línea de banda. Al silbato del DT, arrancan los 3 en paralelo a máxima velocidad durante 5 metros, frenando progresivamente en los siguientes 5 metros.', rules: '1. Salida en explosión con apoyo de metatarso. 2. Mantener la alineación en paralelo.', materials: '🎒 6 Conos de Salida y Llegada, 1 Silbato' },
+  { id: 'pre_p_f3', title: 'Paredes y Tiros a Puerta de Animación', level: 'formativo', cat: 'pre_partido', dur: '10 min', desc: 'El entrenador se ubica como pared fija en la medialuna del área. El jugador le entrega un pase raso tenso, recibe la devolución de primera y remata colocado buscando el poste lejano de la portería.', rules: '1. Rematar raso buscando la red lateral. 2. El portero calienta blocajes bajos de calentamiento.', materials: '🎒 1 Portería Principal, 10 Balones Oficiales de Partido, 4 Conos' },
+  { id: 'pre_p_f4', title: 'Circuito de Pases Cruzados en Octógono', level: 'formativo', cat: 'pre_partido', dur: '8 min', desc: '8 jugadores titulares se ubican en los vértices de un octógono e intercambian pases cruzados a 2 toques activando la comunicación verbal firme llamándose por su nombre ("¡Mía!", "¡Voy!").', rules: '1. Nombre obligatorio antes de pasar. 2. Control orientado perfilado hacia el siguiente pase.', materials: '🎒 8 Conos de Octógono, 4 Balones N°4/5' },
+  { id: 'pre_p_f5', title: 'Juego de Reacción "Toca el Cono Rápido"', level: 'formativo', cat: 'pre_partido', dur: '6 min', desc: 'En parejas frente a frente a 1 metro de distancia con un balón sobre un cono entre ambos. El DT nombra zonas del cuerpo (cabeza, rodillas, tobillos). Al gritar "¡BALÓN!", gana quien agarre la pelota primero.', rules: '1. Máxima atención e intensidad auditiva. 2. Competencia sana y risas activadoras.', materials: '🎒 6 Conos Chinos, 6 Balones N°4/5' },
+  { id: 'pre_p_c1', title: 'Calentamiento Específico Competitivo de Posesión 6v6', level: 'competitivo', cat: 'pre_partido', dur: '12 min', desc: 'Mini-partido de posesión en 20x20m titulares vs suplentes a 1-2 toques buscando replicar el ritmo, la presión tras pérdida y la agresividad táctica que encontrarán en el partido oficial.', rules: '1. Presión tras pérdida en menos de 4 segundos. 2. Intensidad real de partido al 100%.', materials: '🎒 8 Conos de Delimitación, 6 Petos de Titular, 6 Balones Oficiales de Partido' },
+  { id: 'pre_p_c2', title: 'Esprint Progresivo con Frenado y Aceleración Secundaria', level: 'competitivo', cat: 'pre_partido', dur: '6 min', desc: 'Pasadas de 10m al 80% de intensidad + freno seco e isometría + aceleración secundaria al 100% por 5 metros para simular disputas intensas de balones divididos.', rules: '1. 4 repeticiones por jugador con 45s de pausa activa entre pasadas.', materials: '🎒 6 Conos de Pasada, 1 Cronómetro, 1 Silbato' },
+  { id: 'pre_p_c3', title: 'Ensayo de Basculación y Centro-Remate Progresivo', level: 'competitivo', cat: 'pre_partido', dur: '10 min', desc: 'La defensa de 4 titulares realiza basculaciones coordinadas a lo ancho del área mientras los extremos doblan por banda lanzando centros con rosca para el remate aéreo del 9 y llegada del volante.', rules: '1. Sincronizar el desmarque de ruptura al segundo palo. 2. Voz de mando del portero ("¡Mía!").', materials: '🎒 1 Portería Oficial, 10 Balones N°5 de Partido, 4 Petos Defensivos' },
+  { id: 'pre_p_c4', title: 'Rondo de Tensión 4v2 con Cambios de Orientación', level: 'competitivo', cat: 'pre_partido', dur: '8 min', desc: 'Rondo de alta frecuencia. Al completar 6 pases seguidos a 1 toque, el poseedor debe conectar un cambio de frente largo de 25m hacia la otra celda donde aguarda la segunda línea.', rules: '1. Balón tenso por el aire. 2. Control de pecho/muslo obligatorio del receptor.', materials: '🎒 8 Conos de Celda Doble (25m de distancia), 4 Balones de Competición, 4 Petos' },
+  { id: 'pre_p_c5', title: 'Activación de Porteros: Disparos de Reacción en Corto', level: 'competitivo', cat: 'pre_partido', dur: '10 min', desc: 'El preparador de porteros ejecuta remates potentes a quemarropa desde 7-8 metros con desvíos previos en mini-vallas para activar los reflejos, la agilidad de manos y la recuperación baja del guardameta.', rules: '1. Postura agazapada con centro de gravedad bajo. 2. Desviar siempre hacia las bandas fuera del área chica.', materials: '🎒 2 Mini-Vallas para Rebote de Balón, 8 Balones Oficiales de Partido N°5' },
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // 🎯 TÁCTICA & POSESIÓN (6 FORMATIVOS + 6 COMPETITIVOS)
-  // ──────────────────────────────────────────────────────────────────────────
-  {
-    id: 'tac_f1',
-    title: 'Juego de los 4 Portales (Pase Filtrado)',
-    level: 'formativo',
-    cat: 'tactica',
-    dur: '15 min',
-    desc: 'Partido 4v4 en cuadrado de 20x20m con 4 pequeñas porterías de conos (portales) ubicadas en el interior. Se logra gol cruzando o filtrando un pase raso a través de cualquier portal a un compañero desmarcado.',
-    rules: '1. Buscar constantemente la espalda de la marca. 2. Cambios de orientación hacia el portal desguarnecido.',
-    materials: '🎒 8 Conos para 4 Portales, 8 Conos de Perímetro, 8 Petos (4 Verdes + 4 Rojos), 6 Balones N°4/5'
-  },
-  {
-    id: 'tac_f2',
-    title: 'Conservación de Balón 3v3 + 2 Comodines por Banda',
-    level: 'formativo',
-    cat: 'tactica',
-    dur: '15 min',
-    desc: 'Mantener la posesión del balón apoyándose en 2 jugadores comodines neutrales colocados a lo largo de las líneas laterales. Los comodines juegan siempre a favor del equipo poseedor del balón.',
-    rules: '1. Los comodines juegan a 1 solo toque. 2. Obligatorio conectar con ambas bandas antes de intentar gol.',
-    materials: '🎒 12 Conos de Campo, 2 Petos Amarillos para Comodines, 6 Balones N°4/5'
-  },
-  {
-    id: 'tac_f3',
-    title: 'Ataque vs Defensa 3v2 en Cancha Reducida',
-    level: 'formativo',
-    cat: 'tactica',
-    dur: '15 min',
-    desc: '3 atacantes arrancan en velocidad desde la línea media contra 2 defensores centrales. Si la defensa logra robar el balón, deben cruzar la línea de mitad de campo conduciendo limpiamente.',
-    rules: '1. Finalizar la jugada de ataque en menos de 12 segundos. 2. Fijar marcas para generar pase al libre.',
-    materials: '🎒 1 Portería Reglamentaria, 6 Conos de Marcación, 6 Balones N°4/5, 5 Petos'
-  },
-  {
-    id: 'tac_f4',
-    title: 'Desmarque Básico: Ruptura y Apoyo',
-    level: 'formativo',
-    cat: 'tactica',
-    dur: '15 min',
-    desc: 'Ejercicio 2 atacantes contra 1 defensor. Un atacante se acerca a pedir el balón al pie (apoyo) atrayendo la marca del defensor, mientras el segundo atacante ataca explosivamente el espacio libre a la espalda (ruptura).',
-    rules: '1. Contacto visual previo al desmarque. 2. Pase al pie o al espacio según el movimiento del receptor.',
-    materials: '🎒 8 Conos de Pasillo, 6 Balones N°4/5, 3 Petos'
-  },
-  {
-    id: 'tac_f5',
-    title: 'Batalla de Zonas 4v4 (Sin Amontonarse)',
-    level: 'formativo',
-    cat: 'tactica',
-    dur: '15 min',
-    desc: 'El terreno de juego se divide en 4 cuadrantes. En cada cuadrante debe haber inicialmente 1 atacante y 1 defensor. Se enseña a los niños la ocupación racional del espacio prohibiendo amontonarse.',
-    rules: '1. No puede haber más de 2 compañeros en el mismo cuadrante. 2. Conectar pases entre cuadrantes.',
-    materials: '🎒 16 Conos para Delimitar 4 Cuadrantes, 8 Petos (4 Azules + 4 Rojos), 6 Balones N°4/5'
-  },
-  {
-    id: 'tac_f6',
-    title: 'Transición Rápida 2v1 Acompañado',
-    level: 'formativo',
-    cat: 'tactica',
-    dur: '12 min',
-    desc: 'Inicia un duelo 1v1 hacia el marco. A los 3 segundos se incorpora un segundo atacante desde la retaguardia obligando al delantero poseedor a decidir rápidamente entre encarar o filtrar el pase.',
-    rules: '1. Tomar la decisión de pase o tiro en menos de 5 segundos. 2. Reacción inmediata.',
-    materials: '🎒 1 Portería, 6 Conos de Marcación, 6 Balones N°4/5'
-  },
-  {
-    id: 'tac_c1',
-    title: 'Juego de Posición 4v4 + 3 Comodines (Estilo Guardiola)',
-    level: 'competitivo',
-    cat: 'tactica',
-    dur: '20 min',
-    desc: 'Posesión táctica en 25x25m. 3 comodines (Pivote central interior y 2 Extremos fijadores en banda) garantizan la superioridad numérica constante 7v4 para el equipo en posesión del balón.',
-    rules: '1. Encontrar siempre al tercer hombre libre. 2. Presión tras pérdida inmediata en menos de 4 segundos.',
-    materials: '🎒 12 Conos de Perímetro, 3 Petos Amarillos para Comodines, 6 Balones N°5 Oficiales'
-  },
-  {
-    id: 'tac_c2',
-    title: 'Salida de Balón 4v3 bajo Presión Alta',
-    level: 'competitivo',
-    cat: 'tactica',
-    dur: '20 min',
-    desc: 'Línea defensiva (2 Centrales + 2 Laterales) con el Portero iniciando juego desde el fondo raso contra 3 delanteros rivales que presionan alto. El objetivo es filtrar el pase a espaldas de los presionantes.',
-    rules: '1. Atraer la marca antes de soltar el pase. 2. Si el rival roba, dispone de 6 segundos para definir.',
-    materials: '🎒 1 Portería Principal, 10 Conos de Marcación, 3 Petos para Presionantes, 6 Balones N°5'
-  },
-  {
-    id: 'tac_c3',
-    title: 'Repliegue Defensivo en Bloque Medio-Bajo 4v4+2',
-    level: 'competitivo',
-    cat: 'tactica',
-    dur: '20 min',
-    desc: 'Línea de 4 defensores sincronizando basculación y achique espacio-temporal cuando el rival intenta filtrar pases interlineales. Mantener la distancia entre defensores reducida a un máximo de 8 metros.',
-    rules: '1. Distancia interdefensiva máxima: 8m. 2. Achicar hacia el poseedor solo cuando este controle de espaldas.',
-    materials: '🎒 12 Conos de Franja Defensiva, 6 Petos de Color, 6 Balones N°5 Oficiales'
-  },
-  {
-    id: 'tac_c4',
-    title: 'Transición Ofensiva Rápida tras Robo (Contraataque)',
-    level: 'competitivo',
-    cat: 'tactica',
-    dur: '18 min',
-    desc: 'Robo de balón en campo propio y despliegue vertical inmediato de 3 atacantes a máxima velocidad contra 2 defensas que replegan desesperadamente. Finalizar la jugada en menos de 8 segundos.',
-    rules: '1. Máximo 3 pases antes de rematar a puerta. 2. Transición vertical en menos de 8 segundos.',
-    materials: '🎒 1 Portería Reglamentaria, 8 Conos de Transición, 6 Balones Oficiales N°5'
-  },
-  {
-    id: 'tac_c5',
-    title: 'Ataque Organizado contra Bloque Bajo (Centro y Remate)',
-    level: 'competitivo',
-    cat: 'tactica',
-    dur: '20 min',
-    desc: 'Circulaciones pacientes de balón de lado a lado para desorganizar al rival cerrado en su área chica. Doblar por banda con lateral volante y sacar centro raso o tenso para 3 rematadores a diferentes alturas.',
-    rules: '1. Buscar la ventaja 2v1 en banda. 2. Cargar el área con 3 atacantes atacando el primer y segundo palo.',
-    materials: '🎒 1 Portería Reglamentaria, 10 Conos, 6 Petos Defensivos, 8 Balones N°5'
-  },
-  {
-    id: 'tac_c6',
-    title: 'Presión Tras Pérdida Caza-Balón (Gegenpressing)',
-    level: 'competitivo',
-    cat: 'tactica',
-    dur: '18 min',
-    desc: 'Espacio reducido de 15x15m. Tras perder el balón, los 3 jugadores más cercanos saltan a asfixiar al poseedor rival en menos de 3 segundos para recuperar la pelota inmediatamente en zona alta.',
-    rules: '1. Acortar líneas de pase cerrando el embudo. 2. Si no se recupera en 5s, armar bloque de nuevo.',
-    materials: '🎒 8 Conos de Perímetro, 6 Petos de 2 Colores, 6 Balones N°5'
-  },
+  // 🎯 TÁCTICA & POSESIÓN
+  { id: 'tac_f1', title: 'Juego de los 4 Portales (Pase Filtrado)', level: 'formativo', cat: 'tactica', dur: '15 min', desc: 'Partido 4v4 en cuadrado de 20x20m con 4 pequeñas porterías de conos (portales) ubicadas en el interior. Se logra gol cruzando o filtrando un pase raso a través de cualquier portal a un compañero desmarcado.', rules: '1. Buscar constantemente la espalda de la marca. 2. Cambios de orientación hacia el portal desguarnecido.', materials: '🎒 8 Conos para 4 Portales, 8 Conos de Perímetro, 8 Petos (4 Verdes + 4 Rojos), 6 Balones N°4/5' },
+  { id: 'tac_f2', title: 'Conservación de Balón 3v3 + 2 Comodines por Banda', level: 'formativo', cat: 'tactica', dur: '15 min', desc: 'Mantener la posesión del balón apoyándose en 2 jugadores comodines neutrales colocados a lo largo de las líneas laterales. Los comodines juegan siempre a favor del equipo poseedor del balón.', rules: '1. Los comodines juegan a 1 solo toque. 2. Obligatorio conectar con ambas bandas antes de intentar gol.', materials: '🎒 12 Conos de Campo, 2 Petos Amarillos para Comodines, 6 Balones N°4/5' },
+  { id: 'tac_f3', title: 'Ataque vs Defensa 3v2 en Cancha Reducida', level: 'formativo', cat: 'tactica', dur: '15 min', desc: '3 atacantes arrancan en velocidad desde la línea media contra 2 defensores centrales. Si la defensa logra robar el balón, deben cruzar la línea de mitad de campo conduciendo limpiamente.', rules: '1. Finalizar la jugada de ataque en menos de 12 segundos. 2. Fijar marcas para generar pase al libre.', materials: '🎒 1 Portería Reglamentaria, 6 Conos de Marcación, 6 Balones N°4/5, 5 Petos' },
+  { id: 'tac_f4', title: 'Desmarque Básico: Ruptura y Apoyo', level: 'formativo', cat: 'tactica', dur: '15 min', desc: 'Ejercicio 2 atacantes contra 1 defensor. Un atacante se acerca a pedir el balón al pie (apoyo) atrayendo la marca del defensor, mientras el segundo atacante ataca explosivamente el espacio libre a la espalda (ruptura).', rules: '1. Contacto visual previo al desmarque. 2. Pase al pie o al espacio según el movimiento del receptor.', materials: '🎒 8 Conos de Pasillo, 6 Balones N°4/5, 3 Petos' },
+  { id: 'tac_f5', title: 'Batalla de Zonas 4v4 (Sin Amontonarse)', level: 'formativo', cat: 'tactica', dur: '15 min', desc: 'El terreno de juego se divide en 4 cuadrantes. En cada cuadrante debe haber inicialmente 1 atacante y 1 defensor. Se enseña a los niños la ocupación racional del espacio prohibiendo amontonarse.', rules: '1. No puede haber más de 2 compañeros en el mismo cuadrante. 2. Conectar pases entre cuadrantes.', materials: '🎒 16 Conos para Delimitar 4 Cuadrantes, 8 Petos (4 Azules + 4 Rojos), 6 Balones N°4/5' },
+  { id: 'tac_f6', title: 'Transición Rápida 2v1 Acompañado', level: 'formativo', cat: 'tactica', dur: '12 min', desc: 'Inicia un duelo 1v1 hacia el marco. A los 3 segundos se incorpora un segundo atacante desde la retaguardia obligando al delantero poseedor a decidir rápidamente entre encarar o filtrar el pase.', rules: '1. Tomar la decisión de pase o tiro en menos de 5 segundos. 2. Reacción inmediata.', materials: '🎒 1 Portería, 6 Conos de Marcación, 6 Balones N°4/5' },
+  { id: 'tac_c1', title: 'Juego de Posición 4v4 + 3 Comodines (Estilo Guardiola)', level: 'competitivo', cat: 'tactica', dur: '20 min', desc: 'Posesión táctica en 25x25m. 3 comodines (Pivote central interior y 2 Extremos fijadores en banda) garantizan la superioridad numérica constante 7v4 para el equipo en posesión del balón.', rules: '1. Encontrar siempre al tercer hombre libre. 2. Presión tras pérdida inmediata en menos de 4 segundos.', materials: '🎒 12 Conos de Perímetro, 3 Petos Amarillos para Comodines, 6 Balones N°5 Oficiales' },
+  { id: 'tac_c2', title: 'Salida de Balón 4v3 bajo Presión Alta', level: 'competitivo', cat: 'tactica', dur: '20 min', desc: 'Línea defensiva (2 Centrales + 2 Laterales) con el Portero iniciando juego desde el fondo raso contra 3 delanteros rivales que presionan alto. El objetivo es filtrar el pase a espaldas de los presionantes.', rules: '1. Atraer la marca antes de soltar el pase. 2. Si el rival roba, dispone de 6 segundos para definir.', materials: '🎒 1 Portería Principal, 10 Conos de Marcación, 3 Petos para Presionantes, 6 Balones N°5' },
+  { id: 'tac_c3', title: 'Repliegue Defensivo en Bloque Medio-Bajo 4v4+2', level: 'competitivo', cat: 'tactica', dur: '20 min', desc: 'Línea de 4 defensores sincronizando basculación y achique espacio-temporal cuando el rival intenta filtrar pases interlineales. Mantener la distancia entre defensores reducida a un máximo de 8 metros.', rules: '1. Distancia interdefensiva máxima: 8m. 2. Achicar hacia el poseedor solo cuando este controle de espaldas.', materials: '🎒 12 Conos de Franja Defensiva, 6 Petos de Color, 6 Balones N°5 Oficiales' },
+  { id: 'tac_c4', title: 'Transición Ofensiva Rápida tras Robo (Contraataque)', level: 'competitivo', cat: 'tactica', dur: '18 min', desc: 'Robo de balón en campo propio y despliegue vertical inmediato de 3 atacantes a máxima velocidad contra 2 defensas que replegan desesperadamente. Finalizar la jugada en menos de 8 segundos.', rules: '1. Máximo 3 pases antes de rematar a puerta. 2. Transición vertical en menos de 8 segundos.', materials: '🎒 1 Portería Reglamentaria, 8 Conos de Transición, 6 Balones Oficiales N°5' },
+  { id: 'tac_c5', title: 'Ataque Organizado contra Bloque Bajo (Centro y Remate)', level: 'competitivo', cat: 'tactica', dur: '20 min', desc: 'Circulaciones pacientes de balón de lado a lado para desorganizar al rival cerrado en su área chica. Doblar por banda con lateral volante y sacar centro raso o tenso para 3 rematadores a diferentes alturas.', rules: '1. Buscar la ventaja 2v1 en banda. 2. Cargar el área con 3 atacantes atacando el primer y segundo palo.', materials: '🎒 1 Portería Reglamentaria, 10 Conos, 6 Petos Defensivos, 8 Balones N°5' },
+  { id: 'tac_c6', title: 'Presión Tras Pérdida Caza-Balón (Gegenpressing)', level: 'competitivo', cat: 'tactica', dur: '18 min', desc: 'Espacio reducido de 15x15m. Tras perder el balón, los 3 jugadores más cercanos saltan a asfixiar al poseedor rival en menos de 3 segundos para recuperar la pelota inmediatamente en zona alta.', rules: '1. Acortar líneas de pase cerrando el embudo. 2. Si no se recupera en 5s, armar bloque de nuevo.', materials: '🎒 8 Conos de Perímetro, 6 Petos de 2 Colores, 6 Balones N°5' },
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // ⚽ TÉCNICA & REMATE / FUNDAMENTOS BASE (6 FORMATIVOS + 6 COMPETITIVOS)
-  // ──────────────────────────────────────────────────────────────────────────
-  {
-    id: 'tec_f1',
-    title: 'Circuito de Pase Interior y Control Orientado',
-    level: 'formativo',
-    cat: 'tecnica',
-    dur: '15 min',
-    desc: 'Estaciones en triángulo a 10m de distancia. El jugador A entrega pase raso a B con borde interno, B ejecuta control orientado perfilando hacia su pierna hábil y entrega a C a 2 toques.',
-    rules: '1. Atacar la pelota antes de recibirla. 2. Cambiar de perfil de recepción en cada vuelta.',
-    materials: '🎒 3 Conos Chinos de Vértice, 4 Balones N°4/5'
-  },
-  {
-    id: 'tec_f2',
-    title: 'Eslalon de Conducción con Múltiples Superficies',
-    level: 'formativo',
-    cat: 'tecnica',
-    dur: '12 min',
-    desc: 'Recorrido técnico entre 6 conos alineados a 1.5m de distancia. El niño conduce alternando empeine exterior para esquivar y borde interno para recortar, manteniendo la mirada levantada.',
-    rules: '1. Mirada erguida entre cono y cono. 2. Obligatorio utilizar ambas piernas alternadamente.',
-    materials: '🎒 6 Conos Chinos o Estacas, 1 Balón por Jugador N°4/5'
-  },
-  {
-    id: 'tec_f3',
-    title: 'Centros a media altura y Volea Rrasa Infantil',
-    level: 'formativo',
-    cat: 'tecnica',
-    dur: '15 min',
-    desc: 'Pase bombeado suave desde la esquina del área hacia el punto penal. El delantero ingresa en carrera e impacta de primera de volea rasa con empeine antes de que el balón toque el suelo.',
-    rules: '1. Apuntar abajo buscando las esquinas de la portería. 2. Mantener el tronco inclinado sobre el balón.',
-    materials: '🎒 1 Portería Principal, 8 Balones N°4/5, 4 Conos de Posición'
-  },
-  {
-    id: 'tec_f4',
-    title: 'Duelo 1v1 con Amagos y Regates Clásicos',
-    level: 'formativo',
-    cat: 'tecnica',
-    dur: '15 min',
-    desc: 'Pasillo estrecho (8x15m). El atacante encara al defensor aplicando fintas corporales, bicicleta o cambio de ritmo para desbordar y rematar dentro de los 3 segundos posteriores a la superación.',
-    rules: '1. Si supera al rival tiene 3 segundos para definir. 2. El defensor suma punto si roba limpiamente.',
-    materials: '🎒 6 Conos de Pasillo, 1 Mini-Portería o Portería Principal, 6 Balones N°4/5'
-  },
-  {
-    id: 'tec_f5',
-    title: 'Cabezazo Técnico con Salto Unipodal',
-    level: 'formativo',
-    cat: 'tecnica',
-    dur: '12 min',
-    desc: 'El compañero lanza suavemente el balón con las manos desde 5 metros. El rematador salta con un solo pie (salto unipodal), impacta con la frente manteniendo los ojos abiertos y pica el balón al suelo.',
-    rules: '1. Golpeo con la frente, nunca con la coronilla. 2. Dirigir la trayectoria hacia abajo.',
-    materials: '🎒 6 Balones N°4/5, 4 Conos de Posición'
-  },
-  {
-    id: 'tec_f6',
-    title: 'Controles Aéreos con Muslo y Pecho',
-    level: 'formativo',
-    cat: 'tecnica',
-    dur: '12 min',
-    desc: 'Pases por alto en parejas a 12 metros de distancia. Los niños deben amortiguar la caída de la pelota con el muslo o pecho, dejándola acomodada al pie para devolverla mediante un pase raso.',
-    rules: '1. Absorber el impacto relajando la zona de contacto. 2. Prohibido tocar la pelota con los brazos.',
-    materials: '🎒 4 Conos de Fila, 6 Balones N°4/5'
-  },
-  {
-    id: 'tec_c1',
-    title: 'Circuito de Paredes en Corto y Definición Rápida',
-    level: 'competitivo',
-    cat: 'tecnica',
-    dur: '15 min',
-    desc: 'Secuencia de doble pared rápida 1-2 al borde del área a 1 solo toque, finalizando con un disparo colocado con rosca al segundo palo del marco defensivo.',
-    rules: '1. Pase tenso y preciso al pie del pivot. 2. Definición al palo lejano del portero.',
-    materials: '🎒 1 Portería Oficial, 10 Balones N°5 Oficiales, 4 Conos de Pivot'
-  },
-  {
-    id: 'tec_c2',
-    title: 'Centro Tenso en Carrera + Remate de Cabeza Picado',
-    level: 'competitivo',
-    cat: 'tecnica',
-    dur: '18 min',
-    desc: 'El extremo pisa línea de fondo y lanza un centro tenso con rosca hacia afuera. El centrodelantero realiza el desmarque entre centrales e impacta con un cabezazo picado contra el piso.',
-    rules: '1. Centro bombeado entre portero y central. 2. Remate de cabeza potente hacia el césped.',
-    materials: '🎒 1 Portería Reglamentaria, 12 Balones Oficiales de Partido N°5, 6 Conos'
-  },
-  {
-    id: 'tec_c3',
-    title: 'Remates tras Giro y Desmarque en Espacio Reducido',
-    level: 'competitivo',
-    cat: 'tecnica',
-    dur: '15 min',
-    desc: 'El delantero recibe de espaldas al marco con un defensa pegado a la marca. Debe realizar un giro explosivo sobre su eje orientado hacia su pierna hábil y disparar a gol en menos de 1.5 segundos.',
-    rules: '1. Proteger el balón con el cuerpo antes de girar. 2. Disparo instantáneo al arco.',
-    materials: '🎒 1 Portería Reglamentaria, 8 Balones Oficiales N°5, 2 Petos Defensivos'
-  },
-  {
-    id: 'tec_c4',
-    title: 'Pases Largos de Precisión de 35 Metros',
-    level: 'competitivo',
-    cat: 'tecnica',
-    dur: '15 min',
-    desc: 'Parejas situadas a 35 metros de distancia ensayando cambios de orientación por el aire impactando con el empeine total sin que el balón haga roscas descontroladas, con recepción orientada a 1 toque.',
-    rules: '1. Control orientado instantáneo del receptor. 2. Trayectoria limpia y tensa del pase aéreo.',
-    materials: '🎒 8 Conos de Pasillo, 6 Balones N°5 Oficiales de Competición'
-  },
-  {
-    id: 'tec_c5',
-    title: 'Mano a Mano 1v1 contra el Portero con Presión Trasera',
-    level: 'competitivo',
-    cat: 'tecnica',
-    dur: '15 min',
-    desc: 'El delantero parte con 2 metros de ventaja en carrera hacia la portería, perseguido por un defensa central. Debe resolver el mano a mano ante la salida del arquero en menos de 3 toques.',
-    rules: '1. Resolver en máximo 3 toques. 2. Decidir según el achique entre vaselina, regate o disparo bajo.',
-    materials: '🎒 1 Portería Principal, 10 Balones N°5, 4 Petos'
-  },
-  {
-    id: 'tec_c6',
-    title: 'Volea Acrobática tras Rechace de Cabeza',
-    level: 'competitivo',
-    cat: 'tecnica',
-    dur: '15 min',
-    desc: 'El balón sale despejado de cabeza desde el área chica hacia la frontal. El mediocampista ingresa en carrera y remata de volea sin dejar picar el balón en el suelo.',
-    rules: '1. Coordinación ojo-pie impecable. 2. Mantener la mirada fija en el balón hasta el impacto.',
-    materials: '🎒 1 Portería Reglamentaria, 10 Balones Oficiales N°5, 4 Conos'
-  },
+  // ⚽ TÉCNICA & REMATE
+  { id: 'tec_f1', title: 'Circuito de Pase Interior y Control Orientado', level: 'formativo', cat: 'tecnica', dur: '15 min', desc: 'Estaciones en triángulo a 10m de distancia. El jugador A entrega pase raso a B con borde interno, B ejecuta control orientado perfilando hacia su pierna hábil y entrega a C a 2 toques.', rules: '1. Atacar la pelota antes de recibirla. 2. Cambiar de perfil de recepción en cada vuelta.', materials: '🎒 3 Conos Chinos de Vértice, 4 Balones N°4/5' },
+  { id: 'tec_f2', title: 'Eslalon de Conducción con Múltiples Superficies', level: 'formativo', cat: 'tecnica', dur: '12 min', desc: 'Recorrido técnico entre 6 conos alineados a 1.5m de distancia. El niño conduce alternando empeine exterior para esquivar y borde interno para recortar, manteniendo la mirada levantada.', rules: '1. Mirada erguida entre cono y cono. 2. Obligatorio utilizar ambas piernas alternadamente.', materials: '🎒 6 Conos Chinos o Estacas, 1 Balón por Jugador N°4/5' },
+  { id: 'tec_f3', title: 'Centros a media altura y Volea Rrasa Infantil', level: 'formativo', cat: 'tecnica', dur: '15 min', desc: 'Pase bombeado suave desde la esquina del área hacia el punto penal. El delantero ingresa en carrera e impacta de primera de volea rasa con empeine antes de que el balón toque el suelo.', rules: '1. Apuntar abajo buscando las esquinas de la portería. 2. Mantener el tronco inclinado sobre el balón.', materials: '🎒 1 Portería Principal, 8 Balones N°4/5, 4 Conos de Posición' },
+  { id: 'tec_f4', title: 'Duelo 1v1 con Amagos y Regates Clásicos', level: 'formativo', cat: 'tecnica', dur: '15 min', desc: 'Pasillo estrecho (8x15m). El atacante encara al defensor aplicando fintas corporales, bicicleta o cambio de ritmo para desbordar y rematar dentro de los 3 segundos posteriores a la superación.', rules: '1. Si supera al rival tiene 3 segundos para definir. 2. El defensor suma punto si roba limpiamente.', materials: '🎒 6 Conos de Pasillo, 1 Mini-Portería o Portería Principal, 6 Balones N°4/5' },
+  { id: 'tec_f5', title: 'Cabezazo Técnico con Salto Unipodal', level: 'formativo', cat: 'tecnica', dur: '12 min', desc: 'El compañero lanza suavemente el balón con las manos desde 5 metros. El rematador salta con un solo pie (salto unipodal), impacta con la frente manteniendo los ojos abiertos y pica el balón al suelo.', rules: '1. Golpeo con la frente, nunca con la coronilla. 2. Dirigir la trayectoria hacia abajo.', materials: '🎒 6 Balones N°4/5, 4 Conos de Posición' },
+  { id: 'tec_f6', title: 'Controles Aéreos con Muslo y Pecho', level: 'formativo', cat: 'tecnica', dur: '12 min', desc: 'Pases por alto en parejas a 12 metros de distancia. Los niños deben amortiguar la caída de la pelota con el muslo o pecho, dejándola acomodada al pie para devolverla mediante un pase raso.', rules: '1. Absorber el impacto relajando la zona de contacto. 2. Prohibido tocar la pelota con los brazos.', materials: '🎒 4 Conos de Fila, 6 Balones N°4/5' },
+  { id: 'tec_c1', title: 'Circuito de Paredes en Corto y Definición Rápida', level: 'competitivo', cat: 'tecnica', dur: '15 min', desc: 'Secuencia de doble pared rápida 1-2 al borde del área a 1 solo toque, finalizando con un disparo colocado con rosca al segundo palo del marco defensivo.', rules: '1. Pase tenso y preciso al pie del pivot. 2. Definición al palo lejano del portero.', materials: '🎒 1 Portería Oficial, 10 Balones N°5 Oficiales, 4 Conos de Pivot' },
+  { id: 'tec_c2', title: 'Centro Tenso en Carrera + Remate de Cabeza Picado', level: 'competitivo', cat: 'tecnica', dur: '18 min', desc: 'El extremo pisa línea de fondo y lanza un centro tenso con rosca hacia afuera. El centrodelantero realiza el desmarque entre centrales e impacta con un cabezazo picado contra el piso.', rules: '1. Centro bombeado entre portero y central. 2. Remate de cabeza potente hacia el césped.', materials: '🎒 1 Portería Reglamentaria, 12 Balones Oficiales de Partido N°5, 6 Conos' },
+  { id: 'tec_c3', title: 'Remates tras Giro y Desmarque en Espacio Reducido', level: 'competitivo', cat: 'tecnica', dur: '15 min', desc: 'El delantero recibe de espaldas al marco con un defensa pegado a la marca. Debe realizar un giro explosivo sobre su eje orientado hacia su pierna hábil y disparar a gol en menos de 1.5 segundos.', rules: '1. Proteger el balón con el cuerpo antes de girar. 2. Disparo instantáneo al arco.', materials: '🎒 1 Portería Reglamentaria, 8 Balones Oficiales N°5, 2 Petos Defensivos' },
+  { id: 'tec_c4', title: 'Pases Largos de Precisión de 35 Metros', level: 'competitivo', cat: 'tecnica', dur: '15 min', desc: 'Parejas situadas a 35 metros de distancia ensayando cambios de orientación por el aire impactando con el empeine total sin que el balón haga roscas descontroladas, con recepción orientada a 1 toque.', rules: '1. Control orientado instantáneo del receptor. 2. Trayectoria limpia y tensa del pase aéreo.', materials: '🎒 8 Conos de Pasillo, 6 Balones N°5 Oficiales de Competición' },
+  { id: 'tec_c5', title: 'Mano a Mano 1v1 contra el Portero con Presión Trasera', level: 'competitivo', cat: 'tecnica', dur: '15 min', desc: 'El delantero parte con 2 metros de ventaja en carrera hacia la portería, perseguido por un defensa central. Debe resolver el mano a mano ante la salida del arquero en menos de 3 toques.', rules: '1. Resolver en máximo 3 toques. 2. Decidir según el achique entre vaselina, regate o disparo bajo.', materials: '🎒 1 Portería Principal, 10 Balones N°5, 4 Petos' },
+  { id: 'tec_c6', title: 'Volea Acrobática tras Rechace de Cabeza', level: 'competitivo', cat: 'tecnica', dur: '15 min', desc: 'El balón sale despejado de cabeza desde el área chica hacia la frontal. El mediocampista ingresa en carrera y remata de volea sin dejar picar el balón en el suelo.', rules: '1. Coordinación ojo-pie impecable. 2. Mantener la mirada fija en el balón hasta el impacto.', materials: '🎒 1 Portería Reglamentaria, 10 Balones Oficiales N°5, 4 Conos' },
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // 🛡️ BALÓN PARADO / ABP (4 FORMATIVOS + 4 COMPETITIVOS)
-  // ──────────────────────────────────────────────────────────────────────────
-  {
-    id: 'abp_f1',
-    title: 'Saque de Banda Táctico en Corto y Apoyo',
-    level: 'formativo',
-    cat: 'abp',
-    dur: '10 min',
-    desc: 'Enseñar la técnica reglamentaria correcta del saque de banda (ambas manos detrás de la cabeza, ambos pies apoyados en el suelo) buscando la recepción en corto del lateral y la devolución en pared.',
-    rules: '1. Prohibido levantar los pies del suelo al sacar. 2. Ofrecer siempre dos opciones de pase claro.',
-    materials: '🎒 6 Balones N°4/5, 6 Conos de Línea de Banda'
-  },
-  {
-    id: 'abp_f2',
-    title: 'Córner Infantil en Corto con Dos Jugadores',
-    level: 'formativo',
-    cat: 'abp',
-    dur: '12 min',
-    desc: 'Ejecución del tiro de esquina mediante un pase corto al compañero que se acerca al banderín para engañar a la defensa y lanzar un centro raseado peligroso al área chica.',
-    rules: '1. Engañar simulando disparo directo. 2. Centro potente al área chica a ras de césped.',
-    materials: '🎒 1 Banderín de Córner, 1 Portería Principal, 6 Balones N°4/5'
-  },
-  {
-    id: 'abp_f3',
-    title: 'Falta Lateral Básica con Marca Zonal',
-    level: 'formativo',
-    cat: 'abp',
-    dur: '12 min',
-    desc: 'Enseñar a los defensores infantiles a alinearse en marca zonal mirando el balón y saliendo a atacarlo en lugar de quedarse estáticos al momento del lanzamiento lateral rival.',
-    rules: '1. Despejar siempre hacia los laterales fuera del área. 2. Comunicación del portero ("¡Mía!").',
-    materials: '🎒 1 Portería Principal, 8 Balones N°4/5, 6 Petos Defensivos'
-  },
-  {
-    id: 'abp_f4',
-    title: 'Tiro Libre Infantil sobre Barrera Baja',
-    level: 'formativo',
-    cat: 'abp',
-    dur: '10 min',
-    desc: 'Práctica de tiro libre directo a 16 metros con una barrera infantil de 2 muñecos/conos altos, aprendiendo a superar la altura con rosca interior buscando la escuadra.',
-    rules: '1. Pie de apoyo firme al lado del balón. 2. Acompañar el golpeo con el cuerpo.',
-    materials: '🎒 2 Muñecos/Conos Altos para Barrera (1.5m), 1 Portería, 8 Balones N°4/5'
-  },
-  {
-    id: 'abp_c1',
-    title: 'Córner Táctico con Bloqueo y Cortina al Primer Palo',
-    level: 'competitivo',
-    cat: 'abp',
-    dur: '15 min',
-    desc: 'Movimiento ensayado donde 2 atacantes realizan bloqueo al marcador central rival para liberar al rematador principal que ingresa como un rayo a peinar el balón al primer palo.',
-    rules: '1. Salida en abanico coordinada al silbato del cobrador. 2. Buscar la peinada al 2° palo.',
-    materials: '🎒 1 Banderín de Córner, 1 Portería Oficial, 10 Balones N°5 de Competición, 6 Petos'
-  },
-  {
-    id: 'abp_c2',
-    title: 'Tiro Libre Frontal con Jugador Oculto tras Barrera',
-    level: 'competitivo',
-    cat: 'abp',
-    dur: '15 min',
-    desc: 'Estrategia donde un atacante se coloca agachado en la barrera rival y se abre justo antes del impacto, permitiendo filtrar un remate raso sorpresivo directo al gol.',
-    rules: '1. Sincronización milimétrica del movimiento de barrera. 2. Remate raso potente.',
-    materials: '🎒 4 Muñecos de Barrera Inflable, 1 Portería Oficial, 10 Balones Oficiales N°5'
-  },
-  {
-    id: 'abp_c3',
-    title: 'Saque de Banda Ofensivo Directo al Área Chica (Lanzador)',
-    level: 'competitivo',
-    cat: 'abp',
-    dur: '12 min',
-    desc: 'Saque de banda largo lanzado con ambas manos hacia el punto penal para peinar de cabeza hacia atrás, buscando la entrada furiosa de la segunda línea de volantes.',
-    rules: '1. Peinar con la zona occipital. 2. Los extremos atacan los rebotes al segundo palo.',
-    materials: '🎒 8 Balones Oficiales de Partido N°5, 6 Petos, 1 Cinta Métrica'
-  },
-  {
-    id: 'abp_c4',
-    title: 'Defensa de Córner Mixta (Zonal + Marcas Hombre)',
-    level: 'competitivo',
-    cat: 'abp',
-    dur: '15 min',
-    desc: 'Organización defensiva mixta: 3 mejores cabeceadores defienden la zona chica frontal + 3 defensores realizan marca al hombre pegada sobre los rematadores peligrosos rivales.',
-    rules: '1. No perder de vista la marca asignada. 2. Salida rápida en bloque al despejar.',
-    materials: '🎒 1 Portería Oficial, 1 Banderín de Córner, 8 Balones N°5 Oficiales, 6 Petos'
-  },
+  // 🛡️ BALÓN PARADO (ABP)
+  { id: 'abp_f1', title: 'Saque de Banda Táctico en Corto y Apoyo', level: 'formativo', cat: 'abp', dur: '10 min', desc: 'Enseñar la técnica reglamentaria correcta del saque de banda (ambas manos detrás de la cabeza, ambos pies apoyados en el suelo) buscando la recepción en corto del lateral y la devolución en pared.', rules: '1. Prohibido levantar los pies del suelo al sacar. 2. Ofrecer siempre dos opciones de pase claro.', materials: '🎒 6 Balones N°4/5, 6 Conos de Línea de Banda' },
+  { id: 'abp_f2', title: 'Córner Infantil en Corto con Dos Jugadores', level: 'formativo', cat: 'abp', dur: '12 min', desc: 'Ejecución del tiro de esquina mediante un pase corto al compañero que se acerca al banderín para engañar a la defensa y lanzar un centro raseado peligroso al área chica.', rules: '1. Engañar simulando disparo directo. 2. Centro potente al área chica a ras de césped.', materials: '🎒 1 Banderín de Córner, 1 Portería Principal, 6 Balones N°4/5' },
+  { id: 'abp_f3', title: 'Falta Lateral Básica con Marca Zonal', level: 'formativo', cat: 'abp', dur: '12 min', desc: 'Enseñar a los defensores infantiles a alinearse en marca zonal mirando el balón y saliendo a atacarlo en lugar de quedarse estáticos al momento del lanzamiento lateral rival.', rules: '1. Despejar siempre hacia los laterales fuera del área. 2. Comunicación del portero ("¡Mía!").', materials: '🎒 1 Portería Principal, 8 Balones N°4/5, 6 Petos Defensivos' },
+  { id: 'abp_f4', title: 'Tiro Libre Infantil sobre Barrera Baja', level: 'formativo', cat: 'abp', dur: '10 min', desc: 'Práctica de tiro libre directo a 16 metros con una barrera infantil de 2 muñecos/conos altos, aprendiendo a superar la altura con rosca interior buscando la escuadra.', rules: '1. Pie de apoyo firme al lado del balón. 2. Acompañar el golpeo con el cuerpo.', materials: '🎒 2 Muñecos/Conos Altos para Barrera (1.5m), 1 Portería, 8 Balones N°4/5' },
+  { id: 'abp_c1', title: 'Córner Táctico con Bloqueo y Cortina al Primer Palo', level: 'competitivo', cat: 'abp', dur: '15 min', desc: 'Movimiento ensayado donde 2 atacantes realizan bloqueo al marcador central rival para liberar al rematador principal que ingresa como un rayo a peinar el balón al primer palo.', rules: '1. Salida en abanico coordinada al silbato del cobrador. 2. Buscar la peinada al 2° palo.', materials: '🎒 1 Banderín de Córner, 1 Portería Oficial, 10 Balones N°5 de Competición, 6 Petos' },
+  { id: 'abp_c2', title: 'Tiro Libre Frontal con Jugador Oculto tras Barrera', level: 'competitivo', cat: 'abp', dur: '15 min', desc: 'Estrategia donde un atacante se coloca agachado en la barrera rival y se abre justo antes del impacto, permitiendo filtrar un remate raso sorpresivo directo al gol.', rules: '1. Sincronización milimétrica del movimiento de barrera. 2. Remate raso potente.', materials: '🎒 4 Muñecos de Barrera Inflable, 1 Portería Oficial, 10 Balones Oficiales N°5' },
+  { id: 'abp_c3', title: 'Saque de Banda Ofensivo Directo al Área Chica (Lanzador)', level: 'competitivo', cat: 'abp', dur: '12 min', desc: 'Saque de banda largo lanzado con ambas manos hacia el punto penal para peinar de cabeza hacia atrás, buscando la entrada furiosa de la segunda línea de volantes.', rules: '1. Peinar con la zona occipital. 2. Los extremos atacan los rebotes al segundo palo.', materials: '🎒 8 Balones Oficiales de Partido N°5, 6 Petos, 1 Cinta Métrica' },
+  { id: 'abp_c4', title: 'Defensa de Córner Mixta (Zonal + Marcas Hombre)', level: 'competitivo', cat: 'abp', dur: '15 min', desc: 'Organización defensiva mixta: 3 mejores cabeceadores defienden la zona chica frontal + 3 defensores realizan marca al hombre pegada sobre los rematadores peligrosos rivales.', rules: '1. No perder de vista la marca asignada. 2. Salida rápida en bloque al despejar.', materials: '🎒 1 Portería Oficial, 1 Banderín de Córner, 8 Balones N°5 Oficiales, 6 Petos' },
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // 🏃‍♂️ FÍSICO, COORDINACIÓN & PSICOMOTRICIDAD (4 FORMATIVOS + 4 COMPETITIVOS)
-  // ──────────────────────────────────────────────────────────────────────────
-  {
-    id: 'fis_f1',
-    title: 'Circuito Psicomotor de Aros y Salto Infantil',
-    level: 'formativo',
-    cat: 'fisico',
-    dur: '15 min',
-    desc: 'Circuito coordinativo: Paso por aros (pata coja y dos pies), salto consecutivo sobre mini-vallas de 20cm y aceleración suave de 8 metros para rematar a portería.',
-    rules: '1. Coordinación motriz antes que velocidad pura. 2. Caída con rodillas flexionadas.',
-    materials: '🎒 6 Aros Psicomotores, 4 Mini-Vallas (20cm), 1 Portería, 6 Balones N°4/5'
-  },
-  {
-    id: 'fis_f2',
-    title: 'Carrera de Relevos con Conducción en Zig-Zag',
-    level: 'formativo',
-    cat: 'fisico',
-    dur: '12 min',
-    desc: 'Carrera por equipos sorteando hileras de estacas en zig-zag a máxima velocidad llevando el balón pegado al pie hasta la meta y regresando.',
-    rules: '1. Entregar el balón al compañero de fila antes de cruzar la línea. 2. Diversión y máximo esfuerzo.',
-    materials: '🎒 12 Estacas de Eslalon, 4 Balones N°4/5, 1 Silbato'
-  },
-  {
-    id: 'fis_f3',
-    title: 'Juego de Agilidad "El Espejo"',
-    level: 'formativo',
-    cat: 'fisico',
-    dur: '10 min',
-    desc: 'Parejas frente a frente a 2 metros de distancia. El atacante realiza movimientos laterales rápidos de vaivén y el defensor debe imitar sus movimientos en espejo sin perder la postura.',
-    rules: '1. Mantener posición defensiva flexionada. 2. Cambios de ritmo repentinos.',
-    materials: '🎒 8 Conos Bajos de Marcación, 1 Silbato'
-  },
-  {
-    id: 'fis_f4',
-    title: 'Caza de Banderines con Reacción Rápida',
-    level: 'formativo',
-    cat: 'fisico',
-    dur: '12 min',
-    desc: 'Jugadores echados boca abajo en la línea de partida. Al silbato se incorporan en explosión y esprintan 10m a atrapar un banderín en el centro (hay 1 banderín menos que jugadores).',
-    rules: '1. Salida rápida desde la posición tendida. 2. Competencia sana y potencia de piernas.',
-    materials: '🎒 5 Banderines o Conos Altos de Objetivo, 1 Silbato'
-  },
-  {
-    id: 'fis_c1',
-    title: 'Circuito Intermitente Neuromuscular con Balón (RSA)',
-    level: 'competitivo',
-    cat: 'fisico',
-    dur: '18 min',
-    desc: 'Estaciones de alta intensidad en 12 segundos: Esprint 15m + Freno seco + Pase tenso + Pliometría en vallas de 30cm + Tiro a puerta bajo fatiga aeróbica.',
-    rules: '1. Pausa de recuperación 1:3 entre pasadas. 2. Mantener la técnica limpia bajo fatiga.',
-    materials: '🎒 6 Vallas Pliométricas (30cm), 8 Conos, 1 Portería, 6 Balones N°5, 1 Cronómetro'
-  },
-  {
-    id: 'fis_c2',
-    title: 'Resistencia Específica 1v1 Continuo con Transición',
-    level: 'competitivo',
-    cat: 'fisico',
-    dur: '15 min',
-    desc: 'Duelo 1v1 exhaustivo durante 45 segundos seguidos. Apenas el balón sale del rectángulo, el DT introduce otro balón inmediatamente para exigir resistencia anaeróbica láctica.',
-    rules: '1. Exigencia anaeróbica máxima. 2. Mantener la intensidad defensiva sin faltas.',
-    materials: '🎒 8 Conos de Perímetro, 10 Balones Oficiales N°5, 2 Petos, 1 Cronómetro'
-  },
-  {
-    id: 'fis_c3',
-    title: 'Fuerza Explosiva: Arrastre de Trineo / Liga + Esprint',
-    level: 'competitivo',
-    cat: 'fisico',
-    dur: '15 min',
-    desc: 'Carrera de 5 metros con resistencia de liga elástica sujetada por un compañero desde atrás + liberación del arnés para esprintar libremente 10 metros en velocidad pura.',
-    rules: '1. Postura de zancada potente con tronco inclinado. 2. Transferencia a la aceleración limpia.',
-    materials: '🎒 2 Ligas de Resistencia Elástica con Cinturón, 6 Conos de Marcación, 1 Cronómetro'
-  },
-  {
-    id: 'fis_c4',
-    title: 'Frenado Excéntrico y Prevención de Isquiotibiales (Nordic Hamstring)',
-    level: 'competitivo',
-    cat: 'fisico',
-    dur: '12 min',
-    desc: 'Ejercicio nórdico preventivo de isquiotibiales de rodillas sobre colchoneta, frenando la caída del tronco hacia adelante mediante contracción excéntrica con asistencia del compañero sujetando tobillos.',
-    rules: '1. Mantener la cadera extendida en todo momento. 2. 3 series de 5 repeticiones lentas.',
-    materials: '🎒 4 Colchonetas de Protección, 1 Silbato'
-  }
+  // 🏃‍♂️ FÍSICO, COORDINACIÓN & PSICOMOTRICIDAD
+  { id: 'fis_f1', title: 'Circuito Psicomotor de Aros y Salto Infantil', level: 'formativo', cat: 'fisico', dur: '15 min', desc: 'Circuito coordinativo: Paso por aros (pata coja y dos pies), salto consecutivo sobre mini-vallas de 20cm y aceleración suave de 8 metros para rematar a portería.', rules: '1. Coordinación motriz antes que velocidad pura. 2. Caída con rodillas flexionadas.', materials: '🎒 6 Aros Psicomotores, 4 Mini-Vallas (20cm), 1 Portería, 6 Balones N°4/5' },
+  { id: 'fis_f2', title: 'Carrera de Relevos con Conducción en Zig-Zag', level: 'formativo', cat: 'fisico', dur: '12 min', desc: 'Carrera por equipos sorteando hileras de estacas en zig-zag a máxima velocidad llevando el balón pegado al pie hasta la meta y regresando.', rules: '1. Entregar el balón al compañero de fila antes de cruzar la línea. 2. Diversión y máximo esfuerzo.', materials: '🎒 12 Estacas de Eslalon, 4 Balones N°4/5, 1 Silbato' },
+  { id: 'fis_f3', title: 'Juego de Agilidad "El Espejo"', level: 'formativo', cat: 'fisico', dur: '10 min', desc: 'Parejas frente a frente a 2 metros de distancia. El atacante realiza movimientos laterales rápidos de vaivén y el defensor debe imitar sus movimientos en espejo sin perder la postura.', rules: '1. Mantener posición defensiva flexionada. 2. Cambios de ritmo repentinos.', materials: '🎒 8 Conos Bajos de Marcación, 1 Silbato' },
+  { id: 'fis_f4', title: 'Caza de Banderines con Reacción Rápida', level: 'formativo', cat: 'fisico', dur: '12 min', desc: 'Jugadores echados boca abajo en la línea de partida. Al silbato se incorporan en explosión y esprintan 10m a atrapar un banderín en el centro (hay 1 banderín menos que jugadores).', rules: '1. Salida rápida desde la posición tendida. 2. Competencia sana y potencia de piernas.', materials: '🎒 5 Banderines o Conos Altos de Objetivo, 1 Silbato' },
+  { id: 'fis_c1', title: 'Circuito Intermitente Neuromuscular con Balón (RSA)', level: 'competitivo', cat: 'fisico', dur: '18 min', desc: 'Estaciones de alta intensidad en 12 segundos: Esprint 15m + Freno seco + Pase tenso + Pliometría en vallas de 30cm + Tiro a puerta bajo fatiga aeróbica.', rules: '1. Pausa de recuperación 1:3 entre pasadas. 2. Mantener la técnica limpia bajo fatiga.', materials: '🎒 6 Vallas Pliométricas (30cm), 8 Conos, 1 Portería, 6 Balones N°5, 1 Cronómetro' },
+  { id: 'fis_c2', title: 'Resistencia Específica 1v1 Continuo con Transición', level: 'competitivo', cat: 'fisico', dur: '15 min', desc: 'Duelo 1v1 exhaustivo durante 45 segundos seguidos. Apenas el balón sale del rectángulo, el DT introduce otro balón inmediatamente para exigir resistencia anaeróbica láctica.', rules: '1. Exigencia anaeróbica máxima. 2. Mantener la intensidad defensiva sin faltas.', materials: '🎒 8 Conos de Perímetro, 10 Balones Oficiales N°5, 2 Petos, 1 Cronómetro' },
+  { id: 'fis_c3', title: 'Fuerza Explosiva: Arrastre de Trineo / Liga + Esprint', level: 'competitivo', cat: 'fisico', dur: '15 min', desc: 'Carrera de 5 metros con resistencia de liga elástica sujetada por un compañero desde atrás + liberación del arnés para esprintar libremente 10 metros en velocidad pura.', rules: '1. Postura de zancada potente con tronco inclinado. 2. Transferencia a la aceleración limpia.', materials: '🎒 2 Ligas de Resistencia Elástica con Cinturón, 6 Conos de Marcación, 1 Cronómetro' },
+  { id: 'fis_c4', title: 'Frenado Excéntrico y Prevención de Isquiotibiales (Nordic Hamstring)', level: 'competitivo', cat: 'fisico', dur: '12 min', desc: 'Ejercicio nórdico preventivo de isquiotibiales de rodillas sobre colchoneta, frenando la caída del tronco hacia adelante mediante contracción excéntrica con asistencia del compañero sujetando tobillos.', rules: '1. Mantener la cadera extendida en todo momento. 2. 3 series de 5 repeticiones lentas.', materials: '🎒 4 Colchonetas de Protección, 1 Silbato' }
 ];
 
-// ESTADO INTERNO DEL MÓDULO DE ENTRENAMIENTOS
+// MAPEO DE NOMBRES Y BADGES DE CATEGORÍAS
+const CAT_MAP = {
+  ludico: { name: '🎮 Juegos Lúdicos & Recreativos', color: '#50e3c2' },
+  pre_entreno: { name: '⚡ Activación Neuromuscular Pre-Entreno', color: 'var(--oro)' },
+  pre_partido: { name: '🔥 Activación Neuromuscular Pre-Partido', color: '#ff5252' },
+  tactica: { name: '🎯 Táctica & Posesión', color: '#4a90e2' },
+  tecnica: { name: '⚽ Técnica & Remate', color: '#e65100' },
+  abp: { name: '🛡️ Balón Parado (ABP)', color: '#9c27b0' },
+  fisico: { name: '🏃‍♂️ Físico, Coordinación & Psicomotricidad', color: '#00ab55' }
+};
+
 let currentLevelFilter = 'all';
 let currentCatFilter = 'all';
 let modalLevelFilter = 'all';
@@ -751,19 +118,8 @@ export function getEntrenamientosData() {
   return catObj;
 }
 
-// MAPEO DE NOMBRES Y BADGES DE CATEGORÍAS
-const CAT_MAP = {
-  ludico: { name: '🎮 Juegos Lúdicos & Recreativos', color: '#50e3c2' },
-  pre_entreno: { name: '⚡ Activación Neuromuscular Pre-Entreno', color: 'var(--oro)' },
-  pre_partido: { name: '🔥 Activación Neuromuscular Pre-Partido', color: '#ff5252' },
-  tactica: { name: '🎯 Táctica & Posesión', color: '#4a90e2' },
-  tecnica: { name: '⚽ Técnica & Remate', color: '#e65100' },
-  abp: { name: '🛡️ Balón Parado (ABP)', color: '#9c27b0' },
-  fisico: { name: '🏃‍♂️ Físico, Coordinación & Psicomotricidad', color: '#00ab55' }
-};
-
 // ══════════════════════════════════════════════════════════════════════════
-// GENERADOR DE DIAGRAMA TÁCTICO SVG ESTÁTICO DE ALTA DEFINICIÓN (100% ÚNICO)
+// GENERADOR DE DIAGRAMA TÁCTICO SVG ESTÁTICO DE ALTA DEFINICIÓN (100% ÚNICO PARA CADA UNO DE LOS 70 EJERCICIOS)
 // ══════════════════════════════════════════════════════════════════════════
 export function buildTacticalDiagramSVG(drillInput = 'tactica') {
   const cat = typeof drillInput === 'string' ? drillInput : (drillInput.cat || 'tactica');
@@ -773,7 +129,7 @@ export function buildTacticalDiagramSVG(drillInput = 'tactica') {
   let content = '';
   let badgeText = '📋 ESQUEMA TÁCTICO DE CAMPO';
 
-  // LÚDICOS
+  // 1. lud_f1: Tres en Raya
   if (id === 'lud_f1' || title.includes('Tres en Raya')) {
     badgeText = '🎮 3 EN RAYA CONOS & PETOS';
     content = `
@@ -782,20 +138,19 @@ export function buildTacticalDiagramSVG(drillInput = 'tactica') {
       <line x1="110" y1="20" x2="110" y2="80" stroke="#50e3c2" stroke-width="1.5"/>
       <line x1="70" y1="40" x2="130" y2="40" stroke="#50e3c2" stroke-width="1.5"/>
       <line x1="70" y1="60" x2="130" y2="60" stroke="#50e3c2" stroke-width="1.5"/>
-      <!-- Fila A1, A2, A3 -->
       <circle cx="25" cy="30" r="5" fill="#50e3c2"/><text x="25" y="32.5" font-size="5" font-weight="900" fill="#000" text-anchor="middle">A1</text>
       <circle cx="25" cy="50" r="5" fill="#50e3c2"/><text x="25" y="52.5" font-size="5" font-weight="900" fill="#000" text-anchor="middle">A2</text>
       <circle cx="25" cy="70" r="5" fill="#50e3c2"/><text x="25" y="72.5" font-size="5" font-weight="900" fill="#000" text-anchor="middle">A3</text>
       <line x1="32" y1="30" x2="78" y2="30" stroke="#50e3c2" stroke-width="1.5" stroke-dasharray="3,2"/>
-      <!-- Fila B1, B2, B3 -->
       <circle cx="175" cy="30" r="5" fill="#ff5252"/><text x="175" y="32.5" font-size="5" font-weight="900" fill="#fff" text-anchor="middle">B1</text>
       <circle cx="175" cy="50" r="5" fill="#ff5252"/><text x="175" y="52.5" font-size="5" font-weight="900" fill="#fff" text-anchor="middle">B2</text>
       <circle cx="175" cy="70" r="5" fill="#ff5252"/><text x="175" y="72.5" font-size="5" font-weight="900" fill="#fff" text-anchor="middle">B3</text>
       <line x1="168" y1="50" x2="122" y2="50" stroke="#ff5252" stroke-width="1.5" stroke-dasharray="3,2"/>
-      <circle cx="80" cy="30" r="4" fill="#50e3c2"/>
-      <circle cx="120" cy="50" r="4" fill="#ff5252"/>
+      <circle cx="80" cy="30" r="4" fill="#50e3c2"/><circle cx="120" cy="50" r="4" fill="#ff5252"/>
     `;
-  } else if (id === 'lud_f2' || title.includes('Zorro')) {
+  }
+  // 2. lud_f2: El Zorro
+  else if (id === 'lud_f2' || title.includes('Zorro')) {
     badgeText = '🦊 EL ZORRO Y LOS CAZADORES';
     content = `
       <rect x="30" y="15" width="140" height="70" fill="rgba(255,152,0,0.05)" stroke="#ff9800" stroke-width="1.5" stroke-dasharray="4,3"/>
@@ -804,11 +159,12 @@ export function buildTacticalDiagramSVG(drillInput = 'tactica') {
       <circle cx="150" cy="30" r="5" fill="#50e3c2"/><text x="150" y="32" font-size="5" font-weight="900" fill="#000" text-anchor="middle">C2</text>
       <circle cx="50" cy="70" r="5" fill="#50e3c2"/><text x="50" y="72" font-size="5" font-weight="900" fill="#000" text-anchor="middle">C3</text>
       <circle cx="150" cy="70" r="5" fill="#50e3c2"/><text x="150" y="72" font-size="5" font-weight="900" fill="#000" text-anchor="middle">C4</text>
-      <!-- Trayectorias de escape -->
       <path d="M 100 50 Q 80 40 55 35" fill="none" stroke="#ff9800" stroke-width="1.5" stroke-dasharray="2,2"/>
       <path d="M 100 50 Q 120 60 145 65" fill="none" stroke="#ff9800" stroke-width="1.5" stroke-dasharray="2,2"/>
     `;
-  } else if (id === 'lud_f3' || title.includes('Robo de Colas')) {
+  }
+  // 3. lud_f3: Robo de Colas
+  else if (id === 'lud_f3' || title.includes('Robo de Colas')) {
     badgeText = '🎮 ROBO DE COLAS CON CINTAS';
     content = `
       <rect x="30" y="15" width="140" height="70" fill="none" stroke="#50e3c2" stroke-width="1" stroke-dasharray="3,3"/>
@@ -817,7 +173,9 @@ export function buildTacticalDiagramSVG(drillInput = 'tactica') {
       <circle cx="100" cy="65" r="5" fill="#4a90e2"/><line x1="100" y1="70" x2="100" y2="79" stroke="#ffd700" stroke-width="2.5"/>
       <path d="M 65 35 Q 100 30 135 35" fill="none" stroke="#ffd700" stroke-width="1.5" stroke-dasharray="3,2"/>
     `;
-  } else if (id === 'lud_f4' || id === 'lud_c2' || title.includes('Tenis') || title.includes('Vóley')) {
+  }
+  // 4. lud_f4: Fútbol-Tenis Infantil
+  else if (id === 'lud_f4' || title.includes('Fútbol-Tenis Adaptado')) {
     badgeText = '🎾 FÚTBOL TENIS EN RED BAJA';
     content = `
       <rect x="20" y="15" width="160" height="70" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
@@ -826,11 +184,12 @@ export function buildTacticalDiagramSVG(drillInput = 'tactica') {
       <circle cx="50" cy="65" r="5" fill="#50e3c2"/><text x="50" y="67" font-size="5" font-weight="900" fill="#000" text-anchor="middle">A2</text>
       <circle cx="150" cy="35" r="5" fill="#ff5252"/><text x="150" y="37" font-size="5" font-weight="900" fill="#fff" text-anchor="middle">B1</text>
       <circle cx="150" cy="65" r="5" fill="#ff5252"/><text x="150" y="67" font-size="5" font-weight="900" fill="#fff" text-anchor="middle">B2</text>
-      <!-- Parábola del balón sobre la red -->
       <path d="M 55 35 Q 100 10 145 35" fill="none" stroke="#ffd700" stroke-width="2"/>
       <circle cx="100" cy="22" r="3.5" fill="#ffd700"/>
     `;
-  } else if (id === 'lud_f5' || title.includes('Castillo')) {
+  }
+  // 5. lud_f5: Derribar Cono Castillo
+  else if (id === 'lud_f5' || title.includes('Castillo')) {
     badgeText = '🏰 DERRIBAR CONOS DEL CASTILLO';
     content = `
       <rect x="90" y="15" width="20" height="70" fill="rgba(255,215,0,0.15)" stroke="#ffd700" stroke-dasharray="2,2"/>
@@ -844,7 +203,9 @@ export function buildTacticalDiagramSVG(drillInput = 'tactica') {
       <line x1="36" y1="35" x2="94" y2="45" stroke="#ffd700" stroke-width="2"/>
       <line x1="164" y1="65" x2="106" y2="55" stroke="#ffd700" stroke-width="2"/>
     `;
-  } else if (id === 'lud_c1' || title.includes('7v2')) {
+  }
+  // 6. lud_c1: Rondo 7v2 1 Toque
+  else if (id === 'lud_c1') {
     badgeText = '🎮 RONDO 7v2 A UN TOQUE';
     content = `
       <circle cx="100" cy="50" r="35" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
@@ -855,14 +216,30 @@ export function buildTacticalDiagramSVG(drillInput = 'tactica') {
       <circle cx="85" cy="83" r="4.5" fill="#50e3c2"/>
       <circle cx="65" cy="60" r="4.5" fill="#50e3c2"/>
       <circle cx="70" cy="25" r="4.5" fill="#50e3c2"/>
-      <!-- Defensores centro -->
       <circle cx="92" cy="48" r="4.5" fill="#ff5252"/>
       <circle cx="108" cy="52" r="4.5" fill="#ff5252"/>
-      <!-- Pases -->
       <line x1="100" y1="15" x2="130" y2="25" stroke="#ffd700" stroke-width="1.5"/>
       <line x1="130" y1="25" x2="135" y2="60" stroke="#ffd700" stroke-width="1.5"/>
     `;
-  } else if (id === 'lud_c3' || title.includes('Travesaño')) {
+  }
+  // 7. lud_c2: Fútbol Vóley 3v3
+  else if (id === 'lud_c2' || title.includes('Fútbol Vóley')) {
+    badgeText = '🏐 FÚTBOL VÓLEY 3v3 SENSACIÓN';
+    content = `
+      <rect x="25" y="15" width="150" height="70" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+      <line x1="100" y1="10" x2="100" y2="90" stroke="#ff5252" stroke-width="3.5"/>
+      <circle cx="50" cy="30" r="5" fill="#50e3c2"/>
+      <circle cx="40" cy="50" r="5" fill="#50e3c2"/>
+      <circle cx="50" cy="70" r="5" fill="#50e3c2"/>
+      <circle cx="150" cy="30" r="5" fill="#ff9800"/>
+      <circle cx="160" cy="50" r="5" fill="#ff9800"/>
+      <circle cx="150" cy="70" r="5" fill="#ff9800"/>
+      <path d="M 50 30 Q 100 15 150 30" fill="none" stroke="#ffd700" stroke-width="2.5"/>
+      <path d="M 150 70 Q 100 85 50 70" fill="none" stroke="#ffd700" stroke-width="2.5" stroke-dasharray="3,2"/>
+    `;
+  }
+  // 8. lud_c3: Desafío Travesaño
+  else if (id === 'lud_c3' || title.includes('Travesaño')) {
     badgeText = '🎯 DESAFÍO AL TRAVESAÑO';
     content = `
       <rect x="175" y="20" width="10" height="60" fill="none" stroke="#fff" stroke-width="2"/>
@@ -874,138 +251,689 @@ export function buildTacticalDiagramSVG(drillInput = 'tactica') {
       <circle cx="175" cy="20" r="3.5" fill="#ffd700"/>
     `;
   }
-
-  // TÁCTICA
-  else if (id === 'tac_c1' || title.includes('Guardiola')) {
-    badgeText = '🎯 JUEGO DE POSICIÓN 4v4+3';
+  // 9. lud_c4: Pádel-Fútbol
+  else if (id === 'lud_c4' || title.includes('Pádel')) {
+    badgeText = '🏓 PÁDEL FÚTBOL Y PARED';
     content = `
-      <rect x="30" y="15" width="140" height="70" fill="rgba(74,144,226,0.05)" stroke="#4a90e2" stroke-width="1.5"/>
-      <!-- 4 Azules -->
-      <circle cx="45" cy="30" r="5" fill="#4a90e2"/>
-      <circle cx="155" cy="30" r="5" fill="#4a90e2"/>
-      <circle cx="45" cy="70" r="5" fill="#4a90e2"/>
-      <circle cx="155" cy="70" r="5" fill="#4a90e2"/>
-      <!-- 4 Rojos defensores -->
-      <circle cx="80" cy="40" r="5" fill="#ff5252"/>
-      <circle cx="120" cy="40" r="5" fill="#ff5252"/>
-      <circle cx="80" cy="60" r="5" fill="#ff5252"/>
-      <circle cx="120" cy="60" r="5" fill="#ff5252"/>
-      <!-- 3 Comodines Amarillos -->
-      <circle cx="100" cy="50" r="5" fill="#ffd700"/><text x="100" y="52" font-size="4.5" font-weight="900" fill="#000" text-anchor="middle">CDM</text>
-      <circle cx="100" cy="15" r="5" fill="#ffd700"/>
-      <circle cx="100" cy="85" r="5" fill="#ffd700"/>
-      <line x1="45" y1="30" x2="100" y2="50" stroke="#ffd700" stroke-width="1.5"/>
-      <line x1="100" y1="50" x2="155" y2="30" stroke="#ffd700" stroke-width="1.5"/>
+      <rect x="15" y="10" width="170" height="80" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+      <rect x="180" y="10" width="5" height="80" fill="#aaa"/>
+      <circle cx="40" cy="35" r="5" fill="#50e3c2"/>
+      <circle cx="40" cy="65" r="5" fill="#50e3c2"/>
+      <line x1="45" y1="35" x2="180" y2="20" stroke="#ffd700" stroke-width="1.5"/>
+      <line x1="180" y1="20" x2="120" y2="65" stroke="#ffd700" stroke-width="1.5" stroke-dasharray="3,2"/>
+      <circle cx="120" cy="65" r="5" fill="#ff5252"/>
     `;
-  } else if (id === 'tac_c2' || title.includes('Salida')) {
-    badgeText = '🎯 SALIDA DE BALÓN 4v3';
+  }
+  // 10. lud_c5: Relevos Habilidad
+  else if (id === 'lud_c5' || title.includes('Relevos Combinados')) {
+    badgeText = '⚡ RELEVOS COMBINADOS DE HABILIDAD';
     content = `
-      <rect x="10" y="25" width="12" height="50" fill="none" stroke="#fff" stroke-width="2"/>
-      <circle cx="16" cy="50" r="5" fill="#ffeb3b"/><text x="16" y="52" font-size="4.5" font-weight="900" fill="#000" text-anchor="middle">PO</text>
-      <!-- Centrales y Laterales -->
-      <circle cx="45" cy="30" r="5" fill="#4a90e2"/><text x="45" y="32" font-size="4.5" font-weight="900" fill="#fff" text-anchor="middle">LI</text>
-      <circle cx="45" cy="70" r="5" fill="#4a90e2"/><text x="45" y="72" font-size="4.5" font-weight="900" fill="#fff" text-anchor="middle">LD</text>
-      <circle cx="65" cy="45" r="5" fill="#4a90e2"/><text x="65" y="47" font-size="4.5" font-weight="900" fill="#fff" text-anchor="middle">DFC</text>
-      <circle cx="65" cy="55" r="5" fill="#4a90e2"/><text x="65" y="57" font-size="4.5" font-weight="900" fill="#fff" text-anchor="middle">DFC</text>
-      <!-- 3 Presionantes -->
-      <circle cx="95" cy="35" r="5" fill="#ff5252"/>
-      <circle cx="95" cy="50" r="5" fill="#ff5252"/>
-      <circle cx="95" cy="65" r="5" fill="#ff5252"/>
-      <path d="M 16 50 L 65 45 L 45 30 L 140 30" fill="none" stroke="#ffd700" stroke-width="1.5" stroke-dasharray="3,2"/>
-    `;
-  } else if (id === 'tac_c3' || title.includes('Repliegue')) {
-    badgeText = '🎯 BLOQUE MEDIO COMPACTO 8M';
-    content = `
-      <line x1="90" y1="10" x2="90" y2="90" stroke="rgba(255,255,255,0.2)" stroke-dasharray="2,2"/>
-      <!-- Línea defensiva -->
-      <circle cx="80" cy="25" r="5" fill="#4a90e2"/>
-      <circle cx="80" cy="42" r="5" fill="#4a90e2"/>
-      <circle cx="80" cy="58" r="5" fill="#4a90e2"/>
-      <circle cx="80" cy="75" r="5" fill="#4a90e2"/>
-      <line x1="80" y1="25" x2="80" y2="75" stroke="#50e3c2" stroke-width="2"/>
-      <!-- Atacantes rivales -->
-      <circle cx="120" cy="30" r="5" fill="#ff5252"/>
-      <circle cx="125" cy="50" r="5" fill="#ff5252"/>
-      <circle cx="120" cy="70" r="5" fill="#ff5252"/>
-    `;
-  } else if (id === 'tac_c4' || title.includes('Contraataque')) {
-    badgeText = '⚡ TRANSICIÓN OFENSIVA RÁPIDA 8S';
-    content = `
-      <rect x="175" y="25" width="10" height="50" fill="none" stroke="#fff" stroke-width="2"/>
-      <circle cx="40" cy="50" r="5" fill="#4a90e2"/>
-      <circle cx="90" cy="30" r="5" fill="#4a90e2"/>
-      <circle cx="90" cy="70" r="5" fill="#4a90e2"/>
-      <!-- Flecha vertical explosiva -->
-      <path d="M 45 50 L 85 30 L 165 48" fill="none" stroke="#ffd700" stroke-width="2.5"/>
-      <polygon points="175,50 165,45 165,55" fill="#ffd700"/>
-      <circle cx="130" cy="40" r="5" fill="#ff5252"/>
-      <circle cx="130" cy="60" r="5" fill="#ff5252"/>
+      <!-- Estación 1: Dominadas -->
+      <circle cx="40" cy="30" r="5" fill="#50e3c2"/><circle cx="40" cy="20" r="3" fill="#ffd700"/>
+      <!-- Estación 2: Eslalon -->
+      <circle cx="90" cy="40" r="3" fill="#ff9800"/><circle cx="110" cy="40" r="3" fill="#ff9800"/>
+      <path d="M 80 40 Q 90 25 100 40 T 120 40" fill="none" stroke="#50e3c2" stroke-width="1.5"/>
+      <!-- Estación 3: Mini Gol -->
+      <rect x="175" y="60" width="8" height="25" fill="none" stroke="#fff" stroke-width="1.5"/>
+      <line x1="130" y1="72" x2="175" y2="72" stroke="#ffd700" stroke-width="2"/>
     `;
   }
 
-  // TÉCNICA
-  else if (id === 'tec_f2' || title.includes('Eslalon')) {
-    badgeText = '⚽ ESLALON DE CONDUCCIÓN';
+  // 11. pre_e_f1: Simón Dice
+  else if (id === 'pre_e_f1' || title.includes('Simón Dice')) {
+    badgeText = '⚡ SIMÓN DICE NEUROMUSCULAR';
     content = `
-      <circle cx="50" cy="50" r="3.5" fill="#ff9800"/>
-      <circle cx="80" cy="50" r="3.5" fill="#ff9800"/>
-      <circle cx="110" cy="50" r="3.5" fill="#ff9800"/>
-      <circle cx="140" cy="50" r="3.5" fill="#ff9800"/>
-      <circle cx="20" cy="50" r="5" fill="#e65100"/>
-      <path d="M 25 50 Q 50 25 80 50 T 110 50 T 140 50 T 170 50" fill="none" stroke="#ffd700" stroke-width="2"/>
-      <circle cx="170" cy="50" r="3.5" fill="#ffd700"/>
+      <polygon points="30,20 35,30 25,30" fill="#00e5ff"/>
+      <polygon points="170,20 175,30 165,30" fill="#4caf50"/>
+      <polygon points="30,80 35,90 25,90" fill="#f44336"/>
+      <polygon points="170,80 175,90 165,90" fill="#ffeb3b"/>
+      <circle cx="70" cy="40" r="4.5" fill="#50e3c2"/><line x1="70" y1="40" x2="30" y2="20" stroke="#00e5ff" stroke-dasharray="2,2"/>
+      <circle cx="130" cy="40" r="4.5" fill="#50e3c2"/><line x1="130" y1="40" x2="170" y2="20" stroke="#4caf50" stroke-dasharray="2,2"/>
+      <circle cx="100" cy="65" r="4.5" fill="#50e3c2"/><line x1="100" y1="65" x2="30" y2="80" stroke="#f44336" stroke-dasharray="2,2"/>
     `;
-  } else if (id === 'tec_c1' || title.includes('Paredes')) {
-    badgeText = '⚽ DOBLE PARED 1-2 & ROSCA';
+  }
+  // 12. pre_e_f2: Escalera Coordinación
+  else if (id === 'pre_e_f2' || title.includes('Escalera')) {
+    badgeText = '⚡ ESCALERA AGILIDAD & CONDUCCIÓN';
+    content = `
+      <rect x="25" y="40" width="80" height="20" fill="none" stroke="#fff" stroke-width="1.5"/>
+      <line x1="40" y1="40" x2="40" y2="60" stroke="#fff" stroke-width="1.5"/>
+      <line x1="55" y1="40" x2="55" y2="60" stroke="#fff" stroke-width="1.5"/>
+      <line x1="70" y1="40" x2="70" y2="60" stroke="#fff" stroke-width="1.5"/>
+      <line x1="85" y1="40" x2="85" y2="60" stroke="#fff" stroke-width="1.5"/>
+      <circle cx="20" cy="50" r="5" fill="#ffd700"/>
+      <path d="M 20 50 L 105 50 L 140 30 L 170 50" fill="none" stroke="#50e3c2" stroke-width="2"/>
+      <circle cx="140" cy="30" r="3" fill="#ff9800"/>
+    `;
+  }
+  // 13. pre_e_f3: Movilidad Círculo
+  else if (id === 'pre_e_f3' || title.includes('Movilidad Articular')) {
+    badgeText = '⚡ MOVILIDAD ARTICULAR CÍRCIULO';
+    content = `
+      <circle cx="100" cy="50" r="32" fill="none" stroke="rgba(255,255,255,0.2)" stroke-dasharray="3,3"/>
+      <circle cx="100" cy="18" r="4.5" fill="#50e3c2"/>
+      <circle cx="132" cy="50" r="4.5" fill="#50e3c2"/>
+      <circle cx="100" cy="82" r="4.5" fill="#50e3c2"/>
+      <circle cx="68" cy="50" r="4.5" fill="#50e3c2"/>
+      <circle cx="123" cy="27" r="4.5" fill="#50e3c2"/>
+      <circle cx="77" cy="73" r="4.5" fill="#50e3c2"/>
+      <circle cx="100" cy="50" r="5" fill="#ffd700"/><text x="100" y="52" font-size="4" font-weight="900" fill="#000" text-anchor="middle">DT</text>
+    `;
+  }
+  // 14. pre_e_f4: Rondo 3v1 Colores
+  else if (id === 'pre_e_f4' || title.includes('Rondo 3v1')) {
+    badgeText = '⚡ RONDO 3v1 CONOS DE COLORES';
+    content = `
+      <rect x="50" y="20" width="100" height="60" fill="none" stroke="#50e3c2" stroke-width="1.5"/>
+      <polygon points="45,15 50,20 40,20" fill="#00e5ff"/>
+      <polygon points="155,15 160,20 150,20" fill="#4caf50"/>
+      <polygon points="45,85 50,80 40,80" fill="#f44336"/>
+      <polygon points="155,85 160,80 150,80" fill="#ffeb3b"/>
+      <circle cx="50" cy="50" r="5" fill="#50e3c2"/>
+      <circle cx="150" cy="30" r="5" fill="#50e3c2"/>
+      <circle cx="150" cy="70" r="5" fill="#50e3c2"/>
+      <circle cx="100" cy="50" r="5" fill="#ff5252"/>
+    `;
+  }
+  // 15. pre_e_f5: Vallas Bajas
+  else if (id === 'pre_e_f5' || title.includes('Vallas Bajas')) {
+    badgeText = '⚡ PLIOMETRÍA VALLAS BAJAS';
+    content = `
+      <line x1="30" y1="35" x2="30" y2="65" stroke="#ff9800" stroke-width="3"/>
+      <line x1="60" y1="35" x2="60" y2="65" stroke="#ff9800" stroke-width="3"/>
+      <line x1="90" y1="35" x2="90" y2="65" stroke="#ff9800" stroke-width="3"/>
+      <line x1="120" y1="35" x2="120" y2="65" stroke="#ff9800" stroke-width="3"/>
+      <circle cx="15" cy="50" r="5" fill="#50e3c2"/>
+      <path d="M 15 50 Q 30 25 45 50 T 75 50 T 105 50 T 135 50 L 175 50" fill="none" stroke="#ffd700" stroke-width="2"/>
+    `;
+  }
+  // 16. pre_e_c1: Bandas & Pliometría
+  else if (id === 'pre_e_c1' || title.includes('Bandas')) {
+    badgeText = '⚡ BANDAS & HEXÁGONO PLIOMÉTRICO';
+    content = `
+      <polygon points="100,20 130,35 130,65 100,80 70,65 70,35" fill="none" stroke="#50e3c2" stroke-width="2"/>
+      <circle cx="100" cy="50" r="5" fill="#ffd700"/>
+      <circle cx="40" cy="50" r="5" fill="#4a90e2"/><circle cx="40" cy="70" r="5" fill="#4a90e2"/>
+      <line x1="40" y1="50" x2="40" y2="70" stroke="#ff5252" stroke-width="3" stroke-dasharray="2,2"/>
+    `;
+  }
+  // 17. pre_e_c2: Pases Tensión
+  else if (id === 'pre_e_c2' || title.includes('Pases Dinámicos')) {
+    badgeText = '⚡ PASES LATERALES TENSO';
+    content = `
+      <line x1="30" y1="30" x2="170" y2="30" stroke="rgba(255,255,255,0.3)" stroke-dasharray="2,2"/>
+      <line x1="30" y1="70" x2="170" y2="70" stroke="rgba(255,255,255,0.3)" stroke-dasharray="2,2"/>
+      <circle cx="50" cy="30" r="5" fill="#50e3c2"/>
+      <circle cx="50" cy="70" r="5" fill="#50e3c2"/>
+      <line x1="50" y1="35" x2="50" y2="65" stroke="#ffd700" stroke-width="2"/>
+      <circle cx="120" cy="30" r="5" fill="#50e3c2"/>
+      <circle cx="120" cy="70" r="5" fill="#50e3c2"/>
+      <line x1="120" y1="35" x2="120" y2="65" stroke="#ffd700" stroke-width="2"/>
+    `;
+  }
+  // 18. pre_e_c3: Agilidad COD
+  else if (id === 'pre_e_c3' || title.includes('Cambio de Dirección')) {
+    badgeText = '⚡ AGILIDAD COD EN ZIGA-ZAG';
+    content = `
+      <circle cx="40" cy="25" r="3" fill="#ff9800"/>
+      <circle cx="140" cy="40" r="3" fill="#ff9800"/>
+      <circle cx="40" cy="60" r="3" fill="#ff9800"/>
+      <circle cx="140" cy="75" r="3" fill="#ff9800"/>
+      <path d="M 20 25 L 40 25 L 140 40 L 40 60 L 140 75 L 170 75" fill="none" stroke="#ffd700" stroke-width="2.5"/>
+      <circle cx="20" cy="25" r="5" fill="#50e3c2"/>
+    `;
+  }
+  // 19. pre_e_c4: Rondo 4v2 Ritmo
+  else if (id === 'pre_e_c4' || title.includes('Rondo Posicional 4v2')) {
+    badgeText = '⚡ RONDO 4v2 Y ESPRINT 10M';
+    content = `
+      <rect x="65" y="25" width="70" height="50" fill="none" stroke="#ffd700" stroke-width="1.5"/>
+      <circle cx="65" cy="25" r="4.5" fill="#50e3c2"/><line x1="65" y1="25" x2="25" y2="10" stroke="#50e3c2" stroke-dasharray="2,2"/>
+      <circle cx="135" cy="25" r="4.5" fill="#50e3c2"/><line x1="135" y1="25" x2="175" y2="10" stroke="#50e3c2" stroke-dasharray="2,2"/>
+      <circle cx="135" cy="75" r="4.5" fill="#50e3c2"/><line x1="135" y1="75" x2="175" y2="90" stroke="#50e3c2" stroke-dasharray="2,2"/>
+      <circle cx="65" cy="75" r="4.5" fill="#50e3c2"/><line x1="65" y1="75" x2="25" y2="90" stroke="#50e3c2" stroke-dasharray="2,2"/>
+      <circle cx="90" cy="50" r="4.5" fill="#ff5252"/><circle cx="110" cy="50" r="4.5" fill="#ff5252"/>
+    `;
+  }
+  // 20. pre_e_c5: Core + Cabeza
+  else if (id === 'pre_e_c5' || title.includes('Core Estabilidad')) {
+    badgeText = '⚡ CORE ISOMETRÍA & CABEZAZO';
+    content = `
+      <rect x="30" y="55" width="40" height="10" fill="#9c27b0"/>
+      <circle cx="50" cy="50" r="5" fill="#50e3c2"/>
+      <circle cx="150" cy="30" r="5" fill="#ffd700"/><text x="150" y="32" font-size="4" font-weight="900" fill="#000" text-anchor="middle">PAS</text>
+      <path d="M 145 30 Q 100 10 55 45" fill="none" stroke="#ffd700" stroke-width="2"/>
+    `;
+  }
+
+  // 21. pre_p_f1: Rondo Alegre 5v2
+  else if (id === 'pre_p_f1') {
+    badgeText = '🔥 RONDO ALEGRE PRE-PARTIDO';
+    content = `
+      <circle cx="100" cy="50" r="30" fill="none" stroke="#50e3c2" stroke-width="1.5"/>
+      <circle cx="100" cy="20" r="5" fill="#50e3c2"/>
+      <circle cx="130" cy="38" r="5" fill="#50e3c2"/>
+      <circle cx="120" cy="72" r="5" fill="#50e3c2"/>
+      <circle cx="80" cy="72" r="5" fill="#50e3c2"/>
+      <circle cx="70" cy="38" r="5" fill="#50e3c2"/>
+      <circle cx="93" cy="48" r="4" fill="#ff5252"/><circle cx="107" cy="52" r="4" fill="#ff5252"/>
+    `;
+  }
+  // 22. pre_p_f2: Aceleraciones 5m
+  else if (id === 'pre_p_f2') {
+    badgeText = '🔥 ACELERACIÓN EXPLOSIVA 5M';
+    content = `
+      <line x1="30" y1="10" x2="30" y2="90" stroke="#fff" stroke-width="2"/>
+      <line x1="120" y1="10" x2="120" y2="90" stroke="#ffd700" stroke-width="2" stroke-dasharray="3,3"/>
+      <circle cx="30" cy="25" r="5" fill="#50e3c2"/><line x1="35" y1="25" x2="120" y2="25" stroke="#50e3c2" stroke-width="2"/>
+      <circle cx="30" cy="55" r="5" fill="#50e3c2"/><line x1="35" y1="55" x2="120" y2="55" stroke="#50e3c2" stroke-width="2"/>
+      <circle cx="30" cy="80" r="5" fill="#50e3c2"/><line x1="35" y1="80" x2="120" y2="80" stroke="#50e3c2" stroke-width="2"/>
+    `;
+  }
+  // 23. pre_p_f3: Paredes & Tiros
+  else if (id === 'pre_p_f3') {
+    badgeText = '🔥 PAREDES & REMATE COLOCADO';
     content = `
       <rect x="175" y="25" width="10" height="50" fill="none" stroke="#fff" stroke-width="2"/>
-      <circle cx="70" cy="65" r="5" fill="#e65100"/><text x="70" y="67" font-size="4.5" font-weight="900" fill="#fff" text-anchor="middle">A1</text>
-      <circle cx="110" cy="40" r="5" fill="#ffd700"/><text x="110" y="42" font-size="4.5" font-weight="900" fill="#000" text-anchor="middle">PIV</text>
-      <!-- Pared 1-2 -->
+      <circle cx="120" cy="35" r="5" fill="#ffd700"/><text x="120" y="37" font-size="4" font-weight="900" fill="#000" text-anchor="middle">DT</text>
+      <circle cx="60" cy="65" r="5" fill="#ff5252"/>
+      <line x1="65" y1="65" x2="115" y2="40" stroke="#50e3c2" stroke-width="1.5"/>
+      <line x1="120" y1="40" x2="140" y2="65" stroke="#50e3c2" stroke-width="1.5"/>
+      <line x1="140" y1="65" x2="175" y2="35" stroke="#ffd700" stroke-width="2"/>
+    `;
+  }
+  // 24. pre_p_f4: Octógono Pases
+  else if (id === 'pre_p_f4') {
+    badgeText = '🔥 OCTÓGONO DE PASES CRUZADOS';
+    content = `
+      <polygon points="100,15 140,25 160,50 140,75 100,85 60,75 40,50 60,25" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+      <circle cx="100" cy="15" r="4" fill="#50e3c2"/><circle cx="140" cy="25" r="4" fill="#50e3c2"/>
+      <circle cx="160" cy="50" r="4" fill="#50e3c2"/><circle cx="140" cy="75" r="4" fill="#50e3c2"/>
+      <circle cx="100" cy="85" r="4" fill="#50e3c2"/><circle cx="60" cy="75" r="4" fill="#50e3c2"/>
+      <circle cx="40" cy="50" r="4" fill="#50e3c2"/><circle cx="60" cy="25" r="4" fill="#50e3c2"/>
+      <line x1="100" y1="15" x2="100" y2="85" stroke="#ffd700" stroke-width="1.5"/>
+      <line x1="40" y1="50" x2="160" y2="50" stroke="#ffd700" stroke-width="1.5"/>
+    `;
+  }
+  // 25. pre_p_f5: Toca Cono Rápido
+  else if (id === 'pre_p_f5') {
+    badgeText = '🔥 REACCIÓN DUELO AUDITIVO';
+    content = `
+      <circle cx="100" cy="50" r="5" fill="#ff9800"/>
+      <circle cx="60" cy="50" r="5" fill="#50e3c2"/><text x="60" y="52" font-size="4.5" font-weight="900" fill="#000" text-anchor="middle">J1</text>
+      <circle cx="140" cy="50" r="5" fill="#ff5252"/><text x="140" y="52" font-size="4.5" font-weight="900" fill="#fff" text-anchor="middle">J2</text>
+      <line x1="65" y1="50" x2="95" y2="50" stroke="#ffd700" stroke-width="2"/>
+      <line x1="135" y1="50" x2="105" y2="50" stroke="#ffd700" stroke-width="2"/>
+    `;
+  }
+  // 26. pre_p_c1: Posesión 6v6
+  else if (id === 'pre_p_c1') {
+    badgeText = '🔥 POSESIÓN COMPETITIVA 6v6';
+    content = `
+      <rect x="25" y="15" width="150" height="70" fill="none" stroke="#ff5252" stroke-width="1.5"/>
+      <circle cx="45" cy="30" r="4.5" fill="#50e3c2"/><circle cx="80" cy="25" r="4.5" fill="#50e3c2"/><circle cx="130" cy="30" r="4.5" fill="#50e3c2"/>
+      <circle cx="45" cy="70" r="4.5" fill="#50e3c2"/><circle cx="80" cy="75" r="4.5" fill="#50e3c2"/><circle cx="130" cy="70" r="4.5" fill="#50e3c2"/>
+      <circle cx="65" cy="50" r="4.5" fill="#ff5252"/><circle cx="100" cy="40" r="4.5" fill="#ff5252"/><circle cx="100" cy="60" r="4.5" fill="#ff5252"/>
+      <circle cx="145" cy="50" r="4.5" fill="#ff5252"/>
+    `;
+  }
+  // 27. pre_p_c2: Esprint Progresivo
+  else if (id === 'pre_p_c2') {
+    badgeText = '🔥 ESPRINT & FRENO ISOMÉTRICO';
+    content = `
+      <line x1="20" y1="50" x2="110" y2="50" stroke="#50e3c2" stroke-width="2"/>
+      <rect x="110" y="42" width="6" height="16" fill="#ff5252"/>
+      <line x1="116" y1="50" x2="175" y2="50" stroke="#ffd700" stroke-width="3"/>
+      <polygon points="180,50 170,45 170,55" fill="#ffd700"/>
+      <circle cx="20" cy="50" r="5" fill="#50e3c2"/>
+    `;
+  }
+  // 28. pre_p_c3: Basculación & Centro
+  else if (id === 'pre_p_c3') {
+    badgeText = '🔥 BASCULACIÓN & CENTRO AL 9';
+    content = `
+      <rect x="175" y="25" width="10" height="50" fill="none" stroke="#fff" stroke-width="2"/>
+      <!-- 4 defensas basculando -->
+      <circle cx="130" cy="25" r="4.5" fill="#ff5252"/><circle cx="130" cy="40" r="4.5" fill="#ff5252"/>
+      <circle cx="130" cy="60" r="4.5" fill="#ff5252"/><circle cx="130" cy="75" r="4.5" fill="#ff5252"/>
+      <line x1="130" y1="25" x2="130" y2="75" stroke="#ff5252" stroke-dasharray="2,2"/>
+      <!-- Extremo & 9 -->
+      <circle cx="160" cy="85" r="5" fill="#50e3c2"/>
+      <circle cx="150" cy="50" r="5" fill="#50e3c2"/>
+      <path d="M 160 85 Q 185 55 155 50" fill="none" stroke="#ffd700" stroke-width="2"/>
+    `;
+  }
+  // 29. pre_p_c4: Rondo 2 Celdas 25m
+  else if (id === 'pre_p_c4') {
+    badgeText = '🔥 CAMBIO DE ORIENTACIÓN 25M';
+    content = `
+      <rect x="15" y="25" width="45" height="50" fill="none" stroke="#50e3c2" stroke-width="1.5"/>
+      <rect x="140" y="25" width="45" height="50" fill="none" stroke="#50e3c2" stroke-width="1.5"/>
+      <circle cx="37" cy="50" r="4" fill="#50e3c2"/>
+      <circle cx="162" cy="50" r="4" fill="#50e3c2"/>
+      <path d="M 42 50 Q 100 15 157 50" fill="none" stroke="#ffd700" stroke-width="2.5"/>
+    `;
+  }
+  // 30. pre_p_c5: Activación Arquero
+  else if (id === 'pre_p_c5') {
+    badgeText = '🧤 ACTIVACIÓN DE PORTERO REACCIÓN';
+    content = `
+      <rect x="175" y="25" width="10" height="50" fill="none" stroke="#fff" stroke-width="2"/>
+      <circle cx="168" cy="50" r="5" fill="#ffeb3b"/><text x="168" y="52" font-size="4" font-weight="900" fill="#000" text-anchor="middle">PO</text>
+      <rect x="140" y="35" width="2" height="10" fill="#ff9800"/>
+      <rect x="140" y="55" width="2" height="10" fill="#ff9800"/>
+      <circle cx="100" cy="50" r="5" fill="#ffd700"/><text x="100" y="52" font-size="4" font-weight="900" fill="#000" text-anchor="middle">DT</text>
+      <line x1="105" y1="50" x2="162" y2="40" stroke="#ffd700" stroke-width="2"/>
+    `;
+  }
+
+  // 31. tac_f1: 4 Portales
+  else if (id === 'tac_f1') {
+    badgeText = '🎯 JUEGO DE 4 PORTALES';
+    content = `
+      <rect x="30" y="15" width="140" height="70" fill="none" stroke="#4a90e2" stroke-width="1"/>
+      <line x1="60" y1="35" x2="75" y2="35" stroke="#ffd700" stroke-width="3"/>
+      <line x1="125" y1="35" x2="140" y2="35" stroke="#ffd700" stroke-width="3"/>
+      <line x1="60" y1="65" x2="75" y2="65" stroke="#ffd700" stroke-width="3"/>
+      <line x1="125" y1="65" x2="140" y2="65" stroke="#ffd700" stroke-width="3"/>
+      <circle cx="50" cy="35" r="4.5" fill="#4a90e2"/>
+      <line x1="50" y1="35" x2="85" y2="35" stroke="#50e3c2" stroke-width="1.5"/>
+      <circle cx="90" cy="35" r="4.5" fill="#4a90e2"/>
+    `;
+  }
+  // 32. tac_f2: 3v3 + 2 Comodines
+  else if (id === 'tac_f2') {
+    badgeText = '🎯 3v3 + 2 COMODINES BANDA';
+    content = `
+      <rect x="30" y="15" width="140" height="70" fill="none" stroke="#4a90e2" stroke-width="1.5"/>
+      <circle cx="100" cy="15" r="5" fill="#ffd700"/><text x="100" y="17" font-size="4" font-weight="900" fill="#000" text-anchor="middle">C1</text>
+      <circle cx="100" cy="85" r="5" fill="#ffd700"/><text x="100" y="87" font-size="4" font-weight="900" fill="#000" text-anchor="middle">C2</text>
+      <circle cx="60" cy="35" r="4.5" fill="#4a90e2"/><circle cx="100" cy="50" r="4.5" fill="#4a90e2"/><circle cx="140" cy="35" r="4.5" fill="#4a90e2"/>
+      <circle cx="60" cy="65" r="4.5" fill="#ff5252"/><circle cx="120" cy="50" r="4.5" fill="#ff5252"/><circle cx="140" cy="65" r="4.5" fill="#ff5252"/>
+    `;
+  }
+  // 33. tac_f3: Ataque vs Defensa 3v2
+  else if (id === 'tac_f3') {
+    badgeText = '🎯 ATAQUE VS DEFENSA 3v2';
+    content = `
+      <rect x="175" y="25" width="10" height="50" fill="none" stroke="#fff" stroke-width="2"/>
+      <circle cx="40" cy="30" r="5" fill="#4a90e2"/><circle cx="40" cy="50" r="5" fill="#4a90e2"/><circle cx="40" cy="70" r="5" fill="#4a90e2"/>
+      <circle cx="110" cy="40" r="5" fill="#ff5252"/><circle cx="110" cy="60" r="5" fill="#ff5252"/>
+      <line x1="45" y1="30" x2="165" y2="45" stroke="#ffd700" stroke-width="1.5" stroke-dasharray="3,2"/>
+    `;
+  }
+  // 34. tac_f4: Ruptura y Apoyo
+  else if (id === 'tac_f4') {
+    badgeText = '🎯 DESMARQUE RUPTURA & APOYO';
+    content = `
+      <circle cx="120" cy="50" r="5" fill="#ff5252"/>
+      <!-- Apoyo -->
+      <circle cx="80" cy="65" r="5" fill="#4a90e2"/><path d="M 80 65 L 105 55" fill="none" stroke="#50e3c2" stroke-width="1.5" stroke-dasharray="2,2"/>
+      <!-- Ruptura -->
+      <circle cx="80" cy="35" r="5" fill="#4a90e2"/><path d="M 80 35 L 155 35" fill="none" stroke="#ffd700" stroke-width="2"/>
+      <circle cx="30" cy="50" r="5" fill="#4a90e2"/><text x="30" y="52" font-size="4" font-weight="900" fill="#fff" text-anchor="middle">PAS</text>
+    `;
+  }
+  // 35. tac_f5: Batalla 4 Cuadrantes
+  else if (id === 'tac_f5') {
+    badgeText = '🎯 BATALLA DE 4 CUADRANTES';
+    content = `
+      <rect x="30" y="15" width="140" height="70" fill="none" stroke="#fff" stroke-width="1.5"/>
+      <line x1="100" y1="15" x2="100" y2="85" stroke="#fff" stroke-width="1"/>
+      <line x1="30" y1="50" x2="170" y2="50" stroke="#fff" stroke-width="1"/>
+      <circle cx="65" cy="32" r="4" fill="#4a90e2"/><circle cx="75" cy="38" r="4" fill="#ff5252"/>
+      <circle cx="135" cy="32" r="4" fill="#4a90e2"/><circle cx="145" cy="38" r="4" fill="#ff5252"/>
+      <circle cx="65" cy="67" r="4" fill="#4a90e2"/><circle cx="75" cy="73" r="4" fill="#ff5252"/>
+      <circle cx="135" cy="67" r="4" fill="#4a90e2"/><circle cx="145" cy="73" r="4" fill="#ff5252"/>
+    `;
+  }
+  // 36. tac_f6: Transición 2v1
+  else if (id === 'tac_f6') {
+    badgeText = '🎯 TRANSICIÓN RÁPIDA 2v1';
+    content = `
+      <rect x="175" y="25" width="10" height="50" fill="none" stroke="#fff" stroke-width="2"/>
+      <circle cx="60" cy="50" r="5" fill="#4a90e2"/>
+      <circle cx="30" cy="75" r="5" fill="#4a90e2"/>
+      <line x1="35" y1="75" x2="120" y2="35" stroke="#ffd700" stroke-width="2"/>
+      <circle cx="120" cy="50" r="5" fill="#ff5252"/>
+    `;
+  }
+  // 37. tac_c1: Guardiola 4v4+3
+  else if (id === 'tac_c1') {
+    badgeText = '🎯 JUEGO DE POSICIÓN GUARDIOLA';
+    content = `
+      <rect x="30" y="15" width="140" height="70" fill="rgba(74,144,226,0.05)" stroke="#4a90e2" stroke-width="1.5"/>
+      <circle cx="45" cy="30" r="5" fill="#4a90e2"/><circle cx="155" cy="30" r="5" fill="#4a90e2"/>
+      <circle cx="45" cy="70" r="5" fill="#4a90e2"/><circle cx="155" cy="70" r="5" fill="#4a90e2"/>
+      <circle cx="80" cy="40" r="5" fill="#ff5252"/><circle cx="120" cy="40" r="5" fill="#ff5252"/>
+      <circle cx="80" cy="60" r="5" fill="#ff5252"/><circle cx="120" cy="60" r="5" fill="#ff5252"/>
+      <circle cx="100" cy="50" r="5" fill="#ffd700"/><circle cx="100" cy="15" r="5" fill="#ffd700"/><circle cx="100" cy="85" r="5" fill="#ffd700"/>
+    `;
+  }
+  // 38. tac_c2: Salida Balón 4v3
+  else if (id === 'tac_c2') {
+    badgeText = '🎯 SALIDA DE BALÓN 4v3 PRESIÓN';
+    content = `
+      <rect x="10" y="25" width="12" height="50" fill="none" stroke="#fff" stroke-width="2"/>
+      <circle cx="16" cy="50" r="5" fill="#ffeb3b"/>
+      <circle cx="45" cy="30" r="5" fill="#4a90e2"/><circle cx="45" cy="70" r="5" fill="#4a90e2"/>
+      <circle cx="65" cy="45" r="5" fill="#4a90e2"/><circle cx="65" cy="55" r="5" fill="#4a90e2"/>
+      <circle cx="95" cy="35" r="5" fill="#ff5252"/><circle cx="95" cy="50" r="5" fill="#ff5252"/><circle cx="95" cy="65" r="5" fill="#ff5252"/>
+    `;
+  }
+  // 39. tac_c3: Repliegue Bloque Medio
+  else if (id === 'tac_c3') {
+    badgeText = '🎯 BLOQUE MEDIO COMPACTO';
+    content = `
+      <line x1="90" y1="10" x2="90" y2="90" stroke="rgba(255,255,255,0.2)" stroke-dasharray="2,2"/>
+      <circle cx="80" cy="25" r="5" fill="#4a90e2"/><circle cx="80" cy="42" r="5" fill="#4a90e2"/>
+      <circle cx="80" cy="58" r="5" fill="#4a90e2"/><circle cx="80" cy="75" r="5" fill="#4a90e2"/>
+      <line x1="80" y1="25" x2="80" y2="75" stroke="#50e3c2" stroke-width="2"/>
+      <circle cx="120" cy="30" r="5" fill="#ff5252"/><circle cx="125" cy="50" r="5" fill="#ff5252"/><circle cx="120" cy="70" r="5" fill="#ff5252"/>
+    `;
+  }
+  // 40. tac_c4: Contraataque 8s
+  else if (id === 'tac_c4') {
+    badgeText = '⚡ TRANSICIÓN OFENSIVA 8S';
+    content = `
+      <rect x="175" y="25" width="10" height="50" fill="none" stroke="#fff" stroke-width="2"/>
+      <circle cx="40" cy="50" r="5" fill="#4a90e2"/>
+      <circle cx="90" cy="30" r="5" fill="#4a90e2"/><circle cx="90" cy="70" r="5" fill="#4a90e2"/>
+      <path d="M 45 50 L 85 30 L 165 48" fill="none" stroke="#ffd700" stroke-width="2.5"/>
+      <polygon points="175,50 165,45 165,55" fill="#ffd700"/>
+    `;
+  }
+  // 41. tac_c5: Ataque Bloque Bajo
+  else if (id === 'tac_c5') {
+    badgeText = '🎯 ATAQUE SOBRE BLOQUE BAJO';
+    content = `
+      <rect x="175" y="25" width="10" height="50" fill="none" stroke="#fff" stroke-width="2"/>
+      <rect x="140" y="20" width="40" height="60" fill="rgba(255,82,82,0.1)" stroke="#ff5252" stroke-dasharray="2,2"/>
+      <circle cx="160" cy="85" r="5" fill="#4a90e2"/><circle cx="150" cy="35" r="5" fill="#4a90e2"/>
+      <circle cx="150" cy="50" r="5" fill="#4a90e2"/><circle cx="150" cy="65" r="5" fill="#4a90e2"/>
+      <path d="M 160 85 Q 185 55 155 45" fill="none" stroke="#ffd700" stroke-width="2"/>
+    `;
+  }
+  // 42. tac_c6: Gegenpressing
+  else if (id === 'tac_c6') {
+    badgeText = '🎯 GEGENPRESSING CAZA-BALÓN 3S';
+    content = `
+      <circle cx="100" cy="50" r="5" fill="#ff5252"/><text x="100" y="52" font-size="4" font-weight="900" fill="#fff" text-anchor="middle">R1</text>
+      <circle cx="85" cy="35" r="5" fill="#4a90e2"/><line x1="85" y1="35" x2="95" y2="45" stroke="#ffd700" stroke-width="2"/>
+      <circle cx="115" cy="35" r="5" fill="#4a90e2"/><line x1="115" y1="35" x2="105" y2="45" stroke="#ffd700" stroke-width="2"/>
+      <circle cx="100" cy="70" r="5" fill="#4a90e2"/><line x1="100" y1="70" x2="100" y2="58" stroke="#ffd700" stroke-width="2"/>
+      <polygon points="100,50 85,35 115,35" fill="none" stroke="#ffd700" stroke-dasharray="2,2"/>
+    `;
+  }
+
+  // 43. tec_f1: Triángulo Pases
+  else if (id === 'tec_f1') {
+    badgeText = '⚽ TRIÁNGULO CONTROL ORIENTADO';
+    content = `
+      <polygon points="100,20 150,75 50,75" fill="none" stroke="rgba(255,255,255,0.3)" stroke-dasharray="3,2"/>
+      <circle cx="100" cy="20" r="5" fill="#e65100"/>
+      <circle cx="150" cy="75" r="5" fill="#e65100"/>
+      <circle cx="50" cy="75" r="5" fill="#e65100"/>
+      <line x1="55" y1="75" x2="145" y2="75" stroke="#ffd700" stroke-width="2"/>
+      <line x1="150" y1="70" x2="105" y2="25" stroke="#ffd700" stroke-width="2"/>
+    `;
+  }
+  // 44. tec_f2: Eslalon Conducción
+  else if (id === 'tec_f2') {
+    badgeText = '⚽ ESLALON DE CONDUCCIÓN';
+    content = `
+      <circle cx="50" cy="50" r="3.5" fill="#ff9800"/><circle cx="80" cy="50" r="3.5" fill="#ff9800"/>
+      <circle cx="110" cy="50" r="3.5" fill="#ff9800"/><circle cx="140" cy="50" r="3.5" fill="#ff9800"/>
+      <circle cx="20" cy="50" r="5" fill="#e65100"/>
+      <path d="M 25 50 Q 50 25 80 50 T 110 50 T 140 50 T 170 50" fill="none" stroke="#ffd700" stroke-width="2"/>
+    `;
+  }
+  // 45. tec_f3: Volea Rasa Infantil
+  else if (id === 'tec_f3') {
+    badgeText = '⚽ CENTRO A MEDIA ALTURA & VOLEA';
+    content = `
+      <rect x="175" y="25" width="10" height="50" fill="none" stroke="#fff" stroke-width="2"/>
+      <circle cx="160" cy="85" r="5" fill="#e65100"/>
+      <circle cx="140" cy="50" r="5" fill="#e65100"/>
+      <path d="M 160 80 Q 170 60 145 50" fill="none" stroke="#ffd700" stroke-width="2"/>
+      <line x1="140" y1="50" x2="175" y2="40" stroke="#50e3c2" stroke-width="2"/>
+    `;
+  }
+  // 46. tec_f4: Duelo 1v1 Regates
+  else if (id === 'tec_f4') {
+    badgeText = '⚽ DUELO 1v1 REGATE & TIRO';
+    content = `
+      <rect x="40" y="20" width="120" height="60" fill="none" stroke="rgba(255,255,255,0.3)" stroke-dasharray="2,2"/>
+      <circle cx="50" cy="50" r="5" fill="#e65100"/>
+      <circle cx="110" cy="50" r="5" fill="#ff5252"/>
+      <path d="M 55 50 Q 80 30 115 40 T 155 50" fill="none" stroke="#ffd700" stroke-width="2"/>
+      <rect x="175" y="35" width="10" height="30" fill="none" stroke="#fff" stroke-width="2"/>
+    `;
+  }
+  // 47. tec_f5: Cabezazo Unipodal
+  else if (id === 'tec_f5') {
+    badgeText = '⚽ CABEZAZO UNIPODAL PICADO';
+    content = `
+      <circle cx="140" cy="40" r="5" fill="#e65100"/>
+      <circle cx="40" cy="50" r="5" fill="#ffd700"/><text x="40" y="52" font-size="4" font-weight="900" fill="#000" text-anchor="middle">LAN</text>
+      <path d="M 45 50 Q 90 20 135 38" fill="none" stroke="#ffd700" stroke-width="2"/>
+      <line x1="140" y1="40" x2="165" y2="75" stroke="#50e3c2" stroke-width="2.5"/>
+    `;
+  }
+  // 48. tec_f6: Control Pecho Muslo
+  else if (id === 'tec_f6') {
+    badgeText = '⚽ CONTROLES AÉREOS PECHO & MUSLO';
+    content = `
+      <circle cx="40" cy="50" r="5" fill="#e65100"/>
+      <circle cx="160" cy="50" r="5" fill="#e65100"/>
+      <path d="M 45 50 Q 100 15 155 45" fill="none" stroke="#ffd700" stroke-width="2"/>
+      <circle cx="160" cy="65" r="3" fill="#ffd700"/>
+    `;
+  }
+  // 49. tec_c1: Doble Pared & Rosca
+  else if (id === 'tec_c1') {
+    badgeText = '⚽ DOBLE PARED & REMATE ROSCA';
+    content = `
+      <rect x="175" y="25" width="10" height="50" fill="none" stroke="#fff" stroke-width="2"/>
+      <circle cx="70" cy="65" r="5" fill="#e65100"/>
+      <circle cx="110" cy="40" r="5" fill="#ffd700"/>
       <line x1="75" y1="65" x2="105" y2="45" stroke="#50e3c2" stroke-width="1.5"/>
       <line x1="110" y1="45" x2="135" y2="65" stroke="#50e3c2" stroke-width="1.5"/>
       <path d="M 135 65 Q 160 65 175 35" fill="none" stroke="#ffd700" stroke-width="2"/>
     `;
-  } else if (id === 'tec_c2' || title.includes('Centro')) {
-    badgeText = '⚽ CENTRO TENSO & CABEZAZO PICADO';
+  }
+  // 50. tec_c2: Centro Tenso & Cabeza
+  else if (id === 'tec_c2') {
+    badgeText = '⚽ CENTRO TENSO & CABEZAZO 9';
     content = `
       <rect x="175" y="25" width="10" height="50" fill="none" stroke="#fff" stroke-width="2"/>
-      <circle cx="160" cy="85" r="5" fill="#e65100"/><text x="160" y="87" font-size="4.5" font-weight="900" fill="#fff" text-anchor="middle">EXT</text>
-      <circle cx="150" cy="45" r="5" fill="#e65100"/><text x="150" y="47" font-size="4.5" font-weight="900" fill="#fff" text-anchor="middle">9</text>
+      <circle cx="160" cy="85" r="5" fill="#e65100"/>
+      <circle cx="150" cy="45" r="5" fill="#e65100"/>
       <circle cx="165" cy="40" r="5" fill="#ff5252"/>
       <path d="M 160 80 Q 180 60 155 45" fill="none" stroke="#ffd700" stroke-width="2"/>
       <line x1="150" y1="45" x2="175" y2="35" stroke="#50e3c2" stroke-width="2"/>
     `;
   }
+  // 51. tec_c3: Giro & Remate
+  else if (id === 'tec_c3') {
+    badgeText = '⚽ REMATE DE ESPALDAS CON GIRO 180°';
+    content = `
+      <rect x="175" y="25" width="10" height="50" fill="none" stroke="#fff" stroke-width="2"/>
+      <circle cx="130" cy="50" r="5" fill="#e65100"/><text x="130" y="52" font-size="4" font-weight="900" fill="#fff" text-anchor="middle">9</text>
+      <circle cx="140" cy="50" r="5" fill="#ff5252"/>
+      <path d="M 125 50 A 8 8 0 1 1 135 55" fill="none" stroke="#ffd700" stroke-width="2"/>
+      <line x1="130" y1="50" x2="175" y2="40" stroke="#50e3c2" stroke-width="2.5"/>
+    `;
+  }
+  // 52. tec_c4: Pases Largos 35m
+  else if (id === 'tec_c4') {
+    badgeText = '⚽ PASES LARGOS CAMBIO DE ORIENTACIÓN';
+    content = `
+      <circle cx="30" cy="50" r="5" fill="#e65100"/>
+      <circle cx="170" cy="50" r="5" fill="#e65100"/>
+      <path d="M 35 50 Q 100 10 165 50" fill="none" stroke="#ffd700" stroke-width="2.5"/>
+      <path d="M 165 50 Q 100 90 35 50" fill="none" stroke="#ffd700" stroke-width="2.5" stroke-dasharray="3,2"/>
+    `;
+  }
+  // 53. tec_c5: Mano a Mano Arquero
+  else if (id === 'tec_c5') {
+    badgeText = '⚽ MANO A MANO 1v1 CON PORTERO';
+    content = `
+      <rect x="175" y="25" width="10" height="50" fill="none" stroke="#fff" stroke-width="2"/>
+      <circle cx="155" cy="50" r="5" fill="#ffeb3b"/>
+      <circle cx="110" cy="50" r="5" fill="#e65100"/>
+      <circle cx="85" cy="50" r="5" fill="#ff5252"/>
+      <line x1="115" y1="50" x2="175" y2="35" stroke="#ffd700" stroke-width="2"/>
+    `;
+  }
+  // 54. tec_c6: Volea Rechace Cabeza
+  else if (id === 'tec_c6') {
+    badgeText = '⚽ VOLEA ACROBÁTICA RECHACE';
+    content = `
+      <rect x="175" y="25" width="10" height="50" fill="none" stroke="#fff" stroke-width="2"/>
+      <circle cx="150" cy="50" r="5" fill="#ff5252"/><text x="150" y="52" font-size="4" font-weight="900" fill="#fff" text-anchor="middle">DEF</text>
+      <path d="M 150 50 Q 120 30 90 50" fill="none" stroke="#ff5252" stroke-width="2" stroke-dasharray="2,2"/>
+      <circle cx="90" cy="50" r="5" fill="#e65100"/>
+      <line x1="90" y1="50" x2="175" y2="40" stroke="#ffd700" stroke-width="2.5"/>
+    `;
+  }
 
-  // BALÓN PARADO (ABP)
-  else if (id === 'abp_c1' || (cat === 'abp' && title.includes('Córner'))) {
+  // 55. abp_f1: Saque Banda
+  else if (id === 'abp_f1') {
+    badgeText = '🛡️ SAQUE BANDA TÁCTICO CORTO';
+    content = `
+      <line x1="20" y1="10" x2="180" y2="10" stroke="#fff" stroke-width="2"/>
+      <circle cx="60" cy="8" r="5" fill="#9c27b0"/>
+      <circle cx="80" cy="30" r="5" fill="#9c27b0"/>
+      <path d="M 60 8 Q 70 15 78 28" fill="none" stroke="#ffd700" stroke-width="2"/>
+      <line x1="80" y1="30" x2="120" y2="20" stroke="#50e3c2" stroke-width="2"/>
+    `;
+  }
+  // 56. abp_f2: Córner Short
+  else if (id === 'abp_f2') {
+    badgeText = '🛡️ CÓRNER CORTO 2 JUGADORES';
+    content = `
+      <line x1="15" y1="85" x2="15" y2="70" stroke="#fff" stroke-width="1.5"/><polygon points="15,70 25,75 15,80" fill="#9c27b0"/>
+      <circle cx="15" cy="85" r="4.5" fill="#9c27b0"/>
+      <circle cx="45" cy="75" r="4.5" fill="#9c27b0"/>
+      <line x1="15" y1="85" x2="40" y2="75" stroke="#ffd700" stroke-width="2"/>
+      <path d="M 45 75 Q 100 50 175 45" fill="none" stroke="#50e3c2" stroke-width="2"/>
+      <rect x="175" y="25" width="10" height="50" fill="none" stroke="#fff" stroke-width="2"/>
+    `;
+  }
+  // 57. abp_f3: Falta Zonal
+  else if (id === 'abp_f3') {
+    badgeText = '🛡️ FALTA LATERAL MARCA ZONAL';
+    content = `
+      <rect x="175" y="25" width="10" height="50" fill="none" stroke="#fff" stroke-width="2"/>
+      <circle cx="140" cy="25" r="4.5" fill="#9c27b0"/><circle cx="140" cy="40" r="4.5" fill="#9c27b0"/>
+      <circle cx="140" cy="60" r="4.5" fill="#9c27b0"/><circle cx="140" cy="75" r="4.5" fill="#9c27b0"/>
+      <line x1="140" y1="25" x2="140" y2="75" stroke="#50e3c2" stroke-width="2"/>
+      <path d="M 30 80 Q 90 20 140 45" fill="none" stroke="#ffd700" stroke-width="2"/>
+    `;
+  }
+  // 58. abp_f4: Tiro Libre Barrera Baja
+  else if (id === 'abp_f4') {
+    badgeText = '🛡️ TIRO LIBRE SOBRE BARRERA 16M';
+    content = `
+      <rect x="175" y="25" width="10" height="50" fill="none" stroke="#fff" stroke-width="2"/>
+      <rect x="130" y="40" width="4" height="20" fill="#ff5252"/>
+      <circle cx="40" cy="50" r="5" fill="#9c27b0"/>
+      <path d="M 45 50 Q 130 20 175 30" fill="none" stroke="#ffd700" stroke-width="2"/>
+    `;
+  }
+  // 59. abp_c1: Córner Primer Palo
+  else if (id === 'abp_c1') {
     badgeText = '🛡️ CÓRNER BLOQUEO PRIMER PALO';
     content = `
-      <line x1="15" y1="85" x2="15" y2="70" stroke="#fff" stroke-width="1.5"/>
-      <polygon points="15,70 25,75 15,80" fill="#9c27b0"/>
+      <line x1="15" y1="85" x2="15" y2="70" stroke="#fff" stroke-width="1.5"/><polygon points="15,70 25,75 15,80" fill="#9c27b0"/>
       <rect x="175" y="25" width="10" height="50" fill="none" stroke="#fff" stroke-width="2"/>
-      <!-- Barrera/Bloqueo -->
-      <circle cx="140" cy="40" r="4.5" fill="#ff5252"/>
-      <circle cx="140" cy="55" r="4.5" fill="#ff5252"/>
+      <circle cx="140" cy="40" r="4.5" fill="#ff5252"/><circle cx="140" cy="55" r="4.5" fill="#ff5252"/>
       <circle cx="120" cy="80" r="5" fill="#9c27b0"/>
       <path d="M 15 85 Q 100 50 165 35" fill="none" stroke="#ffd700" stroke-width="2"/>
-      <circle cx="165" cy="35" r="3.5" fill="#ffd700"/>
     `;
-  } else if (id === 'abp_c2' || (cat === 'abp' && (title.includes('Tiro Libre') || title.includes('Falta')))) {
+  }
+  // 60. abp_c2: Tiro Libre Oculto
+  else if (id === 'abp_c2') {
     badgeText = '🛡️ TIRO LIBRE BARRERA DESMONTABLE';
     content = `
       <rect x="175" y="25" width="10" height="50" fill="none" stroke="#fff" stroke-width="2"/>
-      <circle cx="130" cy="35" r="4.5" fill="#ff5252"/>
-      <circle cx="130" cy="47" r="4.5" fill="#ff5252"/>
-      <circle cx="130" cy="59" r="4.5" fill="#ff5252"/>
-      <circle cx="130" cy="71" r="4.5" fill="#ffd700"/><text x="130" y="73" font-size="4" font-weight="900" fill="#000" text-anchor="middle">OCU</text>
+      <circle cx="130" cy="35" r="4.5" fill="#ff5252"/><circle cx="130" cy="47" r="4.5" fill="#ff5252"/>
+      <circle cx="130" cy="59" r="4.5" fill="#ff5252"/><circle cx="130" cy="71" r="4.5" fill="#ffd700"/>
       <circle cx="35" cy="50" r="5" fill="#9c27b0"/>
       <line x1="40" y1="50" x2="180" y2="70" stroke="#ffd700" stroke-width="2"/>
     `;
   }
+  // 61. abp_c3: Saque Banda Largo
+  else if (id === 'abp_c3') {
+    badgeText = '🛡️ SAQUE BANDA LARGO AL ÁREA';
+    content = `
+      <rect x="175" y="25" width="10" height="50" fill="none" stroke="#fff" stroke-width="2"/>
+      <circle cx="40" cy="90" r="5" fill="#9c27b0"/>
+      <circle cx="150" cy="50" r="5" fill="#9c27b0"/><text x="150" y="52" font-size="4" font-weight="900" fill="#fff" text-anchor="middle">PEI</text>
+      <circle cx="165" cy="35" r="5" fill="#9c27b0"/><text x="165" y="37" font-size="4" font-weight="900" fill="#fff" text-anchor="middle">REM</text>
+      <path d="M 40 90 Q 100 40 145 50" fill="none" stroke="#ffd700" stroke-width="2"/>
+      <line x1="150" y1="50" x2="165" y2="35" stroke="#50e3c2" stroke-width="2"/>
+    `;
+  }
+  // 62. abp_c4: Defensa Córner Mixta
+  else if (id === 'abp_c4') {
+    badgeText = '🛡️ DEFENSA CÓRNER MIXTA ZONAL+HOM';
+    content = `
+      <rect x="175" y="25" width="10" height="50" fill="none" stroke="#fff" stroke-width="2"/>
+      <!-- 3 Zonales en área chica -->
+      <circle cx="165" cy="30" r="4.5" fill="#ff5252"/><circle cx="165" cy="50" r="4.5" fill="#ff5252"/><circle cx="165" cy="70" r="4.5" fill="#ff5252"/>
+      <!-- 3 Hombre a hombre afuera -->
+      <circle cx="140" cy="35" r="4.5" fill="#ff5252"/><circle cx="140" cy="35" r="3" fill="#9c27b0"/>
+      <circle cx="140" cy="65" r="4.5" fill="#ff5252"/><circle cx="140" cy="65" r="3" fill="#9c27b0"/>
+    `;
+  }
 
-  // FÍSICO
+  // 63. fis_f1: Circuito Aros Vallas
+  else if (id === 'fis_f1') {
+    badgeText = '🏃‍♂️ CIRCUITO AROS & VALLAS';
+    content = `
+      <circle cx="30" cy="50" r="4" fill="none" stroke="#00ab55" stroke-width="2"/>
+      <circle cx="45" cy="50" r="4" fill="none" stroke="#00ab55" stroke-width="2"/>
+      <circle cx="60" cy="50" r="4" fill="none" stroke="#00ab55" stroke-width="2"/>
+      <line x1="85" y1="40" x2="85" y2="60" stroke="#ff9800" stroke-width="3"/>
+      <line x1="105" y1="40" x2="105" y2="60" stroke="#ff9800" stroke-width="3"/>
+      <circle cx="15" cy="50" r="5" fill="#00ab55"/>
+      <path d="M 15 50 L 65 50 L 105 50 L 175 50" fill="none" stroke="#ffd700" stroke-width="2"/>
+      <rect x="175" y="30" width="10" height="40" fill="none" stroke="#fff" stroke-width="2"/>
+    `;
+  }
+  // 64. fis_f2: Relevos Zig-Zag
+  else if (id === 'fis_f2') {
+    badgeText = '🏃‍♂️ RELEVOS CONDUCCIÓN ZIG-ZAG';
+    content = `
+      <circle cx="60" cy="30" r="3" fill="#ff9800"/><circle cx="90" cy="30" r="3" fill="#ff9800"/><circle cx="120" cy="30" r="3" fill="#ff9800"/>
+      <circle cx="60" cy="70" r="3" fill="#ff9800"/><circle cx="90" cy="70" r="3" fill="#ff9800"/><circle cx="120" cy="70" r="3" fill="#ff9800"/>
+      <circle cx="20" cy="30" r="5" fill="#00ab55"/><path d="M 20 30 Q 60 15 90 30 T 120 30 L 150 30" fill="none" stroke="#ffd700" stroke-width="2"/>
+      <circle cx="20" cy="70" r="5" fill="#00ab55"/><path d="M 20 70 Q 60 55 90 70 T 120 70 L 150 70" fill="none" stroke="#ffd700" stroke-width="2"/>
+    `;
+  }
+  // 65. fis_f3: Juego Espejo
+  else if (id === 'fis_f3') {
+    badgeText = '🏃‍♂️ JUEGO AGILIDAD EL ESPEJO';
+    content = `
+      <circle cx="60" cy="50" r="5" fill="#00ab55"/><text x="60" y="52" font-size="4.5" font-weight="900" fill="#fff" text-anchor="middle">ATK</text>
+      <circle cx="140" cy="50" r="5" fill="#ff5252"/><text x="140" y="52" font-size="4.5" font-weight="900" fill="#fff" text-anchor="middle">ESP</text>
+      <path d="M 60 30 L 60 70" fill="none" stroke="#50e3c2" stroke-width="2"/>
+      <path d="M 140 30 L 140 70" fill="none" stroke="#ff5252" stroke-width="2"/>
+    `;
+  }
+  // 66. fis_f4: Caza Banderines
+  else if (id === 'fis_f4') {
+    badgeText = '🏃‍♂️ CAZA DE BANDERINES EXPLOSIVA';
+    content = `
+      <line x1="20" y1="10" x2="20" y2="90" stroke="#fff" stroke-width="2"/>
+      <polygon points="150,50 160,45 150,40" fill="#ffd700"/>
+      <circle cx="20" cy="30" r="5" fill="#00ab55"/><line x1="25" y1="30" x2="150" y2="45" stroke="#ffd700" stroke-width="2"/>
+      <circle cx="20" cy="70" r="5" fill="#00ab55"/><line x1="25" y1="70" x2="150" y2="45" stroke="#ffd700" stroke-width="2"/>
+    `;
+  }
+  // 67. fis_c1: Circuito RSA
   else if (id === 'fis_c1' || title.includes('RSA')) {
     badgeText = '🏃‍♂️ CIRCUITO INTERMITENTE RSA';
     content = `
@@ -1017,8 +945,21 @@ export function buildTacticalDiagramSVG(drillInput = 'tactica') {
       <path d="M 35 50 L 60 35 L 90 35 L 120 35 L 170 50" fill="none" stroke="#ffd700" stroke-width="2"/>
       <rect x="175" y="30" width="10" height="40" fill="none" stroke="#fff" stroke-width="2"/>
     `;
-  } else if (id === 'fis_c3' || title.includes('Trineo') || title.includes('Liga')) {
-    badgeText = '🏃‍♂️ FUERZA Y ARRASTRE DE LIGA';
+  }
+  // 68. fis_c2: 1v1 Láctico 45s
+  else if (id === 'fis_c2') {
+    badgeText = '🏃‍♂️ RESISTENCIA 1v1 LÁCTICO 45S';
+    content = `
+      <rect x="40" y="20" width="120" height="60" fill="none" stroke="#00ab55" stroke-width="1.5"/>
+      <circle cx="70" cy="50" r="5" fill="#00ab55"/>
+      <circle cx="130" cy="50" r="5" fill="#ff5252"/>
+      <circle cx="100" cy="10" r="4" fill="#ffd700"/><text x="100" y="12" font-size="4" font-weight="900" fill="#000" text-anchor="middle">DT</text>
+      <line x1="100" y1="14" x2="100" y2="45" stroke="#ffd700" stroke-width="2"/>
+    `;
+  }
+  // 69. fis_c3: Trineo / Liga
+  else if (id === 'fis_c3' || title.includes('Trineo')) {
+    badgeText = '🏃‍♂️ FUERZA EXPLOSIVA ARRASTRE LIGA';
     content = `
       <line x1="40" y1="50" x2="90" y2="50" stroke="#ffd700" stroke-width="3" stroke-dasharray="3,2"/>
       <circle cx="40" cy="50" r="5" fill="#ff9800"/><text x="40" y="52" font-size="4.5" font-weight="900" fill="#fff" text-anchor="middle">SOST</text>
@@ -1027,11 +968,21 @@ export function buildTacticalDiagramSVG(drillInput = 'tactica') {
       <polygon points="175,50 165,45 165,55" fill="#50e3c2"/>
     `;
   }
+  // 70. fis_c4: Nordic Hamstring
+  else if (id === 'fis_c4' || title.includes('Nordic')) {
+    badgeText = '🏃‍♂️ PREVENCIÓN NORDIC HAMSTRING';
+    content = `
+      <rect x="50" y="60" width="30" height="8" fill="#9c27b0"/>
+      <circle cx="50" cy="50" r="5" fill="#00ab55"/>
+      <circle cx="35" cy="62" r="4" fill="#ffd700"/><text x="35" y="64" font-size="3.5" font-weight="900" fill="#000" text-anchor="middle">SUJ</text>
+      <path d="M 50 50 Q 80 40 110 58" fill="none" stroke="#50e3c2" stroke-width="2.5"/>
+    `;
+  }
 
-  // DEFAULT POR CATEGORÍA
+  // DEFAULT PARA EJERCICIOS PERSONALIZADOS DEL USUARIO
   else {
     const catColor = (CAT_MAP[cat] ? CAT_MAP[cat].color : '#50e3c2');
-    badgeText = `📋 DIAGRAMA TÁCTICO: ${cat.toUpperCase()}`;
+    badgeText = `📋 DIAGRAMA TÁCTICO: ${title.toUpperCase() || 'PERSONALIZADO'}`;
     content = `
       <rect x="30" y="20" width="140" height="60" fill="none" stroke="${catColor}" stroke-width="1.5" stroke-dasharray="4,3"/>
       <circle cx="50" cy="50" r="5" fill="${catColor}"/><text x="50" y="52" font-size="5" font-weight="900" fill="#000" text-anchor="middle">A1</text>
@@ -1732,9 +1683,7 @@ export async function setAsistenciaEstado(nombre, estado) {
 
 window._setAsistenciaEstado = (n, e) => setAsistenciaEstado(n, e);
 
-// ══════════════════════════════════════════════════════════════════════════
-// DEPARTAMENTO MÉDICO & INFORME DE LESIONES
-// ══════════════════════════════════════════════════════════════════════════
+// DEPARTAMENTO MÉDICO
 let targetJugadorLesion = '';
 
 export function abrirModalLesion(nombreJugador) {
@@ -1817,11 +1766,8 @@ export async function darAltaMedica(nombre) {
 
 window._darAltaMedica = (n) => darAltaMedica(n);
 
-// ══════════════════════════════════════════════════════════════════════════
-// INICIALIZACIÓN DE EVENT LISTENERS DE LA SECCIÓN DE ENTRENAMIENTOS
-// ══════════════════════════════════════════════════════════════════════════
+// INICIALIZACIÓN
 export function initEntrenamientosUI() {
-  // Listener de filtro de Nivel en vista principal
   const levelSelect = document.getElementById('filter-drill-level');
   if (levelSelect) {
     levelSelect.onchange = (e) => {
@@ -1830,7 +1776,6 @@ export function initEntrenamientosUI() {
     };
   }
 
-  // Listener de filtro de Categoría Técnica en vista principal
   const catSelect = document.getElementById('filter-drill-cat');
   if (catSelect) {
     catSelect.onchange = (e) => {
@@ -1839,49 +1784,41 @@ export function initEntrenamientosUI() {
     };
   }
 
-  // Listener de abrir modal biblioteca completa
   const btnAbrirModalBiblio = document.getElementById('btn-abrir-modal-biblioteca');
   if (btnAbrirModalBiblio) {
     btnAbrirModalBiblio.onclick = abrirModalBibliotecaCompleta;
   }
 
-  // Listener de abrir modal nuevo ejercicio personalizado
   const btnNuevoCustom = document.getElementById('btn-abrir-modal-nuevo-ejercicio');
   if (btnNuevoCustom) {
     btnNuevoCustom.onclick = abrirModalNuevoEjercicioCustom;
   }
 
-  // Listener para Guardar Ejercicio Personalizado
   const btnSaveCustomDrill = document.getElementById('btn-save-custom-drill');
   if (btnSaveCustomDrill) {
     btnSaveCustomDrill.onclick = guardarEjercicioPersonalizado;
   }
 
-  // Listener para Guardar Sesión
   const btnSaveSession = document.getElementById('btn-save-session');
   if (btnSaveSession) {
     btnSaveSession.onclick = guardarNuevaSesion;
   }
 
-  // Listener para Guardar Parte Médico
   const btnSaveMedical = document.getElementById('btn-save-medical-report');
   if (btnSaveMedical) {
     btnSaveMedical.onclick = guardarParteMedico;
   }
 
-  // Listener para Iniciar Pasar Lista Wizard (1 por 1)
   const btnInciarLista = document.getElementById('btn-iniciar-pasar-lista');
   if (btnInciarLista) {
     btnInciarLista.onclick = iniciarPasarListaWizard;
   }
 
-  // Listener para Toggle Listado Completo
   const btnToggleListado = document.getElementById('btn-toggle-listado-completo');
   if (btnToggleListado) {
     btnToggleListado.onclick = toggleListadoCompleto;
   }
 
-  // Renderizar vistas iniciales
   renderBibliotecaEjercicios();
   renderPlannerUI();
   renderAsistenciaUI();
