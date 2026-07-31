@@ -375,15 +375,21 @@ export function setArrowStyle(eq, arrowStyle) {
 window._setArrowStyle = setArrowStyle;
 
 export function setDrawingMode(eq, mode) {
-  const currentMode = drawingState[eq].mode;
   let targetSubPanel = null;
   if (mode === 'pencil') targetSubPanel = document.getElementById(`sub-panel-pencil-fs-${eq}`);
   else if (mode === 'arrow') targetSubPanel = document.getElementById(`sub-panel-arrows-fs-${eq}`);
   else if (mode === 'line') targetSubPanel = document.getElementById(`sub-panel-line-fs-${eq}`);
 
-  // Si se vuelve a presionar la misma herramienta con submenú abierto, ¡cerrar el submenú y volver a selección limpia!
-  if (currentMode === mode && targetSubPanel && targetSubPanel.style.display === 'flex') {
-    targetSubPanel.style.display = 'none';
+  const isAlreadyOpen = targetSubPanel && (targetSubPanel.style.display === 'flex');
+
+  // Ocultar todos los subpaneles primero para alternar limpiamente
+  ['pencil', 'arrows', 'line'].forEach(type => {
+    const p = document.getElementById(`sub-panel-${type}-fs-${eq}`);
+    if (p) p.style.display = 'none';
+  });
+
+  if (isAlreadyOpen) {
+    // Si el subpanel de esta herramienta ya estaba abierto, cerrar y volver a selección limpia
     drawingState[eq].mode = 'none';
     ['pencil', 'arrow', 'line', 'eraser', 'none'].forEach(m => {
       const btnFs = document.getElementById(`btn-${m}-fs-${eq}`);
@@ -397,21 +403,17 @@ export function setDrawingMode(eq, mode) {
     return;
   }
 
+  // Si no estaba abierto, activar el modo y desplegar su subpanel
   drawingState[eq].mode = mode;
+
+  if (targetSubPanel) {
+    targetSubPanel.style.display = 'flex';
+  }
 
   ['pencil', 'arrow', 'line', 'eraser', 'none'].forEach(m => {
     const btnFs = document.getElementById(`btn-${m}-fs-${eq}`);
     if (btnFs) btnFs.classList.toggle('active', m === mode);
   });
-
-  const pPencil = document.getElementById(`sub-panel-pencil-fs-${eq}`);
-  if (pPencil) pPencil.style.display = (mode === 'pencil') ? 'flex' : 'none';
-
-  const pArrow = document.getElementById(`sub-panel-arrows-fs-${eq}`);
-  if (pArrow) pArrow.style.display = (mode === 'arrow') ? 'flex' : 'none';
-
-  const pLine = document.getElementById(`sub-panel-line-fs-${eq}`);
-  if (pLine) pLine.style.display = (mode === 'line') ? 'flex' : 'none';
 
   const canvas = document.getElementById(`canvas-${eq}`);
   if (canvas) {
