@@ -767,259 +767,77 @@ const CAT_MAP = {
 // GENERADOR DE DEMOSTRACIÓN TÁCTICA ANIMADA ÚNICA SEGÚN CADA EJERCICIO INDIVIDUAL
 // ══════════════════════════════════════════════════════════════════════════
 function buildTacticalAnimationSVG(drillInput = 'tactica') {
-  let cat = typeof drillInput === 'string' ? drillInput : (drillInput.cat || 'tactica');
-  let title = typeof drillInput === 'object' ? (drillInput.title || '') : '';
-  let id = typeof drillInput === 'object' ? (drillInput.id || '') : '';
+  const cat = typeof drillInput === 'string' ? drillInput : (drillInput.cat || 'tactica');
+  const title = typeof drillInput === 'object' ? (drillInput.title || '') : '';
+  const id = typeof drillInput === 'object' ? (drillInput.id || '') : '';
 
   let content = '';
   let badgeText = '⚡ DEMO TÁCTICA ANIMADA';
 
-  // 1. TRES EN RAYA (lud_f1)
+  // DICCIONARIO DIRECTO POR ID Y PALABRAS CLAVE ESPECÍFICAS
   if (id === 'lud_f1' || title.includes('Tres en Raya')) {
     badgeText = '🎮 3 EN RAYA CONOS & PETOS';
-    content = `
-      <rect x="70" y="20" width="60" height="60" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
-      <line x1="90" y1="20" x2="90" y2="80" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
-      <line x1="110" y1="20" x2="110" y2="80" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
-      <line x1="70" y1="40" x2="130" y2="40" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
-      <line x1="70" y1="60" x2="130" y2="60" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
-      <circle cx="20" cy="50" r="5" fill="#50e3c2"><animate attributeName="cx" values="20;80;20" dur="2s" repeatCount="indefinite"/></circle>
-      <circle cx="180" cy="50" r="5" fill="#ff5252"><animate attributeName="cx" values="180;120;180" dur="2s" repeatCount="indefinite"/></circle>
-      <circle cx="80" cy="30" r="4" fill="#50e3c2"/>
-      <circle cx="120" cy="30" r="4" fill="#ff5252"/>
-      <circle cx="100" cy="50" r="4" fill="#50e3c2"/>
-    `;
-  }
-  // 2. EL ZORRO (lud_f2)
-  else if (id === 'lud_f2' || title.includes('Zorro')) {
+    content = `<rect x="70" y="20" width="60" height="60" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/><line x1="90" y1="20" x2="90" y2="80" stroke="rgba(255,255,255,0.4)" stroke-width="1"/><line x1="110" y1="20" x2="110" y2="80" stroke="rgba(255,255,255,0.4)" stroke-width="1"/><line x1="70" y1="40" x2="130" y2="40" stroke="rgba(255,255,255,0.4)" stroke-width="1"/><line x1="70" y1="60" x2="130" y2="60" stroke="rgba(255,255,255,0.4)" stroke-width="1"/><circle cx="20" cy="50" r="5" fill="#50e3c2"><animate attributeName="cx" values="20;80;20" dur="2s" repeatCount="indefinite"/></circle><circle cx="180" cy="50" r="5" fill="#ff5252"><animate attributeName="cx" values="180;120;180" dur="2s" repeatCount="indefinite"/></circle><circle cx="80" cy="30" r="4" fill="#50e3c2"/><circle cx="120" cy="30" r="4" fill="#ff5252"/><circle cx="100" cy="50" r="4" fill="#50e3c2"/>`;
+  } else if (id === 'lud_f2' || title.includes('Zorro')) {
     badgeText = '🦊 EL ZORRO CAZADOR DE BALONES';
-    content = `
-      <circle cx="100" cy="50" r="35" fill="none" stroke="rgba(255,152,0,0.4)" stroke-dasharray="3,3" stroke-width="1.5"/>
-      <circle cx="100" cy="50" r="6" fill="#ff5252">
-        <animate attributeName="cx" values="100;120;80;100" dur="2s" repeatCount="indefinite"/>
-        <animate attributeName="cy" values="50;30;70;50" dur="2s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="75" cy="35" r="4" fill="#00e5ff"><animate attributeName="cx" values="75;65;75" dur="1.5s" repeatCount="indefinite"/></circle>
-      <circle cx="125" cy="35" r="4" fill="#00e5ff"><animate attributeName="cy" values="35;25;35" dur="1.5s" repeatCount="indefinite"/></circle>
-      <circle cx="80" cy="65" r="4" fill="#00e5ff"><animate attributeName="cy" values="65;75;65" dur="1.5s" repeatCount="indefinite"/></circle>
-      <circle cx="120" cy="65" r="4" fill="#00e5ff"><animate attributeName="cx" values="120;130;120" dur="1.5s" repeatCount="indefinite"/></circle>
-    `;
-  }
-  // 3. FÚTBOL TENIS (lud_f4 / lud_c2)
-  else if (title.includes('Tenis') || title.includes('Vóley')) {
+    content = `<circle cx="100" cy="50" r="35" fill="none" stroke="rgba(255,152,0,0.4)" stroke-dasharray="3,3" stroke-width="1.5"/><circle cx="100" cy="50" r="6" fill="#ff5252"><animate attributeName="cx" values="100;120;80;100" dur="2s" repeatCount="indefinite"/><animate attributeName="cy" values="50;30;70;50" dur="2s" repeatCount="indefinite"/></circle><circle cx="75" cy="35" r="4" fill="#00e5ff"/><circle cx="125" cy="35" r="4" fill="#00e5ff"/><circle cx="80" cy="65" r="4" fill="#00e5ff"/><circle cx="120" cy="65" r="4" fill="#00e5ff"/>`;
+  } else if (id === 'lud_f3' || title.includes('Robo de Colas')) {
+    badgeText = '🎮 ROBO DE COLAS CON CINTAS';
+    content = `<rect x="40" y="20" width="120" height="60" fill="none" stroke="rgba(80,227,194,0.3)" stroke-dasharray="2,2"/><circle cx="60" cy="40" r="5" fill="#50e3c2"><animate attributeName="cx" values="60;140;60" dur="2.5s" repeatCount="indefinite"/></circle><line x1="55" y1="40" x2="48" y2="40" stroke="#ffd700" stroke-width="2"><animate attributeName="x1" values="55;135;55" dur="2.5s" repeatCount="indefinite"/><animate attributeName="x2" values="48;128;48" dur="2.5s" repeatCount="indefinite"/></line><circle cx="140" cy="60" r="5" fill="#ff5252"><animate attributeName="cx" values="140;60;140" dur="2.5s" repeatCount="indefinite"/></circle>`;
+  } else if (id === 'lud_f4' || id === 'lud_c2' || title.includes('Tenis') || title.includes('Vóley')) {
     badgeText = '🎾 FÚTBOL TENIS RED BAJA';
-    content = `
-      <line x1="100" y1="10" x2="100" y2="90" stroke="var(--oro)" stroke-width="3"/>
-      <circle cx="50" cy="50" r="5" fill="#50e3c2"/>
-      <circle cx="150" cy="50" r="5" fill="#ff5252"/>
-      <circle cx="50" cy="50" r="3.5" fill="#ffd700">
-        <animate attributeName="cx" values="50;100;150;100;50" dur="2.2s" repeatCount="indefinite"/>
-        <animate attributeName="cy" values="50;20;50;20;50" dur="2.2s" repeatCount="indefinite"/>
-      </circle>
-    `;
-  }
-  // 4. DERRIBAR EL CONO / CASTILLO (lud_f5)
-  else if (title.includes('Cono') || title.includes('Castillo')) {
-    badgeText = '🏰 DERRIBAR EL CONO DE PASE';
-    content = `
-      <rect x="90" y="20" width="20" height="60" fill="rgba(255,215,0,0.15)" stroke="var(--oro)" stroke-dasharray="2,2"/>
-      <polygon points="100,30 95,40 105,40" fill="#ff9800"/>
-      <polygon points="100,50 95,60 105,60" fill="#ff9800"/>
-      <polygon points="100,70 95,80 105,80" fill="#ff9800"/>
-      <circle cx="30" cy="50" r="5" fill="#50e3c2"/>
-      <circle cx="170" cy="50" r="5" fill="#ff5252"/>
-      <circle cx="30" cy="50" r="3.5" fill="#ffd700">
-        <animate attributeName="cx" values="30;100;30" dur="1.8s" repeatCount="indefinite"/>
-      </circle>
-    `;
-  }
-  // 5. ESCALERA DE COORDINACIÓN (pre_e_f2)
-  else if (title.includes('Escalera')) {
+    content = `<line x1="100" y1="15" x2="100" y2="85" stroke="var(--oro)" stroke-width="3"/><circle cx="50" cy="50" r="5" fill="#50e3c2"/><circle cx="150" cy="50" r="5" fill="#ff5252"/><circle cx="50" cy="50" r="3.5" fill="#ffd700"><animate attributeName="cx" values="50;100;150;100;50" dur="2.2s" repeatCount="indefinite"/><animate attributeName="cy" values="50;20;50;20;50" dur="2.2s" repeatCount="indefinite"/></circle>`;
+  } else if (id === 'lud_f5' || title.includes('Castillo')) {
+    badgeText = '🏰 DERRIBAR EL CONO DEL CASTILLO';
+    content = `<rect x="90" y="20" width="20" height="60" fill="rgba(255,215,0,0.15)" stroke="var(--oro)" stroke-dasharray="2,2"/><polygon points="100,30 95,40 105,40" fill="#ff9800"/><polygon points="100,50 95,60 105,60" fill="#ff9800"/><polygon points="100,70 95,80 105,80" fill="#ff9800"/><circle cx="30" cy="50" r="5" fill="#50e3c2"/><circle cx="170" cy="50" r="5" fill="#ff5252"/><circle cx="30" cy="50" r="3.5" fill="#ffd700"><animate attributeName="cx" values="30;100;30" dur="1.8s" repeatCount="indefinite"/></circle>`;
+  } else if (id === 'lud_c3' || title.includes('Travesaño')) {
+    badgeText = '🎯 DESAFÍO DEL TRAVESAÑO';
+    content = `<rect x="175" y="25" width="10" height="50" fill="none" stroke="#fff" stroke-width="2"/><line x1="175" y1="25" x2="185" y2="25" stroke="var(--oro)" stroke-width="4"/><circle cx="30" cy="50" r="5" fill="#ff5252"/><circle cx="30" cy="50" r="3.5" fill="#ffd700"><animate attributeName="cx" values="30;175;100;30" dur="2.4s" repeatCount="indefinite"/><animate attributeName="cy" values="50;25;65;50" dur="2.4s" repeatCount="indefinite"/></circle>`;
+  } else if (id === 'lud_c4' || title.includes('Pádel')) {
+    badgeText = '🏓 PÁDEL FÚTBOL Y REBOTE';
+    content = `<rect x="180" y="15" width="6" height="70" fill="#aaa"/><circle cx="40" cy="40" r="5" fill="#50e3c2"/><circle cx="40" cy="40" r="3.5" fill="#ffd700"><animate attributeName="cx" values="40;180;40" dur="2s" repeatCount="indefinite"/><animate attributeName="cy" values="40;25;60;40" dur="2s" repeatCount="indefinite"/></circle>`;
+  } else if (id === 'pre_e_f2' || title.includes('Escalera')) {
     badgeText = '⚡ ESCALERA DE FRECUENCIA';
-    content = `
-      <rect x="30" y="40" width="140" height="20" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
-      <line x1="50" y1="40" x2="50" y2="60" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
-      <line x1="70" y1="40" x2="70" y2="60" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
-      <line x1="90" y1="40" x2="90" y2="60" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
-      <line x1="110" y1="40" x2="110" y2="60" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
-      <line x1="130" y1="40" x2="130" y2="60" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
-      <line x1="150" y1="40" x2="150" y2="60" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
-      <circle cx="35" cy="50" r="5" fill="var(--oro)">
-        <animate attributeName="cx" values="35;55;75;95;115;135;155;35" dur="1.6s" repeatCount="indefinite"/>
-        <animate attributeName="cy" values="50;35;50;35;50;35;50;50" dur="1.6s" repeatCount="indefinite"/>
-      </circle>
-    `;
-  }
-  // 6. ESLALON DE CONDUCCIÓN (tec_f2)
-  else if (title.includes('Eslalon') || title.includes('Zig-Zag')) {
+    content = `<rect x="30" y="40" width="140" height="20" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/><line x1="50" y1="40" x2="50" y2="60" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/><line x1="70" y1="40" x2="70" y2="60" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/><line x1="90" y1="40" x2="90" y2="60" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/><line x1="110" y1="40" x2="110" y2="60" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/><line x1="130" y1="40" x2="130" y2="60" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/><line x1="150" y1="40" x2="150" y2="60" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/><circle cx="35" cy="50" r="5" fill="var(--oro)"><animate attributeName="cx" values="35;55;75;95;115;135;155;35" dur="1.6s" repeatCount="indefinite"/><animate attributeName="cy" values="50;35;50;35;50;35;50;50" dur="1.6s" repeatCount="indefinite"/></circle>`;
+  } else if (id === 'pre_e_c1' || title.includes('Pliometría') || title.includes('Bandas')) {
+    badgeText = '⚡ BANDAS & PLIOMETRÍA HEXÁGONO';
+    content = `<polygon points="100,25 135,40 135,65 100,80 65,65 65,40" fill="none" stroke="rgba(80,227,194,0.5)" stroke-width="1.5"/><circle cx="100" cy="50" r="5" fill="var(--oro)"><animate attributeName="cx" values="100;135;65;100" dur="1.8s" repeatCount="indefinite"/><animate attributeName="cy" values="50;40;65;50" dur="1.8s" repeatCount="indefinite"/></circle>`;
+  } else if (id === 'tec_f2' || title.includes('Eslalon')) {
     badgeText = '⚽ ESLALON DE CONDUCCIÓN';
-    content = `
-      <circle cx="40" cy="50" r="3.5" fill="#ff9800"/>
-      <circle cx="70" cy="50" r="3.5" fill="#ff9800"/>
-      <circle cx="100" cy="50" r="3.5" fill="#ff9800"/>
-      <circle cx="130" cy="50" r="3.5" fill="#ff9800"/>
-      <circle cx="160" cy="50" r="3.5" fill="#ff9800"/>
-      <circle cx="20" cy="50" r="5" fill="#e65100">
-        <animate attributeName="cx" values="20;40;70;100;130;160;180;20" dur="2.8s" repeatCount="indefinite"/>
-        <animate attributeName="cy" values="50;30;70;30;70;30;50;50" dur="2.8s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="20" cy="50" r="3.5" fill="#ffd700">
-        <animate attributeName="cx" values="20;40;70;100;130;160;180;20" dur="2.8s" repeatCount="indefinite"/>
-        <animate attributeName="cy" values="50;30;70;30;70;30;50;50" dur="2.8s" repeatCount="indefinite"/>
-      </circle>
-    `;
-  }
-  // 7. CÓRNER TÁCTICO (abp_c1 / abp_f2)
-  else if (title.includes('Córner')) {
-    badgeText = '🛡️ ESTRATEGIA DE CÓRNER';
-    content = `
-      <line x1="15" y1="85" x2="15" y2="70" stroke="#fff" stroke-width="1.5"/>
-      <polygon points="15,70 25,75 15,80" fill="#9c27b0"/>
-      <rect x="175" y="30" width="12" height="40" fill="none" stroke="#fff" stroke-width="2"/>
-      <circle cx="140" cy="40" r="4" fill="#ff5252"/>
-      <circle cx="140" cy="50" r="4" fill="#ff5252"/>
-      <circle cx="140" cy="60" r="4" fill="#ff5252"/>
-      <circle cx="120" cy="80" r="5" fill="#9c27b0">
-        <animate attributeName="cx" values="120;165;120" dur="2.5s" repeatCount="indefinite"/>
-        <animate attributeName="cy" values="80;45;80" dur="2.5s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="15" cy="85" r="3.5" fill="#ffd700">
-        <animate attributeName="cx" values="15;165;15" dur="2.5s" repeatCount="indefinite"/>
-        <animate attributeName="cy" values="85;45;85" dur="2.5s" repeatCount="indefinite"/>
-      </circle>
-    `;
-  }
-  // 8. TIRO LIBRE (abp_c2 / abp_f4)
-  else if (title.includes('Tiro Libre') || title.includes('Falta')) {
-    badgeText = '🛡️ BARRERA Y TIRO LIBRE';
-    content = `
-      <rect x="180" y="30" width="10" height="40" fill="none" stroke="#fff" stroke-width="2"/>
-      <circle cx="130" cy="40" r="4" fill="#ff5252"/>
-      <circle cx="130" cy="50" r="4" fill="#ff5252"/>
-      <circle cx="130" cy="60" r="4" fill="#ff5252"/>
-      <circle cx="130" cy="60" r="4" fill="#9c27b0">
-        <animate attributeName="cy" values="60;80;60" dur="2.2s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="40" cy="50" r="5" fill="#9c27b0"/>
-      <circle cx="40" cy="50" r="3.5" fill="#ffd700">
-        <animate attributeName="cx" values="40;185;40" dur="2.2s" repeatCount="indefinite"/>
-        <animate attributeName="cy" values="50;65;50" dur="2.2s" repeatCount="indefinite"/>
-      </circle>
-    `;
-  }
-  // 9. TRINEO Y LIGAS (fis_c3)
-  else if (title.includes('Trineo') || title.includes('Liga')) {
+    content = `<circle cx="40" cy="50" r="3.5" fill="#ff9800"/><circle cx="70" cy="50" r="3.5" fill="#ff9800"/><circle cx="100" cy="50" r="3.5" fill="#ff9800"/><circle cx="130" cy="50" r="3.5" fill="#ff9800"/><circle cx="160" cy="50" r="3.5" fill="#ff9800"/><circle cx="20" cy="50" r="5" fill="#e65100"><animate attributeName="cx" values="20;40;70;100;130;160;180;20" dur="2.8s" repeatCount="indefinite"/><animate attributeName="cy" values="50;30;70;30;70;30;50;50" dur="2.8s" repeatCount="indefinite"/></circle><circle cx="20" cy="50" r="3.5" fill="#ffd700"><animate attributeName="cx" values="20;40;70;100;130;160;180;20" dur="2.8s" repeatCount="indefinite"/><animate attributeName="cy" values="50;30;70;30;70;30;50;50" dur="2.8s" repeatCount="indefinite"/></circle>`;
+  } else if (id === 'abp_c1' || (cat === 'abp' && title.includes('Córner'))) {
+    badgeText = '🛡️ ESTRATEGIA CÓRNER PRIMER PALO';
+    content = `<line x1="15" y1="85" x2="15" y2="70" stroke="#fff" stroke-width="1.5"/><polygon points="15,70 25,75 15,80" fill="#9c27b0"/><rect x="175" y="30" width="12" height="40" fill="none" stroke="#fff" stroke-width="2"/><circle cx="140" cy="40" r="4" fill="#ff5252"/><circle cx="140" cy="50" r="4" fill="#ff5252"/><circle cx="120" cy="80" r="5" fill="#9c27b0"><animate attributeName="cx" values="120;165;120" dur="2.5s" repeatCount="indefinite"/><animate attributeName="cy" values="80;45;80" dur="2.5s" repeatCount="indefinite"/></circle><circle cx="15" cy="85" r="3.5" fill="#ffd700"><animate attributeName="cx" values="15;165;15" dur="2.5s" repeatCount="indefinite"/><animate attributeName="cy" values="85;45;85" dur="2.5s" repeatCount="indefinite"/></circle>`;
+  } else if (id === 'abp_c2' || (cat === 'abp' && (title.includes('Tiro Libre') || title.includes('Falta')))) {
+    badgeText = '🛡️ TIRO LIBRE BARRERA CON HUECO';
+    content = `<rect x="180" y="30" width="10" height="40" fill="none" stroke="#fff" stroke-width="2"/><circle cx="130" cy="40" r="4" fill="#ff5252"/><circle cx="130" cy="50" r="4" fill="#ff5252"/><circle cx="130" cy="60" r="4" fill="#9c27b0"><animate attributeName="cy" values="60;80;60" dur="2.2s" repeatCount="indefinite"/></circle><circle cx="40" cy="50" r="5" fill="#9c27b0"/><circle cx="40" cy="50" r="3.5" fill="#ffd700"><animate attributeName="cx" values="40;185;40" dur="2.2s" repeatCount="indefinite"/><animate attributeName="cy" values="50;65;50" dur="2.2s" repeatCount="indefinite"/></circle>`;
+  } else if (id === 'fis_c3' || title.includes('Trineo') || title.includes('Liga')) {
     badgeText = '🏃‍♂️ FUERZA Y ARRASTRE DE LIGA';
-    content = `
-      <line x1="40" y1="50" x2="80" y2="50" stroke="var(--oro)" stroke-width="2.5" stroke-dasharray="2,2"/>
-      <circle cx="40" cy="50" r="5" fill="#00ab55"/>
-      <circle cx="80" cy="50" r="5" fill="#ff9800">
-        <animate attributeName="cx" values="80;170;80" dur="2s" repeatCount="indefinite"/>
-      </circle>
-    `;
-  }
-  // 10. SALIDA DE BALÓN (tac_c2)
-  else if (title.includes('Salida')) {
+    content = `<line x1="40" y1="50" x2="80" y2="50" stroke="var(--oro)" stroke-width="2.5" stroke-dasharray="2,2"/><circle cx="40" cy="50" r="5" fill="#00ab55"/><circle cx="80" cy="50" r="5" fill="#ff9800"><animate attributeName="cx" values="80;170;80" dur="2s" repeatCount="indefinite"/></circle>`;
+  } else if (id === 'tac_c2' || title.includes('Salida')) {
     badgeText = '🎯 SALIDA DE BALÓN 4v3';
-    content = `
-      <circle cx="20" cy="50" r="5" fill="#ffeb3b"/>
-      <circle cx="50" cy="30" r="5" fill="#4a90e2"/>
-      <circle cx="50" cy="70" r="5" fill="#4a90e2"/>
-      <circle cx="90" cy="40" r="5" fill="#ff5252"/>
-      <circle cx="90" cy="60" r="5" fill="#ff5252"/>
-      <circle cx="20" cy="50" r="3.5" fill="#ffd700">
-        <animate attributeName="cx" values="20;50;130;20" dur="2.5s" repeatCount="indefinite"/>
-        <animate attributeName="cy" values="50;30;50;50" dur="2.5s" repeatCount="indefinite"/>
-      </circle>
-    `;
-  }
-  // 11. CENTRO Y REMATE (tec_c2 / tac_c5)
-  else if (title.includes('Centro')) {
+    content = `<circle cx="20" cy="50" r="5" fill="#ffeb3b"/><circle cx="50" cy="30" r="5" fill="#4a90e2"/><circle cx="50" cy="70" r="5" fill="#4a90e2"/><circle cx="90" cy="40" r="5" fill="#ff5252"/><circle cx="90" cy="60" r="5" fill="#ff5252"/><circle cx="20" cy="50" r="3.5" fill="#ffd700"><animate attributeName="cx" values="20;50;130;20" dur="2.5s" repeatCount="indefinite"/><animate attributeName="cy" values="50;30;50;50" dur="2.5s" repeatCount="indefinite"/></circle>`;
+  } else if (title.includes('Centro')) {
     badgeText = '⚽ CENTRO TENSO Y CABEZAZO';
-    content = `
-      <rect x="180" y="25" width="10" height="50" fill="none" stroke="#fff" stroke-width="2"/>
-      <circle cx="160" cy="90" r="5" fill="#e65100"/>
-      <circle cx="150" cy="50" r="5" fill="#e65100">
-        <animate attributeName="cx" values="150;175;150" dur="2.2s" repeatCount="indefinite"/>
-      </circle>
-      <circle cx="160" cy="90" r="3.5" fill="#ffd700">
-        <animate attributeName="cx" values="160;175;160" dur="2.2s" repeatCount="indefinite"/>
-        <animate attributeName="cy" values="90;50;90" dur="2.2s" repeatCount="indefinite"/>
-      </circle>
-    `;
-  }
-  // 12. GENERAL REPARTIDO POR CATEGORÍA
-  else if (cat === 'ludico') {
+    content = `<rect x="180" y="25" width="10" height="50" fill="none" stroke="#fff" stroke-width="2"/><circle cx="160" cy="90" r="5" fill="#e65100"/><circle cx="150" cy="50" r="5" fill="#e65100"><animate attributeName="cx" values="150;175;150" dur="2.2s" repeatCount="indefinite"/></circle><circle cx="160" cy="90" r="3.5" fill="#ffd700"><animate attributeName="cx" values="160;175;160" dur="2.2s" repeatCount="indefinite"/><animate attributeName="cy" values="90;50;90" dur="2.2s" repeatCount="indefinite"/></circle>`;
+  } else if (cat === 'ludico') {
     badgeText = '🎮 JUEGO RECREATIVO Y LÚDICO';
-    content = `
-      <circle cx="50" cy="30" r="4" fill="#ff9800"/>
-      <circle cx="150" cy="70" r="4" fill="#ff9800"/>
-      <circle cx="40" cy="50" r="5" fill="#50e3c2"><animate attributeName="cx" values="40;100;40" dur="2s" repeatCount="indefinite"/></circle>
-      <circle cx="160" cy="50" r="5" fill="#ff5252"><animate attributeName="cx" values="160;100;160" dur="2s" repeatCount="indefinite"/></circle>
-      <circle cx="40" cy="50" r="3.5" fill="#ffd700">
-        <animate attributeName="cx" values="40;100;160;40" dur="2.2s" repeatCount="indefinite"/>
-      </circle>
-    `;
+    content = `<circle cx="50" cy="30" r="4" fill="#ff9800"/><circle cx="150" cy="70" r="4" fill="#ff9800"/><circle cx="40" cy="50" r="5" fill="#50e3c2"><animate attributeName="cx" values="40;100;40" dur="2s" repeatCount="indefinite"/></circle><circle cx="160" cy="50" r="5" fill="#ff5252"><animate attributeName="cx" values="160;100;160" dur="2s" repeatCount="indefinite"/></circle><circle cx="40" cy="50" r="3.5" fill="#ffd700"><animate attributeName="cx" values="40;100;160;40" dur="2.2s" repeatCount="indefinite"/></circle>`;
   } else if (cat === 'pre_entreno' || cat === 'pre_partido') {
     badgeText = '⚡ ACTIVACIÓN Y RONDO';
-    content = `
-      <rect x="60" y="25" width="80" height="50" fill="none" stroke="rgba(255,215,0,0.4)" stroke-dasharray="3,3" stroke-width="1.5"/>
-      <circle cx="60" cy="25" r="5" fill="#00e5ff"/>
-      <circle cx="140" cy="25" r="5" fill="#00e5ff"/>
-      <circle cx="140" cy="75" r="5" fill="#00e5ff"/>
-      <circle cx="60" cy="75" r="5" fill="#00e5ff"/>
-      <circle cx="100" cy="50" r="5" fill="#ff5252"><animate attributeName="cx" values="100;115;85;100" dur="1.5s" repeatCount="indefinite"/></circle>
-      <circle cx="60" cy="25" r="3.5" fill="#ffd700">
-        <animate attributeName="cx" values="60;140;140;60;60" dur="2s" repeatCount="indefinite"/>
-        <animate attributeName="cy" values="25;25;75;75;25" dur="2s" repeatCount="indefinite"/>
-      </circle>
-    `;
+    content = `<rect x="60" y="25" width="80" height="50" fill="none" stroke="rgba(255,215,0,0.4)" stroke-dasharray="3,3" stroke-width="1.5"/><circle cx="60" cy="25" r="5" fill="#00e5ff"/><circle cx="140" cy="25" r="5" fill="#00e5ff"/><circle cx="140" cy="75" r="5" fill="#00e5ff"/><circle cx="60" cy="75" r="5" fill="#00e5ff"/><circle cx="100" cy="50" r="5" fill="#ff5252"><animate attributeName="cx" values="100;115;85;100" dur="1.5s" repeatCount="indefinite"/></circle><circle cx="60" cy="25" r="3.5" fill="#ffd700"><animate attributeName="cx" values="60;140;140;60;60" dur="2s" repeatCount="indefinite"/><animate attributeName="cy" values="25;25;75;75;25" dur="2s" repeatCount="indefinite"/></circle>`;
   } else if (cat === 'tecnica') {
     badgeText = '⚽ TÉCNICA Y FINALIZACIÓN';
-    content = `
-      <rect x="180" y="30" width="10" height="40" fill="none" stroke="#fff" stroke-width="2"/>
-      <circle cx="40" cy="50" r="5" fill="#e65100"/>
-      <circle cx="100" cy="50" r="5" fill="#e65100"/>
-      <circle cx="40" cy="50" r="3.5" fill="#ffd700">
-        <animate attributeName="cx" values="40;100;185;40" dur="2.3s" repeatCount="indefinite"/>
-        <animate attributeName="cy" values="50;40;35;50" dur="2.3s" repeatCount="indefinite"/>
-      </circle>
-    `;
+    content = `<rect x="180" y="30" width="10" height="40" fill="none" stroke="#fff" stroke-width="2"/><circle cx="40" cy="50" r="5" fill="#e65100"/><circle cx="100" cy="50" r="5" fill="#e65100"/><circle cx="40" cy="50" r="3.5" fill="#ffd700"><animate attributeName="cx" values="40;100;185;40" dur="2.3s" repeatCount="indefinite"/><animate attributeName="cy" values="50;40;35;50" dur="2.3s" repeatCount="indefinite"/></circle>`;
   } else if (cat === 'abp') {
     badgeText = '🛡️ ESTRATEGIA DE BALÓN PARADO';
-    content = `
-      <rect x="180" y="30" width="10" height="40" fill="none" stroke="#fff" stroke-width="2"/>
-      <circle cx="130" cy="40" r="4" fill="#ff5252"/>
-      <circle cx="130" cy="60" r="4" fill="#ff5252"/>
-      <circle cx="120" cy="50" r="5" fill="#9c27b0"><animate attributeName="cx" values="120;165;120" dur="2.2s" repeatCount="indefinite"/></circle>
-      <circle cx="30" cy="75" r="3.5" fill="#ffd700">
-        <animate attributeName="cx" values="30;165;30" dur="2.2s" repeatCount="indefinite"/>
-        <animate attributeName="cy" values="75;50;75" dur="2.2s" repeatCount="indefinite"/>
-      </circle>
-    `;
+    content = `<rect x="180" y="30" width="10" height="40" fill="none" stroke="#fff" stroke-width="2"/><circle cx="130" cy="40" r="4" fill="#ff5252"/><circle cx="130" cy="60" r="4" fill="#ff5252"/><circle cx="120" cy="50" r="5" fill="#9c27b0"><animate attributeName="cx" values="120;165;120" dur="2.2s" repeatCount="indefinite"/></circle><circle cx="30" cy="75" r="3.5" fill="#ffd700"><animate attributeName="cx" values="30;165;30" dur="2.2s" repeatCount="indefinite"/><animate attributeName="cy" values="75;50;75" dur="2.2s" repeatCount="indefinite"/></circle>`;
   } else if (cat === 'fisico') {
     badgeText = '🏃‍♂️ CIRCUITO FÍSICO Y VELOCIDAD';
-    content = `
-      <rect x="60" y="45" width="4" height="15" fill="#00ab55"/>
-      <rect x="110" y="45" width="4" height="15" fill="#00ab55"/>
-      <circle cx="20" cy="50" r="5" fill="#00ab55">
-        <animate attributeName="cx" values="20;62;112;180;20" dur="2.2s" repeatCount="indefinite"/>
-        <animate attributeName="cy" values="50;30;30;50;50" dur="2.2s" repeatCount="indefinite"/>
-      </circle>
-      <line x1="20" y1="50" x2="180" y2="50" stroke="rgba(0,171,85,0.3)" stroke-dasharray="4,4" stroke-width="2"/>
-    `;
+    content = `<rect x="60" y="45" width="4" height="15" fill="#00ab55"/><rect x="110" y="45" width="4" height="15" fill="#00ab55"/><circle cx="20" cy="50" r="5" fill="#00ab55"><animate attributeName="cx" values="20;62;112;180;20" dur="2.2s" repeatCount="indefinite"/><animate attributeName="cy" values="50;30;30;50;50" dur="2.2s" repeatCount="indefinite"/></circle><line x1="20" y1="50" x2="180" y2="50" stroke="rgba(0,171,85,0.3)" stroke-dasharray="4,4" stroke-width="2"/>`;
   } else {
     badgeText = '🎯 DEMO TÁCTICA ANIMADA';
-    content = `
-      <polygon points="40,75 100,25 160,75" fill="none" stroke="rgba(74,144,226,0.5)" stroke-dasharray="4,4" stroke-width="1.5"/>
-      <circle cx="40" cy="75" r="5" fill="#4a90e2"/>
-      <circle cx="100" cy="25" r="5" fill="#4a90e2"/>
-      <circle cx="160" cy="75" r="5" fill="#4a90e2"/>
-      <circle cx="40" cy="75" r="3.5" fill="#ffd700">
-        <animate attributeName="cx" values="40;100;160;40" dur="2.4s" repeatCount="indefinite"/>
-        <animate attributeName="cy" values="75;25;75;75" dur="2.4s" repeatCount="indefinite"/>
-      </circle>
-    `;
+    content = `<polygon points="40,75 100,25 160,75" fill="none" stroke="rgba(74,144,226,0.5)" stroke-dasharray="4,4" stroke-width="1.5"/><circle cx="40" cy="75" r="5" fill="#4a90e2"/><circle cx="100" cy="25" r="5" fill="#4a90e2"/><circle cx="160" cy="75" r="5" fill="#4a90e2"/><circle cx="40" cy="75" r="3.5" fill="#ffd700"><animate attributeName="cx" values="40;100;160;40" dur="2.4s" repeatCount="indefinite"/><animate attributeName="cy" values="75;25;75;75" dur="2.4s" repeatCount="indefinite"/></circle>`;
   }
 
   return `
