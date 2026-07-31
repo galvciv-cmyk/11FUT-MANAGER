@@ -634,6 +634,7 @@ export function toggleFullscreen(eq) {
   if (!layout || !canchaWrapper) return;
 
   const isFS = layout.classList.toggle('fullscreen');
+  document.body.classList.toggle('body-fullscreen-active', isFS);
   const isMitad = vistaCanchaActiva[eq] === 'mitad';
 
   canchaWrapper.classList.toggle('horizontal', isFS && !isMitad);

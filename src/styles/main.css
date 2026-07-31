@@ -443,6 +443,16 @@ body.theme-light .juego-programado-item {
   box-shadow: 0 4px 20px rgba(0,0,0,0.8);
 }
 
+/* MODO FULLSCREEN REAL 100% IMPERATIVO - OCULTAR NAVEGACIÓN Y HEADER DEL DT */
+body.body-fullscreen-active .app-header,
+body.body-fullscreen-active .header-nav-bar {
+  display: none !important;
+}
+
+body.body-fullscreen-active {
+  overflow: hidden !important;
+}
+
 /* CANCHA MITAD DE CAMPO (VISTA VERTICAL FIJA ENCOGIDA HORIZONTALMENTE CON MAYOR MARGEN LATERAL) */
 .campo-layout.fullscreen .cancha-wrapper.vista-mitad,
 .cancha-wrapper.vista-mitad,
