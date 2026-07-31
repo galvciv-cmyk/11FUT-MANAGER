@@ -565,6 +565,62 @@ body.body-fullscreen-active {
   border-color: var(--oro);
 }
 
+/* LÍNEA AJUSTABLE INTERACTIVA DE 2 PUNTOS CON MANIJAS EXTENSIBLES */
+.linea-ajustable-wrapper {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 8;
+}
+
+.line-handle {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  background: var(--oro);
+  color: #000;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 900;
+  cursor: grab;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  box-shadow: 0 0 8px rgba(0,0,0,0.8);
+  transition: transform 0.15s ease;
+  z-index: 9;
+}
+
+.line-handle:active {
+  cursor: grabbing;
+  transform: translate(-50%, -50%) scale(1.3);
+}
+
+.btn-del-line {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(220, 38, 38, 0.9);
+  color: #fff;
+  border: 1px solid #ff4d4d;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  pointer-events: auto;
+  z-index: 9;
+  box-shadow: 0 0 6px rgba(0,0,0,0.6);
+}
+
 .color-dot {
   width: 22px;
   height: 22px;

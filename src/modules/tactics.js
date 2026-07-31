@@ -322,27 +322,46 @@ export function ejecutarSustitucion(eq = 'A') {
 }
 
 const drawingState = {
-  A: { mode: 'none', arrowStyle: 'solid', color: '#d4af37', width: 4, isDashed: false, isDrawing: false, startX: 0, startY: 0 },
-  B: { mode: 'none', arrowStyle: 'solid', color: '#d4af37', width: 4, isDashed: false, isDrawing: false, startX: 0, startY: 0 }
+  A: { mode: 'none', arrowStyle: 'solid', pencilStyle: 'solid', color: '#d4af37', width: 4, isDashed: false, isDrawing: false, startX: 0, startY: 0, lastX: 0, lastY: 0 },
+  B: { mode: 'none', arrowStyle: 'solid', pencilStyle: 'solid', color: '#d4af37', width: 4, isDashed: false, isDrawing: false, startX: 0, startY: 0, lastX: 0, lastY: 0 }
 };
+
+export function setPencilStyle(eq, pencilStyle) {
+  drawingState[eq].pencilStyle = pencilStyle;
+  drawingState[eq].mode = 'pencil';
+
+  const pFs = document.getElementById(`sub-panel-pencil-fs-${eq}`);
+  if (pFs) pFs.style.display = 'flex';
+
+  document.querySelectorAll(`#sub-panel-pencil-fs-${eq} .subtool-btn`).forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.pencilStyle === pencilStyle);
+  });
+
+  ['pencil', 'arrow', 'line', 'eraser', 'none'].forEach(m => {
+    const btnFs = document.getElementById(`btn-${m}-fs-${eq}`);
+    if (btnFs) btnFs.classList.toggle('active', m === 'pencil');
+  });
+
+  const canvas = document.getElementById(`canvas-${eq}`);
+  if (canvas) {
+    canvas.style.pointerEvents = 'auto';
+    canvas.style.cursor = 'crosshair';
+  }
+}
+window._setPencilStyle = setPencilStyle;
 
 export function setArrowStyle(eq, arrowStyle) {
   drawingState[eq].arrowStyle = arrowStyle;
   drawingState[eq].mode = 'arrow';
 
-  // Mostrar sub-panel de flechas y actualizar estilo activo
-  ['', '-fs'].forEach(suffix => {
-    const p = document.getElementById(`sub-panel-arrows${suffix}-${eq}`);
-    if (p) p.style.display = 'flex';
-    document.querySelectorAll(`#sub-panel-arrows${suffix}-${eq} .subtool-btn`).forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.arrowStyle === arrowStyle);
-    });
+  const pFs = document.getElementById(`sub-panel-arrows-fs-${eq}`);
+  if (pFs) pFs.style.display = 'flex';
+
+  document.querySelectorAll(`#sub-panel-arrows-fs-${eq} .subtool-btn`).forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.arrowStyle === arrowStyle);
   });
 
-  // Activar estado visual de botón flechas
-  ['pencil', 'arrow', 'eraser', 'none'].forEach(m => {
-    const btn = document.getElementById(`btn-${m}-${eq}`);
-    if (btn) btn.classList.toggle('active', m === 'arrow');
+  ['pencil', 'arrow', 'line', 'eraser', 'none'].forEach(m => {
     const btnFs = document.getElementById(`btn-${m}-fs-${eq}`);
     if (btnFs) btnFs.classList.toggle('active', m === 'arrow');
   });
@@ -353,30 +372,131 @@ export function setArrowStyle(eq, arrowStyle) {
     canvas.style.cursor = 'crosshair';
   }
 }
-
 window._setArrowStyle = setArrowStyle;
 
 export function setDrawingMode(eq, mode) {
   drawingState[eq].mode = mode;
-  ['pencil', 'arrow', 'eraser', 'none'].forEach(m => {
-    const btn = document.getElementById(`btn-${m}-${eq}`);
-    if (btn) btn.classList.toggle('active', m === mode);
+  ['pencil', 'arrow', 'line', 'eraser', 'none'].forEach(m => {
     const btnFs = document.getElementById(`btn-${m}-fs-${eq}`);
     if (btnFs) btnFs.classList.toggle('active', m === mode);
   });
 
-  // Mostrar/Ocultar sub-panel desplegable de flechas tácticas
-  const arrowPanel = document.getElementById(`sub-panel-arrows-${eq}`);
-  if (arrowPanel) arrowPanel.style.display = (mode === 'arrow') ? 'flex' : 'none';
+  const pPencil = document.getElementById(`sub-panel-pencil-fs-${eq}`);
+  if (pPencil) pPencil.style.display = (mode === 'pencil') ? 'flex' : 'none';
 
-  const arrowPanelFs = document.getElementById(`sub-panel-arrows-fs-${eq}`);
-  if (arrowPanelFs) arrowPanelFs.style.display = (mode === 'arrow') ? 'flex' : 'none';
+  const pArrow = document.getElementById(`sub-panel-arrows-fs-${eq}`);
+  if (pArrow) pArrow.style.display = (mode === 'arrow') ? 'flex' : 'none';
+
+  const pLine = document.getElementById(`sub-panel-line-fs-${eq}`);
+  if (pLine) pLine.style.display = (mode === 'line') ? 'flex' : 'none';
 
   const canvas = document.getElementById(`canvas-${eq}`);
   if (canvas) {
     canvas.style.pointerEvents = mode === 'none' ? 'none' : 'auto';
     canvas.style.cursor = mode === 'none' ? 'default' : 'crosshair';
   }
+}
+
+export function agregarLineaAjustable(eq = 'A', style = 'solid') {
+  const cancha = document.getElementById(`cancha-${eq}`);
+  if (!cancha) return;
+
+  saveCanvasState(eq);
+  const lineWrap = document.createElement('div');
+  lineWrap.className = 'linea-ajustable-wrapper';
+  lineWrap.dataset.style = style;
+
+  const color = drawingState[eq].color || '#d4af37';
+  const strokeW = drawingState[eq].width || 4;
+  const isDash = style === 'dashed';
+
+  lineWrap.innerHTML = `
+    <svg class="linea-ajustable-svg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:4;">
+      <line class="line-path" x1="30%" y1="50%" x2="70%" y2="50%" stroke="${color}" stroke-width="${strokeW}" ${isDash ? 'stroke-dasharray="8,8"' : ''} />
+      ${style === 'blocked' ? `<line class="line-tbar" x1="70%" y1="42%" x2="70%" y2="58%" stroke="${color}" stroke-width="${strokeW + 2}" />` : ''}
+    </svg>
+    <div class="line-handle p1" style="left:30%;top:50%;" title="Punto 1 (Arrastra para ajustar)">●</div>
+    <div class="line-handle p2" style="left:70%;top:50%;" title="Punto 2 (Arrastra para ajustar)">●</div>
+    <button class="btn-del-line" title="Eliminar línea" onclick="this.parentElement.remove();">×</button>
+  `;
+
+  cancha.appendChild(lineWrap);
+  initLineaAjustableHandles(lineWrap, cancha);
+  mostrarNotificacionApp('Línea Ajustable Añadida', '📏 Arrastra los 2 puntos (●) para mover, rotar o estirar la línea.');
+}
+
+window._agregarLineaAjustable = agregarLineaAjustable;
+
+function initLineaAjustableHandles(lineWrap, cancha) {
+  const p1 = lineWrap.querySelector('.p1');
+  const p2 = lineWrap.querySelector('.p2');
+  const linePath = lineWrap.querySelector('.line-path');
+  const tBar = lineWrap.querySelector('.line-tbar');
+
+  let pos1 = { x: 30, y: 50 };
+  let pos2 = { x: 70, y: 50 };
+
+  const updateLine = () => {
+    linePath.setAttribute('x1', `${pos1.x}%`);
+    linePath.setAttribute('y1', `${pos1.y}%`);
+    linePath.setAttribute('x2', `${pos2.x}%`);
+    linePath.setAttribute('y2', `${pos2.y}%`);
+
+    if (tBar) {
+      const containerRect = cancha.getBoundingClientRect();
+      const x1Px = (pos1.x / 100) * containerRect.width;
+      const y1Px = (pos1.y / 100) * containerRect.height;
+      const x2Px = (pos2.x / 100) * containerRect.width;
+      const y2Px = (pos2.y / 100) * containerRect.height;
+
+      const angle = Math.atan2(y2Px - y1Px, x2Px - x1Px);
+      const capLen = 14;
+      const perpAngle = angle + Math.PI / 2;
+
+      const tx1 = ((x2Px + capLen * Math.cos(perpAngle)) / (containerRect.width || 1)) * 100;
+      const ty1 = ((y2Px + capLen * Math.sin(perpAngle)) / (containerRect.height || 1)) * 100;
+      const tx2 = ((x2Px - capLen * Math.cos(perpAngle)) / (containerRect.width || 1)) * 100;
+      const ty2 = ((y2Px - capLen * Math.sin(perpAngle)) / (containerRect.height || 1)) * 100;
+
+      tBar.setAttribute('x1', `${tx1}%`);
+      tBar.setAttribute('y1', `${ty1}%`);
+      tBar.setAttribute('x2', `${tx2}%`);
+      tBar.setAttribute('y2', `${ty2}%`);
+    }
+  };
+
+  const makeHandleDraggable = (handle, posObj) => {
+    let isDragging = false;
+    const onStart = (e) => {
+      e.stopPropagation();
+      isDragging = true;
+    };
+    const onMove = (e) => {
+      if (!isDragging) return;
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const rect = cancha.getBoundingClientRect();
+      let newX = ((clientX - rect.left) / rect.width) * 100;
+      let newY = ((clientY - rect.top) / rect.height) * 100;
+      posObj.x = Math.max(2, Math.min(98, newX));
+      posObj.y = Math.max(2, Math.min(98, newY));
+      handle.style.left = `${posObj.x}%`;
+      handle.style.top = `${posObj.y}%`;
+      updateLine();
+    };
+    const onEnd = () => { isDragging = false; };
+
+    handle.addEventListener('mousedown', onStart);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onEnd);
+    handle.addEventListener('touchstart', onStart, { passive: true });
+    window.addEventListener('touchmove', onMove, { passive: true });
+    window.addEventListener('touchend', onEnd);
+  };
+
+  makeHandleDraggable(p1, pos1);
+  makeHandleDraggable(p2, pos2);
+  updateLine();
 }
 
 export function setDrawingColor(eq, color) {
@@ -588,11 +708,16 @@ export function initCanvas(eq) {
       ctx.globalCompositeOperation = 'source-over';
       ctx.beginPath();
       ctx.moveTo(pos.x, pos.y);
+      state.lastX = pos.x;
+      state.lastY = pos.y;
       ctx.strokeStyle = state.color;
       ctx.lineWidth = state.width || 4;
-      if (state.isDashed) ctx.setLineDash([8, 8]);
+
+      const pStyle = state.pencilStyle || 'solid';
+      if (pStyle === 'dashed') ctx.setLineDash([8, 8]);
       else ctx.setLineDash([]);
       ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
     } else if (state.mode === 'eraser') {
       ctx.globalCompositeOperation = 'destination-out';
       ctx.beginPath();
@@ -609,6 +734,8 @@ export function initCanvas(eq) {
     if (state.mode === 'pencil') {
       ctx.lineTo(pos.x, pos.y);
       ctx.stroke();
+      state.lastX = pos.x;
+      state.lastY = pos.y;
     } else if (state.mode === 'eraser') {
       ctx.globalCompositeOperation = 'destination-out';
       ctx.beginPath();
@@ -622,7 +749,20 @@ export function initCanvas(eq) {
     if (!state || !state.isDrawing) return;
     state.isDrawing = false;
 
-    if (state.mode === 'arrow') {
+    if (state.mode === 'pencil' && state.pencilStyle === 'blocked') {
+      const pos = getPos(e.changedTouches ? e.changedTouches[0] : e);
+      const capLen = 14;
+      const angle = Math.atan2(pos.y - state.lastY, pos.x - state.lastX);
+      const perpAngle = angle + Math.PI / 2;
+
+      ctx.beginPath();
+      ctx.setLineDash([]);
+      ctx.moveTo(pos.x + capLen * Math.cos(perpAngle), pos.y + capLen * Math.sin(perpAngle));
+      ctx.lineTo(pos.x - capLen * Math.cos(perpAngle), pos.y - capLen * Math.sin(perpAngle));
+      ctx.strokeStyle = state.color;
+      ctx.lineWidth = (state.width || 4) + 2;
+      ctx.stroke();
+    } else if (state.mode === 'arrow') {
       ctx.globalCompositeOperation = 'source-over';
       const pos = getPos(e.changedTouches ? e.changedTouches[0] : e);
       drawArrow(ctx, state.startX, state.startY, pos.x, pos.y, state.color, state.width || 4, state.arrowStyle || 'solid');

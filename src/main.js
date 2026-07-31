@@ -571,14 +571,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById(`btn-limpiar-cancha-${eq}`)?.addEventListener('click', () => limpiarCanchaYBanco(eq));
 
   // Extended Drawing tools & Fullscreen bindings
-  document.getElementById(`btn-none-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'none'));
-  document.getElementById(`btn-pencil-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'pencil'));
-  document.getElementById(`btn-arrow-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'arrow'));
-  document.getElementById(`btn-eraser-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'eraser'));
+  document.getElementById(`btn-none-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'none'));
+  document.getElementById(`btn-pencil-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'pencil'));
+  document.getElementById(`btn-arrow-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'arrow'));
+  document.getElementById(`btn-line-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'line'));
   document.getElementById(`btn-eraser-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'eraser'));
-  document.getElementById(`btn-undo-${eq}`)?.addEventListener('click', () => undoCanvas(eq));
   document.getElementById(`btn-undo-fs-${eq}`)?.addEventListener('click', () => undoCanvas(eq));
-  document.getElementById(`btn-clear-${eq}`)?.addEventListener('click', () => clearCanvas(eq));
   document.getElementById(`btn-clear-fs-${eq}`)?.addEventListener('click', () => clearCanvas(eq));
 
   document.getElementById(`btn-w2-${eq}`)?.addEventListener('click', () => setLineWidth(eq, 2));
