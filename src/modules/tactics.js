@@ -592,6 +592,13 @@ export function setDrawingMode(eq, mode) {
     targetSubPanel.style.display = 'flex';
   }
 
+  if (mode === 'line') {
+    const existingLine = document.querySelector(`#cancha-${eq} .linea-ajustable-wrapper`);
+    if (!existingLine) {
+      agregarLineaAjustable(eq, 'solid');
+    }
+  }
+
   ['pencil', 'arrow', 'line', 'eraser', 'none'].forEach(m => {
     const btnFs = document.getElementById(`btn-${m}-fs-${eq}`);
     if (btnFs) btnFs.classList.toggle('active', m === mode);
