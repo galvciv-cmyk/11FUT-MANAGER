@@ -875,10 +875,10 @@ function buildDrillCardHTML(d, accentColor) {
   const materialsList = getDrillMaterials(d);
 
   return `
-    <div style="background:#111;border:1px solid #222;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:transform 0.2s, border-color 0.2s;" onmouseenter="this.style.borderColor='${accentColor}';this.style.transform='translateY(-3px)';" onmouseleave="this.style.borderColor='#222';this.style.transform='translateY(0)';">
+    <div style="background:#111;border:1px solid #222;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;transition:transform 0.2s, border-color 0.2s;width:100%;" onmouseenter="this.style.borderColor='${accentColor}';this.style.transform='translateY(-3px)';" onmouseleave="this.style.borderColor='#222';this.style.transform='translateY(0)';">
       
       <!-- PORTADA CON IMAGEN DE ALTA CALIDAD Y BADGES -->
-      <div style="height:120px;background:url('${d.img}') center/cover no-repeat;position:relative;border-bottom:1px solid #222;">
+      <div style="height:130px;background:url('${d.img}') center/cover no-repeat;position:relative;border-bottom:1px solid #222;">
         <div style="position:absolute;top:6px;left:6px;background:rgba(0,0,0,0.85);color:#fff;padding:3px 8px;border-radius:10px;font-size:9px;font-weight:800;border:1px solid ${catInfo.color};">
           ${d.level === 'formativo' ? '👦 FORMATIVO' : '🏆 COMPETITIVO'}
         </div>
@@ -899,7 +899,7 @@ function buildDrillCardHTML(d, accentColor) {
 
         <div style="display:flex;gap:6px;margin-top:8px;">
           <button onclick="window._verDetalleEjercicio('${d.id}')" style="flex:1;background:#1a1a1a;border:1px solid #333;color:#eee;padding:7px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">🔍 Ver Detalle & Materiales</button>
-          <button onclick="window._agregarEjercicioASesion('${d.id}')" style="background:var(--verde-campo);border:none;color:#000;padding:7px 10px;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;">+ Añadir</button>
+          <button onclick="window._agregarEjercicioASesion('${d.id}')" style="background:#0a1e12;border:1px solid var(--verde-campo);color:var(--verde-campo);padding:7px 12px;border-radius:6px;font-size:11px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;transition:all 0.2s;" onmouseenter="this.style.background='var(--verde-campo)';this.style.color='#000';" onmouseleave="this.style.background='#0a1e12';this.style.color='var(--verde-campo)';">+ Añadir</button>
         </div>
       </div>
     </div>
@@ -907,7 +907,7 @@ function buildDrillCardHTML(d, accentColor) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// RENDERIZADO DE LA BIBLIOTECA EN LA PÁGINA PRINCIPAL
+// RENDERIZADO DE LA BIBLIOTECA EN LA PÁGINA PRINCIPAL (100% DE ANCHO COMPLETO)
 // ══════════════════════════════════════════════════════════════════════════
 export function renderBibliotecaEjercicios() {
   const container = document.getElementById('drills-library-grid');
@@ -943,14 +943,14 @@ export function renderBibliotecaEjercicios() {
       const cardsHtml = items.map(d => buildDrillCardHTML(d, accentColor)).join('');
 
       return `
-        <div style="margin-bottom:20px;">
+        <div style="margin-bottom:20px;width:100%;">
           <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:${catInfo.color};margin-bottom:10px;display:flex;align-items:center;gap:6px;border-bottom:1px solid #222;padding-bottom:4px;">
             <span>${catInfo.name}</span>
             <span style="font-size:11px;color:#777;">(${items.length} ejercicios)</span>
           </div>
 
-          <!-- GRILLA DE 3 COLUMNAS LIMPIAS -->
-          <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));gap:12px;">
+          <!-- GRILLA EXPANDIDA A TODO EL ANCHO HORIZONTAL -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(250px, 1fr));gap:14px;width:100%;">
             ${cardsHtml}
           </div>
         </div>
@@ -958,7 +958,7 @@ export function renderBibliotecaEjercicios() {
     }).join('');
 
     return `
-      <div style="background:#0a0a0a;border:1px solid #222;border-radius:12px;padding:16px;margin-bottom:20px;">
+      <div style="background:#0a0a0a;border:1px solid #222;border-radius:12px;padding:16px;width:100%;box-sizing:border-box;">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:${accentColor};margin-bottom:14px;display:flex;align-items:center;gap:8px;border-bottom:2px solid ${accentColor};padding-bottom:6px;">
           <span>${levelIcon} ${title}</span>
           <span style="font-size:12px;color:#aaa;font-weight:700;">(${drillsList.length} ejercicios)</span>
@@ -1057,13 +1057,13 @@ export function renderBibliotecaModal() {
     const cardsHtml = items.map(d => buildDrillCardHTML(d, catInfo.color)).join('');
 
     return `
-      <div style="margin-bottom:24px;">
+      <div style="margin-bottom:24px;width:100%;">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:${catInfo.color};margin-bottom:12px;display:flex;align-items:center;gap:6px;border-bottom:1px solid #282828;padding-bottom:6px;">
           <span>${catInfo.name}</span>
           <span style="font-size:12px;color:#777;">(${items.length} ejercicios)</span>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(250px, 1fr));gap:16px;width:100%;">
           ${cardsHtml}
         </div>
       </div>
@@ -1071,6 +1071,88 @@ export function renderBibliotecaModal() {
   }).join('');
 
   container.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// CREACIÓN DE EJERCICIOS PERSONALIZADOS POR EL USUARIO
+// ══════════════════════════════════════════════════════════════════════════
+export function abrirModalNuevoEjercicioCustom() {
+  const modal = document.getElementById('modal-nuevo-ejercicio-custom');
+  if (!modal) return;
+
+  const titleInput = document.getElementById('custom-drill-title');
+  const durInput = document.getElementById('custom-drill-dur');
+  const imgInput = document.getElementById('custom-drill-img');
+  const descInput = document.getElementById('custom-drill-desc');
+  const rulesInput = document.getElementById('custom-drill-rules');
+  const materialsInput = document.getElementById('custom-drill-materials');
+
+  if (titleInput) titleInput.value = '';
+  if (durInput) durInput.value = '15 min';
+  if (imgInput) imgInput.value = '';
+  if (descInput) descInput.value = '';
+  if (rulesInput) rulesInput.value = '';
+  if (materialsInput) materialsInput.value = '';
+
+  modal.style.display = 'flex';
+}
+
+export async function guardarEjercicioPersonalizado() {
+  const titleInput = document.getElementById('custom-drill-title');
+  const levelSelect = document.getElementById('custom-drill-level');
+  const catSelect = document.getElementById('custom-drill-cat');
+  const durInput = document.getElementById('custom-drill-dur');
+  const imgInput = document.getElementById('custom-drill-img');
+  const descInput = document.getElementById('custom-drill-desc');
+  const rulesInput = document.getElementById('custom-drill-rules');
+  const materialsInput = document.getElementById('custom-drill-materials');
+
+  const title = titleInput ? titleInput.value.trim() : '';
+  const level = levelSelect ? levelSelect.value : 'formativo';
+  const cat = catSelect ? catSelect.value : 'tactica';
+  const dur = durInput && durInput.value.trim() ? durInput.value.trim() : '15 min';
+  let img = imgInput ? imgInput.value.trim() : '';
+  const desc = descInput ? descInput.value.trim() : '';
+  const rules = rulesInput ? rulesInput.value.trim() : '';
+  const materials = materialsInput ? materialsInput.value.trim() : '';
+
+  if (!title) {
+    return mostrarNotificacionApp('Falta Título', 'Por favor ingresa un título para el ejercicio.', false);
+  }
+  if (!desc) {
+    return mostrarNotificacionApp('Falta Explicación', 'Ingresa una explicación detallada paso a paso.', false);
+  }
+
+  if (!img) {
+    img = 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=500&q=80';
+  }
+
+  const newDrill = {
+    id: `custom_${Date.now()}`,
+    title,
+    level,
+    cat,
+    dur,
+    desc,
+    rules: rules || 'Sin consignas específicas.',
+    materials: materials || '🎒 10 Conos, 6 Petos, 4 Balones N°5, 1 Silbato',
+    img,
+    isCustom: true
+  };
+
+  const catObj = getEntrenamientosData();
+  if (!catObj.customDrills) catObj.customDrills = [];
+  catObj.customDrills.push(newDrill);
+
+  const modal = document.getElementById('modal-nuevo-ejercicio-custom');
+  if (modal) modal.style.display = 'none';
+
+  renderBibliotecaEjercicios();
+  renderBibliotecaModal();
+
+  autoSaveLocal();
+  await guardarFirebase();
+  mostrarNotificacionApp('Ejercicio Creado', `"${title}" ha sido guardado en tu biblioteca personalizada.`);
 }
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -1542,6 +1624,18 @@ export function initEntrenamientosUI() {
   const btnAbrirModalBiblio = document.getElementById('btn-abrir-modal-biblioteca');
   if (btnAbrirModalBiblio) {
     btnAbrirModalBiblio.onclick = abrirModalBibliotecaCompleta;
+  }
+
+  // Listener de abrir modal nuevo ejercicio personalizado
+  const btnNuevoCustom = document.getElementById('btn-abrir-modal-nuevo-ejercicio');
+  if (btnNuevoCustom) {
+    btnNuevoCustom.onclick = abrirModalNuevoEjercicioCustom;
+  }
+
+  // Listener para Guardar Ejercicio Personalizado
+  const btnSaveCustomDrill = document.getElementById('btn-save-custom-drill');
+  if (btnSaveCustomDrill) {
+    btnSaveCustomDrill.onclick = guardarEjercicioPersonalizado;
   }
 
   // Listener para Guardar Sesión
