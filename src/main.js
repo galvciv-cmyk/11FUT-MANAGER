@@ -574,7 +574,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById(`btn-none-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'none'));
   document.getElementById(`btn-pencil-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'pencil'));
   document.getElementById(`btn-arrow-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'arrow'));
+  document.getElementById(`btn-eraser-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'eraser'));
+  document.getElementById(`btn-eraser-fs-${eq}`)?.addEventListener('click', () => setDrawingMode(eq, 'eraser'));
+  document.getElementById(`btn-undo-${eq}`)?.addEventListener('click', () => undoCanvas(eq));
+  document.getElementById(`btn-undo-fs-${eq}`)?.addEventListener('click', () => undoCanvas(eq));
   document.getElementById(`btn-clear-${eq}`)?.addEventListener('click', () => clearCanvas(eq));
+  document.getElementById(`btn-clear-fs-${eq}`)?.addEventListener('click', () => clearCanvas(eq));
 
   document.getElementById(`btn-w2-${eq}`)?.addEventListener('click', () => setLineWidth(eq, 2));
   document.getElementById(`btn-w4-${eq}`)?.addEventListener('click', () => setLineWidth(eq, 4));

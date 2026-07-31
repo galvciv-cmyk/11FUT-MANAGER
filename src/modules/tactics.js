@@ -322,9 +322,39 @@ export function ejecutarSustitucion(eq = 'A') {
 }
 
 const drawingState = {
-  A: { mode: 'none', color: '#d4af37', width: 4, isDashed: false, isDrawing: false, startX: 0, startY: 0 },
-  B: { mode: 'none', color: '#d4af37', width: 4, isDashed: false, isDrawing: false, startX: 0, startY: 0 }
+  A: { mode: 'none', arrowStyle: 'solid', color: '#d4af37', width: 4, isDashed: false, isDrawing: false, startX: 0, startY: 0 },
+  B: { mode: 'none', arrowStyle: 'solid', color: '#d4af37', width: 4, isDashed: false, isDrawing: false, startX: 0, startY: 0 }
 };
+
+export function setArrowStyle(eq, arrowStyle) {
+  drawingState[eq].arrowStyle = arrowStyle;
+  drawingState[eq].mode = 'arrow';
+
+  // Mostrar sub-panel de flechas y actualizar estilo activo
+  ['', '-fs'].forEach(suffix => {
+    const p = document.getElementById(`sub-panel-arrows${suffix}-${eq}`);
+    if (p) p.style.display = 'flex';
+    document.querySelectorAll(`#sub-panel-arrows${suffix}-${eq} .subtool-btn`).forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.arrowStyle === arrowStyle);
+    });
+  });
+
+  // Activar estado visual de botón flechas
+  ['pencil', 'arrow', 'eraser', 'none'].forEach(m => {
+    const btn = document.getElementById(`btn-${m}-${eq}`);
+    if (btn) btn.classList.toggle('active', m === 'arrow');
+    const btnFs = document.getElementById(`btn-${m}-fs-${eq}`);
+    if (btnFs) btnFs.classList.toggle('active', m === 'arrow');
+  });
+
+  const canvas = document.getElementById(`canvas-${eq}`);
+  if (canvas) {
+    canvas.style.pointerEvents = 'auto';
+    canvas.style.cursor = 'crosshair';
+  }
+}
+
+window._setArrowStyle = setArrowStyle;
 
 export function setDrawingMode(eq, mode) {
   drawingState[eq].mode = mode;
@@ -334,6 +364,13 @@ export function setDrawingMode(eq, mode) {
     const btnFs = document.getElementById(`btn-${m}-fs-${eq}`);
     if (btnFs) btnFs.classList.toggle('active', m === mode);
   });
+
+  // Mostrar/Ocultar sub-panel desplegable de flechas tácticas
+  const arrowPanel = document.getElementById(`sub-panel-arrows-${eq}`);
+  if (arrowPanel) arrowPanel.style.display = (mode === 'arrow') ? 'flex' : 'none';
+
+  const arrowPanelFs = document.getElementById(`sub-panel-arrows-fs-${eq}`);
+  if (arrowPanelFs) arrowPanelFs.style.display = (mode === 'arrow') ? 'flex' : 'none';
 
   const canvas = document.getElementById(`canvas-${eq}`);
   if (canvas) {
@@ -588,7 +625,7 @@ export function initCanvas(eq) {
     if (state.mode === 'arrow') {
       ctx.globalCompositeOperation = 'source-over';
       const pos = getPos(e.changedTouches ? e.changedTouches[0] : e);
-      drawArrow(ctx, state.startX, state.startY, pos.x, pos.y, state.color, state.width || 4, state.isDashed);
+      drawArrow(ctx, state.startX, state.startY, pos.x, pos.y, state.color, state.width || 4, state.arrowStyle || 'solid');
     }
     ctx.globalCompositeOperation = 'source-over';
   };
@@ -602,28 +639,112 @@ export function initCanvas(eq) {
   canvas.ontouchend = stopDraw;
 }
 
-function drawArrow(ctx, fromX, fromY, toX, toY, color, width = 4, isDashed = false) {
+function drawArrow(ctx, fromX, fromY, toX, toY, color, width = 4, arrowStyle = 'solid') {
   const headlen = 14;
   const angle = Math.atan2(toY - fromY, toX - fromX);
 
-  ctx.beginPath();
-  if (isDashed) ctx.setLineDash([8, 8]);
-  else ctx.setLineDash([]);
+  if (arrowStyle === 'curved') {
+    // 3. Flecha Curva (Centro / Pase Filtrado / Desdoblamiento)
+    const midX = (fromX + toX) / 2;
+    const midY = (fromY + toY) / 2;
+    const dx = toX - fromX;
+    const dy = toY - fromY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const normX = -dy / (dist || 1);
+    const normY = dx / (dist || 1);
+    const cpX = midX + normX * (dist * 0.25);
+    const cpY = midY + normY * (dist * 0.25);
 
-  ctx.moveTo(fromX, fromY);
-  ctx.lineTo(toX, toY);
-  ctx.strokeStyle = color;
-  ctx.lineWidth = width;
-  ctx.stroke();
+    ctx.beginPath();
+    ctx.setLineDash([]);
+    ctx.moveTo(fromX, fromY);
+    ctx.quadraticCurveTo(cpX, cpY, toX, toY);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.stroke();
 
-  ctx.beginPath();
-  ctx.setLineDash([]);
-  ctx.moveTo(toX, toY);
-  ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
-  ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
-  ctx.lineTo(toX, toY);
-  ctx.fillStyle = color;
-  ctx.fill();
+    const curveAngle = Math.atan2(toY - cpY, toX - cpX);
+    ctx.beginPath();
+    ctx.moveTo(toX, toY);
+    ctx.lineTo(toX - headlen * Math.cos(curveAngle - Math.PI / 6), toY - headlen * Math.sin(curveAngle - Math.PI / 6));
+    ctx.lineTo(toX - headlen * Math.cos(curveAngle + Math.PI / 6), toY - headlen * Math.sin(curveAngle + Math.PI / 6));
+    ctx.lineTo(toX, toY);
+    ctx.fillStyle = color;
+    ctx.fill();
+  } else if (arrowStyle === 'zigzag') {
+    // 4. Flecha Zig-Zag (Regate / Cambio de Dirección / Finta)
+    const dx = toX - fromX;
+    const dy = toY - fromY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const segments = Math.max(4, Math.floor(dist / 18));
+    const normX = -dy / (dist || 1);
+    const normY = dx / (dist || 1);
+    const amp = 10;
+
+    ctx.beginPath();
+    ctx.setLineDash([]);
+    ctx.moveTo(fromX, fromY);
+
+    for (let i = 1; i < segments; i++) {
+      const t = i / segments;
+      const px = fromX + dx * t;
+      const py = fromY + dy * t;
+      const side = (i % 2 === 1) ? 1 : -1;
+      ctx.lineTo(px + normX * amp * side, py + normY * amp * side);
+    }
+    ctx.lineTo(toX, toY);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(toX, toY);
+    ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
+    ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
+    ctx.lineTo(toX, toY);
+    ctx.fillStyle = color;
+    ctx.fill();
+  } else if (arrowStyle === 'blocked') {
+    // 5. Línea Bloqueada / Con Tope T (Cortina / Bloqueo Defensivo)
+    ctx.beginPath();
+    ctx.setLineDash([]);
+    ctx.moveTo(fromX, fromY);
+    ctx.lineTo(toX, toY);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.stroke();
+
+    const capLen = 14;
+    const perpAngle = angle + Math.PI / 2;
+    ctx.beginPath();
+    ctx.moveTo(toX + capLen * Math.cos(perpAngle), toY + capLen * Math.sin(perpAngle));
+    ctx.lineTo(toX - capLen * Math.cos(perpAngle), toY - capLen * Math.sin(perpAngle));
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width + 2;
+    ctx.stroke();
+  } else {
+    // 1 & 2. Flecha Continua (solid) o Discontinua (dashed)
+    const isDashed = (arrowStyle === 'dashed');
+
+    ctx.beginPath();
+    if (isDashed) ctx.setLineDash([8, 8]);
+    else ctx.setLineDash([]);
+
+    ctx.moveTo(fromX, fromY);
+    ctx.lineTo(toX, toY);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.setLineDash([]);
+    ctx.moveTo(toX, toY);
+    ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
+    ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
+    ctx.lineTo(toX, toY);
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
 }
 
 export function salirFullscreenTotal(eq = 'A') {

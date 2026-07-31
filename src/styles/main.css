@@ -543,6 +543,28 @@ body.body-fullscreen-active {
   border-color: var(--oro);
 }
 
+.subtool-btn {
+  background: #1c1c1c;
+  border: 1px solid #333;
+  color: #ccc;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 11px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.subtool-btn:hover,
+.subtool-btn.active {
+  background: var(--oro);
+  color: #000;
+  border-color: var(--oro);
+}
+
 .color-dot {
   width: 22px;
   height: 22px;

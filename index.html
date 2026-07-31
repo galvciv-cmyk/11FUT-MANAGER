@@ -285,10 +285,41 @@
               <button class="btn btn-gray" id="btn-save-esquema-A" style="margin-top:6px;font-size:11px;">💾 GUARDAR ESQUEMA ACTUAL</button>
             </div>
 
-            <!-- TOOLBAR DE DIBUJO Y MARCADORES (MODO COMPACTO) -->
+            <!-- TOOLBAR DE DIBUJO Y FLECHAS TÁCTICAS -->
             <div class="tactica-toolbar">
               <button class="btn btn-blue" id="btn-fs-A" style="padding:12px;font-size:13px;font-weight:900;">⛶ PANTALLA COMPLETA</button>
-              <button class="btn btn-gray" id="btn-export-png-A" style="padding:10px;">📸 GUARDAR IMAGEN TÁCTICA</button>
+
+              <div style="font-size:11px;color:var(--oro);font-weight:800;margin-top:4px;">✏️ TRAZOS Y FLECHAS TÁCTICAS</div>
+              <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:6px;">
+                <button class="tool-btn active" id="btn-none-A" title="Mover / Selección">🤚</button>
+                <button class="tool-btn" id="btn-pencil-A" title="Lápiz / Trazo Libre">✏️</button>
+                <button class="tool-btn" id="btn-arrow-A" title="Flechas Tácticas">➔</button>
+                <button class="tool-btn" id="btn-eraser-A" title="Borrador">🧽</button>
+              </div>
+
+              <!-- SUB-PANEL DESPLEGABLE DE SELECCIÓN DE FLECHAS TÁCTICAS -->
+              <div id="sub-panel-arrows-A" style="display:none;background:#141414;border:1px solid var(--oro);border-radius:8px;padding:8px;margin-top:4px;flex-direction:column;gap:6px;">
+                <div style="font-size:10px;color:var(--oro);font-weight:800;">🎯 SELECCIONA EL TIPO DE FLECHA:</div>
+                <div style="display:flex;flex-direction:column;gap:4px;">
+                  <button class="subtool-btn active" data-arrow-style="solid" onclick="window._setArrowStyle('A','solid')">➔ Continua: Carrera / Conducción</button>
+                  <button class="subtool-btn" data-arrow-style="dashed" onclick="window._setArrowStyle('A','dashed')">╌➔ Punteada: Pase / Desmarque</button>
+                  <button class="subtool-btn" data-arrow-style="curved" onclick="window._setArrowStyle('A','curved')">⤴️ Curva: Centro / Pase Filtrado</button>
+                  <button class="subtool-btn" data-arrow-style="zigzag" onclick="window._setArrowStyle('A','zigzag')">⚡ Zig-Zag: Regate / Cambio Dirección</button>
+                  <button class="subtool-btn" data-arrow-style="blocked" onclick="window._setArrowStyle('A','blocked')">🛑 Tope T: Cortina / Bloqueo Defensivo</button>
+                </div>
+              </div>
+
+              <!-- COLORES Y HERRAMIENTAS DE EDICIÓN -->
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;" id="colors-A">
+                <span class="color-dot active" data-color="#d4af37" style="background:#d4af37;" title="Dorado"></span>
+                <span class="color-dot" data-color="#ffffff" style="background:#ffffff;" title="Blanco"></span>
+                <span class="color-dot" data-color="#ff3333" style="background:#ff3333;" title="Rojo"></span>
+                <span class="color-dot" data-color="#3399ff" style="background:#3399ff;" title="Azul"></span>
+                <button class="tool-btn" id="btn-undo-A" style="padding:4px 8px;font-size:11px;" title="Deshacer trazo">↩️ Undo</button>
+                <button class="tool-btn" id="btn-clear-A" style="padding:4px 8px;font-size:11px;" title="Borrar todo">🗑️ Borrar</button>
+              </div>
+
+              <button class="btn btn-gray" id="btn-export-png-A" style="padding:10px;margin-top:4px;">📸 GUARDAR IMAGEN TÁCTICA</button>
               <button class="btn btn-red" id="btn-limpiar-cancha-A" style="padding:10px;margin-top:2px;">🧹 LIMPIAR CANCHA Y BANCO</button>
             </div>
           </div>
@@ -336,9 +367,20 @@
                   <div class="icon-grid-4">
                     <button class="icon-btn tool-btn active" id="btn-none-fs-A" title="Mover / Selección">🤚</button>
                     <button class="icon-btn tool-btn" id="btn-pencil-fs-A" title="Lápiz continuo">✏️</button>
-                    <button class="icon-btn tool-btn" id="btn-arrow-fs-A" title="Flecha táctica">➔</button>
-                    <button class="icon-btn tool-btn" id="btn-eraser-fs-A" title="Modo Borrador (Toca para eliminar elementos o trazos)">🧽</button>
+                    <button class="icon-btn tool-btn" id="btn-arrow-fs-A" title="Flechas Tácticas">➔</button>
+                    <button class="icon-btn tool-btn" id="btn-eraser-fs-A" title="Modo Borrador">🧽</button>
                   </div>
+
+                  <!-- MENÚ EXPANDIBLE DE FLECHAS TÁCTICAS EN FULLSCREEN -->
+                  <div id="sub-panel-arrows-fs-A" style="display:none;background:#141414;border:1px solid var(--oro);border-radius:8px;padding:6px;margin:6px 0;flex-direction:column;gap:4px;">
+                    <div style="font-size:9px;color:var(--oro);font-weight:900;text-align:center;">FLECHA TÁCTICA:</div>
+                    <button class="subtool-btn active" data-arrow-style="solid" onclick="window._setArrowStyle('A','solid')">➔ Continua (Carrera)</button>
+                    <button class="subtool-btn" data-arrow-style="dashed" onclick="window._setArrowStyle('A','dashed')">╌➔ Punteada (Pase)</button>
+                    <button class="subtool-btn" data-arrow-style="curved" onclick="window._setArrowStyle('A','curved')">⤴️ Curva (Centro)</button>
+                    <button class="subtool-btn" data-arrow-style="zigzag" onclick="window._setArrowStyle('A','zigzag')">⚡ Zig-Zag (Regate)</button>
+                    <button class="subtool-btn" data-arrow-style="blocked" onclick="window._setArrowStyle('A','blocked')">🛑 Tope T (Bloqueo)</button>
+                  </div>
+
                   <div class="icon-grid-3" style="margin-top:6px;">
                     <button class="icon-btn tool-btn" id="btn-dash-fs-A" title="Línea punteada">➖</button>
                     <button class="icon-btn tool-btn" id="btn-undo-fs-A" title="Deshacer trazo">↩️</button>
