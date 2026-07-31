@@ -1005,10 +1005,6 @@ export function initCanvas(eq) {
   canvas.addEventListener('touchstart', startDraw, { passive: false });
   canvas.addEventListener('touchmove', draw, { passive: false });
   canvas.addEventListener('touchend', stopDraw, { passive: false });
-
-  canvas.ontouchstart = startDraw;
-  canvas.ontouchmove = draw;
-  canvas.ontouchend = stopDraw;
 }
 
 function drawArrow(ctx, fromX, fromY, toX, toY, color, width = 4, arrowStyle = 'solid') {
@@ -1271,14 +1267,14 @@ export function actualizarTactica(eq) {
       token.className = 'jugador-token';
 
       const savedPos = customPos[i];
-      let posX = Math.max(10, Math.min(90, savedPos ? savedPos.x : slot.x));
-      let posY = Math.max(12, Math.min(88, savedPos ? savedPos.y : slot.y));
+      let posX = Math.max(12, Math.min(88, savedPos ? savedPos.x : slot.x));
+      let posY = Math.max(12, Math.min(84, savedPos ? savedPos.y : slot.y));
 
       // Conversión bidireccional si la cancha está en modo horizontal
       if (isHorizontal) {
         const origX = posX;
-        posX = Math.max(12, Math.min(88, 100 - posY));
-        posY = Math.max(10, Math.min(90, origX));
+        posX = Math.max(10, Math.min(90, 100 - posY));
+        posY = Math.max(12, Math.min(88, origX));
       }
 
       token.style.left = `${posX}%`;
