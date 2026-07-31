@@ -108,6 +108,7 @@ let currentLevelFilter = 'all';
 let currentCatFilter = 'all';
 let modalLevelFilter = 'all';
 let modalCatFilter = 'all';
+let searchQuery = '';
 
 export function getEntrenamientosData() {
   const catObj = categoriasData[perfil.categoriaActiva] || {};
@@ -1087,7 +1088,7 @@ function buildDrillCardHTML(d, accentColor) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// RENDERIZADO DE LA BIBLIOTECA EN LA PÁGINA PRINCIPAL (100% DE ANCHO COMPLETO)
+// RENDERIZADO DE LA BIBLIOTECA EN LA PÁGINA PRINCIPAL (CON BUSCADOR Y 100% ANCHO)
 // ══════════════════════════════════════════════════════════════════════════
 export function renderBibliotecaEjercicios() {
   const container = document.getElementById('drills-library-grid');
@@ -1099,7 +1100,14 @@ export function renderBibliotecaEjercicios() {
   const filtered = allDrills.filter(d => {
     const matchLevel = (currentLevelFilter === 'all') || (d.level === currentLevelFilter);
     const matchCat = (currentCatFilter === 'all') || (d.cat === currentCatFilter);
-    return matchLevel && matchCat;
+    const q = searchQuery.toLowerCase().trim();
+    const matchSearch = !q || (
+      (d.title || '').toLowerCase().includes(q) ||
+      (d.desc || '').toLowerCase().includes(q) ||
+      (d.rules || '').toLowerCase().includes(q) ||
+      (d.materials || '').toLowerCase().includes(q)
+    );
+    return matchLevel && matchCat && matchSearch;
   });
 
   if (filtered.length === 0) {
@@ -1766,8 +1774,79 @@ export async function darAltaMedica(nombre) {
 
 window._darAltaMedica = (n) => darAltaMedica(n);
 
+// ══════════════════════════════════════════════════════════════════════════
+// EXPORTACIÓN DE ASISTENCIA Y RENDIMIENTO A EXCEL / CSV
+// ══════════════════════════════════════════════════════════════════════════
+export function exportarAsistenciaCSV() {
+  const catObj = getEntrenamientosData();
+  const asistenciaData = catObj.asistencia || {};
+  const lesionesData = catObj.lesiones || {};
+  const activePlantel = catObj.plantel || plantel || {};
+
+  let listaJugadores = [];
+  ['por', 'def', 'med', 'del'].forEach(rol => {
+    if (activePlantel[rol] && Array.isArray(activePlantel[rol])) {
+      activePlantel[rol].forEach(j => {
+        const nombre = typeof j === 'object' ? j.nombre : j;
+        if (nombre && !listaJugadores.some(x => x.nombre === nombre)) {
+          listaJugadores.push({ nombre, rol });
+        }
+      });
+    }
+  });
+
+  if (listaJugadores.length === 0) {
+    return mostrarNotificacionApp('Sin Datos', 'No hay jugadores registrados en el plantel para exportar.', false);
+  }
+
+  let csvRows = ['Jugador,Posicion,Asistencias,Inasistencias,Justificadas,Lesionado,PorcentajeAsistencia%'];
+
+  listaJugadores.forEach(j => {
+    let totalFechas = 0;
+    let asistencias = 0;
+    let inasistencias = 0;
+    let justificadas = 0;
+
+    Object.keys(asistenciaData).forEach(f => {
+      if (asistenciaData[f][j.nombre]) {
+        totalFechas++;
+        if (asistenciaData[f][j.nombre] === 'presente') asistencias++;
+        if (asistenciaData[f][j.nombre] === 'ausente') inasistencias++;
+        if (asistenciaData[f][j.nombre] === 'justificada') justificadas++;
+      }
+    });
+
+    const pct = totalFechas > 0 ? Math.round((asistencias / totalFechas) * 100) : 100;
+    const esLesionado = lesionesData[j.nombre] ? 'SI' : 'NO';
+    const posTexto = j.rol === 'por' ? 'Portero' : j.rol === 'def' ? 'Defensa' : j.rol === 'med' ? 'Mediocampista' : 'Delantero';
+
+    csvRows.push(`"${j.nombre}","${posTexto}",${asistencias},${inasistencias},${justificadas},"${esLesionado}",${pct}%`);
+  });
+
+  const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + csvRows.join('\n');
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement('a');
+  link.setAttribute('href', encodedUri);
+  link.setAttribute('download', `Asistencia_${perfil.categoriaActiva || 'Equipo'}_${new Date().toISOString().split('T')[0]}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  mostrarNotificacionApp('Reporte Exportado', `Reporte de Asistencia de ${perfil.categoriaActiva} descargado exitosamente.`);
+}
+
+window._exportarAsistenciaCSV = exportarAsistenciaCSV;
+
 // INICIALIZACIÓN
 export function initEntrenamientosUI() {
+  const searchInput = document.getElementById('search-drill-input');
+  if (searchInput) {
+    searchInput.oninput = (e) => {
+      searchQuery = e.target.value;
+      renderBibliotecaEjercicios();
+    };
+  }
+
   const levelSelect = document.getElementById('filter-drill-level');
   if (levelSelect) {
     levelSelect.onchange = (e) => {

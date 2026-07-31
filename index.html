@@ -480,9 +480,12 @@
           <!-- COLUMNA IZQUIERDA: ESTADÍSTICAS INDIVIDUALES -->
           <div>
             <div class="card">
-              <div class="card-title">
+              <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
                 <span>📊 STATS INDIVIDUALES</span>
-                <select id="stats-categoria-selector" class="select-categoria-header" style="font-size:12px;padding:4px 8px;"></select>
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <button id="btn-export-stats-csv" onclick="window._exportarEstadisticasCSV()" style="background:#092113;border:1px solid var(--verde-campo);color:var(--verde-campo);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:900;cursor:pointer;">📊 EXPORTAR CSV</button>
+                  <select id="stats-categoria-selector" class="select-categoria-header" style="font-size:12px;padding:4px 8px;"></select>
+                </div>
               </div>
               <input type="text" id="stat-search" placeholder="🔍 Buscar jugador...">
               <div id="stats-list" style="margin-top:10px;"></div>
@@ -538,6 +541,8 @@
               <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
                 <span>📚 BIBLIOTECA DE EJERCICIOS ORGANIZADA (70)</span>
                 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                  <!-- Buscador Instantáneo -->
+                  <input type="text" id="search-drill-input" placeholder="🔍 Buscar por nombre, consigna o material..." style="font-size:12px;padding:6px 12px;background:#181818;border:1px solid #333;color:#fff;border-radius:6px;min-width:220px;">
                   <button id="btn-abrir-modal-nuevo-ejercicio" style="background:#092113;border:1px solid var(--verde-campo);color:var(--verde-campo);padding:8px 14px;border-radius:6px;font-size:12px;font-weight:900;cursor:pointer;box-shadow:0 0 10px rgba(80,227,194,0.15);transition:all 0.2s;" onmouseenter="this.style.background='var(--verde-campo)';this.style.color='#000';" onmouseleave="this.style.background='#092113';this.style.color='var(--verde-campo)';">➕ AGREGAR EJERCICIO</button>
                   <button id="btn-abrir-modal-biblioteca" style="background:#1d1805;border:1px solid var(--oro);color:var(--oro);padding:8px 14px;border-radius:6px;font-size:12px;font-weight:900;cursor:pointer;box-shadow:0 0 10px rgba(255,215,0,0.15);transition:all 0.2s;" onmouseenter="this.style.background='var(--oro)';this.style.color='#000';" onmouseleave="this.style.background='#1d1805';this.style.color='var(--oro)';">📺 ABRIR EN PANTALLA COMPLETA</button>
                   <!-- Filtro Nivel -->
@@ -613,7 +618,10 @@
               
               <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
                 <button class="btn btn-green" id="btn-iniciar-pasar-lista" style="font-size:13px;padding:12px;font-weight:900;">📋 PASAR LISTA (1 POR 1)</button>
-                <button class="btn btn-gray" id="btn-toggle-listado-completo" style="font-size:11px;padding:8px;background:#181818;border:1px solid #333;color:#ccc;">📊 VER LISTADO COMPLETO Y PORCENTAJES</button>
+                <div style="display:flex;gap:6px;">
+                  <button class="btn btn-gray" id="btn-toggle-listado-completo" style="flex:1;font-size:11px;padding:8px;background:#181818;border:1px solid #333;color:#ccc;">📊 VER LISTADO COMPLETO Y PORCENTAJES</button>
+                  <button id="btn-export-attendance-csv" onclick="window._exportarAsistenciaCSV()" style="background:#092113;border:1px solid var(--verde-campo);color:var(--verde-campo);padding:8px 12px;border-radius:6px;font-size:11px;font-weight:900;cursor:pointer;">📊 EXPORTAR CSV</button>
+                </div>
               </div>
 
               <!-- Listado completo desplegable con estadísticas de porcentaje -->

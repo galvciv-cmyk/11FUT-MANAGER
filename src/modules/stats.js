@@ -1,5 +1,6 @@
 import { stats, updateStats, autoSaveLocal, plantel, perfil } from "./state.js";
 import { guardarFirebase } from "../services/firebase.js";
+import { mostrarNotificacionApp } from "./config.js";
 
 export function renderStats(targetId = 'stats-list') {
   const cont = document.getElementById(targetId) || document.getElementById('stats-list');
@@ -136,6 +137,37 @@ export function renderRankings() {
   cont.innerHTML = html;
 }
 
+
+export function exportarEstadisticasCSV() {
+  const todosJugadores = [...new Set([...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del])];
+
+  if (!todosJugadores.length) {
+    return mostrarNotificacionApp('Sin Datos', 'No hay jugadores en el plantel para exportar.', false);
+  }
+
+  let csvRows = ['Jugador,Posicion,PJ,MinutosJugados,Goles,Asistencias,Remates,Amarillas,Rojas,VallaInvicta,RatingPromedio'];
+
+  todosJugadores.forEach(nombre => {
+    const st = stats[nombre] || { pj: 0, minJug: 0, goles: 0, asist: 0, am: 0, ro: 0, remates: 0, rat: 6.5, vallaInvicta: 0 };
+    const pos = plantel.por.includes(nombre) ? 'Portero' : plantel.def.includes(nombre) ? 'Defensa' : plantel.med.includes(nombre) ? 'Mediocampista' : 'Delantero';
+
+    csvRows.push(`"${nombre}","${pos}",${st.pj || 0},${st.minJug || 0},${st.goles || 0},${st.asist || 0},${st.remates || 0},${st.am || 0},${st.ro || 0},${st.vallaInvicta || 0},${(st.rat || 6.5).toFixed(1)}`);
+  });
+
+  const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + csvRows.join('\n');
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement('a');
+  link.setAttribute('href', encodedUri);
+  link.setAttribute('download', `Estadisticas_${perfil.categoriaActiva || 'Equipo'}_${new Date().toISOString().split('T')[0]}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  mostrarNotificacionApp('Estadísticas Exportadas', `Reporte de Estadísticas de ${perfil.categoriaActiva} descargado exitosamente.`);
+}
+
+window._exportarEstadisticasCSV = exportarEstadisticasCSV;
+
 let jugadorStatEdicion = '';
 
 window._abrirStatModal = (nombre) => {
@@ -177,5 +209,5 @@ export async function guardarStatJugador() {
   autoSaveLocal();
   await guardarFirebase();
   renderStats();
-  alert(`✅ Estadísticas de ${jugadorStatEdicion} guardadas.`);
+  mostrarNotificacionApp('Estadísticas Guardadas', `Estadísticas de ${jugadorStatEdicion} guardadas.`);
 }
