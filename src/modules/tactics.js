@@ -257,15 +257,21 @@ export function rotateFicha(eq, id, delta = 10) {
   const item = (fichasLibres[eq] || []).find(f => f.id === id);
   if (item) {
     item.rot = ((item.rot || 0) + delta) % 360;
-    actualizarTactica(eq);
+    const tokenCamisa = document.querySelector(`#cancha-${eq} .jugador-token[data-free-id="${id}"] .token-camisa`);
+    if (tokenCamisa) {
+      tokenCamisa.style.transform = `rotate(${item.rot}deg) scale(${item.scale || 1.0})`;
+    }
   }
 }
 
 export function scaleFicha(eq, id, delta = 0.1) {
   const item = (fichasLibres[eq] || []).find(f => f.id === id);
   if (item) {
-    item.scale = Math.max(0.4, Math.min(2.8, (item.scale || 1.0) + delta));
-    actualizarTactica(eq);
+    item.scale = Math.max(0.2, Math.min(4.0, (item.scale || 1.0) + delta));
+    const tokenCamisa = document.querySelector(`#cancha-${eq} .jugador-token[data-free-id="${id}"] .token-camisa`);
+    if (tokenCamisa) {
+      tokenCamisa.style.transform = `rotate(${item.rot || 0}deg) scale(${item.scale})`;
+    }
   }
 }
 
@@ -447,7 +453,6 @@ export function agregarLineaAjustable(eq = 'A', style = 'solid') {
 
   cancha.appendChild(lineWrap);
   initLineaAjustableHandles(lineWrap, cancha);
-  mostrarNotificacionApp('Línea Ajustable Añadida', '📏 Arrastra los 2 puntos (●) para mover, rotar o estirar la línea.');
 }
 
 window._agregarLineaAjustable = agregarLineaAjustable;
@@ -1178,12 +1183,6 @@ export function actualizarTactica(eq) {
         fichasLibres[eq] = fichasLibres[eq].filter(item => item.id !== f.id);
         actualizarTactica(eq);
       }
-    };
-
-    token.ondblclick = (e) => {
-      e.stopPropagation();
-      fichasLibres[eq] = fichasLibres[eq].filter(item => item.id !== f.id);
-      actualizarTactica(eq);
     };
 
     hacerTokenArrastrable(token, cancha);
