@@ -21,7 +21,7 @@ window._limpiarCanchaYBanco = (eq) => limpiarCanchaYBanco(eq);
 export const FORMACIONES = {
   "11": {
     "1-4-4-2": [
-      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 50, y: 88.5, cat: "por", pos: "POR" },
       { x: 23, y: 70, cat: "def", pos: "LI" },
       { x: 40, y: 73, cat: "def", pos: "DFC" },
       { x: 60, y: 73, cat: "def", pos: "DFC" },
@@ -34,7 +34,7 @@ export const FORMACIONES = {
       { x: 63, y: 22, cat: "del", pos: "DC" }
     ],
     "1-4-3-3": [
-      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 50, y: 88.5, cat: "por", pos: "POR" },
       { x: 23, y: 70, cat: "def", pos: "LI" },
       { x: 40, y: 73, cat: "def", pos: "DFC" },
       { x: 60, y: 73, cat: "def", pos: "DFC" },
@@ -47,7 +47,7 @@ export const FORMACIONES = {
       { x: 75, y: 24, cat: "del", pos: "ED" }
     ],
     "1-4-2-3-1": [
-      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 50, y: 88.5, cat: "por", pos: "POR" },
       { x: 23, y: 70, cat: "def", pos: "LI" },
       { x: 40, y: 73, cat: "def", pos: "DFC" },
       { x: 60, y: 73, cat: "def", pos: "DFC" },
@@ -60,7 +60,7 @@ export const FORMACIONES = {
       { x: 50, y: 20, cat: "del", pos: "DC" }
     ],
     "1-4-1-4-1": [
-      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 50, y: 88.5, cat: "por", pos: "POR" },
       { x: 23, y: 70, cat: "def", pos: "LI" },
       { x: 40, y: 73, cat: "def", pos: "DFC" },
       { x: 60, y: 73, cat: "def", pos: "DFC" },
@@ -73,7 +73,7 @@ export const FORMACIONES = {
       { x: 50, y: 20, cat: "del", pos: "DC" }
     ],
     "1-4-3-2-1": [
-      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 50, y: 88.5, cat: "por", pos: "POR" },
       { x: 23, y: 70, cat: "def", pos: "LI" },
       { x: 40, y: 73, cat: "def", pos: "DFC" },
       { x: 60, y: 73, cat: "def", pos: "DFC" },
@@ -86,7 +86,7 @@ export const FORMACIONES = {
       { x: 50, y: 20, cat: "del", pos: "DC" }
     ],
     "1-3-5-2": [
-      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 50, y: 88.5, cat: "por", pos: "POR" },
       { x: 28, y: 73, cat: "def", pos: "DFC" },
       { x: 50, y: 75, cat: "def", pos: "DFC" },
       { x: 72, y: 73, cat: "def", pos: "DFC" },
@@ -99,7 +99,7 @@ export const FORMACIONES = {
       { x: 63, y: 22, cat: "del", pos: "DC" }
     ],
     "1-3-4-3": [
-      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 50, y: 88.5, cat: "por", pos: "POR" },
       { x: 28, y: 73, cat: "def", pos: "DFC" },
       { x: 50, y: 75, cat: "def", pos: "DFC" },
       { x: 72, y: 73, cat: "def", pos: "DFC" },
@@ -112,7 +112,7 @@ export const FORMACIONES = {
       { x: 75, y: 24, cat: "del", pos: "ED" }
     ],
     "1-5-3-2": [
-      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 50, y: 88.5, cat: "por", pos: "POR" },
       { x: 23, y: 68, cat: "def", pos: "CAD" },
       { x: 36, y: 73, cat: "def", pos: "DFC" },
       { x: 50, y: 75, cat: "def", pos: "DFC" },
@@ -125,7 +125,7 @@ export const FORMACIONES = {
       { x: 63, y: 22, cat: "del", pos: "DC" }
     ],
     "1-5-4-1": [
-      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 50, y: 88.5, cat: "por", pos: "POR" },
       { x: 23, y: 68, cat: "def", pos: "CAD" },
       { x: 36, y: 73, cat: "def", pos: "DFC" },
       { x: 50, y: 75, cat: "def", pos: "DFC" },
@@ -138,7 +138,7 @@ export const FORMACIONES = {
       { x: 50, y: 20, cat: "del", pos: "DC" }
     ],
     "1-4-5-1": [
-      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 50, y: 88.5, cat: "por", pos: "POR" },
       { x: 23, y: 70, cat: "def", pos: "LI" },
       { x: 40, y: 73, cat: "def", pos: "DFC" },
       { x: 60, y: 73, cat: "def", pos: "DFC" },
@@ -153,7 +153,7 @@ export const FORMACIONES = {
   },
   "8": {
     "1-3-3-1": [
-      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 50, y: 88.5, cat: "por", pos: "POR" },
       { x: 25, y: 68, cat: "def", pos: "DFC" },
       { x: 50, y: 72, cat: "def", pos: "DFC" },
       { x: 75, y: 68, cat: "def", pos: "DFC" },
@@ -163,7 +163,7 @@ export const FORMACIONES = {
       { x: 50, y: 22, cat: "del", pos: "DC" }
     ],
     "1-3-2-2": [
-      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 50, y: 88.5, cat: "por", pos: "POR" },
       { x: 25, y: 68, cat: "def", pos: "DFC" },
       { x: 50, y: 72, cat: "def", pos: "DFC" },
       { x: 75, y: 68, cat: "def", pos: "DFC" },
@@ -173,7 +173,7 @@ export const FORMACIONES = {
       { x: 64, y: 22, cat: "del", pos: "DC" }
     ],
     "1-2-4-1": [
-      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 50, y: 88.5, cat: "por", pos: "POR" },
       { x: 34, y: 70, cat: "def", pos: "DFC" },
       { x: 66, y: 70, cat: "def", pos: "DFC" },
       { x: 23, y: 46, cat: "med", pos: "MI" },
@@ -183,7 +183,7 @@ export const FORMACIONES = {
       { x: 50, y: 22, cat: "del", pos: "DC" }
     ],
     "1-2-3-2": [
-      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 50, y: 88.5, cat: "por", pos: "POR" },
       { x: 34, y: 70, cat: "def", pos: "DFC" },
       { x: 66, y: 70, cat: "def", pos: "DFC" },
       { x: 25, y: 46, cat: "med", pos: "MI" },
@@ -193,7 +193,7 @@ export const FORMACIONES = {
       { x: 64, y: 22, cat: "del", pos: "DC" }
     ],
     "1-4-2-1": [
-      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 50, y: 88.5, cat: "por", pos: "POR" },
       { x: 23, y: 70, cat: "def", pos: "LI" },
       { x: 41, y: 73, cat: "def", pos: "DFC" },
       { x: 59, y: 73, cat: "def", pos: "DFC" },
@@ -203,7 +203,7 @@ export const FORMACIONES = {
       { x: 50, y: 22, cat: "del", pos: "DC" }
     ],
     "1-3-1-3": [
-      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 50, y: 88.5, cat: "por", pos: "POR" },
       { x: 25, y: 70, cat: "def", pos: "DFC" },
       { x: 50, y: 74, cat: "def", pos: "DFC" },
       { x: 75, y: 70, cat: "def", pos: "DFC" },
@@ -215,42 +215,42 @@ export const FORMACIONES = {
   },
   "5": {
     "1-2-2": [
-      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 50, y: 88.5, cat: "por", pos: "POR" },
       { x: 32, y: 64, cat: "def", pos: "CIE" },
       { x: 68, y: 64, cat: "def", pos: "CIE" },
       { x: 32, y: 28, cat: "del", pos: "PIV" },
       { x: 68, y: 28, cat: "del", pos: "PIV" }
     ],
     "1-1-2-1": [
-      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 50, y: 88.5, cat: "por", pos: "POR" },
       { x: 50, y: 68, cat: "def", pos: "CIE" },
       { x: 25, y: 46, cat: "med", pos: "ALA" },
       { x: 75, y: 46, cat: "med", pos: "ALA" },
       { x: 50, y: 22, cat: "del", pos: "PIV" }
     ],
     "1-3-1": [
-      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 50, y: 88.5, cat: "por", pos: "POR" },
       { x: 25, y: 64, cat: "med", pos: "ALA" },
       { x: 50, y: 68, cat: "def", pos: "CIE" },
       { x: 75, y: 64, cat: "med", pos: "ALA" },
       { x: 50, y: 22, cat: "del", pos: "PIV" }
     ],
     "1-4-0": [
-      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 50, y: 88.5, cat: "por", pos: "POR" },
       { x: 25, y: 55, cat: "med", pos: "UNI" },
       { x: 41, y: 55, cat: "med", pos: "UNI" },
       { x: 59, y: 55, cat: "med", pos: "UNI" },
       { x: 75, y: 55, cat: "med", pos: "UNI" }
     ],
     "1-2-1-1": [
-      { x: 50, y: 86, cat: "por", pos: "POR" },
-      { x: 34, y: 68, cat: "def", pos: "CIE" },
-      { x: 66, y: 68, cat: "def", pos: "CIE" },
+      { x: 50, y: 88.5, cat: "por", pos: "POR" },
+      { x: 32, y: 68, cat: "def", pos: "CIE" },
+      { x: 68, y: 68, cat: "def", pos: "CIE" },
       { x: 50, y: 45, cat: "med", pos: "ALA" },
       { x: 50, y: 22, cat: "del", pos: "PIV" }
     ],
     "1-1-3": [
-      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 50, y: 88.5, cat: "por", pos: "POR" },
       { x: 50, y: 68, cat: "def", pos: "CIE" },
       { x: 25, y: 26, cat: "del", pos: "ALA" },
       { x: 50, y: 22, cat: "del", pos: "PIV" },
@@ -1268,7 +1268,7 @@ export function actualizarTactica(eq) {
 
       const savedPos = customPos[i];
       let posX = Math.max(23, Math.min(77, savedPos ? savedPos.x : slot.x));
-      let posY = Math.max(14, Math.min(84, savedPos ? savedPos.y : slot.y));
+      let posY = Math.max(14, Math.min(89.5, savedPos ? savedPos.y : slot.y));
 
       // Conversión bidireccional si la cancha está en modo horizontal
       if (isHorizontal) {
