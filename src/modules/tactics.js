@@ -633,8 +633,34 @@ export function toggleFullscreen(eq) {
   const drawer = document.getElementById(`fs-drawer-${eq}`);
   if (!layout || !canchaWrapper) return;
 
-  const isFS = layout.classList.toggle('fullscreen');
-  document.body.classList.toggle('body-fullscreen-active', isFS);
+  const isNativeFS = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+
+  if (!isNativeFS) {
+    // Activar Fullscreen Nativo del Navegador (Estilo YouTube / Video)
+    const target = layout;
+    if (target.requestFullscreen) {
+      target.requestFullscreen().catch(() => {});
+    } else if (target.webkitRequestFullscreen) {
+      target.webkitRequestFullscreen();
+    } else if (target.msRequestFullscreen) {
+      target.msRequestFullscreen();
+    }
+    layout.classList.add('fullscreen');
+    document.body.classList.add('body-fullscreen-active');
+  } else {
+    // Salir de Fullscreen Nativo del Navegador
+    if (document.exitFullscreen) {
+      document.exitFullscreen().catch(() => {});
+    } else if (document.webkitExitFullscreen) {
+      document.webkitExitFullscreen();
+    } else if (document.msExitFullscreen) {
+      document.msExitFullscreen();
+    }
+    layout.classList.remove('fullscreen');
+    document.body.classList.remove('body-fullscreen-active');
+  }
+
+  const isFS = layout.classList.contains('fullscreen');
   const isMitad = vistaCanchaActiva[eq] === 'mitad';
 
   canchaWrapper.classList.toggle('horizontal', isFS && !isMitad);
@@ -659,6 +685,22 @@ export function toggleFullscreen(eq) {
   if (btn) btn.textContent = isFS ? '🗗 SALIR FULLSCREEN' : '⛶ PANTALLA COMPLETA';
   
   actualizarTactica(eq);
+}
+
+// Sincronización del estado al presionar la tecla ESC nativa del sistema
+if (typeof document !== 'undefined') {
+  const syncFullscreenExit = () => {
+    const isNativeFS = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+    if (!isNativeFS) {
+      document.querySelectorAll('.campo-layout').forEach(el => el.classList.remove('fullscreen'));
+      document.body.classList.remove('body-fullscreen-active');
+      document.querySelectorAll('[id^="btn-fs-"]').forEach(btn => btn.textContent = '⛶ PANTALLA COMPLETA');
+    }
+  };
+
+  document.addEventListener('fullscreenchange', syncFullscreenExit);
+  document.addEventListener('webkitfullscreenchange', syncFullscreenExit);
+  document.addEventListener('msfullscreenchange', syncFullscreenExit);
 }
 
 export function actualizarTactica(eq) {
