@@ -564,8 +564,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (m) m.style.display = 'none';
   });
 
-  document.getElementById('modo-A')?.addEventListener('change', () => actualizarTactica('A'));
-  document.getElementById('esquema-A')?.addEventListener('change', () => actualizarTactica('A'));
+  document.getElementById('modo-A')?.addEventListener('change', () => {
+    delete plantel.pos_custom_A;
+    autoSaveLocal();
+    actualizarTactica('A');
+  });
+  document.getElementById('esquema-A')?.addEventListener('change', () => {
+    delete plantel.pos_custom_A;
+    autoSaveLocal();
+    actualizarTactica('A');
+  });
   document.getElementById('btn-save-esquema-A')?.addEventListener('click', () => guardarEsquemaCustom('A'));
   document.getElementById(`btn-export-png-${eq}`)?.addEventListener('click', (e) => exportarPNG(eq, e.target));
   document.getElementById(`btn-limpiar-cancha-${eq}`)?.addEventListener('click', () => limpiarCanchaYBanco(eq));

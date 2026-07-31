@@ -21,10 +21,10 @@ window._limpiarCanchaYBanco = (eq) => limpiarCanchaYBanco(eq);
 export const FORMACIONES = {
   "11": {
     "1-4-4-2": [
-      { x: 50, y: 88, cat: "por", pos: "POR" },
+      { x: 50, y: 86, cat: "por", pos: "POR" },
       { x: 18, y: 70, cat: "def", pos: "LI" },
-      { x: 38, y: 74, cat: "def", pos: "DFC" },
-      { x: 62, y: 74, cat: "def", pos: "DFC" },
+      { x: 38, y: 73, cat: "def", pos: "DFC" },
+      { x: 62, y: 73, cat: "def", pos: "DFC" },
       { x: 82, y: 70, cat: "def", pos: "LD" },
       { x: 18, y: 44, cat: "med", pos: "MI" },
       { x: 38, y: 48, cat: "med", pos: "MC" },
@@ -34,23 +34,62 @@ export const FORMACIONES = {
       { x: 65, y: 22, cat: "del", pos: "DC" }
     ],
     "1-4-3-3": [
-      { x: 50, y: 88, cat: "por", pos: "POR" },
+      { x: 50, y: 86, cat: "por", pos: "POR" },
       { x: 18, y: 70, cat: "def", pos: "LI" },
-      { x: 38, y: 74, cat: "def", pos: "DFC" },
-      { x: 62, y: 74, cat: "def", pos: "DFC" },
+      { x: 38, y: 73, cat: "def", pos: "DFC" },
+      { x: 62, y: 73, cat: "def", pos: "DFC" },
       { x: 82, y: 70, cat: "def", pos: "LD" },
-      { x: 30, y: 48, cat: "med", pos: "MC" },
-      { x: 50, y: 52, cat: "med", pos: "MCD" },
-      { x: 70, y: 48, cat: "med", pos: "MC" },
-      { x: 20, y: 24, cat: "del", pos: "EI" },
+      { x: 32, y: 48, cat: "med", pos: "MC" },
+      { x: 50, y: 54, cat: "med", pos: "MCD" },
+      { x: 68, y: 48, cat: "med", pos: "MC" },
+      { x: 22, y: 24, cat: "del", pos: "EI" },
       { x: 50, y: 20, cat: "del", pos: "DC" },
-      { x: 80, y: 24, cat: "del", pos: "ED" }
+      { x: 78, y: 24, cat: "del", pos: "ED" }
+    ],
+    "1-4-2-3-1": [
+      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 18, y: 70, cat: "def", pos: "LI" },
+      { x: 38, y: 73, cat: "def", pos: "DFC" },
+      { x: 62, y: 73, cat: "def", pos: "DFC" },
+      { x: 82, y: 70, cat: "def", pos: "LD" },
+      { x: 36, y: 56, cat: "med", pos: "MCD" },
+      { x: 64, y: 56, cat: "med", pos: "MCD" },
+      { x: 20, y: 36, cat: "med", pos: "MI" },
+      { x: 50, y: 38, cat: "med", pos: "MCO" },
+      { x: 80, y: 36, cat: "med", pos: "MD" },
+      { x: 50, y: 20, cat: "del", pos: "DC" }
+    ],
+    "1-4-1-4-1": [
+      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 18, y: 70, cat: "def", pos: "LI" },
+      { x: 38, y: 73, cat: "def", pos: "DFC" },
+      { x: 62, y: 73, cat: "def", pos: "DFC" },
+      { x: 82, y: 70, cat: "def", pos: "LD" },
+      { x: 50, y: 58, cat: "med", pos: "MCD" },
+      { x: 18, y: 40, cat: "med", pos: "MI" },
+      { x: 38, y: 44, cat: "med", pos: "MC" },
+      { x: 62, y: 44, cat: "med", pos: "MC" },
+      { x: 82, y: 40, cat: "med", pos: "MD" },
+      { x: 50, y: 20, cat: "del", pos: "DC" }
+    ],
+    "1-4-3-2-1": [
+      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 18, y: 70, cat: "def", pos: "LI" },
+      { x: 38, y: 73, cat: "def", pos: "DFC" },
+      { x: 62, y: 73, cat: "def", pos: "DFC" },
+      { x: 82, y: 70, cat: "def", pos: "LD" },
+      { x: 30, y: 52, cat: "med", pos: "MC" },
+      { x: 50, y: 56, cat: "med", pos: "MCD" },
+      { x: 70, y: 52, cat: "med", pos: "MC" },
+      { x: 36, y: 34, cat: "med", pos: "MCO" },
+      { x: 64, y: 34, cat: "med", pos: "MCO" },
+      { x: 50, y: 20, cat: "del", pos: "DC" }
     ],
     "1-3-5-2": [
-      { x: 50, y: 88, cat: "por", pos: "POR" },
-      { x: 26, y: 74, cat: "def", pos: "DFC" },
-      { x: 50, y: 76, cat: "def", pos: "DFC" },
-      { x: 74, y: 74, cat: "def", pos: "DFC" },
+      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 26, y: 73, cat: "def", pos: "DFC" },
+      { x: 50, y: 75, cat: "def", pos: "DFC" },
+      { x: 74, y: 73, cat: "def", pos: "DFC" },
       { x: 14, y: 48, cat: "med", pos: "CAD" },
       { x: 36, y: 50, cat: "med", pos: "MC" },
       { x: 50, y: 54, cat: "med", pos: "MCD" },
@@ -58,27 +97,164 @@ export const FORMACIONES = {
       { x: 86, y: 48, cat: "med", pos: "CAD" },
       { x: 36, y: 22, cat: "del", pos: "DC" },
       { x: 64, y: 22, cat: "del", pos: "DC" }
+    ],
+    "1-3-4-3": [
+      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 26, y: 73, cat: "def", pos: "DFC" },
+      { x: 50, y: 75, cat: "def", pos: "DFC" },
+      { x: 74, y: 73, cat: "def", pos: "DFC" },
+      { x: 18, y: 48, cat: "med", pos: "MI" },
+      { x: 38, y: 52, cat: "med", pos: "MC" },
+      { x: 62, y: 52, cat: "med", pos: "MC" },
+      { x: 82, y: 48, cat: "med", pos: "MD" },
+      { x: 22, y: 24, cat: "del", pos: "EI" },
+      { x: 50, y: 20, cat: "del", pos: "DC" },
+      { x: 78, y: 24, cat: "del", pos: "ED" }
+    ],
+    "1-5-3-2": [
+      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 14, y: 68, cat: "def", pos: "CAD" },
+      { x: 32, y: 73, cat: "def", pos: "DFC" },
+      { x: 50, y: 75, cat: "def", pos: "DFC" },
+      { x: 68, y: 73, cat: "def", pos: "DFC" },
+      { x: 86, y: 68, cat: "def", pos: "CAD" },
+      { x: 30, y: 48, cat: "med", pos: "MC" },
+      { x: 50, y: 52, cat: "med", pos: "MCD" },
+      { x: 70, y: 48, cat: "med", pos: "MC" },
+      { x: 36, y: 22, cat: "del", pos: "DC" },
+      { x: 64, y: 22, cat: "del", pos: "DC" }
+    ],
+    "1-5-4-1": [
+      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 14, y: 68, cat: "def", pos: "CAD" },
+      { x: 32, y: 73, cat: "def", pos: "DFC" },
+      { x: 50, y: 75, cat: "def", pos: "DFC" },
+      { x: 68, y: 73, cat: "def", pos: "DFC" },
+      { x: 86, y: 68, cat: "def", pos: "CAD" },
+      { x: 20, y: 44, cat: "med", pos: "MI" },
+      { x: 40, y: 48, cat: "med", pos: "MC" },
+      { x: 60, y: 48, cat: "med", pos: "MC" },
+      { x: 80, y: 44, cat: "med", pos: "MD" },
+      { x: 50, y: 20, cat: "del", pos: "DC" }
+    ],
+    "1-4-5-1": [
+      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 18, y: 70, cat: "def", pos: "LI" },
+      { x: 38, y: 73, cat: "def", pos: "DFC" },
+      { x: 62, y: 73, cat: "def", pos: "DFC" },
+      { x: 82, y: 70, cat: "def", pos: "LD" },
+      { x: 16, y: 44, cat: "med", pos: "MI" },
+      { x: 33, y: 48, cat: "med", pos: "MC" },
+      { x: 50, y: 52, cat: "med", pos: "MCD" },
+      { x: 67, y: 48, cat: "med", pos: "MC" },
+      { x: 84, y: 44, cat: "med", pos: "MD" },
+      { x: 50, y: 20, cat: "del", pos: "DC" }
     ]
   },
   "8": {
     "1-3-3-1": [
-      { x: 50, y: 88, cat: "por", pos: "POR" },
-      { x: 22, y: 68, cat: "def", pos: "DF" },
-      { x: 50, y: 72, cat: "def", pos: "DF" },
-      { x: 78, y: 68, cat: "def", pos: "DF" },
+      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 22, y: 68, cat: "def", pos: "DFC" },
+      { x: 50, y: 72, cat: "def", pos: "DFC" },
+      { x: 78, y: 68, cat: "def", pos: "DFC" },
       { x: 22, y: 44, cat: "med", pos: "MC" },
       { x: 50, y: 48, cat: "med", pos: "MC" },
       { x: 78, y: 44, cat: "med", pos: "MC" },
       { x: 50, y: 22, cat: "del", pos: "DC" }
+    ],
+    "1-3-2-2": [
+      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 22, y: 68, cat: "def", pos: "DFC" },
+      { x: 50, y: 72, cat: "def", pos: "DFC" },
+      { x: 78, y: 68, cat: "def", pos: "DFC" },
+      { x: 35, y: 46, cat: "med", pos: "MC" },
+      { x: 65, y: 46, cat: "med", pos: "MC" },
+      { x: 35, y: 22, cat: "del", pos: "DC" },
+      { x: 65, y: 22, cat: "del", pos: "DC" }
+    ],
+    "1-2-4-1": [
+      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 32, y: 70, cat: "def", pos: "DFC" },
+      { x: 68, y: 70, cat: "def", pos: "DFC" },
+      { x: 18, y: 46, cat: "med", pos: "MI" },
+      { x: 38, y: 48, cat: "med", pos: "MC" },
+      { x: 62, y: 48, cat: "med", pos: "MC" },
+      { x: 82, y: 46, cat: "med", pos: "MD" },
+      { x: 50, y: 22, cat: "del", pos: "DC" }
+    ],
+    "1-2-3-2": [
+      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 32, y: 70, cat: "def", pos: "DFC" },
+      { x: 68, y: 70, cat: "def", pos: "DFC" },
+      { x: 22, y: 46, cat: "med", pos: "MI" },
+      { x: 50, y: 48, cat: "med", pos: "MC" },
+      { x: 78, y: 46, cat: "med", pos: "MD" },
+      { x: 35, y: 22, cat: "del", pos: "DC" },
+      { x: 65, y: 22, cat: "del", pos: "DC" }
+    ],
+    "1-4-2-1": [
+      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 18, y: 70, cat: "def", pos: "LI" },
+      { x: 38, y: 73, cat: "def", pos: "DFC" },
+      { x: 62, y: 73, cat: "def", pos: "DFC" },
+      { x: 82, y: 70, cat: "def", pos: "LD" },
+      { x: 35, y: 46, cat: "med", pos: "MC" },
+      { x: 65, y: 46, cat: "med", pos: "MC" },
+      { x: 50, y: 22, cat: "del", pos: "DC" }
+    ],
+    "1-3-1-3": [
+      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 22, y: 70, cat: "def", pos: "DFC" },
+      { x: 50, y: 74, cat: "def", pos: "DFC" },
+      { x: 78, y: 70, cat: "def", pos: "DFC" },
+      { x: 50, y: 50, cat: "med", pos: "MCD" },
+      { x: 22, y: 24, cat: "del", pos: "EI" },
+      { x: 50, y: 20, cat: "del", pos: "DC" },
+      { x: 78, y: 24, cat: "del", pos: "ED" }
     ]
   },
   "5": {
     "1-2-2": [
-      { x: 50, y: 88, cat: "por", pos: "POR" },
-      { x: 30, y: 66, cat: "def", pos: "DF" },
-      { x: 70, y: 66, cat: "def", pos: "DF" },
-      { x: 30, y: 30, cat: "del", pos: "DEL" },
-      { x: 70, y: 30, cat: "del", pos: "DEL" }
+      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 30, y: 64, cat: "def", pos: "CIE" },
+      { x: 70, y: 64, cat: "def", pos: "CIE" },
+      { x: 30, y: 28, cat: "del", pos: "PIV" },
+      { x: 70, y: 28, cat: "del", pos: "PIV" }
+    ],
+    "1-1-2-1": [
+      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 50, y: 68, cat: "def", pos: "CIE" },
+      { x: 22, y: 46, cat: "med", pos: "ALA" },
+      { x: 78, y: 46, cat: "med", pos: "ALA" },
+      { x: 50, y: 22, cat: "del", pos: "PIV" }
+    ],
+    "1-3-1": [
+      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 22, y: 64, cat: "med", pos: "ALA" },
+      { x: 50, y: 68, cat: "def", pos: "CIE" },
+      { x: 78, y: 64, cat: "med", pos: "ALA" },
+      { x: 50, y: 22, cat: "del", pos: "PIV" }
+    ],
+    "1-4-0": [
+      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 20, y: 55, cat: "med", pos: "UNI" },
+      { x: 40, y: 55, cat: "med", pos: "UNI" },
+      { x: 60, y: 55, cat: "med", pos: "UNI" },
+      { x: 80, y: 55, cat: "med", pos: "UNI" }
+    ],
+    "1-2-1-1": [
+      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 32, y: 68, cat: "def", pos: "CIE" },
+      { x: 68, y: 68, cat: "def", pos: "CIE" },
+      { x: 50, y: 45, cat: "med", pos: "ALA" },
+      { x: 50, y: 22, cat: "del", pos: "PIV" }
+    ],
+    "1-1-3": [
+      { x: 50, y: 86, cat: "por", pos: "POR" },
+      { x: 50, y: 68, cat: "def", pos: "CIE" },
+      { x: 22, y: 26, cat: "del", pos: "ALA" },
+      { x: 50, y: 22, cat: "del", pos: "PIV" },
+      { x: 78, y: 26, cat: "del", pos: "ALA" }
     ]
   }
 };
@@ -423,8 +599,9 @@ export function setDrawingMode(eq, mode) {
 
   const canvas = document.getElementById(`canvas-${eq}`);
   if (canvas) {
-    canvas.style.pointerEvents = mode === 'none' ? 'none' : 'auto';
-    canvas.style.cursor = mode === 'none' ? 'default' : 'crosshair';
+    const isDrawingCanvas = (mode === 'pencil' || mode === 'arrow' || mode === 'eraser');
+    canvas.style.pointerEvents = isDrawingCanvas ? 'auto' : 'none';
+    canvas.style.cursor = isDrawingCanvas ? 'crosshair' : 'default';
   }
 }
 window._setDrawingMode = setDrawingMode;
@@ -1087,14 +1264,14 @@ export function actualizarTactica(eq) {
       token.className = 'jugador-token';
 
       const savedPos = customPos[i];
-      let posX = Math.max(5, Math.min(95, savedPos ? savedPos.x : slot.x));
-      let posY = Math.max(5, Math.min(95, savedPos ? savedPos.y : slot.y));
+      let posX = Math.max(10, Math.min(90, savedPos ? savedPos.x : slot.x));
+      let posY = Math.max(12, Math.min(88, savedPos ? savedPos.y : slot.y));
 
       // Conversión bidireccional si la cancha está en modo horizontal
       if (isHorizontal) {
         const origX = posX;
-        posX = Math.max(5, Math.min(95, 100 - posY));
-        posY = Math.max(5, Math.min(95, origX));
+        posX = Math.max(12, Math.min(88, 100 - posY));
+        posY = Math.max(10, Math.min(90, origX));
       }
 
       token.style.left = `${posX}%`;
