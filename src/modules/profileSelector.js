@@ -1,5 +1,5 @@
 import { perfil, setCurrentProfile, setCategoriaActiva } from "./state.js";
-import { mostrarNotificacionApp } from "./config.js";
+import { mostrarNotificacionApp, abrirConfig, cerrarSesion } from "./config.js";
 
 let selectedProfilePending = null;
 let currentPinEntered = "";
@@ -14,10 +14,8 @@ export function renderProfileSelector(onProfileSelected) {
     document.body.appendChild(modalOverlay);
   }
 
-  // Verificar si hay perfiles configurados. Si no hay o hay solo 1, sincronizar e ingresar directamente
   let profilesList = perfil.profiles || [];
   
-  // Garantizar que exista al menos el perfil de la categoría activa
   if (!profilesList.length) {
     profilesList = [
       { id: "admin", nombre: "Director Deportivo", rol: "ADMIN", pin: "1234", avatar: perfil.logo },
@@ -39,16 +37,16 @@ export function renderProfileSelector(onProfileSelected) {
   // RENDERIZADO INTERFAZ STREAMING ("¿Quién está dirigiendo hoy?")
   modalOverlay.style.display = 'flex';
   modalOverlay.innerHTML = `
-    <div style="text-align:center;max-width:800px;width:100%;animation:fadeIn 0.4s ease;">
+    <div style="text-align:center;max-width:850px;width:100%;animation:fadeIn 0.4s ease;">
       
       <div style="margin-bottom:24px;">
-        <img src="${perfil.logo || 'https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'}" style="height:70px;margin-bottom:12px;" onerror="this.src='https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'">
+        <img src="${perfil.logo || 'https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'}" style="height:75px;margin-bottom:10px;" onerror="this.src='https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'">
         <h1 style="font-family:'Barlow Condensed',sans-serif;font-size:32px;color:#fff;margin:0;letter-spacing:1px;">¿QUIÉN ESTÁ DIRIGIENDO HOY?</h1>
-        <div style="font-size:14px;color:var(--oro);margin-top:4px;">${perfil.club || '11FUT MANAGER'}</div>
+        <div style="font-size:14px;color:var(--oro);margin-top:4px;font-weight:700;">${perfil.club || '11FUT MANAGER'}</div>
       </div>
 
-      <!-- GRILLA DE AVATARES ESTILO NETFLIX -->
-      <div style="display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:24px;margin-bottom:30px;">
+      <!-- GRILLA DE AVATARES ESTILO STREAMING -->
+      <div style="display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:24px;margin-bottom:24px;">
         ${profilesList.map(p => `
           <div class="profile-card-item" onclick="window._onSelectProfileCard('${p.id}')" style="display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:transform 0.2s ease;">
             <div style="width:110px;height:110px;border-radius:50%;border:3px solid ${p.rol === 'ADMIN' ? 'var(--oro)' : '#2ecc71'};padding:4px;background:#111;box-shadow:0 8px 25px rgba(0,0,0,0.6);position:relative;display:flex;align-items:center;justify-content:center;">
@@ -61,7 +59,13 @@ export function renderProfileSelector(onProfileSelected) {
         `).join('')}
       </div>
 
-      <div style="font-size:11px;color:#666;">Selecciona tu perfil de entrenador e ingresa tu PIN de 4 dígitos</div>
+      <div style="font-size:11px;color:#888;margin-bottom:20px;">Selecciona tu perfil e ingresa tu PIN de 4 dígitos</div>
+
+      <!-- BOTONES DE ACCIÓN: CONFIGURACIÓN Y CERRAR SESIÓN -->
+      <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
+        <button class="btn btn-gold" onclick="window._abrirConfig()" style="font-size:12px;padding:10px 18px;font-weight:700;">⚙️ CONFIGURACIÓN</button>
+        <button class="btn btn-red" onclick="window._cerrarSesionCompleta()" style="font-size:12px;padding:10px 18px;font-weight:700;">🚪 CERRAR SESIÓN</button>
+      </div>
 
     </div>
 
@@ -71,7 +75,6 @@ export function renderProfileSelector(onProfileSelected) {
         <div style="font-size:12px;color:var(--oro);font-weight:700;margin-bottom:4px;">🔐 INGRESA PIN DE ACCESO</div>
         <div id="pin-profile-title" style="font-family:'Barlow Condensed',sans-serif;font-size:20px;color:#fff;margin-bottom:14px;"></div>
         
-        <!-- PUNTOS PIN -->
         <div style="display:flex;justify-content:center;gap:12px;margin-bottom:20px;">
           <span class="pin-dot" id="pdot-0" style="width:14px;height:14px;border-radius:50%;border:2px solid var(--oro);background:transparent;"></span>
           <span class="pin-dot" id="pdot-1" style="width:14px;height:14px;border-radius:50%;border:2px solid var(--oro);background:transparent;"></span>
@@ -79,7 +82,6 @@ export function renderProfileSelector(onProfileSelected) {
           <span class="pin-dot" id="pdot-3" style="width:14px;height:14px;border-radius:50%;border:2px solid var(--oro);background:transparent;"></span>
         </div>
 
-        <!-- KEYPAD NUMÉRICO -->
         <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:10px;margin-bottom:16px;">
           ${[1,2,3,4,5,6,7,8,9].map(n => `<button class="btn btn-gray" onclick="window._pressPinNum('${n}')" style="font-size:18px;font-weight:700;padding:12px;">${n}</button>`).join('')}
           <button class="btn btn-red" onclick="window._pressPinClear()" style="font-size:12px;padding:12px;">❌</button>
@@ -144,6 +146,13 @@ export function renderProfileSelector(onProfileSelected) {
       currentPinEntered = "";
       updatePinDots();
     }
+  };
+
+  window._cerrarSesionCompleta = () => {
+    if (document.getElementById('profile-selector-overlay')) {
+      document.getElementById('profile-selector-overlay').style.display = 'none';
+    }
+    cerrarSesion();
   };
 
   function updatePinDots() {

@@ -156,14 +156,19 @@ export function renderPerfilesPinsUI() {
   });
 
   cont.innerHTML = perfil.profiles.map(p => `
-    <div style="background:#0d0d0d;border:1px solid #222;padding:10px;border-radius:8px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
-      <div>
-        <div style="font-size:13px;font-weight:700;color:${p.rol === 'ADMIN' ? 'var(--oro)' : '#2ecc71'};">${p.nombre} (${p.rol})</div>
-        <div style="font-size:10px;color:#888;">${p.categoria ? 'Categoría: ' + p.categoria : 'Acceso Total al Club'}</div>
+    <div style="background:#0d0d0d;border:1px solid #222;padding:12px;border-radius:10px;margin-bottom:8px;display:flex;flex-direction:column;gap:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:13px;font-weight:700;color:${p.rol === 'ADMIN' ? 'var(--oro)' : '#2ecc71'};">
+          ${p.rol === 'ADMIN' ? '👑' : '🧢'} ${p.rol} ${p.categoria ? '(' + p.categoria + ')' : ''}
+        </span>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <label style="font-size:11px;color:#aaa;font-weight:700;">PIN (4 dígitos):</label>
+          <input type="text" id="cfg-pin-input-${p.id}" value="${p.pin || '1234'}" maxlength="4" style="width:65px;text-align:center;font-size:14px;font-weight:900;letter-spacing:2px;padding:4px;background:#181818;border:1px solid #444;color:#fff;border-radius:6px;">
+        </div>
       </div>
-      <div style="display:flex;align-items:center;gap:6px;">
-        <label style="font-size:10px;color:#aaa;">PIN (4 dígitos):</label>
-        <input type="text" id="cfg-pin-input-${p.id}" value="${p.pin || '1234'}" maxlength="4" style="width:65px;text-align:center;font-size:14px;font-weight:900;letter-spacing:2px;padding:4px;background:#181818;border:1px solid #444;color:#fff;border-radius:6px;">
+
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input type="text" id="cfg-nombre-input-${p.id}" value="${p.nombre || ''}" placeholder="Nombre del Entrenador / Perfil" style="flex:1;font-size:13px;padding:8px;background:#181818;border:1px solid #333;color:#fff;border-radius:6px;">
       </div>
     </div>
   `).join('');
@@ -173,15 +178,24 @@ export function guardarPinsConfig() {
   if (!perfil.profiles) return;
 
   perfil.profiles.forEach(p => {
-    const input = document.getElementById(`cfg-pin-input-${p.id}`);
-    if (input && input.value) {
-      p.pin = input.value.trim();
+    const inputPin = document.getElementById(`cfg-pin-input-${p.id}`);
+    const inputNombre = document.getElementById(`cfg-nombre-input-${p.id}`);
+
+    if (inputPin && inputPin.value) {
+      p.pin = inputPin.value.trim();
+    }
+    if (inputNombre && inputNombre.value) {
+      p.nombre = inputNombre.value.trim();
+    }
+    // Sincronizar avatar con el logo del club si no tiene foto custom
+    if (!p.avatar || p.avatar === DEFAULT_LOGO) {
+      p.avatar = perfil.logo || DEFAULT_LOGO;
     }
   });
 
   autoSaveLocal();
   guardarFirebase();
-  mostrarNotificacionApp('PINs Guardados', '🔑 Se han actualizado los PINs de acceso para los perfiles de entrenador.');
+  mostrarNotificacionApp('Perfiles Guardados', '🔑 Se han actualizado los Nombres y PINs de acceso para los perfiles de entrenador.');
 }
 
 window._abrirConfig = abrirConfig;
