@@ -764,42 +764,127 @@ const CAT_MAP = {
 };
 
 // ══════════════════════════════════════════════════════════════════════════
-// GENERADOR DE CANAL DE DEMOSTRACIÓN TÁCTICA ANIMADA EN VIVO (SVG + CSS 60FPS)
+// GENERADOR DE DEMOSTRACIÓN TÁCTICA ANIMADA ÚNICA SEGÚN CADA CATEGORÍA (60FPS SVG)
 // ══════════════════════════════════════════════════════════════════════════
-function buildTacticalAnimationSVG() {
-  return `
-    <div style="position:relative;width:100%;height:100px;background:#143d22;overflow:hidden;border-radius:6px;border:1px solid #285e3a;">
-      <!-- LÍNEAS DE CANCHA DE FÚTBOL -->
-      <svg style="position:absolute;top:0;left:0;width:100%;height:100%;" viewBox="0 0 200 100">
-        <rect x="5" y="5" width="190" height="90" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-        <line x1="100" y1="5" x2="100" y2="95" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-        <circle cx="100" cy="50" r="18" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
-        <rect x="5" y="25" width="30" height="50" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.2"/>
-        <rect x="165" y="25" width="30" height="50" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.2"/>
-        
-        <!-- JUGADOR AZUL EN MOVIMIENTO -->
-        <circle cx="45" cy="35" r="5" fill="#00e5ff">
-          <animate attributeName="cx" values="45;75;45" dur="3s" repeatCount="indefinite"/>
-          <animate attributeName="cy" values="35;25;35" dur="3s" repeatCount="indefinite"/>
-        </circle>
-        
-        <!-- JUGADOR ROJO EN MOVIMIENTO -->
-        <circle cx="155" cy="65" r="5" fill="#ff5252">
-          <animate attributeName="cy" values="65;35;65" dur="2.5s" repeatCount="indefinite"/>
-        </circle>
-        
-        <!-- BALÓN DORADO INTERACTIVO PASSING LOOP -->
-        <circle cx="45" cy="35" r="3.5" fill="#ffd700">
-          <animate attributeName="cx" values="45;155;45" dur="2.5s" repeatCount="indefinite"/>
-          <animate attributeName="cy" values="35;65;35" dur="2.5s" repeatCount="indefinite"/>
-        </circle>
+function buildTacticalAnimationSVG(cat = 'tactica') {
+  let content = '';
+  let badgeText = '⚡ TÁCTICA ANIMADA EN VIVO';
 
-        <!-- LÍNEA DE PASE DISCONTINUA -->
-        <line x1="45" y1="35" x2="155" y2="65" stroke="rgba(255,215,0,0.5)" stroke-dasharray="3,3" stroke-width="1"/>
+  if (cat === 'ludico') {
+    badgeText = '🎮 JUEGO LÚDICO Y RECREATIVO';
+    content = `
+      <circle cx="50" cy="30" r="3" fill="#ff9800"/>
+      <circle cx="100" cy="30" r="3" fill="#ff9800"/>
+      <circle cx="150" cy="30" r="3" fill="#ff9800"/>
+      <circle cx="50" cy="70" r="3" fill="#ff9800"/>
+      <circle cx="100" cy="70" r="3" fill="#ff9800"/>
+      <circle cx="150" cy="70" r="3" fill="#ff9800"/>
+      <circle cx="30" cy="50" r="5" fill="#50e3c2"><animate attributeName="cx" values="30;90;30" dur="2s" repeatCount="indefinite"/></circle>
+      <circle cx="170" cy="50" r="5" fill="#ff5252"><animate attributeName="cx" values="170;110;170" dur="2s" repeatCount="indefinite"/></circle>
+      <circle cx="30" cy="50" r="3.5" fill="#ffd700">
+        <animate attributeName="cx" values="30;100;170;100;30" dur="2.5s" repeatCount="indefinite"/>
+        <animate attributeName="cy" values="50;30;50;70;50" dur="2.5s" repeatCount="indefinite"/>
+      </circle>
+    `;
+  } else if (cat === 'pre_entreno') {
+    badgeText = '⚡ FRECUENCIA Y ESCALERA';
+    content = `
+      <rect x="30" y="40" width="140" height="20" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+      <line x1="50" y1="40" x2="50" y2="60" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+      <line x1="70" y1="40" x2="70" y2="60" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+      <line x1="90" y1="40" x2="90" y2="60" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+      <line x1="110" y1="40" x2="110" y2="60" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+      <line x1="130" y1="40" x2="130" y2="60" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+      <line x1="150" y1="40" x2="150" y2="60" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+      <circle cx="35" cy="50" r="5" fill="var(--oro)">
+        <animate attributeName="cx" values="35;55;75;95;115;135;155;35" dur="1.8s" repeatCount="indefinite"/>
+        <animate attributeName="cy" values="50;35;50;35;50;35;50;50" dur="1.8s" repeatCount="indefinite"/>
+      </circle>
+    `;
+  } else if (cat === 'pre_partido') {
+    badgeText = '🔥 RONDO PRE-PARTIDO 4v2';
+    content = `
+      <rect x="60" y="20" width="80" height="60" fill="none" stroke="rgba(255,82,82,0.4)" stroke-dasharray="3,3" stroke-width="1.5"/>
+      <circle cx="60" cy="20" r="5" fill="#00e5ff"/>
+      <circle cx="140" cy="20" r="5" fill="#00e5ff"/>
+      <circle cx="140" cy="80" r="5" fill="#00e5ff"/>
+      <circle cx="60" cy="80" r="5" fill="#00e5ff"/>
+      <circle cx="90" cy="50" r="5" fill="#ff5252"><animate attributeName="cx" values="90;110;90" dur="1.2s" repeatCount="indefinite"/></circle>
+      <circle cx="110" cy="50" r="5" fill="#ff5252"><animate attributeName="cy" values="50;35;50" dur="1.2s" repeatCount="indefinite"/></circle>
+      <circle cx="60" cy="20" r="3.5" fill="#ffd700">
+        <animate attributeName="cx" values="60;140;140;60;60" dur="2s" repeatCount="indefinite"/>
+        <animate attributeName="cy" values="20;20;80;80;20" dur="2s" repeatCount="indefinite"/>
+      </circle>
+    `;
+  } else if (cat === 'tactica') {
+    badgeText = '🎯 TÁCTICA & POSESIÓN TRIANGULAR';
+    content = `
+      <polygon points="40,75 100,25 160,75" fill="none" stroke="rgba(74,144,226,0.5)" stroke-dasharray="4,4" stroke-width="1.5"/>
+      <circle cx="40" cy="75" r="5" fill="#4a90e2"/>
+      <circle cx="100" cy="25" r="5" fill="#4a90e2"/>
+      <circle cx="160" cy="75" r="5" fill="#4a90e2"/>
+      <circle cx="40" cy="75" r="3.5" fill="#ffd700">
+        <animate attributeName="cx" values="40;100;160;40" dur="2.4s" repeatCount="indefinite"/>
+        <animate attributeName="cy" values="75;25;75;75" dur="2.4s" repeatCount="indefinite"/>
+      </circle>
+    `;
+  } else if (cat === 'tecnica') {
+    badgeText = '⚽ ESLALON Y DISPARO CURVO';
+    content = `
+      <circle cx="40" cy="50" r="3" fill="#e65100"/>
+      <circle cx="70" cy="50" r="3" fill="#e65100"/>
+      <circle cx="100" cy="50" r="3" fill="#e65100"/>
+      <rect x="180" y="30" width="10" height="40" fill="none" stroke="#fff" stroke-width="2"/>
+      <path d="M 100 50 Q 140 20 185 35" fill="none" stroke="var(--oro)" stroke-dasharray="3,3" stroke-width="1.5"/>
+      <circle cx="20" cy="50" r="3.5" fill="#ffd700">
+        <animate attributeName="cx" values="20;40;70;100;185;20" dur="2.5s" repeatCount="indefinite"/>
+        <animate attributeName="cy" values="50;35;65;50;35;50" dur="2.5s" repeatCount="indefinite"/>
+      </circle>
+    `;
+  } else if (cat === 'abp') {
+    badgeText = '🛡️ CÓRNER / FALTA ABP';
+    content = `
+      <line x1="15" y1="85" x2="15" y2="70" stroke="#fff" stroke-width="1.5"/>
+      <polygon points="15,70 25,75 15,80" fill="#9c27b0"/>
+      <rect x="175" y="30" width="12" height="40" fill="none" stroke="#fff" stroke-width="2"/>
+      <circle cx="140" cy="40" r="4" fill="#ff5252"/>
+      <circle cx="140" cy="50" r="4" fill="#ff5252"/>
+      <circle cx="140" cy="60" r="4" fill="#ff5252"/>
+      <circle cx="120" cy="80" r="5" fill="#9c27b0">
+        <animate attributeName="cx" values="120;165;120" dur="2.5s" repeatCount="indefinite"/>
+        <animate attributeName="cy" values="80;45;80" dur="2.5s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="15" cy="85" r="3.5" fill="#ffd700">
+        <animate attributeName="cx" values="15;165;15" dur="2.5s" repeatCount="indefinite"/>
+        <animate attributeName="cy" values="85;45;85" dur="2.5s" repeatCount="indefinite"/>
+      </circle>
+    `;
+  } else if (cat === 'fisico') {
+    badgeText = '🏃‍♂️ CIRCUITOS DE VELOCIDAD';
+    content = `
+      <rect x="50" y="45" width="4" height="15" fill="#00ab55"/>
+      <rect x="90" y="45" width="4" height="15" fill="#00ab55"/>
+      <rect x="130" y="45" width="4" height="15" fill="#00ab55"/>
+      <circle cx="20" cy="50" r="5" fill="#00ab55">
+        <animate attributeName="cx" values="20;52;92;132;185;20" dur="2.2s" repeatCount="indefinite"/>
+        <animate attributeName="cy" values="50;30;30;30;50;50" dur="2.2s" repeatCount="indefinite"/>
+      </circle>
+      <line x1="20" y1="50" x2="185" y2="50" stroke="rgba(0,171,85,0.4)" stroke-dasharray="4,4" stroke-width="2"/>
+    `;
+  }
+
+  return `
+    <div style="position:relative;width:100%;height:105px;background:#102e1a;overflow:hidden;border-radius:6px;border:1px solid #1f4f2c;">
+      <svg style="position:absolute;top:0;left:0;width:100%;height:100%;" viewBox="0 0 200 100">
+        <rect x="5" y="5" width="190" height="90" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+        <line x1="100" y1="5" x2="100" y2="95" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+        <circle cx="100" cy="50" r="16" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+
+        ${content}
       </svg>
 
-      <div style="position:absolute;bottom:4px;right:6px;font-size:9px;color:rgba(255,255,255,0.9);font-weight:800;background:rgba(0,0,0,0.7);padding:2px 6px;border-radius:4px;border:1px solid #333;">
-        ⚡ TÁCTICA ANIMADA EN VIVO
+      <div style="position:absolute;bottom:4px;right:6px;font-size:9px;color:rgba(255,255,255,0.9);font-weight:800;background:rgba(0,0,0,0.75);padding:2px 6px;border-radius:4px;border:1px solid #333;">
+        ${badgeText}
       </div>
     </div>
   `;
@@ -824,9 +909,9 @@ function buildDrillCardHTML(d, accentColor) {
         </div>
       </div>
       
-      <!-- REPRODUCTOR ANIMADO DE DEMOSTRACIÓN TÁCTICA 60FPS GARANTIZADO 100% VISIBLE -->
+      <!-- REPRODUCTOR ANIMADO DE DEMOSTRACIÓN TÁCTICA ESPECÍFICO SEGÚN LA CATEGORÍA -->
       <div style="padding:6px;background:#080808;border-bottom:1px solid #222;">
-        ${buildTacticalAnimationSVG()}
+        ${buildTacticalAnimationSVG(d.cat)}
       </div>
 
       <div style="padding:12px;display:flex;flex-direction:column;flex:1;justify-content:space-between;gap:8px;">
@@ -929,7 +1014,6 @@ export function abrirModalBibliotecaCompleta() {
 }
 
 function bindModalTabsEvents() {
-  // Bind botones de Nivel (Todos / Formativo / Competitivo)
   document.querySelectorAll('.btn-modal-section-tab').forEach(btn => {
     btn.onclick = () => {
       document.querySelectorAll('.btn-modal-section-tab').forEach(b => {
@@ -948,7 +1032,6 @@ function bindModalTabsEvents() {
     };
   });
 
-  // Bind botones de Subcategorías Técnicas (Pills)
   document.querySelectorAll('#modal-subcat-tabs-bar .subtab-btn').forEach(btn => {
     btn.onclick = () => {
       document.querySelectorAll('#modal-subcat-tabs-bar .subtab-btn').forEach(b => {
@@ -986,7 +1069,6 @@ export function renderBibliotecaModal() {
     return;
   }
 
-  // Agrupar por categoría técnica y mostrar en una grilla perfecta de 3 a 4 columnas
   const subcats = ['ludico', 'pre_entreno', 'pre_partido', 'tactica', 'tecnica', 'abp', 'fisico'];
 
   const html = subcats.map(subKey => {
@@ -1003,7 +1085,6 @@ export function renderBibliotecaModal() {
           <span style="font-size:12px;color:#777;">(${items.length} ejercicios)</span>
         </div>
 
-        <!-- GRILLA HORIZONAL COMPLETA DE 3 COLUMNAS QUE OCUPA EL 100% DEL ESPACIO -->
         <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:16px;">
           ${cardsHtml}
         </div>
@@ -1037,14 +1118,18 @@ export function verDetalleEjercicio(id) {
     const animContainer = document.createElement('div');
     animContainer.id = 'drill-detail-anim-box';
     animContainer.style.marginTop = '12px';
-    animContainer.innerHTML = `
-      <div style="font-size:11px;color:var(--oro);font-weight:800;margin-bottom:4px;">🎥 DEMOSTRACIÓN TÁCTICA ANIMADA EN VIVO:</div>
-      ${buildTacticalAnimationSVG()}
-    `;
     const rulesBox = document.getElementById('drill-detail-rules')?.parentElement;
     if (rulesBox && rulesBox.parentElement) {
       rulesBox.parentElement.appendChild(animContainer);
     }
+    animBox = document.getElementById('drill-detail-anim-box');
+  }
+
+  if (animBox) {
+    animBox.innerHTML = `
+      <div style="font-size:11px;color:var(--oro);font-weight:800;margin-bottom:4px;">🎥 DEMOSTRACIÓN TÁCTICA ANIMADA EN VIVO:</div>
+      ${buildTacticalAnimationSVG(d.cat)}
+    `;
   }
 
   modal.style.display = 'flex';
