@@ -369,12 +369,25 @@
                     <button class="btn btn-red" id="btn-clear-fs-A" style="flex:1;padding:4px;font-size:11px;" title="Borrar todo el dibujo">🗑️ Limpiar</button>
                   </div>
 
-                  <!-- PALETA DE COLORES -->
-                  <div id="colors-fs-A" class="color-picker-row">
+                  <!-- GROSOR DE TRAZO -->
+                  <div class="drawer-section-title" style="margin-top:8px;">📐 GROSOR DE TRAZO</div>
+                  <div style="display:flex;gap:4px;margin-bottom:6px;">
+                    <button class="tool-btn" id="btn-w2-fs-A" onclick="window._setLineWidth('A', 2)" title="Grosor Fino (2px)">Fino</button>
+                    <button class="tool-btn active" id="btn-w4-fs-A" onclick="window._setLineWidth('A', 4)" title="Grosor Medio (4px)">Medio</button>
+                    <button class="tool-btn" id="btn-w7-fs-A" onclick="window._setLineWidth('A', 7)" title="Grosor Grueso (7px)">Grueso</button>
+                  </div>
+
+                  <!-- PALETA DE COLORES (8 COLORES TÁCTICOS) -->
+                  <div class="drawer-section-title">🎨 COLOR DE TRAZO</div>
+                  <div id="colors-fs-A" class="color-picker-row" style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:8px;">
                     <span class="color-dot active" data-color="#d4af37" style="background:#d4af37;" title="Dorado"></span>
                     <span class="color-dot" data-color="#ffffff" style="background:#ffffff;" title="Blanco"></span>
                     <span class="color-dot" data-color="#ff3333" style="background:#ff3333;" title="Rojo"></span>
                     <span class="color-dot" data-color="#3399ff" style="background:#3399ff;" title="Azul"></span>
+                    <span class="color-dot" data-color="#00ff66" style="background:#00ff66;" title="Verde Neón"></span>
+                    <span class="color-dot" data-color="#a855f7" style="background:#a855f7;" title="Morado"></span>
+                    <span class="color-dot" data-color="#ff7700" style="background:#ff7700;" title="Naranja"></span>
+                    <span class="color-dot" data-color="#000000" style="background:#000000;border:1px solid #666;" title="Negro"></span>
                   </div>
 
                   <!-- ANIMACIÓN DE JUGADAS (ICONOS) -->

@@ -375,7 +375,30 @@ export function setArrowStyle(eq, arrowStyle) {
 window._setArrowStyle = setArrowStyle;
 
 export function setDrawingMode(eq, mode) {
+  const currentMode = drawingState[eq].mode;
+  let targetSubPanel = null;
+  if (mode === 'pencil') targetSubPanel = document.getElementById(`sub-panel-pencil-fs-${eq}`);
+  else if (mode === 'arrow') targetSubPanel = document.getElementById(`sub-panel-arrows-fs-${eq}`);
+  else if (mode === 'line') targetSubPanel = document.getElementById(`sub-panel-line-fs-${eq}`);
+
+  // Si se vuelve a presionar la misma herramienta con submenú abierto, ¡cerrar el submenú y volver a selección limpia!
+  if (currentMode === mode && targetSubPanel && targetSubPanel.style.display === 'flex') {
+    targetSubPanel.style.display = 'none';
+    drawingState[eq].mode = 'none';
+    ['pencil', 'arrow', 'line', 'eraser', 'none'].forEach(m => {
+      const btnFs = document.getElementById(`btn-${m}-fs-${eq}`);
+      if (btnFs) btnFs.classList.toggle('active', m === 'none');
+    });
+    const canvas = document.getElementById(`canvas-${eq}`);
+    if (canvas) {
+      canvas.style.pointerEvents = 'none';
+      canvas.style.cursor = 'default';
+    }
+    return;
+  }
+
   drawingState[eq].mode = mode;
+
   ['pencil', 'arrow', 'line', 'eraser', 'none'].forEach(m => {
     const btnFs = document.getElementById(`btn-${m}-fs-${eq}`);
     if (btnFs) btnFs.classList.toggle('active', m === mode);
@@ -501,18 +524,22 @@ function initLineaAjustableHandles(lineWrap, cancha) {
 
 export function setDrawingColor(eq, color) {
   drawingState[eq].color = color;
-  document.querySelectorAll(`#colors-${eq} .color-dot`).forEach(el => {
+  document.querySelectorAll(`#colors-${eq} .color-dot, #colors-fs-${eq} .color-dot`).forEach(el => {
     el.classList.toggle('active', el.dataset.color === color);
   });
 }
+window._setDrawingColor = setDrawingColor;
 
 export function setLineWidth(eq, width) {
   drawingState[eq].width = width;
   ['2', '4', '7'].forEach(w => {
     const b = document.getElementById(`btn-w${w}-${eq}`);
     if (b) b.classList.toggle('active', +w === width);
+    const bFs = document.getElementById(`btn-w${w}-fs-${eq}`);
+    if (bFs) bFs.classList.toggle('active', +w === width);
   });
 }
+window._setLineWidth = setLineWidth;
 
 export function setLineDash(eq, isDashed) {
   drawingState[eq].isDashed = isDashed;
