@@ -61,10 +61,10 @@ export function renderProfileSelector(onProfileSelected) {
 
       <div style="font-size:11px;color:#888;margin-bottom:20px;">Selecciona tu perfil e ingresa tu PIN de 4 dígitos</div>
 
-      <!-- BOTONES DE ACCIÓN: CONFIGURACIÓN Y CERRAR SESIÓN -->
-      <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
-        <button class="btn btn-gold" onclick="window._abrirConfig()" style="font-size:12px;padding:10px 18px;font-weight:700;">⚙️ CONFIGURACIÓN</button>
-        <button class="btn btn-red" onclick="window._cerrarSesionCompleta()" style="font-size:12px;padding:10px 18px;font-weight:700;">🚪 CERRAR SESIÓN</button>
+      <!-- BOTONES DE ACCIÓN: CONFIGURACIÓN Y CERRAR SESIÓN (PEQUEÑOS Y DISCRETOS) -->
+      <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:10px;">
+        <button class="btn btn-gray" onclick="window._abrirConfig()" style="font-size:10px;padding:4px 10px;opacity:0.8;">⚙️ Configuración</button>
+        <button class="btn btn-gray" onclick="window._cerrarSesionCompleta()" style="font-size:10px;padding:4px 10px;opacity:0.8;color:#e74c3c;">🚪 Cerrar Sesión</button>
       </div>
 
     </div>

@@ -1,4 +1,4 @@
-import { perfil, setPinHash, setCategoriaActiva, autoSaveLocal, updateStats, updateHistorial, categoriasData, plantel } from "./state.js";
+import { perfil, setPinHash, setCategoriaActiva, autoSaveLocal, updateStats, updateHistorial, categoriasData, plantel, currentProfile } from "./state.js";
 import { guardarFirebase, hashPin, getPublicId, auth } from "../services/firebase.js";
 import { signOut } from "firebase/auth";
 import { KITS } from "./state.js";
@@ -126,7 +126,22 @@ window._guardarEsquemaPredeterminadoConfig = guardarEsquemaPredeterminadoConfig;
 
 export function renderPerfilesPinsUI() {
   const cont = document.getElementById('cfg-lista-perfiles-pins');
+  const btnSavePins = document.getElementById('btn-cfg-guardar-pins');
   if (!cont) return;
+
+  const esAdmin = currentProfile && currentProfile.rol === 'ADMIN';
+
+  if (!esAdmin) {
+    cont.innerHTML = `
+      <div style="font-size:12px;color:#aaa;padding:14px;text-align:center;background:#0d0d0d;border-radius:8px;border:1px dashed #444;">
+        🔒 La gestión y asignación de contraseñas/PINs de perfiles está reservada exclusivamente para el <strong>Director Deportivo (ADMIN)</strong>.
+      </div>
+    `;
+    if (btnSavePins) btnSavePins.style.display = 'none';
+    return;
+  }
+
+  if (btnSavePins) btnSavePins.style.display = 'block';
 
   const cats = perfil.categorias || ["Sub-14"];
   if (!perfil.profiles) perfil.profiles = [];
