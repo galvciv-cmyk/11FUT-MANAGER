@@ -935,10 +935,12 @@
       </div>
     </div>
 
-    <!-- MODAL DE CONFIGURACIÓN CON BOTÓN DE SOPORTE WHATSAPP -->
     <div class="modal-overlay" id="config-modal">
       <div class="modal-body">
-        <div class="modal-title">⚙️ CONFIGURACIÓN DEL CLUB</div>
+        <div class="modal-title" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>⚙️ CONFIGURACIÓN DEL CLUB</span>
+          <span id="cfg-autosave-indicator" style="font-size:10px;color:#2ecc71;font-weight:700;opacity:0;transition:opacity 0.4s;font-family:'Barlow',sans-serif;"></span>
+        </div>
         <div class="card">
           <div style="font-size:11px;color:#555;">Correo: <span id="cfg-email-display" style="color:#aaa;"></span></div>
           <div style="font-size:11px;color:#555;margin-top:4px;">Club: <span id="cfg-club-display" style="color:var(--oro);font-weight:700;"></span></div>

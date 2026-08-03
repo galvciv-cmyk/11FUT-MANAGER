@@ -49,6 +49,39 @@ export function mostrarConfirmacionApp(titulo, mensaje, onConfirm) {
   modal.style.display = 'flex';
 }
 
+let _autoSaveTimer = null;
+
+function _dispararAutoGuardado() {
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(() => {
+    // Capturar valores de los campos del modal antes de guardar
+    const cfgClubInput = document.getElementById('cfg-club');
+    if (cfgClubInput && cfgClubInput.value.trim()) {
+      perfil.club = cfgClubInput.value.trim();
+      perfil.eqA = perfil.club;
+    }
+    // Auto-guardar PINs y nombres de perfiles
+    if (perfil.profiles) {
+      perfil.profiles.forEach(p => {
+        const inputPin = document.getElementById(`cfg-pin-input-${p.id}`);
+        const inputNombre = document.getElementById(`cfg-nombre-input-${p.id}`);
+        if (inputPin !== null) p.pin = inputPin.value.trim();
+        if (inputNombre && inputNombre.value.trim()) p.nombre = inputNombre.value.trim();
+        if (!p.avatar || p.avatar === DEFAULT_LOGO) p.avatar = perfil.logo || DEFAULT_LOGO;
+      });
+    }
+    autoSaveLocal();
+    guardarFirebase();
+    // Indicador sutil de guardado automático
+    const ind = document.getElementById('cfg-autosave-indicator');
+    if (ind) {
+      ind.textContent = '✅ Guardado automáticamente';
+      ind.style.opacity = '1';
+      setTimeout(() => { ind.style.opacity = '0'; }, 2000);
+    }
+  }, 800);
+}
+
 export function abrirConfig() {
   const modal = document.getElementById('config-modal');
   if (!modal) return;
@@ -79,6 +112,17 @@ export function abrirConfig() {
   // Asegurar que el config-modal quede por encima del selector de perfiles
   modal.style.zIndex = '10001';
   modal.style.display = 'flex';
+
+  // Auto-guardado: escuchar cambios en cualquier input/select del modal
+  // Usar setTimeout para que el DOM esté listo
+  setTimeout(() => {
+    modal.querySelectorAll('input, select, textarea').forEach(el => {
+      el.removeEventListener('change', _dispararAutoGuardado);
+      el.removeEventListener('input', _dispararAutoGuardado);
+      el.addEventListener('change', _dispararAutoGuardado);
+      el.addEventListener('input', _dispararAutoGuardado);
+    });
+  }, 100);
 }
 
 export function renderEsquemaPredeterminadoUI() {

@@ -363,12 +363,10 @@ async function login() {
     await cargarFirebase();
 
     document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('main-app').style.display = 'block';
-
+    // main-app permanece oculto hasta que se seleccione el perfil
+    document.getElementById('main-app').style.display = 'none';
     aplicarPerfil();
-    renderSelectorCategoria();
-    refrescarTodaLaVista();
-    restaurarPestanaDesdeURL();
+    renderProfileSelector(handleProfileSelected);
   } catch (e) {
     console.error('Error de inicio de sesión:', e);
     if (statusEl) statusEl.textContent = '❌ Correo o contraseña incorrectos';
@@ -420,11 +418,13 @@ async function ejecutarRegistroUsuario() {
 
     cerrarModalRegistro();
     document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('main-app').style.display = 'block';
+    // Nuevo usuario: mostrar selector de perfiles antes del app principal
+    document.getElementById('main-app').style.display = 'none';
     aplicarPerfil();
-    renderSelectorCategoria();
-    refrescarTodaLaVista();
-    abrirOnboardingWizard();
+    renderProfileSelector((prof) => {
+      handleProfileSelected(prof);
+      abrirOnboardingWizard();
+    });
   } catch (e) {
     alert('Error al registrar usuario: ' + e.message);
   }
@@ -457,9 +457,27 @@ export function toggleTheme() {
   aplicarTema(newTheme);
 }
 
-// ══════════════════════════════════════════
-// INITIALIZATION & EVENT BINDINGS
-// ══════════════════════════════════════════
+// handleProfileSelected: disponible en scope de módulo para login, registro y onAuthStateChanged
+function handleProfileSelected(prof) {
+  const tabAdmin = document.getElementById('tab-7');
+  // Mostrar la app principal ahora que hay perfil seleccionado
+  document.getElementById('main-app').style.display = 'block';
+  if (prof && prof.rol === 'ADMIN') {
+    if (tabAdmin) tabAdmin.style.display = 'block';
+    renderSelectorCategoria();
+    refrescarTodaLaVista();
+    switchTab(7);
+  } else {
+    if (tabAdmin) tabAdmin.style.display = 'none';
+    if (prof && prof.categoria) {
+      setCategoriaActiva(prof.categoria);
+    }
+    renderSelectorCategoria();
+    refrescarTodaLaVista();
+    switchTab(1);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   aplicarTema(localStorage.getItem('11fut_theme') || 'dark');
   await cargarKits();
@@ -470,26 +488,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (publicVal) {
     cargarPerfilPublico(publicVal);
     return;
-  }
-
-  function handleProfileSelected(prof) {
-    const tabAdmin = document.getElementById('tab-7');
-    // Mostrar la app principal ahora que hay perfil seleccionado
-    document.getElementById('main-app').style.display = 'block';
-    if (prof && prof.rol === 'ADMIN') {
-      if (tabAdmin) tabAdmin.style.display = 'block';
-      renderSelectorCategoria();
-      refrescarTodaLaVista();
-      switchTab(7);
-    } else {
-      if (tabAdmin) tabAdmin.style.display = 'none';
-      if (prof && prof.categoria) {
-        setCategoriaActiva(prof.categoria);
-      }
-      renderSelectorCategoria();
-      refrescarTodaLaVista();
-      switchTab(1);
-    }
   }
 
   // Persistencia de Sesión con Firebase Auth (No se cierra al recargar F5)
