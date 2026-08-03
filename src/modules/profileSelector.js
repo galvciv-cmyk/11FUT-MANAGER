@@ -37,12 +37,23 @@ export function renderProfileSelector(onProfileSelected) {
   // RENDERIZADO INTERFAZ STREAMING ("¿Quién está dirigiendo hoy?")
   modalOverlay.style.display = 'flex';
   modalOverlay.innerHTML = `
+    <!-- BOTONES ESQUINA SUPERIOR DERECHA (ABSOLUTOS) -->
+    <div style="position:fixed;top:16px;right:16px;display:flex;align-items:center;gap:8px;z-index:10000;">
+      <button onclick="window._abrirConfig()" title="Configuración"
+        style="background:none;border:none;cursor:pointer;font-size:22px;opacity:0.7;line-height:1;padding:4px;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">⚙️</button>
+    </div>
+
     <div style="text-align:center;max-width:850px;width:100%;animation:fadeIn 0.4s ease;">
       
       <div style="margin-bottom:24px;">
         <img src="${perfil.logo || 'https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'}" style="height:75px;margin-bottom:10px;" onerror="this.src='https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'">
         <h1 style="font-family:'Barlow Condensed',sans-serif;font-size:32px;color:#fff;margin:0;letter-spacing:1px;">¿QUIÉN ESTÁ DIRIGIENDO HOY?</h1>
-        <div style="font-size:14px;color:var(--oro);margin-top:4px;font-weight:700;">${perfil.club || '11FUT MANAGER'}</div>
+        <!-- Nombre del club + botón cerrar sesión inline -->
+        <div style="display:inline-flex;align-items:center;gap:8px;margin-top:4px;">
+          <span style="font-size:14px;color:var(--oro);font-weight:700;">${perfil.club || '11FUT MANAGER'}</span>
+          <button onclick="window._cerrarSesionCompleta()" title="Cerrar Sesión"
+            style="background:none;border:none;cursor:pointer;font-size:13px;color:#e74c3c;opacity:0.75;padding:0;line-height:1;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.75'">🚪</button>
+        </div>
       </div>
 
       <!-- GRILLA DE AVATARES ESTILO STREAMING -->
@@ -59,13 +70,7 @@ export function renderProfileSelector(onProfileSelected) {
         `).join('')}
       </div>
 
-      <div style="font-size:11px;color:#888;margin-bottom:20px;">Selecciona tu perfil e ingresa tu PIN de 4 dígitos</div>
-
-      <!-- BOTONES DE ACCIÓN: CONFIGURACIÓN Y CERRAR SESIÓN (PEQUEÑOS Y DISCRETOS) -->
-      <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:10px;">
-        <button class="btn btn-gray" onclick="window._abrirConfig()" style="font-size:10px;padding:4px 10px;opacity:0.8;">⚙️ Configuración</button>
-        <button class="btn btn-gray" onclick="window._cerrarSesionCompleta()" style="font-size:10px;padding:4px 10px;opacity:0.8;color:#e74c3c;">🚪 Cerrar Sesión</button>
-      </div>
+      <div style="font-size:11px;color:#888;">Selecciona tu perfil e ingresa tu PIN de 4 dígitos</div>
 
     </div>
 

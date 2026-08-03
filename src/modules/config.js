@@ -76,6 +76,8 @@ export function abrirConfig() {
   if (divPrev) divPrev.style.display = 'block';
   if (icoLogo) icoLogo.style.display = 'none';
 
+  // Asegurar que el config-modal quede por encima del selector de perfiles
+  modal.style.zIndex = '10001';
   modal.style.display = 'flex';
 }
 
