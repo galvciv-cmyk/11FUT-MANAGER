@@ -474,16 +474,20 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function handleProfileSelected(prof) {
     const tabAdmin = document.getElementById('tab-7');
+    // Mostrar la app principal ahora que hay perfil seleccionado
+    document.getElementById('main-app').style.display = 'block';
     if (prof && prof.rol === 'ADMIN') {
       if (tabAdmin) tabAdmin.style.display = 'block';
+      renderSelectorCategoria();
+      refrescarTodaLaVista();
       switchTab(7);
     } else {
       if (tabAdmin) tabAdmin.style.display = 'none';
       if (prof && prof.categoria) {
         setCategoriaActiva(prof.categoria);
-        renderSelectorCategoria();
-        refrescarTodaLaVista();
       }
+      renderSelectorCategoria();
+      refrescarTodaLaVista();
       switchTab(1);
     }
   }
@@ -496,10 +500,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       await guardarFirebase();
       await limpiarDocumentosObsoletosFirebase();
       document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('main-app').style.display = 'block';
+      // Ocultamos main-app hasta que el usuario seleccione perfil
+      document.getElementById('main-app').style.display = 'none';
       aplicarPerfil();
-      renderSelectorCategoria();
-      refrescarTodaLaVista();
 
       renderProfileSelector(handleProfileSelected);
     }

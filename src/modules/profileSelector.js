@@ -1,5 +1,5 @@
 import { perfil, setCurrentProfile, setCategoriaActiva } from "./state.js";
-import { mostrarNotificacionApp, abrirConfig, cerrarSesion } from "./config.js";
+import { mostrarNotificacionApp, cerrarSesion } from "./config.js";
 
 let selectedProfilePending = null;
 let currentPinEntered = "";
@@ -18,8 +18,8 @@ export function renderProfileSelector(onProfileSelected) {
   
   if (!profilesList.length) {
     profilesList = [
-      { id: "admin", nombre: "Director Deportivo", rol: "ADMIN", pin: "1234", avatar: perfil.logo },
-      { id: "dt_default", nombre: `DT ${perfil.categoriaActiva || 'Sub-14'}`, rol: "DT", categoria: perfil.categoriaActiva || 'Sub-14', pin: "1234", avatar: perfil.logo }
+      { id: "admin", nombre: "Director Deportivo", rol: "ADMIN", pin: "", avatar: perfil.logo },
+      { id: "dt_default", nombre: `DT ${perfil.categoriaActiva || 'Sub-14'}`, rol: "DT", categoria: perfil.categoriaActiva || 'Sub-14', pin: "", avatar: perfil.logo }
     ];
     perfil.profiles = profilesList;
   }
@@ -37,10 +37,12 @@ export function renderProfileSelector(onProfileSelected) {
   // RENDERIZADO INTERFAZ STREAMING ("¿Quién está dirigiendo hoy?")
   modalOverlay.style.display = 'flex';
   modalOverlay.innerHTML = `
-    <!-- BOTONES ESQUINA SUPERIOR DERECHA (ABSOLUTOS) -->
-    <div style="position:fixed;top:16px;right:16px;display:flex;align-items:center;gap:8px;z-index:10000;">
-      <button onclick="window._abrirConfig()" title="Configuración"
-        style="background:none;border:none;cursor:pointer;font-size:22px;opacity:0.7;line-height:1;padding:4px;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">⚙️</button>
+    <!-- BOTÓN CERRAR SESIÓN — ESQUINA SUPERIOR DERECHA -->
+    <div style="position:fixed;top:14px;right:16px;z-index:10000;">
+      <button onclick="window._cerrarSesionCompleta()"
+        style="background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.35);color:#e74c3c;padding:5px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;display:flex;align-items:center;gap:5px;">
+        🚪 Cerrar Sesión
+      </button>
     </div>
 
     <div style="text-align:center;max-width:850px;width:100%;animation:fadeIn 0.4s ease;">
@@ -48,12 +50,7 @@ export function renderProfileSelector(onProfileSelected) {
       <div style="margin-bottom:24px;">
         <img src="${perfil.logo || 'https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'}" style="height:75px;margin-bottom:10px;" onerror="this.src='https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'">
         <h1 style="font-family:'Barlow Condensed',sans-serif;font-size:32px;color:#fff;margin:0;letter-spacing:1px;">¿QUIÉN ESTÁ DIRIGIENDO HOY?</h1>
-        <!-- Nombre del club + botón cerrar sesión inline -->
-        <div style="display:inline-flex;align-items:center;gap:8px;margin-top:4px;">
-          <span style="font-size:14px;color:var(--oro);font-weight:700;">${perfil.club || '11FUT MANAGER'}</span>
-          <button onclick="window._cerrarSesionCompleta()" title="Cerrar Sesión"
-            style="background:none;border:none;cursor:pointer;font-size:13px;color:#e74c3c;opacity:0.75;padding:0;line-height:1;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.75'">🚪</button>
-        </div>
+        <div style="font-size:14px;color:var(--oro);margin-top:4px;font-weight:700;">${perfil.club || '11FUT MANAGER'}</div>
       </div>
 
       <!-- GRILLA DE AVATARES ESTILO STREAMING -->
@@ -103,6 +100,16 @@ export function renderProfileSelector(onProfileSelected) {
   window._onSelectProfileCard = (pId) => {
     const prof = profilesList.find(x => x.id === pId);
     if (!prof) return;
+
+    // Si no tiene PIN asignado, entrar directo
+    if (!prof.pin || prof.pin.trim() === '') {
+      modalOverlay.style.display = 'none';
+      setCurrentProfile(prof);
+      if (prof.categoria) setCategoriaActiva(prof.categoria);
+      if (typeof onProfileSelected === 'function') onProfileSelected(prof);
+      return;
+    }
+
     selectedProfilePending = prof;
     currentPinEntered = "";
     updatePinDots();
@@ -131,9 +138,9 @@ export function renderProfileSelector(onProfileSelected) {
 
   window._pressPinCheck = () => {
     if (!selectedProfilePending) return;
-    const pinValido = selectedProfilePending.pin || "1234";
+    const pinValido = selectedProfilePending.pin || "";
 
-    if (currentPinEntered === pinValido || currentPinEntered === "1234") {
+    if (currentPinEntered === pinValido) {
       const modalPad = document.getElementById('pin-pad-modal');
       if (modalPad) modalPad.style.display = 'none';
       modalOverlay.style.display = 'none';
@@ -147,7 +154,7 @@ export function renderProfileSelector(onProfileSelected) {
         onProfileSelected(selectedProfilePending);
       }
     } else {
-      mostrarNotificacionApp('PIN Incorrecto', '⚠️ El PIN ingresado no es válido. Inténtalo de nuevo (PIN por defecto: 1234).', false);
+      mostrarNotificacionApp('PIN Incorrecto', '⚠️ El PIN ingresado no es válido. Inténtalo de nuevo.', false);
       currentPinEntered = "";
       updatePinDots();
     }

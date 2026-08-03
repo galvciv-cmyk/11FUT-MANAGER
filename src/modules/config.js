@@ -136,7 +136,7 @@ export function renderPerfilesPinsUI() {
   if (!esAdmin) {
     cont.innerHTML = `
       <div style="font-size:12px;color:#aaa;padding:14px;text-align:center;background:#0d0d0d;border-radius:8px;border:1px dashed #444;">
-        🔒 La gestión y asignación de contraseñas/PINs de perfiles está reservada exclusivamente para el <strong>Director Deportivo (ADMIN)</strong>.
+        🔒 La gestión de PINs y perfiles está reservada exclusivamente para el <strong>Director Deportivo (ADMIN)</strong>.
       </div>
     `;
     if (btnSavePins) btnSavePins.style.display = 'none';
@@ -148,16 +148,18 @@ export function renderPerfilesPinsUI() {
   const cats = perfil.categorias || ["Sub-14"];
   if (!perfil.profiles) perfil.profiles = [];
 
+  // Sincronizar: garantizar que el perfil ADMIN exista
   if (!perfil.profiles.find(p => p.rol === 'ADMIN')) {
     perfil.profiles.unshift({
       id: "admin",
       nombre: "Director Deportivo",
       rol: "ADMIN",
-      pin: "1234",
+      pin: "",
       avatar: perfil.logo
     });
   }
 
+  // Sincronizar: agregar perfil DT por cada categoría que no tenga uno
   cats.forEach(c => {
     let dtProf = perfil.profiles.find(p => p.categoria === c);
     if (!dtProf) {
@@ -166,29 +168,54 @@ export function renderPerfilesPinsUI() {
         nombre: `DT ${c}`,
         rol: "DT",
         categoria: c,
-        pin: "1234",
+        pin: "",
         avatar: perfil.logo
       });
     }
   });
 
-  cont.innerHTML = perfil.profiles.map(p => `
-    <div style="background:#0d0d0d;border:1px solid #222;padding:12px;border-radius:10px;margin-bottom:8px;display:flex;flex-direction:column;gap:8px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-size:13px;font-weight:700;color:${p.rol === 'ADMIN' ? 'var(--oro)' : '#2ecc71'};">
-          ${p.rol === 'ADMIN' ? '👑' : '🧢'} ${p.rol} ${p.categoria ? '(' + p.categoria + ')' : ''}
-        </span>
-        <div style="display:flex;align-items:center;gap:6px;">
-          <label style="font-size:11px;color:#aaa;font-weight:700;">PIN (4 dígitos):</label>
-          <input type="text" id="cfg-pin-input-${p.id}" value="${p.pin || '1234'}" maxlength="4" style="width:65px;text-align:center;font-size:14px;font-weight:900;letter-spacing:2px;padding:4px;background:#181818;border:1px solid #444;color:#fff;border-radius:6px;">
-        </div>
-      </div>
+  const totalDTs = perfil.profiles.filter(p => p.rol === 'DT').length;
+  const maxDTs = cats.length; // 1 DT por categoría como máximo base
 
-      <div style="display:flex;align-items:center;gap:8px;">
+  cont.innerHTML = `
+    <!-- LISTA DE PERFILES -->
+    ${perfil.profiles.map(p => {
+      const tienePIN = p.pin && p.pin.trim() !== '';
+      const pinIcon = tienePIN ? '🔒' : '🔓';
+      const pinColor = tienePIN ? '#d4af37' : '#555';
+      const esDT = p.rol === 'DT';
+      return `
+      <div style="background:#0d0d0d;border:1px solid #222;padding:12px;border-radius:10px;margin-bottom:8px;display:flex;flex-direction:column;gap:8px;">
+        <!-- Fila superior: rol + ícono PIN + botón eliminar -->
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:13px;font-weight:700;color:${p.rol === 'ADMIN' ? 'var(--oro)' : '#2ecc71'};">
+            ${p.rol === 'ADMIN' ? '👑' : '🧢'} ${p.rol} ${p.categoria ? '(' + p.categoria + ')' : ''}
+            <span style="font-size:16px;margin-left:6px;" title="${tienePIN ? 'PIN asignado' : 'Sin PIN — acceso libre'}">${pinIcon}</span>
+          </span>
+          ${esDT ? `<button onclick="window._eliminarPerfilDT('${p.id}')" style="background:none;border:none;color:#888;cursor:pointer;font-size:12px;" title="Eliminar este perfil DT">🗑️</button>` : ''}
+        </div>
+        <!-- Nombre -->
         <input type="text" id="cfg-nombre-input-${p.id}" value="${p.nombre || ''}" placeholder="Nombre del Entrenador / Perfil" style="flex:1;font-size:13px;padding:8px;background:#181818;border:1px solid #333;color:#fff;border-radius:6px;">
-      </div>
+        <!-- PIN -->
+        <div style="display:flex;align-items:center;gap:8px;">
+          <label style="font-size:11px;color:#aaa;font-weight:700;white-space:nowrap;">PIN (4 dígitos — dejar vacío = sin PIN):</label>
+          <input type="text" id="cfg-pin-input-${p.id}" value="${p.pin || ''}" maxlength="4" placeholder="----" style="width:70px;text-align:center;font-size:14px;font-weight:900;letter-spacing:3px;padding:4px;background:#181818;border:1px solid ${pinColor};color:#fff;border-radius:6px;">
+        </div>
+      </div>`;
+    }).join('')}
+
+    <!-- AGREGAR NUEVO PERFIL DT EXTRA -->
+    <div style="margin-top:10px;padding:10px;background:#080808;border:1px dashed #333;border-radius:10px;">
+      <div style="font-size:11px;color:var(--oro);font-weight:700;margin-bottom:6px;">➕ AGREGAR PERFIL DT EXTRA</div>
+      <div style="font-size:10px;color:#666;margin-bottom:8px;">Puedes tener hasta <strong style="color:#aaa;">${maxDTs} perfiles DT</strong> (1 por categoría). Actualmente tienes <strong style="color:#2ecc71;">${totalDTs}</strong>.</div>
+      ${totalDTs < maxDTs ? `
+        <select id="cfg-nueva-cat-perfil" style="font-size:12px;padding:6px;margin-bottom:6px;background:#181818;border:1px solid #333;color:#fff;border-radius:6px;width:100%;">
+          ${cats.filter(c => !perfil.profiles.find(p => p.categoria === c)).map(c => `<option value="${c}">${c}</option>`).join('') || '<option disabled>Todas las categorías ya tienen DT</option>'}
+        </select>
+        <button class="btn btn-gray" onclick="window._agregarNuevoPerfilDT()" style="font-size:11px;padding:7px;width:auto;">➕ CREAR PERFIL DT</button>
+      ` : `<div style="font-size:11px;color:#555;">✅ Todas las categorías ya tienen su perfil DT asignado.</div>`}
     </div>
-  `).join('');
+  `;
 }
 
 export function guardarPinsConfig() {
@@ -198,7 +225,8 @@ export function guardarPinsConfig() {
     const inputPin = document.getElementById(`cfg-pin-input-${p.id}`);
     const inputNombre = document.getElementById(`cfg-nombre-input-${p.id}`);
 
-    if (inputPin && inputPin.value) {
+    if (inputPin !== null) {
+      // Guardar PIN tal cual (puede quedar vacío = sin PIN)
       p.pin = inputPin.value.trim();
     }
     if (inputNombre && inputNombre.value) {
@@ -212,10 +240,42 @@ export function guardarPinsConfig() {
 
   autoSaveLocal();
   guardarFirebase();
-  mostrarNotificacionApp('Perfiles Guardados', '🔑 Se han actualizado los Nombres y PINs de acceso para los perfiles de entrenador.');
+  mostrarNotificacionApp('Perfiles Guardados', '🔑 Nombres y PINs actualizados. Los perfiles sin PIN tienen acceso libre.');
+  // Re-render para actualizar íconos 🔒/🔓
+  renderPerfilesPinsUI();
 }
 
 window._abrirConfig = abrirConfig;
+
+window._eliminarPerfilDT = (profId) => {
+  if (!perfil.profiles) return;
+  const idx = perfil.profiles.findIndex(p => p.id === profId && p.rol === 'DT');
+  if (idx === -1) return;
+  perfil.profiles.splice(idx, 1);
+  autoSaveLocal();
+  guardarFirebase();
+  renderPerfilesPinsUI();
+  mostrarNotificacionApp('Perfil Eliminado', '🗑️ El perfil DT ha sido eliminado correctamente.');
+};
+
+window._agregarNuevoPerfilDT = () => {
+  const sel = document.getElementById('cfg-nueva-cat-perfil');
+  if (!sel || !sel.value) return;
+  const cat = sel.value;
+  if (perfil.profiles.find(p => p.categoria === cat)) return;
+  perfil.profiles.push({
+    id: `dt_${cat.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`,
+    nombre: `DT ${cat}`,
+    rol: 'DT',
+    categoria: cat,
+    pin: '',
+    avatar: perfil.logo || DEFAULT_LOGO
+  });
+  autoSaveLocal();
+  guardarFirebase();
+  renderPerfilesPinsUI();
+  mostrarNotificacionApp('Perfil Creado', `🧢 Se creó el perfil DT para ${cat}.`);
+};
 
 export function abrirSoporteWhatsApp() {
   const link = `https://wa.me/584241895407?text=${encodeURIComponent('Hola, quisiera solicitar un kit de uniforme personalizado para mi equipo en 11FUT MANAGER.')}`;
