@@ -16,8 +16,11 @@
         <img id="login-logo" class="login-logo" src="/logo.png" alt="11FUT Logo" onerror="this.src='https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--oro);letter-spacing:3px;text-transform:uppercase;margin-bottom:12px;font-weight:700;">11FUT MANAGER</div>
         <input type="email" id="email-input" placeholder="✉️ Correo electrónico" style="text-align:center;">
-        <input type="password" id="pin-input" placeholder="🔐 Contraseña" style="text-align:center; letter-spacing:2px; font-size:16px;">
-        <button class="btn btn-red" id="btn-login" style="padding:14px;font-size:16px;">INGRESAR</button>
+        <input type="password" id="pin-input" placeholder="🔐 Contraseña" style="text-align:center; letter-spacing:2px; font-size:16px; margin-bottom:12px;">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button class="btn btn-red" id="btn-login" style="flex:1; padding:14px; font-size:16px;">INGRESAR</button>
+          <button class="btn btn-gold" id="btn-bio-login" title="Iniciar sesión con biometría (Huella / Face ID)" style="width:48px; height:48px; padding:0; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; border-radius:10px;">🔒</button>
+        </div>
         <div style="margin-top:14px; display:flex; gap:16px; justify-content:center;">
           <button id="btn-show-setup" style="background:none;border:none;color:#aaa;font-size:12px;cursor:pointer;text-decoration:underline;">Nuevo usuario → Registrarse</button>
           <button id="btn-reset-pin" style="background:none;border:none;color:#aaa;font-size:12px;cursor:pointer;text-decoration:underline;">¿Olvidaste tu contraseña?</button>
@@ -37,12 +40,16 @@
           <label style="font-size:12px;color:var(--oro);font-weight:700;margin-bottom:4px;display:block;">✉️ Correo Electrónico:</label>
           <input type="email" id="reg-email" placeholder="ejemplo@club.com">
           
+          <label style="font-size:12px;color:var(--oro);font-weight:700;margin-bottom:4px;display:block;margin-top:8px;">📱 Teléfono WhatsApp de la Institución (con código de país):</label>
+          <input type="tel" id="reg-wa" placeholder="+584121234567">
+
           <label style="font-size:12px;color:var(--oro);font-weight:700;margin-bottom:4px;display:block;margin-top:8px;">🔐 Crear Contraseña (mín. 6 caracteres):</label>
           <input type="password" id="reg-pin" placeholder="******">
 
           <label style="font-size:12px;color:var(--oro);font-weight:700;margin-bottom:4px;display:block;margin-top:8px;">🔐 Confirmar Contraseña:</label>
           <input type="password" id="reg-pin-confirm" placeholder="******">
         </div>
+
         <button class="btn btn-gold" id="btn-confirm-register" style="margin-top:10px;padding:14px;font-size:15px;">⚡ CREAR CUENTA E INGRESAR</button>
       </div>
     </div>
@@ -61,6 +68,27 @@
         <button class="btn btn-blue" id="btn-confirm-forgot" style="margin-top:10px;padding:14px;font-size:15px;">📩 ENVIAR CORREO DE RECUPERACIÓN</button>
       </div>
     </div>
+
+    <!-- MODAL DE REGISTRO DE BIOMETRÍA -->
+    <div class="modal-overlay" id="modal-bio-register">
+      <div class="modal-body" style="max-width:420px;padding:24px;text-align:center;">
+        <div class="modal-title" style="font-size:20px;margin-bottom:12px;color:var(--oro);display:flex;align-items:center;justify-content:space-between;">
+          <span>🔒 ACCESO BIOMÉTRICO</span>
+          <button id="btn-cerrar-modal-bio" style="background:none;border:none;color:#aaa;font-size:20px;cursor:pointer;">❌</button>
+        </div>
+        <div style="font-size:50px;margin:16px 0;">👆🏻🛡️</div>
+        <p style="font-size:14px;color:#eee;margin-bottom:16px;line-height:1.4;">
+          ¿Deseas vincular tu huella digital o FaceID a esta cuenta para iniciar sesión sin escribir tu contraseña la próxima vez?
+        </p>
+        <button class="btn btn-gold" id="btn-register-bio-confirm" style="padding:14px;font-size:15px;width:100%;margin-bottom:8px;">
+          ☝️ REGISTRAR HUELLA / FACE ID
+        </button>
+        <button class="btn btn-gray" id="btn-register-bio-skip" style="padding:10px;font-size:13px;width:100%;">
+          Omitir por ahora
+        </button>
+      </div>
+    </div>
+
 
     <!-- ══ ASISTENTE DE CONFIGURACIÓN INICIAL (ONBOARDING WIZARD 4 PASOS) ══ -->
     <div class="modal-overlay" id="modal-onboarding-wizard">
@@ -99,20 +127,42 @@
           </div>
         </div>
 
-        <!-- PASO 2: CATEGORÍAS Y EQUIPOS -->
+        <!-- PASO 2: SELECCIÓN DE MEMBRESÍA Y PERFILES DT -->
         <div class="wizard-step-content" id="wizard-step-2" style="display:none;">
           <div class="card">
-            <div class="card-title">👥 CATEGORÍAS DE TU CLUB</div>
-            <p style="font-size:12px;color:#aaa;margin-bottom:10px;">Agrega las categorías en las que compite tu institución:</p>
+            <div class="card-title">🎖️ PLAN Y CANTIDAD DE PERFILES DE ENTRENADOR</div>
+            <p style="font-size:12px;color:#aaa;margin-bottom:12px;">Selecciona la cantidad de perfiles de DT que requiere tu institución (máximo 8):</p>
 
-            <div id="wiz-lista-cats" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;"></div>
+            <label style="font-size:12px;color:var(--oro);font-weight:700;margin-bottom:6px;display:block;">Cantidad de Perfiles de DT a Contratar:</label>
+            <select id="wiz-num-profiles" style="font-size:14px;padding:10px;margin-bottom:14px;background:#141414;color:#fff;border:1px solid var(--oro);border-radius:8px;width:100%;">
+              <option value="1">1 Perfil de Entrenador (DT)</option>
+              <option value="2">2 Perfiles de Entrenador (DT)</option>
+              <option value="3">3 Perfiles de Entrenador (DT)</option>
+              <option value="4">4 Perfiles de Entrenador (DT)</option>
+              <option value="5">5 Perfiles de Entrenador (DT)</option>
+              <option value="6">6 Perfiles de Entrenador (DT)</option>
+              <option value="7">7 Perfiles de Entrenador (DT)</option>
+              <option value="8">8 Perfiles de Entrenador (DT)</option>
+            </select>
 
-            <div style="display:flex;gap:8px;">
-              <input type="text" id="wiz-cat-input" placeholder="Nueva Categoría (ej. Sub-16, Femenino)" style="margin-bottom:0;">
-              <button class="btn btn-green" id="btn-wiz-add-cat" style="width:auto;padding:10px 16px;white-space:nowrap;">➕ AÑADIR</button>
+            <!-- TARJETA DE DETALLES DEL PLAN Y OFERTA INCLUIDA -->
+            <div id="wiz-plan-details-card" style="background:rgba(212,175,55,0.08);border:1px solid var(--oro);border-radius:10px;padding:14px;margin-bottom:16px;">
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;color:var(--oro);margin-bottom:6px;" id="wiz-plan-title">Plan DT Agente Libre</div>
+              <div style="font-size:12px;color:#eee;line-height:1.4;margin-bottom:8px;" id="wiz-plan-description">
+                Incluye 1 Perfil de Entrenador (DT) para gestionar plantilla, tácticas, citaciones, asistencia y estadísticas completas + 1 Perfil de Administrador (Director Deportivo) para controlar la institución y consultar todos los dashboards consolidados.
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(255,255,255,0.1);padding-top:8px;margin-top:8px;">
+                <span style="font-size:11px;color:#aaa;">Inversión Mensual Estimada:</span>
+                <span style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:var(--verde-campo);" id="wiz-plan-price">$15.00 USD / mes</span>
+              </div>
             </div>
+
+            <div class="card-title" style="font-size:13px;margin-bottom:6px;">👥 NOMBRE DE TUS CATEGORÍAS Y EQUIPOS:</div>
+            <p style="font-size:11px;color:#aaa;margin-bottom:10px;">Escribe el nombre de cada categoría contratada:</p>
+            <div id="wiz-lista-cats-inputs" style="display:flex;flex-direction:column;gap:8px;"></div>
           </div>
         </div>
+
 
         <!-- PASO 3: TORNEOS O LIGAS -->
         <div class="wizard-step-content" id="wizard-step-3" style="display:none;">
@@ -236,9 +286,28 @@
             <span class="menu-icon">☰</span>
             <span class="menu-label">MENÚ</span>
           </button>
+          
+          <!-- ICONO DE CAMPANA DE NOTIFICACIONES -->
+          <div style="position:relative;display:inline-block;">
+            <button class="header-config" id="btn-notificaciones-bell" title="Historial de Notificaciones" style="font-size:18px;position:relative;">
+              🔔
+              <span id="notif-count-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--rojo);color:#fff;font-size:9px;font-weight:900;border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;box-shadow:0 0 8px rgba(226,30,34,0.6);">0</span>
+            </button>
+            <div id="dropdown-notificaciones" style="display:none;position:absolute;top:40px;right:0;width:290px;background:#141414;border:1px solid var(--oro);border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.85);z-index:9999;padding:12px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:6px;">
+                <span style="font-size:12px;font-weight:900;color:var(--oro);">🔔 NOTIFICACIONES DE SESIÓN</span>
+                <button id="btn-limpiar-notifs" style="background:none;border:none;color:#aaa;font-size:11px;cursor:pointer;">Limpiar</button>
+              </div>
+              <div id="lista-notificaciones-historial" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;">
+                <div style="font-size:11px;color:#aaa;text-align:center;padding:10px;">Sin notificaciones recientes.</div>
+              </div>
+            </div>
+          </div>
+
           <button class="header-config" id="btn-toggle-theme" title="Alternar Modo Oscuro / Claro" style="font-size:18px;">☀️</button>
           <button class="header-config" id="btn-config" title="Configurar Perfil y Equipos">⚙️</button>
         </div>
+
       </div>
 
       <!-- BARRA DE NAVEGACIÓN HORIZONTAL DESPLEGABLE -->
@@ -251,8 +320,40 @@
           <div class="nav-horizontal-item" data-tab="5" id="tab-5">📚 HISTORIAL</div>
           <div class="nav-horizontal-item" data-tab="6" id="tab-6">🏋️‍♂️ ENTRENAMIENTOS</div>
           <div class="nav-horizontal-item" data-tab="7" id="tab-7" style="display:none;background:rgba(255,215,0,0.15);color:var(--oro);font-weight:700;">👑 PANEL ADMIN</div>
+          <div class="nav-horizontal-item" data-tab="8" id="tab-8" style="display:none;background:rgba(212,175,55,0.25);color:var(--oro);border:1px solid var(--oro);font-weight:900;">👑 SÚPER ADMIN</div>
         </div>
       </div>
+
+      <!-- BANNER DE RENOVACIÓN DE MEMBRESÍA (CUENTA REGRESIVA 7 DÍAS) -->
+      <div id="banner-renovacion" style="display:none;background:linear-gradient(90deg, rgba(212,175,55,0.25) 0%, rgba(9,33,19,0.9) 100%);border-bottom:1px solid var(--oro);padding:10px 16px;font-size:12px;color:#fff;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:16px;">⏳</span>
+          <span id="banner-renovacion-texto" style="font-weight:700;">Te quedan N días de membresía.</span>
+        </div>
+        <button id="btn-renovar-wa-banner" style="background:#25D366;color:#000;border:none;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:900;cursor:pointer;display:flex;align-items:center;gap:6px;">
+          💬 RENOVAR VÍA WHATSAPP
+        </button>
+      </div>
+
+      <!-- OVERLAY DE BLOQUEO POR VENCIMIENTO -->
+      <div id="overlay-lock-vencido" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.92);z-index:99999;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;">
+        <div style="background:#141414;border:2px solid var(--rojo);border-radius:16px;padding:30px 20px;max-width:440px;width:100%;box-shadow:0 0 40px rgba(230,57,70,0.4);">
+          <div style="font-size:48px;margin-bottom:12px;">⛔</div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--rojo);margin-bottom:10px;">MEMBRESÍA VENCIDA</div>
+          <p style="font-size:13px;color:#eee;line-height:1.5;margin-bottom:20px;">
+            Tu membresía ha vencido. Ponte en contacto vía WhatsApp para reactivar el acceso completo a tus categorías y perfiles de entrenador.
+          </p>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <button id="btn-lock-wa" style="background:#25D366;color:#000;border:none;padding:14px;border-radius:10px;font-size:14px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+              💬 RENOVAR VÍA WHATSAPP
+            </button>
+            <button id="btn-lock-fullscreen-pitch" style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid #444;padding:10px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">
+              📺 MODO PANTALLA COMPLETA (PIZARRA TÁCTICA)
+            </button>
+          </div>
+        </div>
+      </div>
+
 
       <!-- SECCIÓN 1: TÁCTICA -->
       <div id="s1" class="seccion active">
@@ -805,6 +906,12 @@
     <div id="s7" class="seccion">
       <div id="admin-dashboard-container"></div>
     </div>
+
+    <!-- SECCIÓN 8: SÚPER ADMIN (PANEL MASTER) -->
+    <div id="s8" class="seccion">
+      <div id="super-admin-content" style="padding:16px;"></div>
+    </div>
+
 
     <!-- MODAL PARTE MÉDICO -->
     <div class="modal-overlay" id="modal-injury-report" style="display:none;">

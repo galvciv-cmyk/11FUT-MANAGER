@@ -8,7 +8,14 @@ const BASE_URL = "https://res.cloudinary.com/djhpfdklk/image/upload";
 
 export async function cargarKits() {
   try {
-    const res = await fetch(KITS_JSON_URL + '?t=' + Date.now());
+    const cached = sessionStorage.getItem('11fut_cached_kits');
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      setKits(parsed);
+      return parsed;
+    }
+
+    const res = await fetch(KITS_JSON_URL);
     const lista = await res.json();
     const optimizar = (url, w = 300) => {
       if (!url || !url.includes('cloudinary.com')) return url;
@@ -28,7 +35,7 @@ export async function cargarKits() {
         ct:              optimizar(k.ct              || BASE_URL + '/kits/' + k.id + '/cuerpo_tecnico')
       }));
     setKits(kitsFinal);
-    console.log('✅ Kits cargados:', KITS.map(k => k.nombre));
+    sessionStorage.setItem('11fut_cached_kits', JSON.stringify(kitsFinal));
     return kitsFinal;
   } catch (e) {
     console.error('❌ Error cargando kits, usando predeterminado:', e);
@@ -46,6 +53,7 @@ export async function cargarKits() {
     return fallbackKits;
   }
 }
+
 
 export function resizarImagen(file, maxSize = 600) {
   return new Promise((resolve) => {

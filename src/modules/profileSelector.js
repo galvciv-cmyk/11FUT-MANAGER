@@ -1,10 +1,11 @@
-import { perfil, setCurrentProfile, setCategoriaActiva } from "./state.js";
-import { mostrarNotificacionApp, cerrarSesion } from "./config.js";
+import { perfil, setCurrentProfile, setCategoriaActiva, autoSaveLocal, isSuperAdmin } from "./state.js";
+import { mostrarNotificacionApp, mostrarConfirmacionApp, mostrarToastRapido, cerrarSesion } from "./config.js";
+import { guardarFirebase } from "../services/firebase.js";
 
 let selectedProfilePending = null;
 let currentPinEntered = "";
 
-export function renderProfileSelector(onProfileSelected) {
+export function renderProfileSelector(onProfileSelected, forceShow = false) {
   let modalOverlay = document.getElementById('profile-selector-overlay');
   
   if (!modalOverlay) {
@@ -14,18 +15,31 @@ export function renderProfileSelector(onProfileSelected) {
     document.body.appendChild(modalOverlay);
   }
 
-  let profilesList = perfil.profiles || [];
-  
-  if (!profilesList.length) {
-    profilesList = [
-      { id: "admin", nombre: "Director Deportivo", rol: "ADMIN", pin: "", avatar: perfil.logo },
-      { id: "dt_default", nombre: `DT ${perfil.categoriaActiva || 'Sub-14'}`, rol: "DT", categoria: perfil.categoriaActiva || 'Sub-14', pin: "", avatar: perfil.logo }
-    ];
-    perfil.profiles = profilesList;
+  const isMaster = isSuperAdmin();
+  const maxAllowed = isMaster ? 8 : (perfil.maxPerfiles || 1);
+
+  // Asegurar que exista el perfil predeterminado ADMIN (Director Deportivo)
+  let hasAdmin = (perfil.profiles || []).find(p => p.id === 'admin');
+  if (!hasAdmin) {
+    hasAdmin = {
+      id: "admin",
+      nombre: "Director Deportivo",
+      rol: "ADMIN",
+      pin: isMaster ? "1901" : "1234",
+      avatar: perfil.logo || "https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png"
+    };
+    perfil.profiles = [hasAdmin, ...(perfil.profiles || [])];
   }
 
-  // SI SOLO HAY 1 PERFIL: Auto-login directo sin detenerse
-  if (profilesList.length === 1) {
+  // SI EL PLAN ES DE 1 SOLO PERFIL: Forzar que ÚNICAMENTE exista el perfil predeterminado ADMIN
+  if (maxAllowed === 1 && !isMaster) {
+    perfil.profiles = [hasAdmin];
+  }
+
+  let profilesList = perfil.profiles;
+
+  // SI SOLO HAY 1 PERFIL: Auto-login al arrancar salvo que el usuario presionara '👤 PERFIL' manualmente
+  if (profilesList.length === 1 && !forceShow) {
     modalOverlay.style.display = 'none';
     const single = profilesList[0];
     setCurrentProfile(single);
@@ -33,6 +47,7 @@ export function renderProfileSelector(onProfileSelected) {
     if (typeof onProfileSelected === 'function') onProfileSelected(single);
     return;
   }
+
 
   // RENDERIZADO INTERFAZ STREAMING ("¿Quién está dirigiendo hoy?")
   modalOverlay.style.display = 'flex';
@@ -45,6 +60,8 @@ export function renderProfileSelector(onProfileSelected) {
       </button>
     </div>
 
+
+
     <div style="text-align:center;max-width:850px;width:100%;animation:fadeIn 0.4s ease;">
       
       <div style="margin-bottom:24px;">
@@ -56,13 +73,27 @@ export function renderProfileSelector(onProfileSelected) {
       <!-- GRILLA DE AVATARES ESTILO STREAMING -->
       <div style="display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:24px;margin-bottom:24px;">
         ${profilesList.map(p => `
-          <div class="profile-card-item" onclick="window._onSelectProfileCard('${p.id}')" style="display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:transform 0.2s ease;">
-            <div style="width:110px;height:110px;border-radius:50%;border:3px solid ${p.rol === 'ADMIN' ? 'var(--oro)' : '#2ecc71'};padding:4px;background:#111;box-shadow:0 8px 25px rgba(0,0,0,0.6);position:relative;display:flex;align-items:center;justify-content:center;">
-              <img src="${p.avatar || perfil.logo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.src='https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'">
-              <div style="position:absolute;bottom:0;right:0;background:${p.rol === 'ADMIN' ? 'var(--oro)' : '#2ecc71'};color:#000;font-size:10px;font-weight:900;padding:2px 6px;border-radius:10px;">${p.rol}</div>
+          <div style="position:relative;display:flex;flex-direction:column;align-items:center;">
+            ${p.id !== 'admin' ? `
+              <button onclick="event.stopPropagation(); window._eliminarPerfilDT('${p.id}')" 
+                title="Eliminar este perfil de Entrenador" 
+                style="position:absolute;top:-6px;right:-6px;z-index:20;background:var(--rojo);border:2px solid #000;color:#fff;border-radius:50%;width:28px;height:28px;font-size:12px;font-weight:900;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;transition:transform 0.15s ease;">
+                🗑️
+              </button>
+            ` : `
+              <div title="Perfil Predeterminado de la Institución (No eliminable)" 
+                style="position:absolute;top:-6px;right:-6px;z-index:20;background:var(--oro);color:#000;border-radius:50%;width:24px;height:24px;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.5);">
+                👑
+              </div>
+            `}
+            <div class="profile-card-item" onclick="window._onSelectProfileCard('${p.id}')" style="display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:transform 0.2s ease;">
+              <div style="width:110px;height:110px;border-radius:50%;border:3px solid ${p.rol === 'ADMIN' ? 'var(--oro)' : '#2ecc71'};padding:4px;background:#111;box-shadow:0 8px 25px rgba(0,0,0,0.6);position:relative;display:flex;align-items:center;justify-content:center;">
+                <img src="${p.avatar || perfil.logo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.src='https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'">
+                <div style="position:absolute;bottom:0;right:0;background:${p.rol === 'ADMIN' ? 'var(--oro)' : '#2ecc71'};color:#000;font-size:10px;font-weight:900;padding:2px 6px;border-radius:10px;">${p.rol}</div>
+              </div>
+              <div style="margin-top:12px;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:#fff;">${p.nombre}</div>
+              <div style="font-size:11px;color:#aaa;">${p.categoria ? 'Categoría ' + p.categoria : 'Dirección General'}</div>
             </div>
-            <div style="margin-top:12px;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:#fff;">${p.nombre}</div>
-            <div style="font-size:11px;color:#aaa;">${p.categoria ? 'Categoría ' + p.categoria : 'Dirección General'}</div>
           </div>
         `).join('')}
       </div>
@@ -97,11 +128,33 @@ export function renderProfileSelector(onProfileSelected) {
   `;
 
   // Global Handlers
+  window._eliminarPerfilDT = (pId) => {
+    const profTarget = perfil.profiles.find(x => x.id === pId);
+    if (!profTarget) return;
+
+    if (pId === 'admin') {
+      return mostrarNotificacionApp('Perfil Protegido', 'El perfil Director Deportivo (ADMIN) es el único perfil predeterminado de la institución y no se puede eliminar.', false);
+    }
+
+    const adminProfile = perfil.profiles.find(x => x.id === 'admin') || { pin: isSuperAdmin() ? '1901' : '1234' };
+    const adminPin = adminProfile.pin || (isSuperAdmin() ? '1901' : '1234');
+
+    // Autorización requerida: PIN del Director Deportivo (ADMIN)
+    selectedProfilePending = { ...profTarget, action: 'delete', targetId: pId, requiredPin: adminPin };
+    currentPinEntered = "";
+    updatePinDots();
+
+    const titleEl = document.getElementById('pin-profile-title');
+    if (titleEl) titleEl.textContent = `👑 PIN ADMIN para borrar ${profTarget.nombre}`;
+
+    const modalPad = document.getElementById('pin-pad-modal');
+    if (modalPad) modalPad.style.display = 'flex';
+  };
+
   window._onSelectProfileCard = (pId) => {
     const prof = profilesList.find(x => x.id === pId);
     if (!prof) return;
 
-    // Si no tiene PIN asignado, entrar directo
     if (!prof.pin || prof.pin.trim() === '') {
       modalOverlay.style.display = 'none';
       setCurrentProfile(prof);
@@ -110,7 +163,7 @@ export function renderProfileSelector(onProfileSelected) {
       return;
     }
 
-    selectedProfilePending = prof;
+    selectedProfilePending = { ...prof, action: 'login' };
     currentPinEntered = "";
     updatePinDots();
 
@@ -138,6 +191,31 @@ export function renderProfileSelector(onProfileSelected) {
 
   window._pressPinCheck = () => {
     if (!selectedProfilePending) return;
+
+    // SI LA ACCIÓN ES ELIMINAR PERFIL: Verificar PIN de ADMIN
+    if (selectedProfilePending.action === 'delete') {
+      const pinValido = selectedProfilePending.requiredPin;
+      if (currentPinEntered === pinValido) {
+        const targetId = selectedProfilePending.targetId;
+        const targetName = selectedProfilePending.nombre;
+
+        const modalPad = document.getElementById('pin-pad-modal');
+        if (modalPad) modalPad.style.display = 'none';
+
+        perfil.profiles = perfil.profiles.filter(x => x.id !== targetId);
+        autoSaveLocal();
+        guardarFirebase();
+        mostrarToastRapido('Perfil Eliminado', `El perfil "${targetName}" ha sido eliminado por el Administrador.`, true);
+        renderProfileSelector(onProfileSelected);
+      } else {
+        mostrarNotificacionApp('Autorización Denegada', '⛔ Se requiere el PIN del Director Deportivo (ADMIN) para autorizar la eliminación de perfiles.', false);
+        currentPinEntered = "";
+        updatePinDots();
+      }
+      return;
+    }
+
+    // SI LA ACCIÓN ES INICIAR SESIÓN EN PERFIL
     const pinValido = selectedProfilePending.pin || "";
 
     if (currentPinEntered === pinValido) {
@@ -160,6 +238,7 @@ export function renderProfileSelector(onProfileSelected) {
     }
   };
 
+
   window._cerrarSesionCompleta = () => {
     if (document.getElementById('profile-selector-overlay')) {
       document.getElementById('profile-selector-overlay').style.display = 'none';
@@ -175,4 +254,31 @@ export function renderProfileSelector(onProfileSelected) {
       }
     }
   }
+
+  // Soporte de Teclado Físico (PC / Laptop) para el Modal de PIN
+  const handlePinKeydown = (e) => {
+    const modalPad = document.getElementById('pin-pad-modal');
+    if (!modalPad || modalPad.style.display === 'none') return;
+
+    if (e.key >= '0' && e.key <= '9') {
+      e.preventDefault();
+      window._pressPinNum(e.key);
+    } else if (e.key === 'Backspace' || e.key === 'Delete') {
+      e.preventDefault();
+      window._pressPinClear();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      window._pressPinCheck();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      modalPad.style.display = 'none';
+    }
+  };
+
+  if (window._pinKeydownHandler) {
+    window.removeEventListener('keydown', window._pinKeydownHandler);
+  }
+  window._pinKeydownHandler = handlePinKeydown;
+  window.addEventListener('keydown', window._pinKeydownHandler);
 }
+

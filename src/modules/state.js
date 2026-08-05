@@ -9,6 +9,8 @@ export const DEFAULT_PLANTEL = {
   tit_A: [], sup_A: [], ct_A: [], pos_custom_A: {}, maxSup_A: 7
 };
 
+export const SUPER_ADMIN_EMAIL = "gyknova@gmail.com";
+
 export const DEFAULT_PERFIL = {
   club: "11FUT MANAGER",
   eqA: "Equipo Principal",
@@ -16,8 +18,12 @@ export const DEFAULT_PERFIL = {
   logo: "https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png",
   bg: "",
   email: "",
-  categoriaActiva: "Sub-14",
-  categorias: ["Sub-14"],
+  whatsapp: "",
+  estadoCuenta: "PRUEBA", // PRUEBA, ACTIVO, VENCIDO
+  fechaVencimiento: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 días por defecto
+  categoriaActiva: "",
+  categorias: [],
+  maxPerfiles: 1,
   modoPredeterminado: "11",
   esquemaPredeterminado: "1-4-4-2",
   profiles: [
@@ -25,20 +31,22 @@ export const DEFAULT_PERFIL = {
       id: "admin",
       nombre: "Director Deportivo",
       rol: "ADMIN",
-      pin: "1234",
-      avatar: "https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png"
-    },
-    {
-      id: "dt_sub14",
-      nombre: "DT Sub-14",
-      rol: "DT",
-      categoria: "Sub-14",
-      pin: "1234",
+      pin: "1901",
       avatar: "https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png"
     }
   ],
   esquemasCustom: []
 };
+
+export function isSuperAdmin() {
+  const emailAuth = (window.firebaseAuth && window.firebaseAuth.currentUser && window.firebaseAuth.currentUser.email) ? window.firebaseAuth.currentUser.email : "";
+  const emailState = (perfil && perfil.email) || userEmail || localStorage.getItem('11fut_user_email') || "";
+  const finalEmail = (emailAuth || emailState || "").trim().toLowerCase();
+  return finalEmail === SUPER_ADMIN_EMAIL.toLowerCase();
+}
+
+
+
 
 export let perfil = { ...DEFAULT_PERFIL };
 export let currentProfile = null;
@@ -187,7 +195,14 @@ export function updateJuegosProgramados(newProg) {
   }
 }
 
+export let isPublicViewActive = false;
+
+export function setPublicViewActive(val) {
+  isPublicViewActive = !!val;
+}
+
 export function autoSaveLocal() {
+  if (isPublicViewActive) return;
   try {
     localStorage.setItem("11fut_perfil", JSON.stringify(perfil));
     localStorage.setItem("11fut_categorias_data", JSON.stringify(categoriasData));
@@ -195,6 +210,7 @@ export function autoSaveLocal() {
     console.error("Error guardando localStorage:", e);
   }
 }
+
 
 export function autoLoadLocal() {
   try {

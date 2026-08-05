@@ -108,7 +108,10 @@ export function renderAdminDashboard(containerElement) {
           <div style="font-size:12px;color:#aaa;">Consolidador General de Rendimiento y Gestión Institucional</div>
         </div>
 
-        <div style="display:flex;align-items:center;gap:10px;">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <button onclick="window._abrirPizarraFullscreenAdmin()" class="btn btn-gold" style="font-size:12px;padding:8px 14px;display:flex;align-items:center;gap:6px;font-weight:700;">
+            📺 PIZARRA TÁCTICA PANTALLA COMPLETA
+          </button>
           <label style="font-size:12px;color:var(--oro);font-weight:700;">Filtrar Vista:</label>
           <select id="admin-view-selector" style="background:#0d0d0d;color:#fff;border:1px solid var(--oro);padding:8px 12px;border-radius:8px;font-size:13px;cursor:pointer;">
             <option value="GLOBAL">🌐 TODAS LAS CATEGORÍAS (GLOBAL)</option>
@@ -116,6 +119,7 @@ export function renderAdminDashboard(containerElement) {
           </select>
         </div>
       </div>
+
 
       <div id="admin-section-global">
         
@@ -369,6 +373,30 @@ function renderVistaDetalladaCategoria(catName, container) {
 
 window._adminIrACategoria = (catName) => {
   setCategoriaActiva(catName);
-  const tab1 = document.getElementById('tab-1');
-  if (tab1) tab1.click();
+  const selector = document.getElementById('admin-view-selector');
+  if (selector) {
+    selector.value = catName;
+    selector.dispatchEvent(new Event('change'));
+  }
 };
+
+window._abrirPizarraFullscreenAdmin = () => {
+  const s1 = document.getElementById('s1');
+  if (!s1) return;
+
+  // Activar pestaña de táctica (s1) temporalmente
+  document.querySelectorAll('.seccion').forEach(s => s.classList.remove('active'));
+  s1.classList.add('active');
+
+  const btnFullscreen = document.getElementById('btn-fs-A');
+  if (btnFullscreen) {
+    btnFullscreen.click();
+  } else {
+    const el = document.querySelector('.col-cancha-centro');
+    if (el) {
+      if (el.requestFullscreen) el.requestFullscreen();
+      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    }
+  }
+};
+

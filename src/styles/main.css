@@ -45,7 +45,7 @@ input, select, button {
   outline: none;
 }
 
-input[type="text"], input[type="password"], input[type="email"], input[type="number"], input[type="date"], input[type="time"], select {
+input[type="text"], input[type="password"], input[type="email"], input[type="tel"], input[type="number"], input[type="date"], input[type="time"], select {
   width: 100%;
   background: rgba(8, 12, 18, 0.75) !important;
   backdrop-filter: blur(12px);
@@ -59,6 +59,7 @@ input[type="text"], input[type="password"], input[type="email"], input[type="num
   transition: border-color 0.2s, box-shadow 0.2s;
   color-scheme: dark;
 }
+
 
 input:focus, select:focus {
   border-color: var(--oro) !important;
@@ -174,6 +175,7 @@ body.theme-light .card:hover {
 body.theme-light input[type="text"], 
 body.theme-light input[type="password"], 
 body.theme-light input[type="email"], 
+body.theme-light input[type="tel"], 
 body.theme-light input[type="number"], 
 body.theme-light input[type="date"], 
 body.theme-light input[type="time"], 
@@ -183,6 +185,7 @@ body.theme-light select {
   color: #0f172a !important;
   color-scheme: light;
 }
+
 
 body.theme-light input:focus, 
 body.theme-light select:focus {
@@ -343,9 +346,9 @@ body.theme-light .juego-programado-item {
 }
 
 .header-nav-bar.open {
-  max-height: 70px;
+  max-height: 520px;
   opacity: 1;
-  padding: 10px 16px;
+  padding: 12px 16px;
 }
 
 .header-nav-container {
@@ -353,15 +356,12 @@ body.theme-light .juego-programado-item {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  max-width: 960px;
+  max-width: 1100px;
   margin: 0 auto;
-  overflow-x: auto;
-  white-space: nowrap;
+  flex-wrap: wrap;
 }
 
 .nav-horizontal-item {
-  flex: 1;
-  text-align: center;
   padding: 8px 14px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -373,6 +373,20 @@ body.theme-light .juego-programado-item {
   color: #ccc;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .header-nav-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+  .nav-horizontal-item {
+    width: 100%;
+    text-align: left;
+    padding: 10px 14px;
+  }
 }
 
 .nav-horizontal-item:hover {
@@ -387,6 +401,7 @@ body.theme-light .juego-programado-item {
   border-color: var(--oro);
   box-shadow: 0 0 12px rgba(212, 175, 55, 0.3);
 }
+
 
 /* ── SECCIONES ── */
 .seccion { display: none; padding: 12px; }

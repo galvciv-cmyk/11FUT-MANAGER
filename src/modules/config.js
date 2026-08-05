@@ -9,20 +9,86 @@ import { actualizarTactica, FORMACIONES } from "./tactics.js";
 
 const DEFAULT_LOGO = "https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png";
 
-export function mostrarNotificacionApp(titulo, mensaje, esExito = true) {
-  const modal = document.getElementById('modal');
-  const modalContent = document.getElementById('modal-content');
-  if (!modal || !modalContent) return;
+let historialNotificaciones = [];
 
-  modalContent.innerHTML = `
-    <div class="modal-title">${esExito ? '✅' : '⚠️'} ${titulo.toUpperCase()}</div>
-    <div class="card" style="text-align:center;padding:20px 14px;">
-      <div style="font-size:14px;color:#eee;margin-bottom:16px;">${mensaje}</div>
-      <button class="btn btn-gold" onclick="document.getElementById('modal').style.display='none'">ACEPTAR</button>
+export function limpiarHistorialNotificaciones() {
+  historialNotificaciones = [];
+  const badge = document.getElementById('notif-count-badge');
+  const lista = document.getElementById('lista-notificaciones-historial');
+  if (badge) {
+    badge.style.display = 'none';
+    badge.textContent = '0';
+  }
+  if (lista) {
+    lista.innerHTML = '<div style="font-size:11px;color:#aaa;text-align:center;padding:10px;">Sin notificaciones recientes.</div>';
+  }
+}
+
+export function agregarNotificacionCampana(titulo, mensaje, esExito = true) {
+
+  const badge = document.getElementById('notif-count-badge');
+  const lista = document.getElementById('lista-notificaciones-historial');
+
+  const notifObj = {
+    id: Date.now(),
+    titulo,
+    mensaje,
+    esExito,
+    hora: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  };
+
+  historialNotificaciones.unshift(notifObj);
+  if (historialNotificaciones.length > 25) historialNotificaciones.pop();
+
+  if (badge) {
+    badge.style.display = 'flex';
+    badge.textContent = historialNotificaciones.length;
+  }
+
+  if (lista) {
+    lista.innerHTML = historialNotificaciones.map(n => `
+      <div style="background:rgba(255,255,255,0.05);border-left:3px solid ${n.esExito ? 'var(--verde-campo)' : 'var(--oro)'};padding:8px 10px;border-radius:6px;margin-bottom:4px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:${n.esExito ? 'var(--verde-campo)' : 'var(--oro)'};">
+          <span>${n.esExito ? '✅' : '🔔'} ${n.titulo}</span>
+          <span style="font-size:9px;color:#888;">${n.hora}</span>
+        </div>
+        <div style="font-size:11px;color:#eee;margin-top:2px;">${n.mensaje}</div>
+      </div>
+    `).join('');
+  }
+}
+
+export function mostrarToastRapido(titulo, mensaje, esExito = true) {
+  agregarNotificacionCampana(titulo, mensaje, esExito);
+
+  let toast = document.getElementById('toast-app-container');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toast-app-container';
+    toast.style.cssText = 'position:fixed;bottom:24px;left:24px;z-index:99999;display:flex;flex-direction:column;gap:8px;pointer-events:none;';
+    document.body.appendChild(toast);
+  }
+
+  const toastItem = document.createElement('div');
+  toastItem.style.cssText = `background:rgba(14,18,26,0.95);backdrop-filter:blur(16px);border:1px solid ${esExito ? 'var(--verde-campo)' : 'var(--oro)'};color:#fff;padding:12px 16px;border-radius:10px;font-size:13px;box-shadow:0 8px 28px rgba(0,0,0,0.7);display:flex;align-items:center;gap:10px;pointer-events:auto;min-width:280px;animation:fadeIn 0.25s ease;`;
+  toastItem.innerHTML = `
+    <span style="font-size:20px;">${esExito ? '✅' : '🔔'}</span>
+    <div>
+      <div style="font-weight:900;color:${esExito ? 'var(--verde-campo)' : 'var(--oro)'};font-size:12px;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;">${titulo.toUpperCase()}</div>
+      <div style="font-size:11px;color:#ccc;margin-top:1px;">${mensaje}</div>
     </div>
   `;
 
-  modal.style.display = 'flex';
+  toast.appendChild(toastItem);
+  setTimeout(() => {
+    toastItem.style.opacity = '0';
+    toastItem.style.transition = 'opacity 0.35s ease';
+    setTimeout(() => toastItem.remove(), 350);
+  }, 1800);
+}
+
+export function mostrarNotificacionApp(titulo, mensaje, esExito = true) {
+  mostrarToastRapido(titulo, mensaje, esExito);
 }
 
 export function mostrarConfirmacionApp(titulo, mensaje, onConfirm) {
@@ -48,6 +114,7 @@ export function mostrarConfirmacionApp(titulo, mensaje, onConfirm) {
 
   modal.style.display = 'flex';
 }
+
 
 let _autoSaveTimer = null;
 
@@ -192,34 +259,30 @@ export function renderPerfilesPinsUI() {
   const cats = perfil.categorias || ["Sub-14"];
   if (!perfil.profiles) perfil.profiles = [];
 
-  // Sincronizar: garantizar que el perfil ADMIN exista
-  if (!perfil.profiles.find(p => p.rol === 'ADMIN')) {
-    perfil.profiles.unshift({
+  // Sincronizar: garantizar que el perfil predeterminado ADMIN exista siempre
+  let defaultAdmin = perfil.profiles.find(p => p.id === 'admin' || p.rol === 'ADMIN');
+  if (!defaultAdmin) {
+    defaultAdmin = {
       id: "admin",
       nombre: "Director Deportivo",
       rol: "ADMIN",
-      pin: "",
-      avatar: perfil.logo
-    });
+      pin: isSuperAdmin() ? "1901" : "1234",
+      avatar: perfil.logo || DEFAULT_LOGO
+    };
+    perfil.profiles.unshift(defaultAdmin);
+  } else {
+    defaultAdmin.id = 'admin'; // Forzar ID protegido
   }
 
-  // Sincronizar: agregar perfil DT por cada categoría que no tenga uno
-  cats.forEach(c => {
-    let dtProf = perfil.profiles.find(p => p.categoria === c);
-    if (!dtProf) {
-      perfil.profiles.push({
-        id: `dt_${c.replace(/\s+/g, '_').toLowerCase()}`,
-        nombre: `DT ${c}`,
-        rol: "DT",
-        categoria: c,
-        pin: "",
-        avatar: perfil.logo
-      });
-    }
-  });
+  const isMaster = isSuperAdmin();
+  const maxContratado = isMaster ? 8 : (perfil.maxPerfiles || 1);
 
-  const totalDTs = perfil.profiles.filter(p => p.rol === 'DT').length;
-  const maxDTs = cats.length; // 1 DT por categoría como máximo base
+  // Si el plan es de 1 solo perfil, forzar que solo quede el perfil predeterminado ADMIN
+  if (maxContratado === 1 && !isMaster) {
+    perfil.profiles = [defaultAdmin];
+  }
+
+  const totalPerfiles = perfil.profiles.length;
 
   cont.innerHTML = `
     <!-- LISTA DE PERFILES -->
@@ -227,16 +290,16 @@ export function renderPerfilesPinsUI() {
       const tienePIN = p.pin && p.pin.trim() !== '';
       const pinIcon = tienePIN ? '🔒' : '🔓';
       const pinColor = tienePIN ? '#d4af37' : '#555';
-      const esDT = p.rol === 'DT';
+      const esPredeterminado = p.id === 'admin';
       return `
-      <div style="background:#0d0d0d;border:1px solid #222;padding:12px;border-radius:10px;margin-bottom:8px;display:flex;flex-direction:column;gap:8px;">
+      <div style="background:#0d0d0d;border:1px solid ${esPredeterminado ? 'var(--oro)' : '#222'};padding:12px;border-radius:10px;margin-bottom:8px;display:flex;flex-direction:column;gap:8px;">
         <!-- Fila superior: rol + ícono PIN + botón eliminar -->
         <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-size:13px;font-weight:700;color:${p.rol === 'ADMIN' ? 'var(--oro)' : '#2ecc71'};">
-            ${p.rol === 'ADMIN' ? '👑' : '🧢'} ${p.rol} ${p.categoria ? '(' + p.categoria + ')' : ''}
+          <span style="font-size:13px;font-weight:700;color:${esPredeterminado ? 'var(--oro)' : '#2ecc71'};">
+            ${esPredeterminado ? '👑' : '🧢'} ${p.rol} ${p.categoria ? '(' + p.categoria + ')' : ''} ${esPredeterminado ? '<small style="color:var(--oro);font-weight:800;">(PREDETERMINADO)</small>' : ''}
             <span style="font-size:16px;margin-left:6px;" title="${tienePIN ? 'PIN asignado' : 'Sin PIN — acceso libre'}">${pinIcon}</span>
           </span>
-          ${esDT ? `<button onclick="window._eliminarPerfilDT('${p.id}')" style="background:none;border:none;color:#888;cursor:pointer;font-size:12px;" title="Eliminar este perfil DT">🗑️</button>` : ''}
+          ${!esPredeterminado ? `<button onclick="window._eliminarPerfilDT('${p.id}')" style="background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);color:#e74c3c;padding:4px 8px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;" title="Eliminar este perfil DT">🗑️ ELIMINAR</button>` : `<span style="font-size:10px;color:var(--oro);font-weight:700;background:rgba(212,175,55,0.12);padding:2px 8px;border-radius:6px;">🔒 Protegido</span>`}
         </div>
         <!-- Nombre -->
         <input type="text" id="cfg-nombre-input-${p.id}" value="${p.nombre || ''}" placeholder="Nombre del Entrenador / Perfil" style="flex:1;font-size:13px;padding:8px;background:#181818;border:1px solid #333;color:#fff;border-radius:6px;">
@@ -250,14 +313,17 @@ export function renderPerfilesPinsUI() {
 
     <!-- AGREGAR NUEVO PERFIL DT EXTRA -->
     <div style="margin-top:10px;padding:10px;background:#080808;border:1px dashed #333;border-radius:10px;">
-      <div style="font-size:11px;color:var(--oro);font-weight:700;margin-bottom:6px;">➕ AGREGAR PERFIL DT EXTRA</div>
-      <div style="font-size:10px;color:#666;margin-bottom:8px;">Puedes tener hasta <strong style="color:#aaa;">${maxDTs} perfiles DT</strong> (1 por categoría). Actualmente tienes <strong style="color:#2ecc71;">${totalDTs}</strong>.</div>
-      ${totalDTs < maxDTs ? `
+      <div style="font-size:11px;color:var(--oro);font-weight:700;margin-bottom:6px;">➕ AGREGAR PERFIL DT ADICIONAL</div>
+      <div style="font-size:10px;color:#666;margin-bottom:8px;">Tu plan actual permite <strong style="color:#aaa;">${maxContratado} perfil(es)</strong>. Tienes <strong style="color:#2ecc71;">${totalPerfiles}</strong> activos.</div>
+      ${totalPerfiles < maxContratado ? `
         <select id="cfg-nueva-cat-perfil" style="font-size:12px;padding:6px;margin-bottom:6px;background:#181818;border:1px solid #333;color:#fff;border-radius:6px;width:100%;">
-          ${cats.filter(c => !perfil.profiles.find(p => p.categoria === c)).map(c => `<option value="${c}">${c}</option>`).join('') || '<option disabled>Todas las categorías ya tienen DT</option>'}
+          ${cats.filter(c => !perfil.profiles.find(p => p.categoria === c)).map(c => `<option value="${c}">${c}</option>`).join('') || '<option value="General">Perfil General / Multicategoría</option>'}
         </select>
         <button class="btn btn-gray" onclick="window._agregarNuevoPerfilDT()" style="font-size:11px;padding:7px;width:auto;">➕ CREAR PERFIL DT</button>
-      ` : `<div style="font-size:11px;color:#555;">✅ Todas las categorías ya tienen su perfil DT asignado.</div>`}
+      ` : `
+        <div style="font-size:11px;color:#aaa;margin-bottom:6px;">Límite de perfiles alcanzado para tu plan (${totalPerfiles}/${maxContratado}).</div>
+        <button class="btn btn-green" onclick="mostrarModalUpgradePlan(${totalPerfiles}, ${maxContratado})" style="font-size:11px;padding:6px 12px;width:auto;">💬 AMPLIAR PLAN O PERFILES</button>
+      `}
     </div>
   `;
 }
@@ -270,13 +336,11 @@ export function guardarPinsConfig() {
     const inputNombre = document.getElementById(`cfg-nombre-input-${p.id}`);
 
     if (inputPin !== null) {
-      // Guardar PIN tal cual (puede quedar vacío = sin PIN)
       p.pin = inputPin.value.trim();
     }
     if (inputNombre && inputNombre.value) {
       p.nombre = inputNombre.value.trim();
     }
-    // Sincronizar avatar con el logo del club si no tiene foto custom
     if (!p.avatar || p.avatar === DEFAULT_LOGO) {
       p.avatar = perfil.logo || DEFAULT_LOGO;
     }
@@ -284,8 +348,7 @@ export function guardarPinsConfig() {
 
   autoSaveLocal();
   guardarFirebase();
-  mostrarNotificacionApp('Perfiles Guardados', '🔑 Nombres y PINs actualizados. Los perfiles sin PIN tienen acceso libre.');
-  // Re-render para actualizar íconos 🔒/🔓
+  mostrarNotificacionApp('Perfiles Guardados', '🔑 Nombres y PINs actualizados.');
   renderPerfilesPinsUI();
 }
 
@@ -293,33 +356,46 @@ window._abrirConfig = abrirConfig;
 
 window._eliminarPerfilDT = (profId) => {
   if (!perfil.profiles) return;
-  const idx = perfil.profiles.findIndex(p => p.id === profId && p.rol === 'DT');
+  if (profId === 'admin') {
+    return mostrarNotificacionApp('Perfil Protegido', 'El perfil Director Deportivo (ADMIN) es el perfil predeterminado de la institución y no se puede eliminar.', false);
+  }
+  const idx = perfil.profiles.findIndex(p => p.id === profId);
   if (idx === -1) return;
-  perfil.profiles.splice(idx, 1);
-  autoSaveLocal();
-  guardarFirebase();
-  renderPerfilesPinsUI();
-  mostrarNotificacionApp('Perfil Eliminado', '🗑️ El perfil DT ha sido eliminado correctamente.');
+  
+  mostrarConfirmacionApp('Eliminar Perfil DT', '¿Estás seguro de eliminar este perfil de entrenador?', async () => {
+    perfil.profiles.splice(idx, 1);
+    autoSaveLocal();
+    await guardarFirebase();
+    renderPerfilesPinsUI();
+    mostrarToastRapido('Perfil Eliminado', 'El perfil de Entrenador fue eliminado correctamente.', true);
+  });
 };
 
 window._agregarNuevoPerfilDT = () => {
+  const isMaster = isSuperAdmin();
+  const maxContratado = isMaster ? 8 : (perfil.maxPerfiles || 1);
+  if ((perfil.profiles || []).length >= maxContratado) {
+    return mostrarModalUpgradePlan(perfil.profiles.length, maxContratado);
+  }
+
   const sel = document.getElementById('cfg-nueva-cat-perfil');
-  if (!sel || !sel.value) return;
-  const cat = sel.value;
-  if (perfil.profiles.find(p => p.categoria === cat)) return;
+  const cat = sel ? sel.value : 'General';
+  
   perfil.profiles.push({
     id: `dt_${cat.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`,
     nombre: `DT ${cat}`,
     rol: 'DT',
-    categoria: cat,
+    categoria: cat !== 'General' ? cat : (perfil.categorias[0] || 'Sub-14'),
     pin: '',
     avatar: perfil.logo || DEFAULT_LOGO
   });
+
   autoSaveLocal();
   guardarFirebase();
   renderPerfilesPinsUI();
-  mostrarNotificacionApp('Perfil Creado', `🧢 Se creó el perfil DT para ${cat}.`);
+  mostrarToastRapido('Perfil Creado', `Se creó el perfil de entrenador para ${cat}.`, true);
 };
+
 
 export function abrirSoporteWhatsApp() {
   const link = `https://wa.me/584241895407?text=${encodeURIComponent('Hola, quisiera solicitar un kit de uniforme personalizado para mi equipo en 11FUT MANAGER.')}`;
@@ -426,7 +502,40 @@ window._agregarTorneoACategoria = (catNombre) => {
   });
 };
 
+export function mostrarModalUpgradePlan(actual, max) {
+  const modal = document.getElementById('modal');
+  const modalContent = document.getElementById('modal-content');
+  if (!modal || !modalContent) return;
+
+  const waLink = `https://wa.me/584241895407?text=${encodeURIComponent(`Hola, quisiera solicitar la ampliación de mi plan en 11FUT MANAGER. Actualmente tengo ${max} perfil(es) contratado(s).`)}`;
+
+  modalContent.innerHTML = `
+    <div class="modal-title">⚠️ LÍMITE DE MEMBRESÍA ALCANZADO</div>
+    <div class="card" style="text-align:center;padding:20px 14px;">
+      <div style="font-size:14px;color:#eee;margin-bottom:12px;line-height:1.4;">
+        Has alcanzado el límite de <b>${max} perfil(es) de DT contratado(s)</b> en tu plan actual (${actual}/${max} perfiles ocupados).
+      </div>
+      <div style="font-size:12px;color:#aaa;margin-bottom:16px;line-height:1.4;">
+        Para habilitar un nuevo entrenador o categoría en tu institución, solicita la ampliación de tu membresía a 2 o más perfiles (máx. 8).
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button class="btn btn-green" onclick="window.open('${waLink}', '_blank'); document.getElementById('modal').style.display='none';">💬 AMPLIAR PLAN VÍA WHATSAPP</button>
+        <button class="btn btn-gray" onclick="document.getElementById('modal').style.display='none'">ENTENDIDO</button>
+      </div>
+    </div>
+  `;
+
+  modal.style.display = 'flex';
+}
+
 export async function agregarNuevaCategoriaConfig() {
+  const maxContratado = perfil.maxPerfiles || 1;
+  const actualCount = (perfil.categorias || []).length;
+
+  if (actualCount >= maxContratado) {
+    return mostrarModalUpgradePlan(actualCount, maxContratado);
+  }
+
   const inputCat = document.getElementById('cfg-nueva-cat-input');
   const inputTor = document.getElementById('cfg-nuevo-torneo-input');
   if (!inputCat) return;
@@ -439,6 +548,7 @@ export async function agregarNuevaCategoriaConfig() {
   if (perfil.categorias.includes(catVal)) return mostrarNotificacionApp('Categoría existente', 'Esta categoría ya existe', false);
 
   perfil.categorias.push(catVal);
+
 
   if (!categoriasData[catVal]) {
     categoriasData[catVal] = {
@@ -780,6 +890,32 @@ export function actualizarVistaWizard() {
   }
 }
 
+export function actualizarDetallesPlanWizard(numProfiles) {
+  const titleEl = document.getElementById('wiz-plan-title');
+  const descEl = document.getElementById('wiz-plan-description');
+  const priceEl = document.getElementById('wiz-plan-price');
+
+  const names = {
+    1: 'Plan DT Agente Libre',
+    2: 'Plan Club Dúo (2 Categorías)',
+    3: 'Plan Club Trío (3 Categorías)',
+    4: 'Plan Academia Pro (4 Categorías)',
+    5: 'Plan Academia Pro (5 Categorías)',
+    6: 'Plan Club Elite (6 Categorías)',
+    7: 'Plan Club Elite (7 Categorías)',
+    8: 'Plan Institución Máxima (8 Categorías)'
+  };
+
+  const name = names[numProfiles] || `Plan Institucional (${numProfiles} Categorías)`;
+  const price = (numProfiles * 15).toFixed(2);
+
+  if (titleEl) titleEl.textContent = name;
+  if (descEl) {
+    descEl.textContent = `Incluye ${numProfiles} Perfil(es) de Entrenador (DT) para gestionar plantilla, tácticas, citaciones, asistencia y estadísticas completas + 1 Perfil de Administrador (Director Deportivo) para controlar la institución y consultar todos los dashboards consolidados.`;
+  }
+  if (priceEl) priceEl.textContent = `$${price} USD / mes`;
+}
+
 export function siguientePasoWizard() {
   if (wizardStep === 1) {
     const nombre = document.getElementById('wiz-club-nombre')?.value?.trim();
@@ -787,6 +923,14 @@ export function siguientePasoWizard() {
     wizardStep = 2;
     actualizarVistaWizard();
   } else if (wizardStep === 2) {
+    const selectNum = document.getElementById('wiz-num-profiles');
+    const numProfiles = parseInt(selectNum ? selectNum.value : '1', 10) || 1;
+    wizardTempCats = [];
+    for (let i = 0; i < numProfiles; i++) {
+      const val = document.getElementById(`wiz-cat-input-${i}`)?.value?.trim() || `Categoría ${i + 1}`;
+      wizardTempCats.push(val);
+      if (!wizardTempTorneos[val]) wizardTempTorneos[val] = 'Liga Oficial';
+    }
     if (!wizardTempCats.length) {
       return mostrarNotificacionApp('Categorías Requeridas', 'Agrega al menos una categoría para tu club', false);
     }
@@ -808,34 +952,31 @@ export function anteriorPasoWizard() {
 }
 
 function renderWizardCategoriasUI() {
-  const container = document.getElementById('wiz-lista-cats');
+  const container = document.getElementById('wiz-lista-cats-inputs');
+  const selectNum = document.getElementById('wiz-num-profiles');
   if (!container) return;
 
-  container.innerHTML = wizardTempCats.map(c => `
-    <span class="cat-chip-wiz">
-      ${c}
-      ${wizardTempCats.length > 1 ? `<button onclick="window._eliminarCatWiz('${c}')" style="background:none;border:none;color:var(--rojo);cursor:pointer;font-weight:900;margin-left:4px;">✕</button>` : ''}
-    </span>
-  `).join('');
-}
+  const numProfiles = parseInt(selectNum ? selectNum.value : '1', 10) || 1;
+  actualizarDetallesPlanWizard(numProfiles);
 
-window._eliminarCatWiz = (cat) => {
-  if (wizardTempCats.length <= 1) return;
-  wizardTempCats = wizardTempCats.filter(c => c !== cat);
-  delete wizardTempTorneos[cat];
-  renderWizardCategoriasUI();
-};
-
-export function agregarCategoriaWiz() {
-  const input = document.getElementById('wiz-cat-input');
-  const val = input?.value?.trim();
-  if (!val) return;
-  if (!wizardTempCats.includes(val)) {
-    wizardTempCats.push(val);
-    wizardTempTorneos[val] = 'Liga Oficial';
+  if (selectNum && !selectNum._bound) {
+    selectNum._bound = true;
+    selectNum.addEventListener('change', () => {
+      renderWizardCategoriasUI();
+    });
   }
-  if (input) input.value = '';
-  renderWizardCategoriasUI();
+
+  let html = '';
+  for (let i = 0; i < numProfiles; i++) {
+    const defaultVal = wizardTempCats[i] || (i === 0 ? 'Sub-14' : `Categoría ${i + 1}`);
+    html += `
+      <div style="background:rgba(0,0,0,0.4);padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);">
+        <label style="font-size:11px;color:var(--oro);font-weight:800;display:block;margin-bottom:4px;">🧢 Nombre de la Categoría / DT #${i + 1}:</label>
+        <input type="text" id="wiz-cat-input-${i}" value="${defaultVal}" placeholder="ej. Sub-16, Femenino, Primera">
+      </div>
+    `;
+  }
+  container.innerHTML = html;
 }
 
 function renderWizardTorneosUI() {
@@ -884,11 +1025,43 @@ window._seleccionarKitWiz = (kitId) => {
 export async function finalizarOnboardingWizard() {
   const modal = document.getElementById('modal-onboarding-wizard');
 
+  const selectNum = document.getElementById('wiz-num-profiles');
+  const numProfiles = parseInt(selectNum ? selectNum.value : '1', 10) || 1;
+  perfil.maxPerfiles = numProfiles;
+
+  wizardTempCats = [];
+  for (let i = 0; i < numProfiles; i++) {
+    const val = document.getElementById(`wiz-cat-input-${i}`)?.value?.trim() || `Categoría ${i + 1}`;
+    wizardTempCats.push(val);
+  }
+
   perfil.categorias = wizardTempCats;
   perfil.categoriaActiva = wizardTempCats[0];
   perfil.kitA = wizardTempKit;
 
-  // Purga de claves en categoriasData que no fueron seleccionadas por el usuario en el asistente
+  // Re-generar perfiles: 1 ADMIN + N perfiles DTs contratados
+  perfil.profiles = [
+    {
+      id: "admin",
+      nombre: "Director Deportivo",
+      rol: "ADMIN",
+      pin: "1234",
+      avatar: perfil.logo || DEFAULT_LOGO
+    }
+  ];
+
+  wizardTempCats.forEach(cat => {
+    perfil.profiles.push({
+      id: `dt_${cat.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`,
+      nombre: `DT ${cat}`,
+      rol: 'DT',
+      categoria: cat,
+      pin: '1234',
+      avatar: perfil.logo || DEFAULT_LOGO
+    });
+  });
+
+  // Purga de claves en categoriasData que no fueron seleccionadas
   Object.keys(categoriasData).forEach(catKey => {
     if (!wizardTempCats.includes(catKey)) {
       delete categoriasData[catKey];
@@ -918,4 +1091,8 @@ export async function finalizarOnboardingWizard() {
 
   mostrarNotificacionApp('¡Bienvenido a 11FUT!', `🏆 Configuración completada para ${perfil.club || 'tu Club'}.`);
 }
+
+
+
+
 
