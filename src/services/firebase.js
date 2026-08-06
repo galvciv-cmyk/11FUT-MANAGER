@@ -6,6 +6,7 @@ import { perfil, plantel, stats, historial, pinHash, userEmail, setPinHash, setU
 const firebaseConfig = {
   apiKey: "AIzaSyB6McwyGjozN5EAiEJ3J2Q-wP-SR4h68DQ",
   authDomain: "fut-manager-oficial.firebaseapp.com",
+  databaseURL: "https://fut-manager-oficial-default-rtdb.firebaseio.com",
   projectId: "fut-manager-oficial",
   storageBucket: "fut-manager-oficial.firebasestorage.app",
   messagingSenderId: "838588250397",
