@@ -408,10 +408,16 @@ async function login() {
     await cargarFirebase();
 
     document.getElementById('login-screen').style.display = 'none';
-    // main-app permanece oculto hasta que se seleccione el perfil
     document.getElementById('main-app').style.display = 'none';
     aplicarPerfil();
-    renderProfileSelector(handleProfileSelected);
+
+    if (!perfil.wizardCompletado) {
+      const profScreen = document.getElementById('profile-selector-screen');
+      if (profScreen) profScreen.style.display = 'none';
+      abrirOnboardingWizard();
+    } else {
+      renderProfileSelector(handleProfileSelected);
+    }
   } catch (e) {
     console.error('Error de inicio de sesión:', e);
     const isEmulatorActive = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && 
@@ -802,7 +808,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       verificarMembresiaYLock();
 
-      renderProfileSelector(handleProfileSelected);
+      if (!perfil.wizardCompletado) {
+        const profScreen = document.getElementById('profile-selector-screen');
+        if (profScreen) profScreen.style.display = 'none';
+        abrirOnboardingWizard();
+      } else {
+        renderProfileSelector(handleProfileSelected);
+      }
     }
   });
 

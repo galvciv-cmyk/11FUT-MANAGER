@@ -1270,6 +1270,7 @@ export async function finalizarOnboardingWizard() {
     }
   });
 
+  perfil.wizardCompletado = true;
   aplicarPerfil();
   autoSaveLocal();
   await guardarFirebase();
