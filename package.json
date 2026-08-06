@@ -1,5 +1,5 @@
 {
-  "name": "11fut-manager",
+  "name": "elevenfut-manager",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -7,15 +7,14 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest run",
-    "emulators": "npx -y firebase-tools@12.9.0 emulators:start --project demo-11fut"
+    "test": "vitest run"
   },
   "dependencies": {
-    "firebase": "10.12.0",
-    "html2canvas": "1.4.1",
-    "jsdom": "24.1.0",
-    "jspdf": "2.5.1",
-    "vite": "5.2.0",
-    "vitest": "1.6.0"
+    "firebase": "^10.12.0",
+    "html2canvas": "^1.4.1",
+    "jsdom": "^24.1.0",
+    "jspdf": "^2.5.1",
+    "vite": "^5.2.0",
+    "vitest": "^1.6.0"
   }
 }
