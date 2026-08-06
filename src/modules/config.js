@@ -975,7 +975,7 @@ export function abrirOnboardingWizard() {
 
   wizardStep = 1;
   const currentCats = (perfil.categorias || []).filter(Boolean);
-  wizardTempCats = currentCats.length ? [...currentCats] : ['Sub-14'];
+  wizardTempCats = currentCats.length ? [...currentCats] : [];
   wizardTempTorneos = {};
   wizardTempCats.forEach(c => {
     wizardTempTorneos[c] = (categoriasData[c] && categoriasData[c].torneo) ? categoriasData[c].torneo : 'Liga Oficial';
@@ -984,6 +984,12 @@ export function abrirOnboardingWizard() {
 
   const inputNombre = document.getElementById('wiz-club-nombre');
   if (inputNombre) inputNombre.value = perfil.club || '';
+
+  const inputPinAdmin = document.getElementById('wiz-pin-admin');
+  const adminProf = (perfil.profiles || []).find(x => x.id === 'admin');
+  if (inputPinAdmin) {
+    inputPinAdmin.value = (adminProf && adminProf.pin) ? adminProf.pin : (isSuperAdmin() ? '1901' : '1234');
+  }
 
   const prevLogo = document.getElementById('prev-wiz-logo');
   const imgLogo = document.getElementById('img-prev-wiz-logo');
@@ -1019,7 +1025,7 @@ export function actualizarVistaWizard() {
   if (btnPrev) btnPrev.style.display = wizardStep > 1 ? 'block' : 'none';
 
   if (wizardStep === 1) {
-    if (subtitle) subtitle.textContent = 'Paso 1 de 4: Identidad de tu Club';
+    if (subtitle) subtitle.textContent = 'Paso 1 de 4: Identidad de tu Club y PIN Admin';
     if (btnNext) btnNext.textContent = 'SIGUIENTE →';
   } else if (wizardStep === 2) {
     if (subtitle) subtitle.textContent = 'Paso 2 de 4: Categorías y Equipos';
@@ -1081,9 +1087,6 @@ export function siguientePasoWizard() {
       const val = document.getElementById(`wiz-cat-input-${i}`)?.value?.trim() || `Categoría ${i + 1}`;
       wizardTempCats.push(val);
       if (!wizardTempTorneos[val]) wizardTempTorneos[val] = 'Liga Oficial';
-    }
-    if (!wizardTempCats.length) {
-      return mostrarNotificacionApp('Categorías Requeridas', 'Agrega al menos una categoría para tu club', false);
     }
     wizardStep = 3;
     actualizarVistaWizard();
@@ -1152,6 +1155,27 @@ window._guardarTorneoWiz = (cat, val) => {
   wizardTempTorneos[cat] = val.trim() || 'Liga Oficial';
 };
 
+window._subirCustomKitWiz = (fileInput, tipo) => {
+  if (!fileInput || !fileInput.files.length) return;
+  const file = fileInput.files[0];
+  const reader = new FileReader();
+
+  reader.onload = async (e) => {
+    const dataUrl = e.target.result;
+    if (!perfil.customKits) perfil.customKits = {};
+    perfil.customKits[tipo] = dataUrl;
+
+    const prev = document.getElementById(`prev-wiz-kit-${tipo}`);
+    if (prev) {
+      prev.innerHTML = `<img src="${dataUrl}" style="height:35px;object-fit:contain;">`;
+    }
+    autoSaveLocal();
+    await guardarFirebase();
+    mostrarToastRapido('Uniforme Subido', `Kit ${tipo.replace('_', ' ').toUpperCase()} cargado.`, true);
+  };
+  reader.readAsDataURL(file);
+};
+
 function renderWizardKitsUI() {
   const gallery = document.getElementById('wiz-kit-gallery');
   if (!gallery) return;
@@ -1186,6 +1210,8 @@ export async function finalizarOnboardingWizard() {
   const numProfiles = parseInt(selectNum ? selectNum.value : '1', 10) || 1;
   perfil.maxPerfiles = numProfiles;
 
+  const pinAdminInput = document.getElementById('wiz-pin-admin')?.value?.trim() || (isSuperAdmin() ? '1901' : '1234');
+
   const numCats = numProfiles === 1 ? 1 : (numProfiles - 1);
 
   wizardTempCats = [];
@@ -1195,7 +1221,7 @@ export async function finalizarOnboardingWizard() {
   }
 
   perfil.categorias = wizardTempCats;
-  perfil.categoriaActiva = wizardTempCats[0];
+  perfil.categoriaActiva = wizardTempCats[0] || '';
   perfil.kitA = wizardTempKit;
 
   // Re-generar perfiles: 1 ADMIN (+ N-1 perfiles DTs contratados)
@@ -1204,7 +1230,7 @@ export async function finalizarOnboardingWizard() {
       id: "admin",
       nombre: "Director Deportivo",
       rol: "ADMIN",
-      pin: "1234",
+      pin: pinAdminInput,
       avatar: perfil.logo || DEFAULT_LOGO
     }
   ];
@@ -1251,6 +1277,11 @@ export async function finalizarOnboardingWizard() {
   if (modal) modal.style.display = 'none';
 
   mostrarNotificacionApp('¡Bienvenido a 11FUT!', `🏆 Configuración completada para ${perfil.club || 'tu Club'}.`);
+
+  // Mostrar el Selector de Perfiles DESPUÉS de finalizar el Wizard
+  if (typeof window._mostrarProfileSelectorSetup === 'function') {
+    window._mostrarProfileSelectorSetup();
+  }
 }
 
 window._toggleConfigSection = (secId) => {

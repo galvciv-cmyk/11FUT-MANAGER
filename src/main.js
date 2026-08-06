@@ -548,6 +548,9 @@ async function ejecutarRegistroUsuario() {
     cerrarModalRegistro();
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('main-app').style.display = 'none';
+    const profScreen = document.getElementById('profile-selector-screen');
+    if (profScreen) profScreen.style.display = 'none';
+
     aplicarPerfil();
     abrirOnboardingWizard();
 
@@ -865,6 +868,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // Bind Onboarding Wizard
+  window._mostrarProfileSelectorSetup = () => {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('main-app').style.display = 'none';
+    renderProfileSelector((prof) => {
+      handleProfileSelected(prof);
+    });
+  };
+
   document.getElementById('btn-wiz-next')?.addEventListener('click', siguientePasoWizard);
   document.getElementById('btn-wiz-prev')?.addEventListener('click', anteriorPasoWizard);
   document.getElementById('btn-wiz-soporte-wa')?.addEventListener('click', abrirSoporteWhatsApp);
