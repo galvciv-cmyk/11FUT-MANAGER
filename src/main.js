@@ -414,7 +414,7 @@ async function login() {
     if (!perfil.wizardCompletado) {
       const profScreen = document.getElementById('profile-selector-screen');
       if (profScreen) profScreen.style.display = 'none';
-      abrirOnboardingWizard();
+      abrirOnboardingWizard(true);
     } else {
       renderProfileSelector(handleProfileSelected);
     }
@@ -570,7 +570,7 @@ async function ejecutarRegistroUsuario() {
     if (profScreen) profScreen.style.display = 'none';
 
     aplicarPerfil();
-    abrirOnboardingWizard();
+    abrirOnboardingWizard(true);
 
   } catch (e) {
     if (e.code === 'auth/email-already-in-use' || e.message?.includes('email-already-in-use')) {
@@ -828,7 +828,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!perfil.wizardCompletado) {
         const profScreen = document.getElementById('profile-selector-screen');
         if (profScreen) profScreen.style.display = 'none';
-        abrirOnboardingWizard();
+        abrirOnboardingWizard(true);
       } else {
         renderProfileSelector(handleProfileSelected);
       }

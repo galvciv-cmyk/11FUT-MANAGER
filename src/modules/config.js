@@ -969,11 +969,12 @@ let wizardTempCats = [];
 let wizardTempTorneos = {};
 let wizardTempKit = 'predeterminado';
 
-export function abrirOnboardingWizard() {
+export function abrirOnboardingWizard(force = false) {
   const modalReg = document.getElementById('modal-register');
-  if (modalReg && modalReg.style.display !== 'none') {
+  if (!force && modalReg && modalReg.style.display !== 'none' && modalReg.style.display !== '') {
     return;
   }
+  if (modalReg) modalReg.style.display = 'none';
 
   const modal = document.getElementById('modal-onboarding-wizard');
   if (!modal) return;
