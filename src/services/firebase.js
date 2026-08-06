@@ -33,9 +33,9 @@ const useEmulator = isLocalhost && (localStorage.getItem('11fut_use_emulator') =
 
 if (useEmulator) {
   try {
-    connectFirestoreEmulator(db, '127.0.0.1', 8080);
+    connectFirestoreEmulator(db, '127.0.0.1', 8082);
     connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
-    console.log('⚡ Conectado a Emuladores de Firebase Local (Firestore:8080, Auth:9099)');
+    console.log('⚡ Conectado a Emuladores de Firebase Local (Firestore:8082, Auth:9099)');
   } catch (e) {
     console.warn('⚠️ No se pudo conectar a los emuladores locales de Firebase:', e);
   }

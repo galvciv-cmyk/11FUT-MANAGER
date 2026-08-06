@@ -1,7 +1,6 @@
 import { perfil, plantel, KITS, autoSaveLocal } from "./state.js";
 import { guardarFirebase } from "../services/firebase.js";
 import { mostrarNotificacionApp, mostrarConfirmacionApp } from "./config.js";
-import html2canvas from "html2canvas";
 
 export function limpiarCanchaYBanco(eq = 'A') {
   mostrarConfirmacionApp('Limpiar Cancha y Banco', '¿Estás seguro de quitar todos los jugadores seleccionados y dejarlos LIBRES?', () => {
@@ -358,6 +357,27 @@ const EQUIPMENT_SVGS = {
 };
 
 export function getImg(eq, tipo) {
+  const custom = perfil.customKits || {};
+
+  if (tipo === 'visita' || tipo === 'visitante' || tipo === 'rival') {
+    if (custom.visita) return custom.visita;
+  }
+  if (tipo === 'por_visita' || tipo === 'portero_visita' || tipo === 'por_rival' || tipo === 'portero_rival') {
+    if (custom.portero_visita) return custom.portero_visita;
+  }
+  if (tipo === 'por' || tipo === 'por_local' || tipo === 'portero_local') {
+    if (custom.portero_local) return custom.portero_local;
+  }
+  if (tipo === 'sup') {
+    if (custom.sup_local || custom.local) return custom.sup_local || custom.local;
+  }
+  if (tipo === 'ct') {
+    if (custom.ct) return custom.ct;
+  }
+  if (tipo === 'local' || tipo === 'titular') {
+    if (custom.local) return custom.local;
+  }
+
   const kitId = perfil.kitA || 'predeterminado';
   const kitObj = (KITS && KITS.length) ? (KITS.find(k => k.id === kitId) || KITS[0]) : null;
   if (tipo === 'por_rival' || tipo === 'portero_rival') {
@@ -1127,6 +1147,10 @@ export function salirFullscreenTotal(eq = 'A') {
     document.webkitExitFullscreen();
   }
 
+  if (screen.orientation && screen.orientation.unlock) {
+    try { screen.orientation.unlock(); } catch (e) {}
+  }
+
   if (layout) layout.classList.remove('fullscreen');
   document.body.classList.remove('body-fullscreen-active');
 
@@ -1163,24 +1187,55 @@ export function toggleFullscreen(eq) {
   const isNativeFS = !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
   const isFS = layout.classList.contains('fullscreen');
 
+  const aplicarGiroFallback = () => {
+    if (window.innerHeight > window.innerWidth) {
+      layout.classList.add('force-landscape');
+    }
+  };
+
+  const intentarBloqueoLandscape = () => {
+    if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('landscape-primary')
+        .catch(() => screen.orientation.lock('landscape'))
+        .catch(() => {
+          aplicarGiroFallback();
+        });
+    } else {
+      aplicarGiroFallback();
+    }
+  };
+
   if (!isNativeFS && !isFS) {
     // Entrar a Fullscreen Nativo del Navegador (Estilo YouTube / Video)
     const target = layout;
     if (target.requestFullscreen) {
-      target.requestFullscreen().catch(() => {});
+      target.requestFullscreen().then(() => {
+        setTimeout(intentarBloqueoLandscape, 80);
+      }).catch(() => {
+        intentarBloqueoLandscape();
+      });
     } else if (target.webkitRequestFullscreen) {
       target.webkitRequestFullscreen();
+      setTimeout(intentarBloqueoLandscape, 100);
     } else if (target.msRequestFullscreen) {
       target.msRequestFullscreen();
+      setTimeout(intentarBloqueoLandscape, 100);
     }
+
+    intentarBloqueoLandscape();
+
+    if (window.innerWidth < 768 && window.innerHeight > window.innerWidth) {
+      mostrarNotificacionApp('📱 Rotación Recomendada', '🔄 ¡Gira tu teléfono en posición HORIZONTAL (Landscape) para aprovechar al máximo la Pizarra Táctica en pantalla completa!', false);
+    }
+
     layout.classList.add('fullscreen');
     document.body.classList.add('body-fullscreen-active');
     
     const isMitad = vistaCanchaActiva[eq] === 'mitad';
-    canchaWrapper.classList.toggle('horizontal', !isMitad);
+    canchaWrapper.classList.toggle('horizontal', true);
     canchaWrapper.classList.toggle('vista-mitad', isMitad);
 
-    if (drawer) drawer.classList.add('open');
+    if (drawer) drawer.classList.remove('open');
     if (colBanca) colBanca.style.display = 'none';
 
     const btn = document.getElementById(`btn-fs-${eq}`);
@@ -1201,6 +1256,12 @@ if (typeof document !== 'undefined') {
       ['A'].forEach(eq => {
         salirFullscreenTotal(eq);
       });
+    } else {
+      if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape-primary')
+          .catch(() => screen.orientation.lock('landscape'))
+          .catch(() => {});
+      }
     }
   };
 
@@ -1815,6 +1876,7 @@ export async function exportarPNG(eq, btnElement) {
   btnElement.disabled = true;
 
   try {
+    const html2canvas = (await import("html2canvas")).default;
     const canvas = await html2canvas(el, {
       backgroundColor: '#000',
       scale: 2,
@@ -1844,3 +1906,49 @@ export async function exportarPNG(eq, btnElement) {
     btnElement.disabled = false;
   }
 }
+
+export function mostrarToastPizarraFullscreen(eq = 'A', titulo, mensaje, esExito = true) {
+  const banner = document.getElementById(`fs-toast-banner-${eq}`);
+  if (!banner) return;
+  banner.innerHTML = `
+    <span style="font-size:22px;flex-shrink:0;">${esExito ? '✅' : '🔔'}</span>
+    <div>
+      <div style="font-weight:900;color:${esExito ? 'var(--verde-campo)' : 'var(--oro)'};letter-spacing:0.5px;">${titulo.toUpperCase()}</div>
+      <div style="font-size:12px;color:#eee;margin-top:2px;">${mensaje}</div>
+    </div>
+  `;
+  banner.style.display = 'flex';
+
+  clearTimeout(banner._timer);
+  banner._timer = setTimeout(() => {
+    banner.style.display = 'none';
+  }, 5000);
+}
+
+window._mostrarToastPizarraFullscreen = mostrarToastPizarraFullscreen;
+
+window._toggleRotacionPizarra = (eq = 'A') => {
+  const layout = document.getElementById(`pizarra-${eq}`);
+  if (!layout) return;
+  layout.classList.toggle('force-landscape');
+  const isRotated = layout.classList.contains('force-landscape');
+  mostrarNotificacionApp('Orientación Cambiada', isRotated ? '🔄 Cancha rotada a modo Horizontal.' : '📱 Cancha en orientación Normal.');
+};
+
+window._toggleTacticaSection = (secId) => {
+  const target = document.getElementById(secId);
+  const arrow = document.getElementById(`arrow-${secId}`);
+  const btn = target ? target.parentElement.querySelector('.tactica-accordion-header') : null;
+  if (!target) return;
+
+  const isCurrentlyOpen = target.style.display !== 'none';
+  if (isCurrentlyOpen) {
+    target.style.display = 'none';
+    if (arrow) arrow.textContent = '►';
+    if (btn) btn.classList.remove('active');
+  } else {
+    target.style.display = 'block';
+    if (arrow) arrow.textContent = '▼';
+    if (btn) btn.classList.add('active');
+  }
+};

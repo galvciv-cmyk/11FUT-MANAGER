@@ -1,7 +1,7 @@
 import { db } from "../services/firebase.js";
 import { collection, getDocs, doc, setDoc, deleteDoc } from "firebase/firestore";
 import { isSuperAdmin, perfil, autoSaveLocal } from "./state.js";
-import { mostrarConfirmacionApp, mostrarToastRapido } from "./config.js";
+import { mostrarConfirmacionApp, mostrarToastRapido, mostrarPromptModal, mostrarNotificacionApp } from "./config.js";
 
 
 export async function renderSuperAdminDashboard() {
@@ -71,22 +71,11 @@ export async function renderSuperAdminDashboard() {
     let html = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--oro);">👑 PANEL DE SÚPER ADMINISTRADOR (PANEL MASTER)</div>
-        <div style="font-size:20px;font-weight:900;color:var(--oro);background:rgba(212,175,55,0.15);padding:6px 16px;border-radius:20px;border:1px solid var(--oro);">Total Registrados: <b>${clubesValidos.length} Clubes</b></div>
+        <div style="font-size:16px;font-weight:900;color:var(--oro);background:rgba(212,175,55,0.15);padding:6px 16px;border-radius:20px;border:1px solid var(--oro);">Total Registrados: <b>${clubesValidos.length} Clubes</b></div>
       </div>
 
-      <div style="overflow-x:auto;">
-        <table style="width:100%;border-collapse:collapse;font-size:12px;text-align:left;">
-          <thead>
-            <tr style="background:rgba(212,175,55,0.15);color:var(--oro);border-bottom:2px solid var(--oro);">
-              <th style="padding:10px;">INSTITUCIÓN / CLUB</th>
-              <th style="padding:10px;">CONTACTO (EMAIL & WA)</th>
-              <th style="padding:10px;">PLAN / PERFILES</th>
-              <th style="padding:10px;">ESTADO</th>
-              <th style="padding:10px;">VENCIMIENTO</th>
-              <th style="padding:10px;text-align:center;">ACCIONES MASTER</th>
-            </tr>
-          </thead>
-          <tbody id="tb-superadmin-rows">
+      <!-- VISTA EN TARJETAS RESPONSIVAS (MÓVIL Y DESKTOP) -->
+      <div id="tb-superadmin-rows" style="display:flex;flex-direction:column;gap:12px;">
     `;
 
     clubesValidos.forEach(c => {
@@ -103,56 +92,64 @@ export async function renderSuperAdminDashboard() {
       const diffMs = fechaExp - new Date();
       const diasRestantes = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
+      let badgeBg = 'rgba(212,175,55,0.15)';
+      let badgeBorder = 'var(--oro)';
       let badgeColor = 'var(--oro)';
       let badgeLabel = `⏳ PRUEBA (${diasRestantes}d)`;
+
       if (estado === 'ACTIVO') {
-        badgeColor = 'var(--verde-campo)';
+        badgeBg = 'rgba(46,204,113,0.15)';
+        badgeBorder = '#2ecc71';
+        badgeColor = '#2ecc71';
         badgeLabel = `🟢 ACTIVO (${diasRestantes}d)`;
       } else if (estado === 'VENCIDO' || diasRestantes <= 0) {
-        badgeColor = 'var(--rojo)';
+        badgeBg = 'rgba(231,76,60,0.15)';
+        badgeBorder = '#e74c3c';
+        badgeColor = '#e74c3c';
         badgeLabel = `🔴 VENCIDO`;
       }
 
       html += `
-        <tr style="border-bottom:1px solid rgba(255,255,255,0.08);background:rgba(0,0,0,0.3);">
-          <td style="padding:10px;">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <img src="${c.logo || c.perfil?.logo || 'https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'}" style="width:28px;height:28px;object-fit:contain;border-radius:4px;">
-              <span style="font-weight:700;color:#fff;">${clubNombre}</span>
+        <div style="background:#0d0d0d;border:1px solid #222;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 4px 15px rgba(0,0,0,0.4);">
+          
+          <!-- FILA SUPERIOR: LOGO, NOMBRE Y BADGE ESTADO -->
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <img src="${c.logo || c.perfil?.logo || 'https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'}" style="width:34px;height:34px;object-fit:contain;border-radius:6px;background:#181818;padding:2px;border:1px solid #333;">
+              <div>
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#fff;line-height:1.1;">${clubNombre}</div>
+                <div style="font-size:11px;color:#aaa;">📧 ${email}</div>
+              </div>
             </div>
-          </td>
-          <td style="padding:10px;">
-            <div style="color:#eee;">📧 ${email}</div>
-            <div style="color:#aaa;font-size:11px;">📱 ${wa}</div>
-          </td>
-          <td style="padding:10px;">
-            <span style="background:#1a1a1a;border:1px solid var(--oro);padding:3px 8px;border-radius:6px;color:var(--oro);font-weight:700;">${maxP} Perfil(es) DT</span>
-          </td>
-          <td style="padding:10px;">
-            <span style="color:${badgeColor};font-weight:900;">${badgeLabel}</span>
-          </td>
-          <td style="padding:10px;color:#ccc;">
-            ${fechaExp.toLocaleDateString()}
-          </td>
-          <td style="padding:10px;text-align:center;">
-            <div style="display:flex;gap:6px;justify-content:center;">
-              <button class="btn btn-green sa-btn-action" data-action="aprobar" data-id="${c.id}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:10px;padding:6px 8px;white-space:nowrap;">🟢 APROBAR (30D)</button>
-              <button class="btn btn-gold sa-btn-action" data-action="regalar" data-id="${c.id}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:10px;padding:6px 8px;white-space:nowrap;">🟡 REGALAR PRUEBA</button>
-              <button class="btn btn-gray sa-btn-action" data-action="suspender" data-id="${c.id}" style="font-size:10px;padding:6px 8px;white-space:nowrap;color:var(--rojo);">🔴 SUSPENDER</button>
-              <button class="btn btn-gray sa-btn-action" data-action="wa" data-wa="${wa}" data-club="${clubNombre}" style="font-size:10px;padding:6px 8px;white-space:nowrap;">💬 WA</button>
-              <button class="btn btn-red sa-btn-action" data-action="eliminar" data-id="${c.id}" data-club="${clubNombre}" style="font-size:10px;padding:6px 8px;white-space:nowrap;">🗑️ ELIMINAR</button>
-            </div>
-          </td>
-        </tr>
+            <span style="background:${badgeBg};border:1px solid ${badgeBorder};color:${badgeColor};font-size:11px;font-weight:900;padding:4px 10px;border-radius:12px;">
+              ${badgeLabel}
+            </span>
+          </div>
 
+          <!-- DETALLES SECUNDARIOS: WHATSAPP, CANTIDAD DE PERFILES, FECHA VENCIMIENTO -->
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;background:#141414;padding:8px 12px;border-radius:8px;font-size:11px;color:#ccc;border:1px solid #222;">
+            <div>📱 <span style="color:#fff;font-weight:700;">${wa}</span></div>
+            <div style="display:flex;gap:12px;align-items:center;">
+              <span style="color:var(--oro);font-weight:800;background:rgba(212,175,55,0.12);padding:2px 8px;border-radius:6px;">👤 ${maxP} Perfil(es)</span>
+              <span>📅 ${fechaExp.toLocaleDateString()}</span>
+            </div>
+          </div>
+
+          <!-- FILA DE BOTONES DE ACCIÓN RESPONSIVOS -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(110px, 1fr));gap:6px;margin-top:2px;">
+            <button class="btn btn-green sa-btn-action" data-action="aprobar" data-id="${c.id}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟢 APROBAR (30D)</button>
+            <button class="btn btn-gold sa-btn-action" data-action="regalar" data-id="${c.id}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟡 +PRUEBA</button>
+            <button class="btn btn-gray sa-btn-action" data-action="suspender" data-id="${c.id}" style="font-size:11px;padding:8px;font-weight:800;color:var(--rojo);justify-content:center;">🔴 SUSPENDER</button>
+            <button class="btn btn-gray sa-btn-action" data-action="wa" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">💬 CHAT WA</button>
+            <button class="btn btn-red sa-btn-action" data-action="eliminar" data-id="${c.id}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🗑️ BORRAR</button>
+          </div>
+
+        </div>
       `;
     });
 
-    html += `
-          </tbody>
-        </table>
-      </div>
-    `;
+    html += `</div>`;
+    container.innerHTML = html;
 
     container.innerHTML = html;
 
@@ -217,56 +214,60 @@ async function ejecutarAprobarSuperAdmin(pubDocId, email, wa, clubNombre) {
 
     renderSuperAdminDashboard();
   } catch (e) {
-    alert('Error al aprobar membresía: ' + e.message);
+    mostrarToastRapido('Error', 'Error al aprobar membresía: ' + e.message, false);
   }
 }
 
 async function ejecutarRegalarPruebaSuperAdmin(pubDocId, email, wa, clubNombre) {
-  const inputDias = prompt(`¿Cuántos días de prueba deseas otorgar a ${clubNombre}?`, '7');
-  if (!inputDias) return;
-  const dias = parseInt(inputDias, 10) || 7;
-  const nuevaFecha = new Date(Date.now() + dias * 24 * 60 * 60 * 1000).toISOString();
+  mostrarPromptModal(`Días de Prueba para ${clubNombre}`, 'Días a otorgar (ej: 7, 14, 30)', async (inputDias) => {
+    const dias = parseInt(inputDias, 10) || 7;
+    const nuevaFecha = new Date(Date.now() + dias * 24 * 60 * 60 * 1000).toISOString();
 
-  try {
-    await setDoc(doc(db, 'publicos', pubDocId), {
-      estadoCuenta: 'PRUEBA',
-      fechaVencimiento: nuevaFecha
-    }, { merge: true });
+    try {
+      await setDoc(doc(db, 'publicos', pubDocId), {
+        estadoCuenta: 'PRUEBA',
+        fechaVencimiento: nuevaFecha
+      }, { merge: true });
 
-    if (perfil && perfil.email === email) {
-      perfil.estadoCuenta = 'PRUEBA';
-      perfil.fechaVencimiento = nuevaFecha;
-      autoSaveLocal();
+      if (perfil && perfil.email === email) {
+        perfil.estadoCuenta = 'PRUEBA';
+        perfil.fechaVencimiento = nuevaFecha;
+        autoSaveLocal();
+      }
+
+      mostrarToastRapido('Prueba Otorgada', `🟡 Se regalaron ${dias} días de prueba a ${clubNombre}.`, true);
+
+      const msgWA = encodeURIComponent(`¡Hola ${clubNombre}! 🎉 Te hemos otorgado una prueba especial de ${dias} días en 11FUT MANAGER para que disfrutes de todas las funciones de tu club. ¡Bienvenido! ⚽`);
+      const waClean = (wa || '').replace(/\D/g, '');
+
+      if (waClean) {
+        window.open(`https://wa.me/${waClean}?text=${msgWA}`, '_blank');
+      }
+
+      renderSuperAdminDashboard();
+    } catch (e) {
+      mostrarToastRapido('Error', 'Error al otorgar días de prueba: ' + e.message, false);
     }
-
-    const msgWA = encodeURIComponent(`¡Hola ${clubNombre}! 🎉 Te hemos otorgado una prueba especial de ${dias} días en 11FUT MANAGER para que disfrutes de todas las funciones de tu club. ¡Bienvenido! ⚽`);
-    const waClean = (wa || '').replace(/\D/g, '');
-
-    if (waClean) {
-      window.open(`https://wa.me/${waClean}?text=${msgWA}`, '_blank');
-    }
-
-    renderSuperAdminDashboard();
-  } catch (e) {
-    alert('Error al otorgar días de prueba: ' + e.message);
-  }
+  });
 }
 
 async function ejecutarSuspenderSuperAdmin(pubDocId) {
-  if (!confirm('¿Estás seguro de suspender el acceso de este club?')) return;
-  try {
-    await setDoc(doc(db, 'publicos', pubDocId), {
-      estadoCuenta: 'VENCIDO'
-    }, { merge: true });
-    renderSuperAdminDashboard();
-  } catch (e) {
-    alert('Error al suspender cuenta: ' + e.message);
-  }
+  mostrarConfirmacionApp('Suspender Club', '¿Estás seguro de suspender el acceso de este club?', async () => {
+    try {
+      await setDoc(doc(db, 'publicos', pubDocId), {
+        estadoCuenta: 'VENCIDO'
+      }, { merge: true });
+      mostrarToastRapido('Cuenta Suspendida', 'Se ha cambiado el estado a VENCIDO.', true);
+      renderSuperAdminDashboard();
+    } catch (e) {
+      mostrarToastRapido('Error', 'Error al suspender cuenta: ' + e.message, false);
+    }
+  });
 }
 
 function ejecutarChatWASuperAdmin(wa, clubNombre) {
   const waClean = (wa || '').replace(/\D/g, '');
-  if (!waClean) return alert('No hay número de WhatsApp registrado para este club.');
+  if (!waClean) return mostrarNotificacionApp('WhatsApp', 'No hay número de WhatsApp registrado para este club.', false);
   const msg = encodeURIComponent(`Hola ${clubNombre}, te contacto de la administración de 11FUT MANAGER.`);
   window.open(`https://wa.me/${waClean}?text=${msg}`, '_blank');
 }

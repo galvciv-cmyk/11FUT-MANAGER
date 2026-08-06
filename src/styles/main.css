@@ -143,6 +143,7 @@ body.theme-light .app-header {
 body.theme-light .header-title {
   background: linear-gradient(180deg, #0f172a 0%, #b8860b 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -274,6 +275,7 @@ body.theme-light .juego-programado-item {
   letter-spacing: 2.5px;
   background: linear-gradient(180deg, #ffffff 0%, #d4af37 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   text-transform: uppercase;
   text-align: center;
@@ -1394,6 +1396,34 @@ body.body-fullscreen-active {
   z-index: 99900 !important;
 }
 
+/* ── ACORDEÓN DESPLEGABLE EN EL MODAL DE CONFIGURACIÓN ── */
+.cfg-accordion-header {
+  width: 100%;
+  background: #141414;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: var(--oro);
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.cfg-accordion-header:hover, .cfg-accordion-header.active {
+  background: rgba(212, 175, 55, 0.15);
+  border-color: var(--oro);
+  color: #fff;
+}
+
+.cfg-accordion-content {
+  animation: fadeIn 0.25s ease;
+}
+
 .modal-body {
   width: 100%; max-width: 440px;
   max-height: 85vh; overflow-y: auto;
@@ -1592,4 +1622,130 @@ body.body-fullscreen-active {
   width: auto;
   object-fit: contain;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+/* ── RESPONSIVE MOBILE OPTIMIZATIONS ── */
+@media (max-width: 650px) {
+  .app-header {
+    padding: 10px 12px !important;
+    min-height: 58px !important;
+    gap: 6px !important;
+  }
+
+  .header-logo {
+    height: 44px !important;
+    width: 44px !important;
+  }
+
+  .header-title {
+    font-size: 15px !important;
+    letter-spacing: 1px !important;
+  }
+
+  #btn-switch-profile {
+    padding: 4px 6px !important;
+    font-size: 10px !important;
+  }
+
+  .header-menu-btn {
+    padding: 5px 8px !important;
+    font-size: 11px !important;
+  }
+
+  .header-config {
+    font-size: 18px !important;
+    padding: 2px !important;
+  }
+}
+
+.table-responsive-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  margin-bottom: 16px;
+}
+
+.table-responsive-wrapper table {
+  min-width: 720px;
+  width: 100%;
+}
+
+/* ── BANNER FLOTANTE DE NOTIFICACIONES DENTRO DE PANTALLA COMPLETA ── */
+.fs-toast-banner {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999999;
+  background: rgba(10, 14, 20, 0.96);
+  border: 1px solid var(--oro);
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.95);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 90%;
+  min-width: 280px;
+  pointer-events: auto;
+  animation: fadeIn 0.3s ease;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* ── GIRO DE CANCHA VIRTUAL CUANDO EL BLOQUEO DE HARDWARE DE ORIENTACIÓN FALLE O ESTÉ DESACTIVADO ── */
+@media screen and (max-width: 900px) and (orientation: portrait) {
+  .campo-layout.fullscreen.force-landscape {
+    transform: rotate(90deg) !important;
+    transform-origin: center center !important;
+    width: 100vh !important;
+    height: 100vw !important;
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    margin-top: -50vw !important;
+    margin-left: -50vh !important;
+    z-index: 999999 !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* ── ACORDEONES REPLEGABLES EN LA PESTAÑA TÁCTICA ── */
+.tactica-accordion-header {
+  width: 100%;
+  background: #121620;
+  border: none;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+  color: var(--oro);
+  padding: 12px 14px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background 0.2s, color 0.2s;
+  letter-spacing: 0.5px;
+}
+
+.tactica-accordion-header:hover, .tactica-accordion-header.active {
+  background: rgba(212, 175, 55, 0.15);
+  color: #fff;
+}
+
+.tactica-accordion-content {
+  animation: fadeIn 0.25s ease;
+}
+
+/* ── RESPONSIVE GRID PLANTEL 50/50 PC ── */
+@media (min-width: 768px) {
+  .squad-grid-container {
+    grid-template-columns: 1fr 1fr !important;
+  }
 }

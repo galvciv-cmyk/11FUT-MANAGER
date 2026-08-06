@@ -112,11 +112,25 @@ export function renderAdminDashboard(containerElement) {
           <button onclick="window._abrirPizarraFullscreenAdmin()" class="btn btn-gold" style="font-size:12px;padding:8px 14px;display:flex;align-items:center;gap:6px;font-weight:700;">
             📺 PIZARRA TÁCTICA PANTALLA COMPLETA
           </button>
-          <label style="font-size:12px;color:var(--oro);font-weight:700;">Filtrar Vista:</label>
-          <select id="admin-view-selector" style="background:#0d0d0d;color:#fff;border:1px solid var(--oro);padding:8px 12px;border-radius:8px;font-size:13px;cursor:pointer;">
-            <option value="GLOBAL">🌐 TODAS LAS CATEGORÍAS (GLOBAL)</option>
-            ${cats.map(c => `<option value="${c}">🔍 CATEGORÍA: ${c}</option>`).join('')}
-          </select>
+          
+          <div style="display:flex;flex-direction:column;gap:6px;background:#0d0d0d;padding:8px 12px;border-radius:10px;border:1px solid rgba(212,175,55,0.35);">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <label style="font-size:11px;color:var(--oro);font-weight:700;white-space:nowrap;">👤 Perfil:</label>
+              <select id="admin-profile-selector" style="background:#181818;color:#fff;border:1px solid #333;padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;flex:1;">
+                <option value="GLOBAL">🌐 TODOS LOS PERFILES</option>
+                ${(perfil.profiles || []).map(p => `
+                  <option value="${p.id}">${p.rol === 'ADMIN' ? '👑' : '🧢'} ${p.nombre}</option>
+                `).join('')}
+              </select>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <label style="font-size:11px;color:var(--oro);font-weight:700;white-space:nowrap;">⚽ Equipo (máx 3):</label>
+              <select id="admin-team-selector" style="background:#181818;color:#fff;border:1px solid #333;padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;flex:1;">
+                <option value="GLOBAL">🌐 TODOS LOS EQUIPOS</option>
+                ${cats.map(c => `<option value="${c}">⚽ ${c}</option>`).join('')}
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -250,23 +264,61 @@ export function renderAdminDashboard(containerElement) {
     </div>
   `;
 
-  const viewSelect = document.getElementById('admin-view-selector');
-  if (viewSelect) {
-    viewSelect.addEventListener('change', (e) => {
-      const val = e.target.value;
-      const globalSec = document.getElementById('admin-section-global');
-      const catSec = document.getElementById('admin-section-category');
+  const profileSelect = document.getElementById('admin-profile-selector');
+  const teamSelect = document.getElementById('admin-team-selector');
+  const globalSec = document.getElementById('admin-section-global');
+  const catSec = document.getElementById('admin-section-category');
 
-      if (val === 'GLOBAL') {
-        if (globalSec) globalSec.style.display = 'block';
-        if (catSec) catSec.style.display = 'none';
+  function updateTeamOptions(pId) {
+    if (!teamSelect) return;
+
+    if (pId === 'GLOBAL') {
+      teamSelect.innerHTML = `
+        <option value="GLOBAL">🌐 TODOS LOS EQUIPOS DEL CLUB</option>
+        ${cats.map(c => `<option value="${c}">⚽ ${c}</option>`).join('')}
+      `;
+    } else {
+      const prof = (perfil.profiles || []).find(p => p.id === pId);
+      const eqList = (prof && prof.equipos && Array.isArray(prof.equipos))
+        ? prof.equipos.filter(Boolean).slice(0, 3)
+        : (prof && prof.categoria ? [prof.categoria] : []);
+
+      if (eqList.length === 0) {
+        teamSelect.innerHTML = `<option value="GLOBAL">⚠️ Sin equipos asignados aún</option>`;
       } else {
-        if (globalSec) globalSec.style.display = 'none';
-        if (catSec) {
-          catSec.style.display = 'block';
-          renderVistaDetalladaCategoria(val, catSec);
-        }
+        teamSelect.innerHTML = `
+          <option value="GLOBAL">🌐 TODOS LOS EQUIPOS DE ESTE PERFIL (${eqList.length})</option>
+          ${eqList.map(eq => `<option value="${eq}">⚽ ${eq}</option>`).join('')}
+        `;
       }
+    }
+  }
+
+  function handleFilterChange() {
+    const selectedTeam = teamSelect ? teamSelect.value : 'GLOBAL';
+
+    if (selectedTeam === 'GLOBAL') {
+      if (globalSec) globalSec.style.display = 'block';
+      if (catSec) catSec.style.display = 'none';
+    } else {
+      if (globalSec) globalSec.style.display = 'none';
+      if (catSec) {
+        catSec.style.display = 'block';
+        renderVistaDetalladaCategoria(selectedTeam, catSec);
+      }
+    }
+  }
+
+  if (profileSelect) {
+    profileSelect.addEventListener('change', (e) => {
+      updateTeamOptions(e.target.value);
+      handleFilterChange();
+    });
+  }
+
+  if (teamSelect) {
+    teamSelect.addEventListener('change', () => {
+      handleFilterChange();
     });
   }
 }

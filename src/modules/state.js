@@ -1,5 +1,5 @@
-export const cupos = { por: 3, def: 8, med: 8, del: 6 };
-export const catNombres = { por: 'PORTEROS', def: 'DEFENSAS', med: 'MEDIOCAMPISTAS', del: 'DELANTEROS' };
+export const cupos = { por: 3, def: 9, med: 9, del: 9 };
+export const catNombres = { por: 'PORTEROS (3)', def: 'DEFENSAS (9)', med: 'MEDIOCAMPISTAS (9)', del: 'DELANTEROS (9)' };
 
 export const DEFAULT_PLANTEL = {
   por: [],
@@ -66,31 +66,30 @@ export function getCurrentProfile() {
   return currentProfile;
 }
 
-export let categoriasData = {
-  "Sub-14": {
-    plantel: JSON.parse(JSON.stringify(DEFAULT_PLANTEL)),
-    stats: {},
-    historial: [],
-    juegosProgramados: []
-  }
-};
+export let categoriasData = {};
 
-export let plantel = categoriasData["Sub-14"].plantel;
-export let stats = categoriasData["Sub-14"].stats;
-export let historial = categoriasData["Sub-14"].historial;
-export let juegosProgramados = categoriasData["Sub-14"].juegosProgramados;
+export let plantel = JSON.parse(JSON.stringify(DEFAULT_PLANTEL));
+export let stats = {};
+export let historial = [];
+export let juegosProgramados = [];
 
 export function setCategoriaActiva(catNombre) {
-  if (!catNombre) return;
-  perfil.categoriaActiva = catNombre;
+  perfil.categoriaActiva = catNombre || '';
 
-  if (!perfil.categorias || !perfil.categorias.length) {
-    perfil.categorias = [catNombre];
-  } else if (!perfil.categorias.includes(catNombre)) {
+  if (!catNombre) {
+    plantel = JSON.parse(JSON.stringify(DEFAULT_PLANTEL));
+    stats = {};
+    historial = [];
+    juegosProgramados = [];
+    return;
+  }
+
+  if (!perfil.categorias) perfil.categorias = [];
+  if (!perfil.categorias.includes(catNombre)) {
     perfil.categorias.push(catNombre);
   }
 
-  // Purga de categorías huérfanas/fantasmas en categoriasData que no pertenezcan a perfil.categorias
+  // Purga de categorías huérfanas en categoriasData que no estén en perfil.categorias
   Object.keys(categoriasData).forEach(key => {
     if (!perfil.categorias.includes(key)) {
       delete categoriasData[key];
@@ -114,34 +113,20 @@ export function setCategoriaActiva(catNombre) {
 }
 
 export function updateCategoriasData(newData) {
-  if (newData && typeof newData === 'object' && Object.keys(newData).length > 0) {
+  if (newData && typeof newData === 'object') {
     categoriasData = newData;
-    const catsClaves = Object.keys(categoriasData);
 
-    // Sincronizar bidireccionalmente perfil.categorias con las claves de categoriasData
-    const setCats = new Set([
-      ...(perfil.categorias || []),
-      ...catsClaves
-    ]);
-
-    let categorias = Array.from(setCats).filter(Boolean);
-    
-    // Si existen categorías personalizadas del usuario, remover 'Sub-14' si está vacía
-    if (categorias.length > 1 && categorias.includes('Sub-14')) {
-      const sub14Obj = categoriasData['Sub-14'];
-      const sub14HasPlayers = sub14Obj && sub14Obj.plantel &&
-        ['por','def','med','del'].some(k => sub14Obj.plantel[k] && sub14Obj.plantel[k].length > 0);
-      if (!sub14HasPlayers) {
-        categorias = categorias.filter(c => c !== 'Sub-14');
-        delete categoriasData['Sub-14'];
+    // Purga de llaves no pertenecientes a perfil.categorias
+    const catsActuales = Array.isArray(perfil.categorias) ? perfil.categorias : [];
+    Object.keys(categoriasData).forEach(key => {
+      if (!catsActuales.includes(key)) {
+        delete categoriasData[key];
       }
-    }
-
-    perfil.categorias = categorias;
+    });
 
     const catActual = (perfil.categoriaActiva && categoriasData[perfil.categoriaActiva]) 
       ? perfil.categoriaActiva 
-      : (perfil.categorias[0] || 'Sub-14');
+      : (catsActuales.length > 0 ? catsActuales[0] : '');
     
     setCategoriaActiva(catActual);
   }
@@ -150,7 +135,7 @@ export function updateCategoriasData(newData) {
 export function updatePlantel(newPlantel) {
   if (newPlantel) {
     plantel = newPlantel;
-    if (categoriasData[perfil.categoriaActiva]) {
+    if (perfil.categoriaActiva && categoriasData[perfil.categoriaActiva]) {
       categoriasData[perfil.categoriaActiva].plantel = plantel;
     }
   }
@@ -166,11 +151,14 @@ export function setUserEmail(email) { userEmail = email; perfil.email = email; }
 export function updatePerfil(newPerfil) {
   if (newPerfil) {
     perfil = { ...DEFAULT_PERFIL, ...newPerfil };
-    if (!perfil.categorias || !perfil.categorias.length) {
-      perfil.categorias = ["Sub-14"];
-    }
+    if (!perfil.categorias) perfil.categorias = [];
     if (!perfil.esquemasCustom) perfil.esquemasCustom = [];
-    setCategoriaActiva(perfil.categoriaActiva || "Sub-14");
+    
+    const catActual = (perfil.categoriaActiva && perfil.categorias.includes(perfil.categoriaActiva))
+      ? perfil.categoriaActiva
+      : (perfil.categorias.length > 0 ? perfil.categorias[0] : '');
+
+    setCategoriaActiva(catActual);
   }
 }
 

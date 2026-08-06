@@ -8,5 +8,10 @@ export default defineConfig({
   },
   optimizeDeps: {
     exclude: ['canvg', 'html2canvas']
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    include: ['src/**/*.test.js']
   }
 });

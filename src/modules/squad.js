@@ -2,7 +2,6 @@ import { plantel, cupos, catNombres, perfil, stats, autoSaveLocal } from "./stat
 import { guardarFirebase } from "../services/firebase.js";
 import { renderStats } from "./stats.js";
 import { mostrarNotificacionApp } from "./config.js";
-import { jsPDF } from "jspdf";
 
 export function initPlantelUI() {
   const cont = document.getElementById('lista-inputs');
@@ -53,6 +52,18 @@ export function aplicarPlantelUI() {
       });
     }
   }
+
+  const ct = plantel.cuerpoTecnico || {};
+  const dtEl = document.getElementById('ct-dt-nombre');
+  const atEl = document.getElementById('ct-at-nombre');
+  const pfEl = document.getElementById('ct-pf-nombre');
+  const medEl = document.getElementById('ct-med-nombre');
+
+  if (dtEl) dtEl.value = ct.dt || '';
+  if (atEl) atEl.value = ct.at || '';
+  if (pfEl) pfEl.value = ct.pf || '';
+  if (medEl) medEl.value = ct.med || '';
+
   renderCapitanesUI();
 }
 
@@ -69,6 +80,12 @@ export function syncPlantelFromUI() {
     document.getElementById('cap-select-2')?.value || '',
     document.getElementById('cap-select-3')?.value || ''
   ];
+  plantel.cuerpoTecnico = {
+    dt: document.getElementById('ct-dt-nombre')?.value.trim() || '',
+    at: document.getElementById('ct-at-nombre')?.value.trim() || '',
+    pf: document.getElementById('ct-pf-nombre')?.value.trim() || '',
+    med: document.getElementById('ct-med-nombre')?.value.trim() || ''
+  };
 }
 
 export async function guardarSquad() {
@@ -111,8 +128,9 @@ export function importarCSV(input) {
   if (input.files[0]) reader.readAsText(input.files[0]);
 }
 
-export function exportarPDF() {
+export async function exportarPDF() {
   syncPlantelFromUI();
+  const { jsPDF } = await import("jspdf");
   const doc = new jsPDF();
   doc.setFontSize(22);
   doc.setTextColor(226, 30, 34);

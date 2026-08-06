@@ -62,12 +62,22 @@ const TAB_LABELS = {
 export function switchTab(n, updateHash = true) {
   // Protección de seguridad por rol: Bloquear acceso a Tab 7 y Tab 8 por Hash si no tiene permisos
   const isMaster = isSuperAdmin();
-  const esAdminRol = isMaster || (currentProfile && currentProfile.rol === 'ADMIN');
+  // esAdminRol: basado SOLO en el rol del perfil seleccionado (no en isMaster)
+  // Un DT en cuenta SuperAdmin se trata como DT normal
+  const esAdminRol = currentProfile && currentProfile.rol === 'ADMIN';
+  const maxContratado = isMaster ? 8 : (perfil.maxPerfiles || 1);
 
-  if (n === 8 && !isMaster) {
+  // Contar cuántos perfiles DT existen activamente (sin contar el Admin)
+  const dtActivos = (perfil.profiles || []).filter(p => p.rol === 'DT').length;
+
+  if (n === 8 && !(isMaster && esAdminRol)) {
+    // Tab 8 (Súper Admin) solo accesible si la cuenta es SuperAdmin Y el perfil activo es ADMIN
     n = esAdminRol ? 7 : 1;
   } else if (n === 7 && !esAdminRol) {
     n = 1;
+  } else if (n === 1 && esAdminRol && dtActivos > 0) {
+    // Redirigir Tab 1 → Tab 7 cuando el perfil Admin ya tiene DTs creados
+    n = 7;
   }
 
   document.querySelectorAll('.nav-horizontal-item').forEach((t) => {
@@ -98,7 +108,6 @@ export function switchTab(n, updateHash = true) {
 
 
 
-
 export function restaurarPestanaDesdeURL() {
   const hash = window.location.hash || '#tactica';
   const tabNum = ROUTE_TABS[hash] || 1;
@@ -106,6 +115,18 @@ export function restaurarPestanaDesdeURL() {
 }
 
 window.addEventListener('hashchange', restaurarPestanaDesdeURL);
+
+// Exponer para uso desde config.js (evita circular import)
+window._refrescarVisibilidadTabs = () => {
+  actualizarVisibilidadPestanasRol();
+  // Si el Admin ahora tiene DTs y está en Tab 1, redirigir a Panel Admin
+  const dtActivos = (perfil.profiles || []).filter(p => p.rol === 'DT').length;
+  const esPerfilAdmin = currentProfile && currentProfile.rol === 'ADMIN';
+  if (esPerfilAdmin && dtActivos > 0) {
+    switchTab(7);
+  }
+};
+
 
 // ══════════════════════════════════════════
 // CATEGORY & TEAM SELECTOR MANAGER
@@ -117,41 +138,34 @@ export function renderSelectorCategoria(isPublic = false) {
   const selectTraining = document.getElementById('training-categoria-selector');
   const selectPub = document.getElementById('pub-selector-categoria');
 
-  let categorias = (perfil.categorias && perfil.categorias.length > 0) ? perfil.categorias.filter(Boolean) : ['Sub-14'];
-  
-  // Si el usuario tiene múltiples categorías y una es 'Sub-14' sin jugadores, remover 'Sub-14'
-  if (categorias.length > 1 && categorias.includes('Sub-14')) {
-    const sub14Obj = categoriasData['Sub-14'];
-    const sub14HasPlayers = sub14Obj && sub14Obj.plantel &&
-      ['por','def','med','del'].some(k => sub14Obj.plantel[k] && sub14Obj.plantel[k].length > 0);
-    if (!sub14HasPlayers) {
-      categorias = categorias.filter(c => c !== 'Sub-14');
-      delete categoriasData['Sub-14'];
-    }
-  }
-
+  let categorias = Array.isArray(perfil.categorias) ? perfil.categorias.filter(Boolean) : [];
   perfil.categorias = categorias;
 
-  const activa = (perfil.categoriaActiva && categorias.includes(perfil.categoriaActiva)) 
-    ? perfil.categoriaActiva 
-    : categorias[0];
+  let html = '';
+  if (categorias.length === 0) {
+    perfil.categoriaActiva = '';
+    html = `<option value="">⚠️ Sin categorías creadas</option>`;
+  } else {
+    const activa = (perfil.categoriaActiva && categorias.includes(perfil.categoriaActiva)) 
+      ? perfil.categoriaActiva 
+      : categorias[0];
+    perfil.categoriaActiva = activa;
 
-  perfil.categoriaActiva = activa;
+    // Asegurar estructura inicial en categoriasData para cada categoría activa
+    categorias.forEach(c => {
+      if (!categoriasData[c]) {
+        categoriasData[c] = {
+          plantel: JSON.parse(JSON.stringify(DEFAULT_PLANTEL)),
+          stats: {},
+          historial: [],
+          juegosProgramados: [],
+          torneo: 'Torneo Oficial'
+        };
+      }
+    });
 
-  // Asegurar estructura inicial en categoriasData para cada categoría activa
-  categorias.forEach(c => {
-    if (!categoriasData[c]) {
-      categoriasData[c] = {
-        plantel: JSON.parse(JSON.stringify(DEFAULT_PLANTEL)),
-        stats: {},
-        historial: [],
-        juegosProgramados: [],
-        torneo: 'Torneo Oficial'
-      };
-    }
-  });
-
-  const html = categorias.map(c => `<option value="${c}" ${c === activa ? 'selected' : ''}>⚽ ${c}</option>`).join('');
+    html = categorias.map(c => `<option value="${c}" ${c === activa ? 'selected' : ''}>⚽ ${c}</option>`).join('');
+  }
 
   if (selectTactica) selectTactica.innerHTML = html;
   if (selectPlantel) selectPlantel.innerHTML = html;
@@ -400,6 +414,31 @@ async function login() {
     renderProfileSelector(handleProfileSelected);
   } catch (e) {
     console.error('Error de inicio de sesión:', e);
+    const isEmulatorActive = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && 
+                            (localStorage.getItem('11fut_use_emulator') === 'true' || window.location.search.includes('use_emulator=true'));
+    
+    if (isEmulatorActive && (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential')) {
+      try {
+        if (statusEl) statusEl.textContent = '⚡ Registrando cuenta en Emulador Local...';
+        const newCred = await createUserWithEmailAndPassword(auth, emailInput, pinInput);
+        const user = newCred.user;
+        setUserEmail(user.email);
+        const hashed = await hashPin(pinInput + user.email);
+        setPinHash(hashed);
+
+        if (statusEl) statusEl.textContent = '☁️ Cargando datos...';
+        await cargarFirebase();
+
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('main-app').style.display = 'none';
+        aplicarPerfil();
+        renderProfileSelector(handleProfileSelected);
+        return;
+      } catch (regErr) {
+        console.error('Error en registro automático de emulador:', regErr);
+      }
+    }
+
     if (statusEl) statusEl.textContent = `❌ Error: ${e.message || 'Correo o contraseña incorrectos'}`;
   }
 }
@@ -607,7 +646,9 @@ export function cerrarModalBiometria() {
 
 export function actualizarVisibilidadPestanasRol() {
   const isMaster = isSuperAdmin();
-  const esAdminRol = isMaster || (currentProfile && currentProfile.rol === 'ADMIN');
+  // esAdminRol: basado SOLO en el rol del perfil seleccionado actualmente
+  // (NO en si la cuenta es SuperAdmin, para que un DT en cuenta SuperAdmin se trate como DT)
+  const esAdminRol = currentProfile && currentProfile.rol === 'ADMIN';
   const maxContratado = isMaster ? 8 : (perfil.maxPerfiles || 1);
 
   const tab1 = document.getElementById('tab-1'); // Táctica
@@ -637,20 +678,37 @@ export function actualizarVisibilidadPestanasRol() {
 
   // CUENTAS DE MÚLTIPLES PERFILES (maxContratado > 1 o Master):
   if (esAdminRol) {
-    // Para el Perfil Director Deportivo (ADMIN):
-    // Pestañas visibles: Táctica (Pizarra Estratégica), Plantel, Stats, Historial, Panel Admin, Súper Admin (si aplica)
-    // Pestañas ocultas: Citaciones (Tab 2) y Entrenamientos (Tab 6)
+    // Contar perfiles DT activos reales (no el plan máximo contratado)
+    const dtActivos = (perfil.profiles || []).filter(p => p.rol === 'DT').length;
+
+    if (dtActivos > 0) {
+      // El perfil Admin ya tiene DTs creados: ocultar Tab 1 (Táctica).
+      // La pizarra táctica se activa en Pantalla Completa desde el Panel Admin (Tab 7).
+      if (tab1) tab1.style.display = 'none';
+      if (tab2) tab2.style.display = 'none';
+      if (tab3) tab3.style.display = 'block';
+      if (tab4) tab4.style.display = 'block';
+      if (tab5) tab5.style.display = 'block';
+      if (tab6) tab6.style.display = 'none';
+      if (tab7) tab7.style.display = 'block';
+      if (tab8) tab8.style.display = (isMaster && esAdminRol) ? 'block' : 'none';
+      if (btnModoPartido) btnModoPartido.style.display = 'none';
+      return;
+    }
+
+    // Si NO se han creado perfiles DT todavía (dtActivos === 0):
+    // El Admin mantiene el acceso directo a la Pizarra Táctica (Tab 1), Citación (Tab 2) y Entrenamientos (Tab 6).
     if (tab1) tab1.style.display = 'block';
-    if (tab2) tab2.style.display = 'none';
+    if (tab2) tab2.style.display = 'block';
     if (tab3) tab3.style.display = 'block';
     if (tab4) tab4.style.display = 'block';
     if (tab5) tab5.style.display = 'block';
-    if (tab6) tab6.style.display = 'none';
+    if (tab6) tab6.style.display = 'block';
     if (tab7) tab7.style.display = 'block';
-    if (tab8) tab8.style.display = isMaster ? 'block' : 'none';
+    // Tab 8 (Súper Admin): solo si cuenta SuperAdmin Y perfil Admin
+    if (tab8) tab8.style.display = (isMaster && esAdminRol) ? 'block' : 'none';
 
-    // Ocultar "Modo Partido" en vivo para el Perfil Director Deportivo
-    if (btnModoPartido) btnModoPartido.style.display = 'none';
+    if (btnModoPartido) btnModoPartido.style.display = 'flex';
 
   } else {
     // Para Perfiles DT (Entrenadores):
@@ -681,10 +739,18 @@ function handleProfileSelected(prof) {
     renderSelectorCategoria();
     refrescarTodaLaVista();
     switchTab(7);
-  } else if (isMaster) {
+  } else if (isMaster && prof && prof.rol === 'ADMIN') {
+    // SuperAdmin seleccionó el perfil de Director Deportivo → Panel Admin (Tab 7)
+    // Tab 8 (Súper Admin) es accesible desde Tab 7 si la cuenta es SuperAdmin
     renderSelectorCategoria();
     refrescarTodaLaVista();
-    switchTab(8);
+    switchTab(7);
+  } else if (isMaster && prof && prof.rol === 'DT') {
+    // SuperAdmin seleccionó un perfil de Entrenador → tratarlo como DT normal
+    if (prof.categoria) setCategoriaActiva(prof.categoria);
+    renderSelectorCategoria();
+    refrescarTodaLaVista();
+    switchTab(1);
   } else if (prof && prof.rol === 'ADMIN') {
     renderSelectorCategoria();
     refrescarTodaLaVista();

@@ -133,16 +133,16 @@
             <div class="card-title">🎖️ PLAN Y CANTIDAD DE PERFILES DE ENTRENADOR</div>
             <p style="font-size:12px;color:#aaa;margin-bottom:12px;">Selecciona la cantidad de perfiles de DT que requiere tu institución (máximo 8):</p>
 
-            <label style="font-size:12px;color:var(--oro);font-weight:700;margin-bottom:6px;display:block;">Cantidad de Perfiles de DT a Contratar:</label>
+            <label style="font-size:12px;color:var(--oro);font-weight:700;margin-bottom:6px;display:block;">Cantidad de Perfiles Contratados:</label>
             <select id="wiz-num-profiles" style="font-size:14px;padding:10px;margin-bottom:14px;background:#141414;color:#fff;border:1px solid var(--oro);border-radius:8px;width:100%;">
-              <option value="1">1 Perfil de Entrenador (DT)</option>
-              <option value="2">2 Perfiles de Entrenador (DT)</option>
-              <option value="3">3 Perfiles de Entrenador (DT)</option>
-              <option value="4">4 Perfiles de Entrenador (DT)</option>
-              <option value="5">5 Perfiles de Entrenador (DT)</option>
-              <option value="6">6 Perfiles de Entrenador (DT)</option>
-              <option value="7">7 Perfiles de Entrenador (DT)</option>
-              <option value="8">8 Perfiles de Entrenador (DT)</option>
+              <option value="1">1 Perfil (Solo Perfil de Administración / Director Deportivo)</option>
+              <option value="2">2 Perfiles (1 Perfil Admin + 1 Perfil DT)</option>
+              <option value="3">3 Perfiles (1 Perfil Admin + 2 Perfiles DT)</option>
+              <option value="4">4 Perfiles (1 Perfil Admin + 3 Perfiles DT)</option>
+              <option value="5">5 Perfiles (1 Perfil Admin + 4 Perfiles DT)</option>
+              <option value="6">6 Perfiles (1 Perfil Admin + 5 Perfiles DT)</option>
+              <option value="7">7 Perfiles (1 Perfil Admin + 6 Perfiles DT)</option>
+              <option value="8">8 Perfiles (1 Perfil Admin + 7 Perfiles DT)</option>
             </select>
 
             <!-- TARJETA DE DETALLES DEL PLAN Y OFERTA INCLUIDA -->
@@ -305,7 +305,7 @@
           </div>
 
           <button class="header-config" id="btn-toggle-theme" title="Alternar Modo Oscuro / Claro" style="font-size:18px;">☀️</button>
-          <button class="header-config" id="btn-config" title="Configurar Perfil y Equipos">⚙️</button>
+          <button class="header-config" id="btn-config" title="Configurar Perfil y Equipos" onclick="window._abrirConfig()">⚙️</button>
         </div>
 
       </div>
@@ -361,35 +361,41 @@
           
           <!-- COLUMNA IZQUIERDA -->
           <div class="col-panel-izq">
-            <div class="card" style="margin-bottom:0;">
-              <div class="card-title">🏆 CATEGORÍA / EQUIPO</div>
-              <select id="selector-categoria-tactica" class="select-categoria-header" style="width:100%;font-size:15px;padding:10px;margin-bottom:12px;"></select>
+            <div class="card" style="margin-bottom:0;padding:0;overflow:hidden;">
+              <button class="tactica-accordion-header" id="btn-toggle-sec-tactica-cfg" onclick="window._toggleTacticaSection('sec-tactica-cfg')">
+                <span>🏆 CATEGORÍA, ALINEACIÓN Y OPCIONES</span>
+                <span class="tactica-arrow" id="arrow-sec-tactica-cfg">►</span>
+              </button>
+              <div class="tactica-accordion-content" id="sec-tactica-cfg" style="display:none;padding:14px;">
+                <div class="card-title" style="font-size:12px;color:#888;margin-bottom:4px;">CATEGORÍA ACTIVA:</div>
+                <select id="selector-categoria-tactica" class="select-categoria-header" style="width:100%;font-size:15px;padding:10px;margin-bottom:12px;"></select>
 
-              <div class="card-title" style="font-size:14px;margin-top:6px;">⚙️ ALINEACIÓN</div>
+                <div class="card-title" style="font-size:14px;margin-top:6px;">⚙️ ALINEACIÓN</div>
 
-              <label style="font-size:11px;color:#aaa;">Formato de Juego:</label>
-              <select id="modo-A">
-                <option value="11">Fútbol 11</option>
-                <option value="8">Fútbol 8</option>
-                <option value="5">Fútbol 5</option>
-              </select>
+                <label style="font-size:11px;color:#aaa;">Formato de Juego:</label>
+                <select id="modo-A">
+                  <option value="11">Fútbol 11</option>
+                  <option value="8">Fútbol 8</option>
+                  <option value="5">Fútbol 5</option>
+                </select>
 
-              <label style="font-size:11px;color:#aaa;">Formación / Esquema:</label>
-              <select id="esquema-A">
-                <option value="1-4-4-2">1-4-4-2</option>
-                <option value="1-4-3-3">1-4-3-3</option>
-                <option value="1-3-5-2">1-3-5-2</option>
-              </select>
+                <label style="font-size:11px;color:#aaa;">Formación / Esquema:</label>
+                <select id="esquema-A">
+                  <option value="1-4-4-2">1-4-4-2</option>
+                  <option value="1-4-3-3">1-4-3-3</option>
+                  <option value="1-3-5-2">1-3-5-2</option>
+                </select>
 
-              <label style="font-size:11px;color:var(--oro);font-weight:700;margin-top:4px;display:block;">⭐ CAPITÁN DEL EQUIPO (C):</label>
-              <select id="select-capitan-A" style="border-color:var(--oro) !important;"></select>
+                <label style="font-size:11px;color:var(--oro);font-weight:700;margin-top:4px;display:block;">⭐ CAPITÁN DEL EQUIPO (C):</label>
+                <select id="select-capitan-A" style="border-color:var(--oro) !important;"></select>
 
-              <button class="btn btn-gold" id="btn-sustitucion-A" style="margin-top:8px;padding:10px;">🔄 REALIZAR SUSTITUCIÓN</button>
-              <button class="btn btn-gray" id="btn-save-esquema-A" style="margin-top:6px;font-size:11px;">💾 GUARDAR ESQUEMA ACTUAL</button>
+                <button class="btn btn-gold" id="btn-sustitucion-A" style="margin-top:8px;padding:10px;">🔄 REALIZAR SUSTITUCIÓN</button>
+                <button class="btn btn-gray" id="btn-save-esquema-A" style="margin-top:6px;font-size:11px;">💾 GUARDAR ESQUEMA ACTUAL</button>
 
-              <button class="btn btn-blue" id="btn-fs-A" style="margin-top:12px;padding:12px;font-size:13px;font-weight:900;">⛶ PANTALLA COMPLETA</button>
-              <button class="btn btn-gray" id="btn-export-png-A" style="margin-top:6px;padding:10px;">📸 GUARDAR IMAGEN TÁCTICA</button>
-              <button class="btn btn-red" id="btn-limpiar-cancha-A" style="margin-top:6px;padding:10px;">🧹 LIMPIAR CANCHA Y BANCO</button>
+                <button class="btn btn-blue" id="btn-fs-A" style="margin-top:12px;padding:12px;font-size:13px;font-weight:900;">⛶ PANTALLA COMPLETA</button>
+                <button class="btn btn-gray" id="btn-export-png-A" style="margin-top:6px;padding:10px;">📸 GUARDAR IMAGEN TÁCTICA</button>
+                <button class="btn btn-red" id="btn-limpiar-cancha-A" style="margin-top:6px;padding:10px;">🧹 LIMPIAR CANCHA Y BANCO</button>
+              </div>
             </div>
           </div>
 
@@ -397,6 +403,7 @@
           <div class="col-cancha-centro">
             <div class="campo-layout" id="pizarra-A">
               <button class="btn-exit-fs" id="btn-exit-fs-A">❌ SALIR PANTALLA COMPLETA</button>
+              <div id="fs-toast-banner-A" class="fs-toast-banner" style="display:none;"></div>
               
               <!-- PANEL REPLEGABLE LATERAL IZQUIERDO SOLO EN FULLSCREEN (CERRADO POR DEFECTO) -->
               <div class="fs-drawer-left" id="fs-drawer-A">
@@ -429,7 +436,8 @@
                     <button class="btn btn-gray" id="btn-limpiar-libres-fs-A" style="padding:4px;font-size:11px;" title="Borrar Fichas Libres">🗑️ Limpiar Libres</button>
                   </div>
 
-                  <button class="btn btn-gold" id="btn-sustitucion-fs-A" style="padding:6px;font-size:11px;margin-bottom:8px;width:100%;">🔄 Sustitución</button>
+                  <button class="btn btn-gold" id="btn-sustitucion-fs-A" style="padding:6px;font-size:11px;margin-bottom:6px;width:100%;">🔄 Sustitución</button>
+                  <button class="btn btn-gold" id="btn-rotar-cancha-fs-A" onclick="window._toggleRotacionPizarra('A')" style="padding:6px;font-size:11px;margin-bottom:8px;width:100%;">📱 🔄 GIRAR ORIENTACIÓN CANCHA</button>
 
                   <!-- DIBUJO Y HERRAMIENTAS EXCLUSIVAS DE FULLSCREEN -->
                   <div class="drawer-section-title">✏️ HERRAMIENTAS DE DIBUJO</div>
@@ -554,30 +562,32 @@
 
           <!-- COLUMNA DERECHA (BANQUILLO ESTILO ESTADIO CON PANEL PUBLICITARIO) -->
           <div class="col-banca-der">
-            <div class="banca-side">
+            <div class="banca-side" style="padding:0;overflow:hidden;">
               
-              <!-- CUBIERTA DEL BANQUILLO DE SUPLENTES -->
-              <div class="dugout-roof">
-                <span class="dugout-roof-title">🏟️ BANQUILLO DE SUPLENTES</span>
-                <span style="font-size:10px;color:#aaa;font-weight:700;">DUGOUT OFFICIAL</span>
-              </div>
+              <!-- HEADER REPLEGABLE DE BANQUILLO -->
+              <button class="tactica-accordion-header" id="btn-toggle-sec-banca-content" onclick="window._toggleTacticaSection('sec-banca-content')">
+                <span>🏟️ BANQUILLO Y CUERPO TÉCNICO</span>
+                <span class="tactica-arrow" id="arrow-sec-banca-content">►</span>
+              </button>
 
-              <div class="banca-container" id="banco-A"></div>
-              
-              <div class="ct-section">
-                <div class="banca-label" style="margin-top:14px;margin-bottom:8px;">🧥 CUERPO TÉCNICO</div>
-                <div class="ct-container" id="ct-A"></div>
-              </div>
-
-              <!-- PANEL PUBLICITARIO DEL BANQUILLO (G&K NOVA + 11FUT MANAGER) -->
-              <div class="dugout-ad-wall">
-                <div class="dugout-ad-brand">
-                  <img src="/gk_nova_logo.png" alt="G&K NOVA" class="dugout-ad-img" onerror="this.src='https://res.cloudinary.com/djhpfdklk/image/upload/v1785381403/gk_nova_logo_spdofl.png'">
+              <div class="tactica-accordion-content" id="sec-banca-content" style="display:none;padding:12px;">
+                <div class="banca-container" id="banco-A"></div>
+                
+                <div class="ct-section">
+                  <div class="banca-label" style="margin-top:10px;margin-bottom:6px;font-size:11px;">🧥 CUERPO TÉCNICO</div>
+                  <div class="ct-container" id="ct-A"></div>
                 </div>
-                <div class="dugout-ad-divider"></div>
-                <div class="dugout-ad-brand">
-                  <img src="/logo.png" alt="11FUT MANAGER" class="dugout-ad-img" onerror="this.src='https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'">
-                  <span style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:900;color:var(--oro);letter-spacing:1px;">11FUT</span>
+
+                <!-- PANEL PUBLICITARIO DEL BANQUILLO (G&K NOVA + 11FUT MANAGER) -->
+                <div class="dugout-ad-wall" style="margin-top:12px;">
+                  <div class="dugout-ad-brand">
+                    <img src="/gk_nova_logo.png" alt="G&K NOVA" class="dugout-ad-img" onerror="this.src='https://res.cloudinary.com/djhpfdklk/image/upload/v1785381403/gk_nova_logo_spdofl.png'">
+                  </div>
+                  <div class="dugout-ad-divider"></div>
+                  <div class="dugout-ad-brand">
+                    <img src="/logo.png" alt="11FUT MANAGER" class="dugout-ad-img" onerror="this.src='https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'">
+                    <span style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:900;color:var(--oro);letter-spacing:1px;">11FUT</span>
+                  </div>
                 </div>
               </div>
 
@@ -609,44 +619,87 @@
         </div>
       </div>
 
-      <!-- SECCIÓN 3: PLANTEL CON SELECTOR DE CATEGORÍA -->
+      <!-- SECCIÓN 3: PLANTEL CON SELECTOR DE CATEGORÍA (LAYOUT 50/50 EN PC) -->
       <div id="s3" class="seccion">
-        <div class="card">
-          <div class="card-title">
-            <span>👥 GESTIÓN DE PLANTEL DE LA CATEGORÍA</span>
-            <select id="squad-categoria-selector" class="select-categoria-header" style="font-size:12px;padding:4px 8px;"></select>
+        
+        <div class="squad-grid-container" style="display:grid;grid-template-columns:1fr;gap:14px;">
+          
+          <!-- COLUMNA IZQUIERDA (50% EN PC): LISTADO DE JUGADORES -->
+          <div class="squad-col-izq">
+            <div class="card" style="margin:0;">
+              <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
+                <span>👥 JUGADORES DE LA CATEGORÍA</span>
+                <select id="squad-categoria-selector" class="select-categoria-header" style="font-size:12px;padding:4px 8px;"></select>
+              </div>
+              <div id="lista-inputs"></div>
+            </div>
           </div>
-          <div id="lista-inputs"></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
-            <button class="btn btn-gold" id="btn-guardar-squad">💾 GUARDAR PLANTEL</button>
-            <button class="btn btn-blue" id="btn-export-pdf">📄 EXPORTAR PDF</button>
+
+          <!-- COLUMNA DERECHA (50% EN PC): CUERPO TÉCNICO, CAPITANES Y BOTONES -->
+          <div class="squad-col-der" style="display:flex;flex-direction:column;gap:14px;">
+            
+            <!-- CUERPO TÉCNICO -->
+            <div class="card" style="margin:0;">
+              <div class="card-title">📋 CUERPO TÉCNICO DE LA CATEGORÍA</div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div>
+                  <label style="font-size:11px;color:var(--oro);font-weight:700;display:block;margin-bottom:2px;">🧢 Director Técnico (DT):</label>
+                  <input type="text" id="ct-dt-nombre" placeholder="Nombre del Director Técnico" oninput="window._autoSaveLocal()">
+                </div>
+                <div>
+                  <label style="font-size:11px;color:#aaa;font-weight:700;display:block;margin-bottom:2px;">📋 Asistente Técnico (AT):</label>
+                  <input type="text" id="ct-at-nombre" placeholder="Nombre del Asistente Técnico" oninput="window._autoSaveLocal()">
+                </div>
+                <div>
+                  <label style="font-size:11px;color:#aaa;font-weight:700;display:block;margin-bottom:2px;">🏃‍♂️ Preparador Físico (PF):</label>
+                  <input type="text" id="ct-pf-nombre" placeholder="Nombre del Preparador Físico" oninput="window._autoSaveLocal()">
+                </div>
+                <div>
+                  <label style="font-size:11px;color:#aaa;font-weight:700;display:block;margin-bottom:2px;">🏥 Médico / Fisioterapeuta:</label>
+                  <input type="text" id="ct-med-nombre" placeholder="Nombre del Médico o Kinesiólogo" oninput="window._autoSaveLocal()">
+                </div>
+              </div>
+            </div>
+
+            <!-- CAPITANES DEL EQUIPO -->
+            <div class="card" style="margin:0;">
+              <div class="card-title">👑 CAPITANES DEL EQUIPO</div>
+              <div style="display:flex;flex-direction:column;gap:8px;">
+                <div>
+                  <label style="font-size:11px;color:var(--oro);display:block;margin-bottom:4px;">🥇 1er Capitán (Principal):</label>
+                  <select id="cap-select-1" style="margin:0;"></select>
+                </div>
+                <div>
+                  <label style="font-size:11px;color:#aaa;display:block;margin-bottom:4px;">🥈 2do Capitán (Subcapitán):</label>
+                  <select id="cap-select-2" style="margin:0;"></select>
+                </div>
+                <div>
+                  <label style="font-size:11px;color:#aaa;display:block;margin-bottom:4px;">🥉 3er Capitán (Tercero):</label>
+                  <select id="cap-select-3" style="margin:0;"></select>
+                </div>
+              </div>
+            </div>
+
+            <!-- BOTONES Y ACCIONES DE PLANTEL -->
+            <div class="card" style="margin:0;">
+              <div class="card-title">⚙️ ACCIONES Y GESTIÓN</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
+                <button class="btn btn-gold" id="btn-guardar-squad" style="font-size:12px;padding:10px;font-weight:900;">💾 GUARDAR PLANTEL</button>
+                <button class="btn btn-blue" id="btn-export-pdf" style="font-size:12px;padding:10px;font-weight:900;">📄 EXPORTAR PDF</button>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+                <button class="btn btn-gray" id="btn-descargar-csv" style="font-size:11px;">📥 PLANTILLA CSV</button>
+                <label class="btn btn-gray" style="font-size:11px;margin:0;text-align:center;cursor:pointer;">
+                  📤 IMPORTAR CSV
+                  <input type="file" id="input-csv" accept=".csv" style="display:none;">
+                </label>
+              </div>
+            </div>
+
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
-            <button class="btn btn-gray" id="btn-descargar-csv" style="font-size:11px;">📥 PLANTILLA CSV</button>
-            <label class="btn btn-gray" style="font-size:11px;margin:0;">
-              📤 IMPORTAR CSV
-              <input type="file" id="input-csv" accept=".csv" style="display:none;">
-            </label>
-          </div>
+
         </div>
 
-        <div class="card" style="margin-top:12px;">
-          <div class="card-title">👑 CAPITANES DEL EQUIPO</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <div>
-              <label style="font-size:11px;color:#aaa;display:block;margin-bottom:4px;">🥇 1er Capitán (Principal):</label>
-              <select id="cap-select-1" style="margin:0;"></select>
-            </div>
-            <div>
-              <label style="font-size:11px;color:#aaa;display:block;margin-bottom:4px;">🥈 2do Capitán (Subcapitán):</label>
-              <select id="cap-select-2" style="margin:0;"></select>
-            </div>
-            <div>
-              <label style="font-size:11px;color:#aaa;display:block;margin-bottom:4px;">🥉 3er Capitán (Tercero):</label>
-              <select id="cap-select-3" style="margin:0;"></select>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- SECCIÓN 4: STATS EN 2 COLUMNAS CON SELECTOR DE CATEGORÍA Y DASHBOARD COLECTIVO -->
@@ -1043,91 +1096,211 @@
     </div>
 
     <div class="modal-overlay" id="config-modal">
-      <div class="modal-body">
-        <div class="modal-title" style="display:flex;align-items:center;justify-content:space-between;">
+      <div class="modal-body" style="max-width:540px;padding:20px;">
+        <div class="modal-title" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <span>⚙️ CONFIGURACIÓN DEL CLUB</span>
-          <span id="cfg-autosave-indicator" style="font-size:10px;color:#2ecc71;font-weight:700;opacity:0;transition:opacity 0.4s;font-family:'Barlow',sans-serif;"></span>
+          <span id="cfg-autosave-indicator" style="font-size:11px;color:#2ecc71;font-weight:700;opacity:0;transition:opacity 0.4s;font-family:'Barlow',sans-serif;"></span>
         </div>
-        <div class="card">
+
+        <div class="card" style="margin-bottom:12px;padding:12px 14px;">
           <div style="font-size:11px;color:#555;">Correo: <span id="cfg-email-display" style="color:#aaa;"></span></div>
           <div style="font-size:11px;color:#555;margin-top:4px;">Club: <span id="cfg-club-display" style="color:var(--oro);font-weight:700;"></span></div>
-          <button class="btn btn-gold" id="btn-copy-public-link" style="margin-top:8px;font-size:11px;">🔗 COPIAR ENLACE PERFIL PÚBLICO</button>
+          <button class="btn btn-gold" id="btn-copy-public-link" style="margin-top:8px;font-size:11px;padding:8px 12px;width:100%;">🔗 COPIAR ENLACE PERFIL PÚBLICO</button>
         </div>
 
-        <div class="card">
-          <div class="card-title">🏆 GESTIÓN DE CATEGORÍAS DEL CLUB</div>
-          <div id="cfg-lista-categorias" style="margin-bottom:8px;"></div>
-          
-          <div style="display:flex;flex-direction:column;gap:6px;background:#0d0d0d;padding:10px;border-radius:8px;border:1px solid #222;">
-            <label style="font-size:11px;color:var(--oro);font-weight:700;">➕ AGREGAR NUEVA CATEGORÍA</label>
-            <input type="text" id="cfg-nueva-cat-input" placeholder="Nombre (ej. Sub-16, Femenino)">
-            <input type="text" id="cfg-nuevo-torneo-input" placeholder="Torneo (ej. LIGA DISTRITAL GEMA - LIGUILLA J3)">
-            <button class="btn btn-green" id="btn-cfg-add-cat" style="font-size:12px;margin-top:4px;">➕ AGREGAR CATEGORÍA</button>
+        <!-- ACORDEÓN DESPLEGABLE DE CONFIGURACIÓN -->
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+
+          <!-- SECCIÓN 1: PERFILES DE ENTRENADORES Y PINS -->
+          <div>
+            <button class="cfg-accordion-header" id="header-cfg-sec-perfiles" onclick="window._toggleConfigSection('cfg-sec-perfiles')">
+              <span>🔑 PERFILES DE ENTRENADORES Y PINS</span>
+              <span class="cfg-arrow">►</span>
+            </button>
+            <div class="cfg-accordion-content" id="cfg-sec-perfiles" style="display:none;padding-top:8px;">
+              <div id="cfg-lista-perfiles-pins"></div>
+            </div>
           </div>
-        </div>
 
-        <div class="card">
-          <div class="card-title">🔑 PERFILES DE ENTRENADORES Y PINS</div>
-          <div id="cfg-lista-perfiles-pins" style="margin-bottom:8px;"></div>
-          <button class="btn btn-gold" id="btn-cfg-guardar-pins" style="margin-top:6px;font-size:12px;">💾 GUARDAR PINS DE ACCESO</button>
-        </div>
-
-        <div class="card">
-          <div class="card-title">✏️ DATOS DEL CLUB / EQUIPO</div>
-          <input type="text" id="cfg-club" placeholder="Nombre del Club o Equipo">
-          <button class="btn btn-gold" id="btn-cfg-nombres">💾 GUARDAR NOMBRE</button>
-        </div>
-
-        <div class="card">
-          <div class="card-title">📋 ESQUEMA TÁCTICO PREDETERMINADO</div>
-          <div style="display:flex;flex-direction:column;gap:6px;">
-            <label style="font-size:11px;color:#aaa;">Formato Predeterminado:</label>
-            <select id="cfg-modo-predeterminado">
-              <option value="11">Fútbol 11</option>
-              <option value="8">Fútbol 8</option>
-              <option value="5">Fútbol 5</option>
-            </select>
-
-            <label style="font-size:11px;color:#aaa;">Esquema / Formación Predeterminada:</label>
-            <select id="cfg-esquema-predeterminado"></select>
-
-            <button class="btn btn-gold" id="btn-cfg-guardar-esquema-pred" style="margin-top:6px;">💾 GUARDAR ESQUEMA PREDETERMINADO</button>
+          <!-- SECCIÓN 2: IDENTIDAD Y LOGO DEL CLUB -->
+          <div>
+            <button class="cfg-accordion-header" id="header-cfg-sec-identidad" onclick="window._toggleConfigSection('cfg-sec-identidad')">
+              <span>🏆 IDENTIDAD Y LOGO DEL CLUB</span>
+              <span class="cfg-arrow">►</span>
+            </button>
+            <div class="cfg-accordion-content" id="cfg-sec-identidad" style="display:none;padding-top:8px;">
+              <div class="card" style="margin:0;">
+                <label style="font-size:11px;color:var(--oro);font-weight:700;margin-bottom:4px;display:block;">Nombre Oficial del Club o Equipo (Auto-guardado):</label>
+                <input type="text" id="cfg-club" placeholder="Nombre del Club o Equipo">
+                
+                <label style="font-size:11px;color:var(--oro);font-weight:700;margin-top:10px;margin-bottom:4px;display:block;">🏅 Logo Oficial del Club:</label>
+                <div class="upload-zone" id="uz-cfg-logo">
+                  <div id="prev-cfg-logo" style="display:none;"><img id="img-prev-cfg-logo" src="" style="max-height:80px;"></div>
+                  <span class="upload-icon" id="ico-cfg-logo">🏅</span>
+                  <span class="upload-label">Toca para cambiar logo</span>
+                  <input type="file" id="up-cfg-logo" accept="image/*" style="display:none;">
+                </div>
+                <button class="btn btn-blue" id="btn-cfg-subir-logo" style="margin-top:8px;">☁️ SUBIR LOGO</button>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div class="card">
-          <div class="card-title">🎽 KITS Y UNIFORME</div>
-          <div id="cfg-kit-gallery-A" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:8px;"></div>
-          <button class="btn btn-gold" id="btn-cfg-kits" style="margin-top:6px;">💾 GUARDAR UNIFORME</button>
-          <button class="btn btn-green" id="btn-soporte-wa-kit" style="margin-top:6px;font-size:12px;">💬 SOLICITAR KIT PERSONALIZADO (SOPORTE WHATSAPP)</button>
-        </div>
-
-        <div class="card">
-          <div class="card-title">🏅 LOGO DEL CLUB</div>
-          <div class="upload-zone" id="uz-cfg-logo">
-            <div id="prev-cfg-logo" style="display:none;"><img id="img-prev-cfg-logo" src="" style="max-height:80px;"></div>
-            <span class="upload-icon" id="ico-cfg-logo">🏅</span>
-            <span class="upload-label">Toca para cambiar logo</span>
-            <input type="file" id="up-cfg-logo" accept="image/*" style="display:none;">
+          <!-- SECCIÓN 3: CATEGORÍAS Y TORNEOS -->
+          <div>
+            <button class="cfg-accordion-header" id="header-cfg-sec-categorias" onclick="window._toggleConfigSection('cfg-sec-categorias')">
+              <span>🏆 GESTIÓN DE CATEGORÍAS Y TORNEOS</span>
+              <span class="cfg-arrow">►</span>
+            </button>
+            <div class="cfg-accordion-content" id="cfg-sec-categorias" style="display:none;padding-top:8px;">
+              <div class="card" style="margin:0;">
+                <div id="cfg-lista-categorias" style="margin-bottom:8px;"></div>
+                
+                <div style="display:flex;flex-direction:column;gap:6px;background:#0d0d0d;padding:10px;border-radius:8px;border:1px solid #222;">
+                  <label style="font-size:11px;color:var(--oro);font-weight:700;">➕ AGREGAR NUEVA CATEGORÍA</label>
+                  <input type="text" id="cfg-nueva-cat-input" placeholder="Nombre (ej. Sub-16, Femenino)">
+                  <input type="text" id="cfg-nuevo-torneo-input" placeholder="Torneo (ej. LIGA DISTRITAL GEMA)">
+                  <button class="btn btn-green" id="btn-cfg-add-cat" style="font-size:12px;margin-top:4px;">➕ AGREGAR CATEGORÍA</button>
+                </div>
+              </div>
+            </div>
           </div>
-          <button class="btn btn-blue" id="btn-cfg-subir-logo" style="margin-top:8px;">☁️ SUBIR LOGO</button>
+
+          <!-- SECCIÓN 4: ESQUEMA TÁCTICO PREDETERMINADO -->
+          <div>
+            <button class="cfg-accordion-header" id="header-cfg-sec-tactica" onclick="window._toggleConfigSection('cfg-sec-tactica')">
+              <span>📋 ESQUEMA TÁCTICO PREDETERMINADO</span>
+              <span class="cfg-arrow">►</span>
+            </button>
+            <div class="cfg-accordion-content" id="cfg-sec-tactica" style="display:none;padding-top:8px;">
+              <div class="card" style="margin:0;">
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                  <label style="font-size:11px;color:#aaa;">Formato Predeterminado (Auto-guardado):</label>
+                  <select id="cfg-modo-predeterminado">
+                    <option value="11">Fútbol 11</option>
+                    <option value="8">Fútbol 8</option>
+                    <option value="5">Fútbol 5</option>
+                  </select>
+
+                  <label style="font-size:11px;color:#aaa;">Esquema / Formación Predeterminada (Auto-guardado):</label>
+                  <select id="cfg-esquema-predeterminado"></select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN 5: KITS Y UNIFORME -->
+          <div>
+            <button class="cfg-accordion-header" id="header-cfg-sec-kits" onclick="window._toggleConfigSection('cfg-sec-kits')">
+              <span>🎽 KITS Y UNIFORME DE EQUIPO</span>
+              <span class="cfg-arrow">►</span>
+            </button>
+            <div class="cfg-accordion-content" id="cfg-sec-kits" style="display:none;padding-top:8px;">
+              <div class="card" style="margin:0;">
+                <div style="font-size:11px;color:#aaa;margin-bottom:8px;">Galería de Kits Oficiales Prediseñados:</div>
+                <div id="cfg-kit-gallery-A" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px;"></div>
+                
+                <!-- SECCIÓN DE SUBIDA DE UNIFORMES PROPIOS -->
+                <div style="margin-top:10px;padding:12px;background:#090909;border:1px dashed var(--oro);border-radius:10px;">
+                  <div style="font-size:12px;color:var(--oro);font-weight:700;margin-bottom:4px;">📤 SUBIR UNIFORMES PROPIOS DE TU CLUB (KITS PERSONALIZADOS)</div>
+                  <div style="font-size:10px;color:#888;margin-bottom:10px;">Subes tus propias camisetas en formato PNG transparente para vestirlos en la cancha.</div>
+                  
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:8px;">
+                    <!-- KIT LOCAL -->
+                    <div style="background:#141414;padding:8px;border-radius:8px;border:1px solid #333;text-align:center;">
+                      <div style="font-size:10px;color:#aaa;margin-bottom:4px;font-weight:700;">👕 LOCAL</div>
+                      <div id="prev-kit-local" style="height:45px;display:flex;align-items:center;justify-content:center;margin-bottom:4px;">
+                        <span style="font-size:24px;">👕</span>
+                      </div>
+                      <label class="btn btn-gray" style="font-size:10px;padding:4px 6px;margin:0;cursor:pointer;width:100%;">
+                        📷 Subir Local
+                        <input type="file" id="up-kit-local" accept="image/*" style="display:none;" onchange="window._subirCustomKit(this, 'local')">
+                      </label>
+                    </div>
+
+                    <!-- KIT VISITANTE -->
+                    <div style="background:#141414;padding:8px;border-radius:8px;border:1px solid #333;text-align:center;">
+                      <div style="font-size:10px;color:#aaa;margin-bottom:4px;font-weight:700;">👕 VISITANTE</div>
+                      <div id="prev-kit-visita" style="height:45px;display:flex;align-items:center;justify-content:center;margin-bottom:4px;">
+                        <span style="font-size:24px;">👕</span>
+                      </div>
+                      <label class="btn btn-gray" style="font-size:10px;padding:4px 6px;margin:0;cursor:pointer;width:100%;">
+                        📷 Subir Visita
+                        <input type="file" id="up-kit-visita" accept="image/*" style="display:none;" onchange="window._subirCustomKit(this, 'visita')">
+                      </label>
+                    </div>
+
+                    <!-- PORTERO LOCAL -->
+                    <div style="background:#141414;padding:8px;border-radius:8px;border:1px solid #333;text-align:center;">
+                      <div style="font-size:10px;color:#aaa;margin-bottom:4px;font-weight:700;">🧤 PORTERO LOCAL</div>
+                      <div id="prev-kit-portero_local" style="height:45px;display:flex;align-items:center;justify-content:center;margin-bottom:4px;">
+                        <span style="font-size:24px;">🧤</span>
+                      </div>
+                      <label class="btn btn-gray" style="font-size:10px;padding:4px 6px;margin:0;cursor:pointer;width:100%;">
+                        📷 Por. Local
+                        <input type="file" id="up-kit-portero_local" accept="image/*" style="display:none;" onchange="window._subirCustomKit(this, 'portero_local')">
+                      </label>
+                    </div>
+
+                    <!-- PORTERO VISITANTE -->
+                    <div style="background:#141414;padding:8px;border-radius:8px;border:1px solid #333;text-align:center;">
+                      <div style="font-size:10px;color:#aaa;margin-bottom:4px;font-weight:700;">🧤 PORTERO VISITA</div>
+                      <div id="prev-kit-portero_visita" style="height:45px;display:flex;align-items:center;justify-content:center;margin-bottom:4px;">
+                        <span style="font-size:24px;">🧤</span>
+                      </div>
+                      <label class="btn btn-gray" style="font-size:10px;padding:4px 6px;margin:0;cursor:pointer;width:100%;">
+                        📷 Por. Visita
+                        <input type="file" id="up-kit-portero_visita" accept="image/*" style="display:none;" onchange="window._subirCustomKit(this, 'portero_visita')">
+                      </label>
+                    </div>
+
+                    <!-- KIT SUPLENTES -->
+                    <div style="background:#141414;padding:8px;border-radius:8px;border:1px solid #333;text-align:center;">
+                      <div style="font-size:10px;color:#aaa;margin-bottom:4px;font-weight:700;">🎽 SUPLENTES</div>
+                      <div id="prev-kit-sup_local" style="height:45px;display:flex;align-items:center;justify-content:center;margin-bottom:4px;">
+                        <span style="font-size:24px;">🎽</span>
+                      </div>
+                      <label class="btn btn-gray" style="font-size:10px;padding:4px 6px;margin:0;cursor:pointer;width:100%;">
+                        📷 Suplentes
+                        <input type="file" id="up-kit-sup_local" accept="image/*" style="display:none;" onchange="window._subirCustomKit(this, 'sup_local')">
+                      </label>
+                    </div>
+                  </div>
+
+                  <button class="btn btn-gold" onclick="window._limpiarCustomKits()" style="margin-top:10px;font-size:11px;padding:6px;width:100%;font-weight:700;">🧹 USAR KITS PREDETERMINADOS</button>
+                </div>
+
+                <button class="btn btn-green" id="btn-soporte-wa-kit" style="margin-top:10px;font-size:12px;">💬 SOLICITAR UNIFORME PROFESIONAL (WHATSAPP)</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN 6: SEGURIDAD Y REINICIO -->
+          <div>
+            <button class="cfg-accordion-header" id="header-cfg-sec-seguridad" onclick="window._toggleConfigSection('cfg-sec-seguridad')">
+              <span>🔐 SEGURIDAD Y CONTRASEÑA</span>
+              <span class="cfg-arrow">►</span>
+            </button>
+            <div class="cfg-accordion-content" id="cfg-sec-seguridad" style="display:none;padding-top:8px;">
+              <div class="card" style="margin:0 0 10px 0;">
+                <label style="font-size:11px;color:var(--oro);font-weight:700;margin-bottom:4px;display:block;">Cambiar Contraseña:</label>
+                <input type="password" id="cfg-pin-nuevo" placeholder="Nueva Contraseña">
+                <input type="password" id="cfg-pin-conf" placeholder="Confirmar Contraseña">
+                <button class="btn btn-red" id="btn-cfg-cambiar-pin" style="margin-top:6px;">🔐 CAMBIAR CONTRASEÑA</button>
+              </div>
+              <div class="card" style="margin:0;">
+                <div class="card-title">📊 REINICIAR DATOS</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                  <button class="btn btn-gray" id="btn-reset-stats" style="font-size:11px;">🗑️ RESET STATS</button>
+                  <button class="btn btn-gray" id="btn-borrar-historial" style="font-size:11px;">🗑️ BORRAR HISTORIAL</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
 
-        <div class="card">
-          <div class="card-title">🔐 CAMBIAR CONTRASEÑA</div>
-          <input type="password" id="cfg-pin-nuevo" placeholder="Nueva Contraseña">
-          <input type="password" id="cfg-pin-conf" placeholder="Confirmar Contraseña">
-          <button class="btn btn-red" id="btn-cfg-cambiar-pin">🔐 CAMBIAR CONTRASEÑA</button>
-        </div>
-        <div class="card">
-          <div class="card-title">📊 REINICIAR DATOS</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-            <button class="btn btn-gray" id="btn-reset-stats" style="font-size:11px;">🗑️ RESET STATS</button>
-            <button class="btn btn-gray" id="btn-borrar-historial" style="font-size:11px;">🗑️ BORRAR HISTORIAL</button>
-          </div>
-        </div>
-        <button class="btn btn-red" id="btn-cerrar-sesion" style="margin-bottom:8px;">🚪 CERRAR SESIÓN</button>
-        <button class="btn btn-gray" id="btn-cerrar-config">← VOLVER</button>
+        <button class="btn btn-red" id="btn-cerrar-sesion" style="margin-bottom:8px;width:100%;">🚪 CERRAR SESIÓN</button>
+        <button class="btn btn-gray" id="btn-cerrar-config" style="width:100%;">← VOLVER</button>
       </div>
     </div>
 

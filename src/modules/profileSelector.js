@@ -38,15 +38,10 @@ export function renderProfileSelector(onProfileSelected, forceShow = false) {
 
   let profilesList = perfil.profiles;
 
-  // SI SOLO HAY 1 PERFIL: Auto-login al arrancar salvo que el usuario presionara '👤 PERFIL' manualmente
-  if (profilesList.length === 1 && !forceShow) {
-    modalOverlay.style.display = 'none';
-    const single = profilesList[0];
-    setCurrentProfile(single);
-    if (single.categoria) setCategoriaActiva(single.categoria);
-    if (typeof onProfileSelected === 'function') onProfileSelected(single);
-    return;
-  }
+
+  // SI SOLO HAY 1 PERFIL: En lugar de auto-login, mostrar la pantalla de selección
+  // para que el usuario siempre ingrese su PIN de seguridad, incluso en cuentas de 1 solo perfil.
+  // Nota: El auto-login SIN PIN queda deshabilitado por seguridad.
 
 
   // RENDERIZADO INTERFAZ STREAMING ("¿Quién está dirigiendo hoy?")
@@ -92,7 +87,7 @@ export function renderProfileSelector(onProfileSelected, forceShow = false) {
                 <div style="position:absolute;bottom:0;right:0;background:${p.rol === 'ADMIN' ? 'var(--oro)' : '#2ecc71'};color:#000;font-size:10px;font-weight:900;padding:2px 6px;border-radius:10px;">${p.rol}</div>
               </div>
               <div style="margin-top:12px;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:#fff;">${p.nombre}</div>
-              <div style="font-size:11px;color:#aaa;">${p.categoria ? 'Categoría ' + p.categoria : 'Dirección General'}</div>
+              <div style="font-size:11px;color:#aaa;">${(p.equipos && p.equipos.length > 0) ? p.equipos.join(', ') : (p.categoria ? p.categoria : (p.rol === 'ADMIN' ? 'Dirección General' : 'Sin equipos asignados'))}</div>
             </div>
           </div>
         `).join('')}
