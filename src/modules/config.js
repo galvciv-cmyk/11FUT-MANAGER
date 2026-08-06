@@ -1211,82 +1211,91 @@ window._seleccionarKitWiz = (kitId) => {
 export async function finalizarOnboardingWizard() {
   const modal = document.getElementById('modal-onboarding-wizard');
 
-  const selectNum = document.getElementById('wiz-num-profiles');
-  const numProfiles = parseInt(selectNum ? selectNum.value : '1', 10) || 1;
-  perfil.maxPerfiles = numProfiles;
+  try {
+    const selectNum = document.getElementById('wiz-num-profiles');
+    const numProfiles = parseInt(selectNum ? selectNum.value : '1', 10) || 1;
+    perfil.maxPerfiles = numProfiles;
 
-  const pinAdminInput = document.getElementById('wiz-pin-admin')?.value?.trim() || (isSuperAdmin() ? '1901' : '1234');
+    const pinAdminInput = document.getElementById('wiz-pin-admin')?.value?.trim() || (isSuperAdmin() ? '1901' : '1234');
 
-  const numCats = numProfiles === 1 ? 1 : (numProfiles - 1);
+    const numCats = numProfiles === 1 ? 1 : (numProfiles - 1);
 
-  wizardTempCats = [];
-  for (let i = 0; i < numCats; i++) {
-    const val = document.getElementById(`wiz-cat-input-${i}`)?.value?.trim() || `Categoría ${i + 1}`;
-    wizardTempCats.push(val);
-  }
-
-  perfil.categorias = wizardTempCats;
-  perfil.categoriaActiva = wizardTempCats[0] || '';
-  perfil.kitA = wizardTempKit;
-
-  // Re-generar perfiles: 1 ADMIN (+ N-1 perfiles DTs contratados)
-  perfil.profiles = [
-    {
-      id: "admin",
-      nombre: "Director Deportivo",
-      rol: "ADMIN",
-      pin: pinAdminInput,
-      avatar: perfil.logo || DEFAULT_LOGO
+    wizardTempCats = [];
+    for (let i = 0; i < numCats; i++) {
+      const val = document.getElementById(`wiz-cat-input-${i}`)?.value?.trim() || `Categoría ${i + 1}`;
+      wizardTempCats.push(val);
     }
-  ];
 
-  if (numProfiles > 1) {
-    wizardTempCats.forEach(cat => {
-      perfil.profiles.push({
-        id: `dt_${cat.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`,
-        nombre: `DT ${cat}`,
-        rol: 'DT',
-        categoria: cat,
-        pin: '1234',
+    perfil.categorias = wizardTempCats;
+    perfil.categoriaActiva = wizardTempCats[0] || '';
+    perfil.kitA = wizardTempKit;
+
+    // Re-generar perfiles: 1 ADMIN (+ N-1 perfiles DTs contratados)
+    perfil.profiles = [
+      {
+        id: "admin",
+        nombre: "Director Deportivo",
+        rol: "ADMIN",
+        pin: pinAdminInput,
         avatar: perfil.logo || DEFAULT_LOGO
+      }
+    ];
+
+    if (numProfiles > 1) {
+      wizardTempCats.forEach(cat => {
+        perfil.profiles.push({
+          id: `dt_${cat.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`,
+          nombre: `DT ${cat}`,
+          rol: 'DT',
+          categoria: cat,
+          pin: '1234',
+          avatar: perfil.logo || DEFAULT_LOGO
+        });
       });
+    }
+
+    // Purga de claves en categoriasData que no fueron seleccionadas
+    Object.keys(categoriasData).forEach(catKey => {
+      if (!wizardTempCats.includes(catKey)) {
+        delete categoriasData[catKey];
+      }
     });
-  }
 
-  // Purga de claves en categoriasData que no fueron seleccionadas
-  Object.keys(categoriasData).forEach(catKey => {
-    if (!wizardTempCats.includes(catKey)) {
-      delete categoriasData[catKey];
+    wizardTempCats.forEach(cat => {
+      if (!categoriasData[cat]) {
+        categoriasData[cat] = {
+          plantel: JSON.parse(JSON.stringify(DEFAULT_PLANTEL)),
+          stats: {},
+          historial: [],
+          juegosProgramados: [],
+          torneo: wizardTempTorneos[cat] || 'Liga Oficial',
+          torneosList: [wizardTempTorneos[cat] || 'Liga Oficial']
+        };
+      } else {
+        categoriasData[cat].torneo = wizardTempTorneos[cat] || 'Liga Oficial';
+      }
+    });
+
+    perfil.wizardCompletado = true;
+    aplicarPerfil();
+    autoSaveLocal();
+    await guardarFirebase();
+
+    if (modal) modal.style.display = 'none';
+
+    mostrarNotificacionApp('¡Bienvenido a 11FUT!', `🏆 Configuración completada para ${perfil.club || 'tu Club'}.`);
+
+    // Mostrar el Selector de Perfiles DESPUÉS de finalizar el Wizard
+    if (typeof window._mostrarProfileSelectorSetup === 'function') {
+      window._mostrarProfileSelectorSetup();
     }
-  });
-
-  wizardTempCats.forEach(cat => {
-    if (!categoriasData[cat]) {
-      categoriasData[cat] = {
-        plantel: JSON.parse(JSON.stringify(DEFAULT_PLANTEL)),
-        stats: {},
-        historial: [],
-        juegosProgramados: [],
-        torneo: wizardTempTorneos[cat] || 'Liga Oficial',
-        torneosList: [wizardTempTorneos[cat] || 'Liga Oficial']
-      };
-    } else {
-      categoriasData[cat].torneo = wizardTempTorneos[cat] || 'Liga Oficial';
+  } catch (err) {
+    console.error('Error al finalizar Wizard:', err);
+    perfil.wizardCompletado = true;
+    if (modal) modal.style.display = 'none';
+    if (typeof window._mostrarProfileSelectorSetup === 'function') {
+      window._mostrarProfileSelectorSetup();
     }
-  });
-
-  perfil.wizardCompletado = true;
-  aplicarPerfil();
-  autoSaveLocal();
-  await guardarFirebase();
-
-  if (modal) modal.style.display = 'none';
-
-  mostrarNotificacionApp('¡Bienvenido a 11FUT!', `🏆 Configuración completada para ${perfil.club || 'tu Club'}.`);
-
-  // Mostrar el Selector de Perfiles DESPUÉS de finalizar el Wizard
-  if (typeof window._mostrarProfileSelectorSetup === 'function') {
-    window._mostrarProfileSelectorSetup();
   }
 }
 
