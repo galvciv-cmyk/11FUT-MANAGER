@@ -1749,3 +1749,16 @@ body.body-fullscreen-active {
     grid-template-columns: 1fr 1fr !important;
   }
 }
+
+/* ── ESTILOS Y Z-INDEX DEL ONBOARDING WIZARD ── */
+#modal-onboarding-wizard {
+  z-index: 99999 !important;
+}
+.step-dot.active {
+  background: var(--oro) !important;
+  color: #000 !important;
+  font-weight: 900 !important;
+}
+.step-line.active {
+  background: var(--oro) !important;
+}
