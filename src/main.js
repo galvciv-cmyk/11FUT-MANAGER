@@ -454,6 +454,15 @@ export function abrirModalRegistro() {
   const wiz = document.getElementById('modal-onboarding-wizard');
   if (wiz) wiz.style.display = 'none';
 
+  const regEmail = document.getElementById('reg-email');
+  const regWa = document.getElementById('reg-wa');
+  const regPin = document.getElementById('reg-pin');
+  const regPinConf = document.getElementById('reg-pin-confirm');
+  if (regEmail) regEmail.value = '';
+  if (regWa) regWa.value = '';
+  if (regPin) regPin.value = '';
+  if (regPinConf) regPinConf.value = '';
+
   const m = document.getElementById('modal-register');
   if (m) m.style.display = 'flex';
 }
@@ -800,6 +809,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Persistencia de Sesión con Firebase Auth (No se cierra al recargar F5)
   onAuthStateChanged(auth, async (user) => {
+    const modalReg = document.getElementById('modal-register');
+    if (modalReg && modalReg.style.display !== 'none') {
+      return;
+    }
+
     if (user && user.email) {
       setUserEmail(user.email);
       await cargarFirebase();

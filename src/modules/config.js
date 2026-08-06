@@ -970,6 +970,11 @@ let wizardTempTorneos = {};
 let wizardTempKit = 'predeterminado';
 
 export function abrirOnboardingWizard() {
+  const modalReg = document.getElementById('modal-register');
+  if (modalReg && modalReg.style.display !== 'none') {
+    return;
+  }
+
   const modal = document.getElementById('modal-onboarding-wizard');
   if (!modal) return;
 
