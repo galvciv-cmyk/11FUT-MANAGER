@@ -451,6 +451,9 @@ async function login() {
 
 
 export function abrirModalRegistro() {
+  const wiz = document.getElementById('modal-onboarding-wizard');
+  if (wiz) wiz.style.display = 'none';
+
   const m = document.getElementById('modal-register');
   if (m) m.style.display = 'flex';
 }
@@ -797,7 +800,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Persistencia de Sesión con Firebase Auth (No se cierra al recargar F5)
   onAuthStateChanged(auth, async (user) => {
-    if (user) {
+    if (user && user.email) {
       setUserEmail(user.email);
       await cargarFirebase();
       await guardarFirebase();
@@ -815,6 +818,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       } else {
         renderProfileSelector(handleProfileSelected);
       }
+    } else {
+      const wiz = document.getElementById('modal-onboarding-wizard');
+      if (wiz) wiz.style.display = 'none';
+      const loginSc = document.getElementById('login-screen');
+      if (loginSc) loginSc.style.display = 'flex';
+      const mainApp = document.getElementById('main-app');
+      if (mainApp) mainApp.style.display = 'none';
     }
   });
 
