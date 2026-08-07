@@ -609,11 +609,13 @@ export function mostrarModalUpgradePlan(actual, max) {
 }
 
 export async function agregarNuevaCategoriaConfig() {
-  const maxContratado = perfil.maxPerfiles || 1;
-  const actualCount = (perfil.categorias || []).length;
+  const esDT = currentProfile && currentProfile.rol === 'DT';
 
-  if (actualCount >= maxContratado) {
-    return mostrarModalUpgradePlan(actualCount, maxContratado);
+  if (esDT) {
+    if (!currentProfile.equipos) currentProfile.equipos = currentProfile.categoria ? [currentProfile.categoria] : [];
+    if (currentProfile.equipos.length >= 3) {
+      return mostrarNotificacionApp('Límite Alcanzado', '⚠️ Cada perfil de Entrenador (DT) puede gestionar hasta 3 equipos individuales.', false);
+    }
   }
 
   const inputCat = document.getElementById('cfg-nueva-cat-input');
@@ -622,13 +624,24 @@ export async function agregarNuevaCategoriaConfig() {
 
   const catVal = inputCat.value.trim();
   const torVal = inputTor ? inputTor.value.trim() : 'Torneo Oficial';
-  if (!catVal) return mostrarNotificacionApp('Datos incompletos', 'Ingresa el nombre de la categoría', false);
+  if (!catVal) return mostrarNotificacionApp('Datos incompletos', 'Ingresa el nombre del equipo o categoría', false);
 
   if (!perfil.categorias) perfil.categorias = [];
-  if (perfil.categorias.includes(catVal)) return mostrarNotificacionApp('Categoría existente', 'Esta categoría ya existe', false);
+  if (!perfil.categorias.includes(catVal)) {
+    perfil.categorias.push(catVal);
+  }
 
-  perfil.categorias.push(catVal);
-
+  // Asociar la nueva categoría exclusivamente al perfil activo si es DT
+  if (esDT) {
+    if (!currentProfile.equipos) currentProfile.equipos = [];
+    if (!currentProfile.equipos.includes(catVal)) {
+      currentProfile.equipos.push(catVal);
+    }
+    const targetProf = (perfil.profiles || []).find(p => p.id === currentProfile.id);
+    if (targetProf) {
+      targetProf.equipos = [...currentProfile.equipos];
+    }
+  }
 
   if (!categoriasData[catVal]) {
     categoriasData[catVal] = {
@@ -655,7 +668,7 @@ export async function agregarNuevaCategoriaConfig() {
   }
   autoSaveLocal();
   await guardarFirebase();
-  mostrarNotificacionApp('Categoría Creada', `Categoría "${catVal}" creada con éxito.`);
+  mostrarNotificacionApp('Equipo Creado', `Equipo "${catVal}" creado con éxito para este perfil.`);
 }
 
 export function eliminarCategoriaConfig(catNombre) {
