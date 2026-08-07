@@ -526,7 +526,9 @@ export function verificarMembresiaYLock() {
     if (bannerRenovacion) {
       bannerRenovacion.style.display = 'flex';
       if (bannerTexto) {
-        bannerTexto.textContent = `⏳ Tienes ${diasRestantes} día(s) de membresía restantes (${estado === 'PRUEBA' ? 'Periodo de Prueba' : 'Suscripción Mensual'}). Renueva a tiempo para evitar interrupciones.`;
+        const pluralStr = diasRestantes === 1 ? '1 día de membresía restante' : `${diasRestantes} días de membresía restantes`;
+        const tipoStr = estado === 'PRUEBA' ? 'Periodo de Prueba' : 'Suscripción Mensual';
+        bannerTexto.textContent = `⏳ Tienes ${pluralStr} (${tipoStr}). Renueva a tiempo para evitar interrupciones.`;
       }
     }
   } else {

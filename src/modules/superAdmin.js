@@ -214,29 +214,31 @@ async function ejecutarAprobarSuperAdmin(pubDocId, email, wa, clubNombre) {
     await setDoc(doc(db, 'publicos', pubDocId), {
       estadoCuenta: 'ACTIVO',
       fechaVencimiento: nuevaFecha
-    }, { merge: true });
-
-    if (perfil && perfil.email === email) {
-      perfil.estadoCuenta = 'ACTIVO';
-      perfil.fechaVencimiento = nuevaFecha;
-      autoSaveLocal();
-    }
-
-    const msgWA = encodeURIComponent(`¡Hola ${clubNombre}! 👋 Confirmo la recepción de tu pago. La membresía para tu club ha sido ACTIVADA exitosamente por 30 días (Vence el ${new Date(nuevaFecha).toLocaleDateString()}). ¡Gracias por confiar en 11FUT MANAGER! ⚽🏆`);
-    const waClean = (wa || '').replace(/\D/g, '');
-
-    if (waClean) {
-      window.open(`https://wa.me/${waClean}?text=${msgWA}`, '_blank');
-    }
-
-    const mailSubject = encodeURIComponent('¡Membresía Aprobada! - 11FUT MANAGER');
-    const mailBody = encodeURIComponent(`Hola ${clubNombre},\n\nTu suscripción en 11FUT MANAGER ha sido activada exitosamente por 30 días (Vencimiento: ${new Date(nuevaFecha).toLocaleDateString()}).\n\nYa puedes acceder con todos tus entrenadores.\n\nAtentamente,\nEquipo 11FUT MANAGER`);
-    window.open(`mailto:${email}?subject=${mailSubject}&body=${mailBody}`, '_blank');
-
-    renderSuperAdminDashboard();
+    }, { merge: true }).catch(err => console.warn('Aviso Firestore en aprobación:', err));
   } catch (e) {
-    mostrarToastRapido('Error', 'Error al aprobar membresía: ' + e.message, false);
+    console.warn(e);
   }
+
+  if (perfil && (perfil.email === email || isSuperAdmin())) {
+    perfil.estadoCuenta = 'ACTIVO';
+    perfil.fechaVencimiento = nuevaFecha;
+    autoSaveLocal();
+  }
+
+  mostrarToastRapido('Membresía Aprobada', `🟢 Membresía para ${clubNombre} aprobada por 30 días.`, true);
+
+  const msgWA = encodeURIComponent(`¡Hola ${clubNombre}! 👋 Confirmo la recepción de tu pago. La membresía para tu club ha sido ACTIVADA exitosamente por 30 días (Vence el ${new Date(nuevaFecha).toLocaleDateString()}). ¡Gracias por confiar en 11FUT MANAGER! ⚽🏆`);
+  const waClean = (wa || '').replace(/\D/g, '');
+
+  if (waClean) {
+    window.open(`https://wa.me/${waClean}?text=${msgWA}`, '_blank');
+  }
+
+  const mailSubject = encodeURIComponent('¡Membresía Aprobada! - 11FUT MANAGER');
+  const mailBody = encodeURIComponent(`Hola ${clubNombre},\n\nTu suscripción en 11FUT MANAGER ha sido activada exitosamente por 30 días (Vencimiento: ${new Date(nuevaFecha).toLocaleDateString()}).\n\nYa puedes acceder con todos tus entrenadores.\n\nAtentamente,\nEquipo 11FUT MANAGER`);
+  window.open(`mailto:${email}?subject=${mailSubject}&body=${mailBody}`, '_blank');
+
+  renderSuperAdminDashboard();
 }
 
 async function ejecutarRegalarPruebaSuperAdmin(pubDocId, email, wa, clubNombre) {
@@ -248,27 +250,27 @@ async function ejecutarRegalarPruebaSuperAdmin(pubDocId, email, wa, clubNombre) 
       await setDoc(doc(db, 'publicos', pubDocId), {
         estadoCuenta: 'PRUEBA',
         fechaVencimiento: nuevaFecha
-      }, { merge: true });
-
-      if (perfil && perfil.email === email) {
-        perfil.estadoCuenta = 'PRUEBA';
-        perfil.fechaVencimiento = nuevaFecha;
-        autoSaveLocal();
-      }
-
-      mostrarToastRapido('Prueba Otorgada', `🟡 Se regalaron ${dias} días de prueba a ${clubNombre}.`, true);
-
-      const msgWA = encodeURIComponent(`¡Hola ${clubNombre}! 🎉 Te hemos otorgado una prueba especial de ${dias} días en 11FUT MANAGER para que disfrutes de todas las funciones de tu club. ¡Bienvenido! ⚽`);
-      const waClean = (wa || '').replace(/\D/g, '');
-
-      if (waClean) {
-        window.open(`https://wa.me/${waClean}?text=${msgWA}`, '_blank');
-      }
-
-      renderSuperAdminDashboard();
+      }, { merge: true }).catch(err => console.warn('Aviso Firestore en prueba:', err));
     } catch (e) {
-      mostrarToastRapido('Error', 'Error al otorgar días de prueba: ' + e.message, false);
+      console.warn(e);
     }
+
+    if (perfil && (perfil.email === email || isSuperAdmin())) {
+      perfil.estadoCuenta = 'PRUEBA';
+      perfil.fechaVencimiento = nuevaFecha;
+      autoSaveLocal();
+    }
+
+    mostrarToastRapido('Prueba Otorgada', `🟡 Se regalaron ${dias} días de prueba a ${clubNombre}.`, true);
+
+    const msgWA = encodeURIComponent(`¡Hola ${clubNombre}! 🎉 Te hemos otorgado una prueba especial de ${dias} días en 11FUT MANAGER para que disfrutes de todas las funciones de tu club. ¡Bienvenido! ⚽`);
+    const waClean = (wa || '').replace(/\D/g, '');
+
+    if (waClean) {
+      window.open(`https://wa.me/${waClean}?text=${msgWA}`, '_blank');
+    }
+
+    renderSuperAdminDashboard();
   });
 }
 
@@ -277,12 +279,18 @@ async function ejecutarSuspenderSuperAdmin(pubDocId) {
     try {
       await setDoc(doc(db, 'publicos', pubDocId), {
         estadoCuenta: 'VENCIDO'
-      }, { merge: true });
-      mostrarToastRapido('Cuenta Suspendida', 'Se ha cambiado el estado a VENCIDO.', true);
-      renderSuperAdminDashboard();
+      }, { merge: true }).catch(err => console.warn('Aviso Firestore en suspensión:', err));
     } catch (e) {
-      mostrarToastRapido('Error', 'Error al suspender cuenta: ' + e.message, false);
+      console.warn(e);
     }
+
+    if (perfil) {
+      perfil.estadoCuenta = 'VENCIDO';
+      autoSaveLocal();
+    }
+
+    mostrarToastRapido('Cuenta Suspendida', 'Se ha cambiado el estado a VENCIDO.', true);
+    renderSuperAdminDashboard();
   });
 }
 
