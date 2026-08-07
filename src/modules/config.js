@@ -687,7 +687,9 @@ export function cerrarConfig() {
 
 export function copiarEnlacePublico() {
   const pubId = getPublicId();
-  const url = `${window.location.origin}${window.location.pathname}?public=${pubId}`;
+  const profId = currentProfile ? currentProfile.id : 'admin';
+  const cat = perfil.categoriaActiva || '';
+  const url = `${window.location.origin}${window.location.pathname}?public=${pubId}&profile=${encodeURIComponent(profId)}&cat=${encodeURIComponent(cat)}`;
 
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(url).then(() => {

@@ -87,7 +87,9 @@ export function switchTab(n, updateHash = true) {
 
   document.querySelectorAll('.seccion').forEach((s) => {
     const secNum = parseInt(s.id.replace('s', ''), 10);
-    s.classList.toggle('active', secNum === n);
+    const isTarget = (secNum === n);
+    s.classList.toggle('active', isTarget);
+    s.style.display = isTarget ? 'block' : 'none';
   });
 
   const navBar = document.getElementById('header-nav-bar');
@@ -140,6 +142,19 @@ export function renderSelectorCategoria(isPublic = false) {
 
   let categorias = Array.isArray(perfil.categorias) ? perfil.categorias.filter(Boolean) : [];
   perfil.categorias = categorias;
+
+  // AISLAMIENTO DE EQUIPOS POR PERFIL DT:
+  const esPerfilDT = currentProfile && currentProfile.rol === 'DT';
+  if (esPerfilDT && !isPublic) {
+    let equiposDT = currentProfile.equipos && Array.isArray(currentProfile.equipos) && currentProfile.equipos.length 
+      ? currentProfile.equipos.filter(Boolean) 
+      : (currentProfile.categoria ? [currentProfile.categoria] : []);
+    
+    equiposDT = equiposDT.slice(0, 3); // Máximo 3 equipos por perfil DT
+    if (equiposDT.length) {
+      categorias = equiposDT;
+    }
+  }
 
   let html = '';
   if (categorias.length === 0) {
@@ -196,34 +211,35 @@ function refrescarTodaLaVista() {
 // ══════════════════════════════════════════
 // PUBLIC PROFILE VIEW (SOLO LECTURA SIN BOTONES DE EDICIÓN)
 // ══════════════════════════════════════════
-async function cargarPerfilPublico(publicId) {
+async function cargarPerfilPublico(publicId, profId = null, catReq = null) {
   setPublicViewActive(true);
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('public-profile-screen').style.display = 'block';
 
-
   const cargado = await cargarFirebasePublico(publicId);
   if (!cargado) {
     updatePerfil({ club: '11FUT MANAGER', logo: 'https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png', categorias: ['Sub-14'], categoriaActiva: 'Sub-14' });
-    updateCategoriasData({
-      'Sub-14': {
-        plantel: { por: [], def: [], med: [], del: [], tit_A: [], sup_A: [], ct_A: [], pos_custom_A: {}, maxSup_A: 7 },
-        stats: {},
-        historial: [],
-        juegosProgramados: []
-      }
-    });
   }
 
-  // 1. Renderizar selector de categorías
+  // Establecer el perfil seleccionado si viene en la URL
+  if (profId && perfil.profiles && perfil.profiles.length) {
+    const profEncontrado = perfil.profiles.find(p => p.id === profId);
+    if (profEncontrado) {
+      setCurrentProfile(profEncontrado);
+    }
+  }
+
+  // 1. Renderizar selector de categorías públicas
   renderSelectorCategoria(true);
 
   // 2. Establecer categoría activa oficial
   const selectPub = document.getElementById('pub-selector-categoria');
-  const catActiva = (perfil.categoriaActiva && perfil.categorias.includes(perfil.categoriaActiva))
-    ? perfil.categoriaActiva
-    : (perfil.categorias[0] || 'Sub-14');
+  const catActiva = (catReq && perfil.categorias.includes(catReq))
+    ? catReq
+    : ((perfil.categoriaActiva && perfil.categorias.includes(perfil.categoriaActiva))
+      ? perfil.categoriaActiva
+      : (perfil.categorias[0] || 'Sub-14'));
 
   setCategoriaActiva(catActiva);
 
@@ -742,6 +758,12 @@ export function actualizarVisibilidadPestanasRol() {
     if (tab6) tab6.style.display = 'block';
     if (tab7) tab7.style.display = 'none';
     if (tab8) tab8.style.display = 'none';
+
+    const s7 = document.getElementById('s7');
+    const s8 = document.getElementById('s8');
+    if (s7) s7.style.display = 'none';
+    if (s8) s8.style.display = 'none';
+
     if (btnModoPartido) btnModoPartido.style.display = 'flex';
   }
 }
@@ -802,8 +824,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Detect Public Profile Mode
   const urlParams = new URLSearchParams(window.location.search);
   const publicVal = urlParams.get('public');
+  const profParam = urlParams.get('profile');
+  const catParam = urlParams.get('cat');
   if (publicVal) {
-    cargarPerfilPublico(publicVal);
+    cargarPerfilPublico(publicVal, profParam, catParam);
     return;
   }
 
