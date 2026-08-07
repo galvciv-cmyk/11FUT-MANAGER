@@ -770,7 +770,12 @@ export function actualizarVisibilidadPestanasRol() {
 
 // handleProfileSelected: disponible en scope de módulo para login, registro y onAuthStateChanged
 function handleProfileSelected(prof) {
+  if (prof && prof.id) {
+    localStorage.setItem('11fut_active_profile_id', prof.id);
+  }
   document.getElementById('main-app').style.display = 'block';
+  const profScreen = document.getElementById('profile-selector-screen');
+  if (profScreen) profScreen.style.display = 'none';
 
   verificarMembresiaYLock();
   actualizarVisibilidadPestanasRol();
@@ -843,8 +848,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       await cargarFirebase();
       await guardarFirebase();
       await limpiarDocumentosObsoletosFirebase();
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('main-app').style.display = 'none';
+      
+      const loginSc = document.getElementById('login-screen');
+      if (loginSc) loginSc.style.display = 'none';
       aplicarPerfil();
 
       verificarMembresiaYLock();
@@ -852,11 +858,23 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!perfil.wizardCompletado) {
         const profScreen = document.getElementById('profile-selector-screen');
         if (profScreen) profScreen.style.display = 'none';
+        const mainApp = document.getElementById('main-app');
+        if (mainApp) mainApp.style.display = 'none';
         abrirOnboardingWizard(true);
       } else {
-        renderProfileSelector(handleProfileSelected);
+        const activeProfId = localStorage.getItem('11fut_active_profile_id');
+        const foundProfile = (perfil.profiles || []).find(p => p.id === activeProfId);
+
+        if (foundProfile) {
+          const profScreen = document.getElementById('profile-selector-screen');
+          if (profScreen) profScreen.style.display = 'none';
+          handleProfileSelected(foundProfile);
+        } else {
+          renderProfileSelector(handleProfileSelected);
+        }
       }
     } else {
+      localStorage.removeItem('11fut_active_profile_id');
       const wiz = document.getElementById('modal-onboarding-wizard');
       if (wiz) wiz.style.display = 'none';
       const loginSc = document.getElementById('login-screen');
