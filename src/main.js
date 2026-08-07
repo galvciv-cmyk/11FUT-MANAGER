@@ -143,9 +143,9 @@ export function renderSelectorCategoria(isPublic = false) {
   let categorias = Array.isArray(perfil.categorias) ? perfil.categorias.filter(Boolean) : [];
   perfil.categorias = categorias;
 
-  // AISLAMIENTO DE EQUIPOS POR PERFIL DT:
+  // AISLAMIENTO DE EQUIPOS POR PERFIL DT (APLICA EN VISTA PRIVADA Y PÚBLICA):
   const esPerfilDT = currentProfile && currentProfile.rol === 'DT';
-  if (esPerfilDT && !isPublic) {
+  if (esPerfilDT) {
     let equiposDT = currentProfile.equipos && Array.isArray(currentProfile.equipos) && currentProfile.equipos.length 
       ? currentProfile.equipos.filter(Boolean) 
       : (currentProfile.categoria ? [currentProfile.categoria] : []);
