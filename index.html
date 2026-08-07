@@ -1166,6 +1166,25 @@
         <!-- ACORDEÓN DESPLEGABLE DE CONFIGURACIÓN -->
         <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
 
+          <!-- SECCIÓN 0: DATOS PERSONALES DE CONTACTO -->
+          <div>
+            <button class="cfg-accordion-header" id="header-cfg-sec-datos-personales" onclick="window._toggleConfigSection('cfg-sec-datos-personales')">
+              <span>👤 DATOS PERSONALES DE CONTACTO</span>
+              <span class="cfg-arrow">►</span>
+            </button>
+            <div class="cfg-accordion-content" id="cfg-sec-datos-personales" style="display:none;padding-top:8px;">
+              <div class="card" style="margin:0;">
+                <label style="font-size:11px;color:var(--oro);font-weight:700;margin-bottom:4px;display:block;">📧 Correo Electrónico de la Cuenta / Club:</label>
+                <input type="email" id="cfg-personal-email" placeholder="ej. usuario@gmail.com" style="margin-bottom:10px;">
+                
+                <label style="font-size:11px;color:var(--oro);font-weight:700;margin-bottom:4px;display:block;">📱 Teléfono / WhatsApp de Contacto:</label>
+                <input type="text" id="cfg-personal-wa" placeholder="ej. +584141234567" style="margin-bottom:12px;">
+
+                <button class="btn btn-green" id="btn-save-personal-data" onclick="window._guardarDatosPersonalesConfig()" style="font-size:12px;font-weight:900;padding:10px;width:100%;">💾 GUARDAR DATOS PERSONALES</button>
+              </div>
+            </div>
+          </div>
+
           <!-- SECCIÓN 1: PERFILES DE ENTRENADORES Y PINS -->
           <div>
             <button class="cfg-accordion-header" id="header-cfg-sec-perfiles" onclick="window._toggleConfigSection('cfg-sec-perfiles')">

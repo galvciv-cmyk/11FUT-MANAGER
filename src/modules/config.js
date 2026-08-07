@@ -187,6 +187,12 @@ export function abrirConfig() {
     const cfgClubInput = document.getElementById('cfg-club');
     if (cfgClubInput) cfgClubInput.value = perfil.club || '';
 
+    const cfgPersonalEmail = document.getElementById('cfg-personal-email');
+    if (cfgPersonalEmail) cfgPersonalEmail.value = perfil.email || '';
+
+    const cfgPersonalWA = document.getElementById('cfg-personal-wa');
+    if (cfgPersonalWA) cfgPersonalWA.value = perfil.whatsapp || perfil.telefono || '';
+
     renderCategoriasConfigUI();
     renderKitGallery('A');
     renderEsquemaPredeterminadoUI();
@@ -1363,6 +1369,36 @@ window._toggleConfigSection = (secId) => {
     }
   }
 };
+
+export async function guardarDatosPersonalesConfig() {
+  const emailInput = document.getElementById('cfg-personal-email')?.value?.trim();
+  const waInput = document.getElementById('cfg-personal-wa')?.value?.trim();
+
+  if (!emailInput || !emailInput.includes('@')) {
+    return mostrarNotificacionApp('Datos Personales', 'Por favor ingresa un correo electrónico válido.', false);
+  }
+
+  perfil.email = emailInput;
+  perfil.whatsapp = waInput || perfil.whatsapp || '';
+
+  const emailDisplay = document.getElementById('cfg-email-display');
+  if (emailDisplay) emailDisplay.textContent = perfil.email;
+
+  autoSaveLocal();
+  await guardarFirebase();
+
+  const pubDocId = perfil.email.toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
+  setDoc(doc(db, 'publicos', pubDocId), {
+    email: perfil.email,
+    whatsapp: perfil.whatsapp,
+    club: perfil.club || '11FUT MANAGER',
+    updatedAt: new Date().toISOString()
+  }, { merge: true }).catch(() => {});
+
+  mostrarNotificacionApp('Datos Actualizados', '✅ Correo y teléfono de contacto guardados correctamente.');
+}
+
+window._guardarDatosPersonalesConfig = guardarDatosPersonalesConfig;
 
 
 

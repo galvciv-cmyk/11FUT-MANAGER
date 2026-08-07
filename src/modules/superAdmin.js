@@ -209,12 +209,19 @@ function renderSuperAdminCardsUI(container, clubesValidos) {
 async function ejecutarAprobarSuperAdmin(pubDocId, email, wa, clubNombre) {
   const dias = 30;
   const nuevaFecha = new Date(Date.now() + dias * 24 * 60 * 60 * 1000).toISOString();
+  const emailKey = (email || '').trim().toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
+
+  const payload = {
+    estadoCuenta: 'ACTIVO',
+    fechaVencimiento: nuevaFecha,
+    club: clubNombre,
+    email: email,
+    updatedAt: new Date().toISOString()
+  };
 
   try {
-    await setDoc(doc(db, 'publicos', pubDocId), {
-      estadoCuenta: 'ACTIVO',
-      fechaVencimiento: nuevaFecha
-    }, { merge: true }).catch(err => console.warn('Aviso Firestore en aprobación:', err));
+    if (pubDocId) await setDoc(doc(db, 'publicos', pubDocId), payload, { merge: true }).catch(() => {});
+    if (emailKey && emailKey !== pubDocId) await setDoc(doc(db, 'publicos', emailKey), payload, { merge: true }).catch(() => {});
   } catch (e) {
     console.warn(e);
   }
