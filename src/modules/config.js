@@ -969,6 +969,12 @@ let wizardTempCats = [];
 let wizardTempTorneos = {};
 let wizardTempKit = 'predeterminado';
 
+window._reabrirWizardManualmente = () => {
+  const cfgModal = document.getElementById('config-modal');
+  if (cfgModal) cfgModal.style.display = 'none';
+  abrirOnboardingWizard(true);
+};
+
 export function abrirOnboardingWizard(force = false) {
   const modalReg = document.getElementById('modal-register');
   if (!force && modalReg && modalReg.style.display !== 'none' && modalReg.style.display !== '') {
