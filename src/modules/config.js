@@ -346,7 +346,10 @@ export function renderPerfilesPinsUI() {
         <!-- PIN -->
         <div style="display:flex;align-items:center;gap:8px;">
           <label style="font-size:11px;color:#aaa;font-weight:700;white-space:nowrap;">PIN (4 dígitos — dejar vacío = sin PIN):</label>
-          <input type="text" id="cfg-pin-input-${p.id}" value="${p.pin || ''}" maxlength="4" placeholder="----" style="width:70px;text-align:center;font-size:14px;font-weight:900;letter-spacing:3px;padding:4px;background:#181818;border:1px solid ${pinColor};color:#fff;border-radius:6px;">
+          <div style="position:relative;display:flex;align-items:center;">
+            <input type="password" id="cfg-pin-input-${p.id}" value="${p.pin || ''}" maxlength="4" inputmode="numeric" placeholder="****" style="width:90px;text-align:center;font-size:14px;font-weight:900;letter-spacing:3px;padding:4px 24px 4px 4px;background:#181818;border:1px solid ${pinColor};color:#fff;border-radius:6px;">
+            <button type="button" onclick="window._togglePasswordVisibility('cfg-pin-input-${p.id}', this)" style="position:absolute;right:2px;background:none;border:none;color:#aaa;cursor:pointer;font-size:13px;padding:2px;" title="Mostrar / Ocultar PIN">👁️</button>
+          </div>
         </div>
       </div>`;
     }).join('')}
@@ -360,7 +363,10 @@ export function renderPerfilesPinsUI() {
           <input type="text" id="cfg-nuevo-nombre-perfil" placeholder="Nombre del Entrenador (ej. DT Carlos Pérez)" style="font-size:12px;padding:8px;background:#181818;border:1px solid #333;color:#fff;border-radius:6px;">
           <div style="display:flex;gap:8px;">
             <input type="text" id="cfg-nueva-cat-perfil" placeholder="Equipos/Categorías (opcional, máx 3, ej: Sub-16 A, Sub-16 B)" style="flex:1;font-size:12px;padding:8px;background:#181818;border:1px solid #333;color:#fff;border-radius:6px;">
-            <input type="text" id="cfg-nuevo-pin-perfil" placeholder="PIN (4 dig)" maxlength="4" style="width:110px;text-align:center;font-size:12px;padding:8px;background:#181818;border:1px solid #333;color:#fff;border-radius:6px;">
+            <div style="position:relative;display:flex;align-items:center;">
+              <input type="password" id="cfg-nuevo-pin-perfil" placeholder="PIN (4 dig)" maxlength="4" inputmode="numeric" style="width:110px;text-align:center;font-size:12px;padding:8px 24px 8px 8px;background:#181818;border:1px solid #333;color:#fff;border-radius:6px;">
+              <button type="button" onclick="window._togglePasswordVisibility('cfg-nuevo-pin-perfil', this)" style="position:absolute;right:2px;background:none;border:none;color:#aaa;cursor:pointer;font-size:13px;padding:2px;" title="Mostrar / Ocultar PIN">👁️</button>
+            </div>
           </div>
           <button class="btn btn-gold" onclick="window._agregarNuevoPerfilDT()" style="font-size:12px;padding:9px;width:100%;font-weight:700;">➕ CREAR Y GUARDAR NUEVO PERFIL DT</button>
         </div>
@@ -962,6 +968,17 @@ export function aplicarPerfil() {
     if (bg) bg.style.backgroundImage = `url('${perfil.bg}')`;
   }
 }
+
+window._togglePasswordVisibility = (inputId, btnEl) => {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const isPassword = input.type === 'password';
+  input.type = isPassword ? 'text' : 'password';
+  if (btnEl) {
+    btnEl.textContent = isPassword ? '🙈' : '👁️';
+    btnEl.title = isPassword ? 'Ocultar contraseña' : 'Mostrar contraseña';
+  }
+};
 
 // ── ASISTENTE DE CONFIGURACIÓN INICIAL (ONBOARDING WIZARD 4 PASOS) ──
 let wizardStep = 1;

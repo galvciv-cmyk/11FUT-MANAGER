@@ -16,7 +16,10 @@
         <img id="login-logo" class="login-logo" src="/logo.png" alt="11FUT Logo" onerror="this.src='https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;color:var(--oro);letter-spacing:3px;text-transform:uppercase;margin-bottom:12px;font-weight:700;">11FUT MANAGER</div>
         <input type="email" id="email-input" placeholder="✉️ Correo electrónico" style="text-align:center;">
-        <input type="password" id="pin-input" placeholder="🔐 Contraseña" style="text-align:center; letter-spacing:2px; font-size:16px; margin-bottom:12px;">
+        <div style="position:relative;display:flex;align-items:center;margin-bottom:12px;">
+          <input type="password" id="pin-input" placeholder="🔐 Contraseña" style="text-align:center; letter-spacing:2px; font-size:16px; width:100%; padding-right:36px;">
+          <button type="button" onclick="window._togglePasswordVisibility('pin-input', this)" style="position:absolute;right:8px;background:none;border:none;color:#aaa;cursor:pointer;font-size:16px;padding:4px;z-index:2;" title="Mostrar / Ocultar contraseña">👁️</button>
+        </div>
         <div style="display:flex; gap:8px; align-items:center;">
           <button class="btn btn-red" id="btn-login" style="flex:1; padding:14px; font-size:16px;">INGRESAR</button>
           <button class="btn btn-gold" id="btn-bio-login" title="Iniciar sesión con biometría (Huella / Face ID)" style="width:48px; height:48px; padding:0; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; border-radius:10px;">🔒</button>
@@ -44,10 +47,16 @@
           <input type="tel" id="reg-wa" placeholder="+584121234567">
 
           <label style="font-size:12px;color:var(--oro);font-weight:700;margin-bottom:4px;display:block;margin-top:8px;">🔐 Crear Contraseña (mín. 6 caracteres):</label>
-          <input type="password" id="reg-pin" placeholder="******">
+          <div style="position:relative;display:flex;align-items:center;">
+            <input type="password" id="reg-pin" placeholder="******" style="width:100%;padding-right:36px;">
+            <button type="button" onclick="window._togglePasswordVisibility('reg-pin', this)" style="position:absolute;right:8px;background:none;border:none;color:#aaa;cursor:pointer;font-size:16px;padding:4px;z-index:2;" title="Mostrar / Ocultar contraseña">👁️</button>
+          </div>
 
           <label style="font-size:12px;color:var(--oro);font-weight:700;margin-bottom:4px;display:block;margin-top:8px;">🔐 Confirmar Contraseña:</label>
-          <input type="password" id="reg-pin-confirm" placeholder="******">
+          <div style="position:relative;display:flex;align-items:center;">
+            <input type="password" id="reg-pin-confirm" placeholder="******" style="width:100%;padding-right:36px;">
+            <button type="button" onclick="window._togglePasswordVisibility('reg-pin-confirm', this)" style="position:absolute;right:8px;background:none;border:none;color:#aaa;cursor:pointer;font-size:16px;padding:4px;z-index:2;" title="Mostrar / Ocultar contraseña">👁️</button>
+          </div>
         </div>
 
         <button class="btn btn-gold" id="btn-confirm-register" style="margin-top:10px;padding:14px;font-size:15px;">⚡ CREAR CUENTA E INGRESAR</button>
@@ -1030,7 +1039,10 @@
             <div style="margin-top:14px;padding:12px;background:#090909;border:1px solid var(--oro);border-radius:10px;text-align:center;">
               <label style="font-size:12px;color:var(--oro);font-weight:900;display:block;margin-bottom:4px;">👑 CONTRASEÑA / PIN DEL PERFIL DIRECTOR DEPORTIVO (ADMIN)</label>
               <div style="font-size:11px;color:#aaa;margin-bottom:8px;">Crea el PIN de 4 dígitos para acceder al perfil Administrador Máximo:</div>
-              <input type="password" id="wiz-pin-admin" placeholder="****" maxlength="4" inputmode="numeric" style="width:110px;text-align:center;font-size:18px;font-weight:900;letter-spacing:4px;margin:0 auto;display:block;background:#1a1a1a;border:1px solid var(--oro);color:#fff;border-radius:8px;padding:8px;">
+              <div style="position:relative;display:flex;align-items:center;justify-content:center;max-width:140px;margin:0 auto;">
+                <input type="password" id="wiz-pin-admin" placeholder="****" maxlength="4" inputmode="numeric" style="width:110px;text-align:center;font-size:18px;font-weight:900;letter-spacing:4px;background:#1a1a1a;border:1px solid var(--oro);color:#fff;border-radius:8px;padding:8px 26px 8px 8px;">
+                <button type="button" onclick="window._togglePasswordVisibility('wiz-pin-admin', this)" style="position:absolute;right:0px;background:none;border:none;color:#aaa;cursor:pointer;font-size:15px;padding:4px;" title="Mostrar / Ocultar PIN">👁️</button>
+              </div>
             </div>
           </div>
         </div>
