@@ -1000,43 +1000,40 @@ function handleProfileSelected(prof) {
   if (prof && prof.id) {
     localStorage.setItem('11fut_active_profile_id', prof.id);
   }
-  document.getElementById('main-app').style.display = 'block';
+  const loginSc = document.getElementById('login-screen');
+  if (loginSc) loginSc.style.display = 'none';
+  const mainApp = document.getElementById('main-app');
+  if (mainApp) mainApp.style.display = 'block';
   const profScreen = document.getElementById('profile-selector-screen');
   if (profScreen) profScreen.style.display = 'none';
 
   verificarMembresiaYLock();
   actualizarVisibilidadPestanasRol();
 
-  const isMaster = isSuperAdmin();
-  const maxContratado = isMaster ? 8 : (perfil.maxPerfiles || 1);
+  if (prof && prof.categoria) {
+    setCategoriaActiva(prof.categoria);
+  }
+  renderSelectorCategoria();
+  refrescarTodaLaVista();
 
-  if (maxContratado === 1 && !isMaster) {
-    renderSelectorCategoria();
-    refrescarTodaLaVista();
-    switchTab(7);
-  } else if (isMaster && prof && prof.rol === 'ADMIN') {
-    // SuperAdmin seleccionó el perfil de Director Deportivo → Panel Admin (Tab 7)
-    // Tab 8 (Súper Admin) es accesible desde Tab 7 si la cuenta es SuperAdmin
-    renderSelectorCategoria();
-    refrescarTodaLaVista();
-    switchTab(7);
-  } else if (isMaster && prof && prof.rol === 'DT') {
-    // SuperAdmin seleccionó un perfil de Entrenador → tratarlo como DT normal
-    if (prof.categoria) setCategoriaActiva(prof.categoria);
-    renderSelectorCategoria();
-    refrescarTodaLaVista();
-    switchTab(1);
-  } else if (prof && prof.rol === 'ADMIN') {
-    renderSelectorCategoria();
-    refrescarTodaLaVista();
-    switchTab(7);
+  // Restaurar la pestaña exacta donde estaba el usuario según el URL Hash (#tactica, #stats, #plantel, etc.)
+  const currentHash = window.location.hash || '';
+  const tabFromHash = ROUTE_TABS[currentHash];
+
+  if (tabFromHash) {
+    switchTab(tabFromHash, false);
   } else {
-    if (prof && prof.categoria) {
-      setCategoriaActiva(prof.categoria);
+    const isMaster = isSuperAdmin();
+    const maxContratado = isMaster ? 8 : (perfil.maxPerfiles || 1);
+    const esAdminRol = prof && prof.rol === 'ADMIN';
+    const dtActivos = (perfil.profiles || []).filter(p => p.rol === 'DT').length;
+    if (esAdminRol && dtActivos > 0) {
+      switchTab(7);
+    } else if (esAdminRol && (maxContratado === 1 || isMaster)) {
+      switchTab(7);
+    } else {
+      switchTab(1);
     }
-    renderSelectorCategoria();
-    refrescarTodaLaVista();
-    switchTab(1);
   }
 
   if (auth && auth.currentUser) {
@@ -1052,7 +1049,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   aplicarTema(localStorage.getItem('11fut_theme') || 'dark');
   cargarKits().catch(console.error);
 
-
   // Detect Public Profile Mode
   const urlParams = new URLSearchParams(window.location.search);
   const publicVal = urlParams.get('public');
@@ -1061,6 +1057,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (publicVal) {
     cargarPerfilPublico(publicVal, profParam, catParam);
     return;
+  }
+
+  // Restauración instantánea desde localStorage para que F5 no parpadee al login screen
+  const localProfId = localStorage.getItem('11fut_active_profile_id');
+  const localEmail = localStorage.getItem('11fut_user_email') || perfil?.email;
+
+  if (localProfId || localEmail) {
+    const loginSc = document.getElementById('login-screen');
+    if (loginSc) loginSc.style.display = 'none';
+    const mainApp = document.getElementById('main-app');
+    if (mainApp) mainApp.style.display = 'block';
+    aplicarPerfil();
+
+    const foundProfile = (perfil.profiles || []).find(p => p.id === localProfId) || (perfil.profiles && perfil.profiles[0]);
+    if (foundProfile) {
+      handleProfileSelected(foundProfile);
+    }
+  } else {
+    // Si no hay sesión local previa, mostrar pantalla de inicio de sesión
+    const loginSc = document.getElementById('login-screen');
+    if (loginSc) loginSc.style.display = 'flex';
   }
 
   // Persistencia de Sesión con Firebase Auth (No se cierra al recargar F5)
@@ -1073,22 +1090,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (user && user.email) {
       const isMaster = user.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
 
-      // 1. Si no ha verificado el email (y no es SuperAdmin), mostrar pantalla de verificación
-      if (!user.emailVerified && !isMaster) {
-        const loginSc = document.getElementById('login-screen');
-        if (loginSc) loginSc.style.display = 'none';
-        const mainApp = document.getElementById('main-app');
-        if (mainApp) mainApp.style.display = 'none';
-        mostrarPantallaVerificacionEmail(user);
-        return;
-      }
-
       setUserEmail(user.email);
       await cargarFirebase();
       // No guardar inmediatamente al cargar (evita escrituras innecesarias en cada F5)
       await limpiarDocumentosObsoletosFirebase();
 
-      // 2. Si está en estado PENDIENTE de aprobación por SuperAdmin
+      // Si está en estado PENDIENTE de aprobación por SuperAdmin
       if (perfil.estadoCuenta === 'PENDIENTE' && !isMaster) {
         const loginSc = document.getElementById('login-screen');
         if (loginSc) loginSc.style.display = 'none';
@@ -1105,6 +1112,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       
       const loginSc = document.getElementById('login-screen');
       if (loginSc) loginSc.style.display = 'none';
+      const mainApp = document.getElementById('main-app');
+      if (mainApp) mainApp.style.display = 'block';
       aplicarPerfil();
 
       verificarMembresiaYLock();
@@ -1112,12 +1121,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!perfil.wizardCompletado) {
         const profScreen = document.getElementById('profile-selector-screen');
         if (profScreen) profScreen.style.display = 'none';
-        const mainApp = document.getElementById('main-app');
         if (mainApp) mainApp.style.display = 'none';
         abrirOnboardingWizard(true);
       } else {
         const activeProfId = localStorage.getItem('11fut_active_profile_id');
-        const foundProfile = (perfil.profiles || []).find(p => p.id === activeProfId);
+        const foundProfile = (perfil.profiles || []).find(p => p.id === activeProfId) || (perfil.profiles && perfil.profiles[0]);
 
         if (foundProfile) {
           const profScreen = document.getElementById('profile-selector-screen');
@@ -1128,13 +1136,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
     } else {
-      localStorage.removeItem('11fut_active_profile_id');
-      const wiz = document.getElementById('modal-onboarding-wizard');
-      if (wiz) wiz.style.display = 'none';
-      const loginSc = document.getElementById('login-screen');
-      if (loginSc) loginSc.style.display = 'flex';
-      const mainApp = document.getElementById('main-app');
-      if (mainApp) mainApp.style.display = 'none';
+      const activeProfId = localStorage.getItem('11fut_active_profile_id');
+      if (!activeProfId) {
+        localStorage.removeItem('11fut_active_profile_id');
+        const wiz = document.getElementById('modal-onboarding-wizard');
+        if (wiz) wiz.style.display = 'none';
+        const loginSc = document.getElementById('login-screen');
+        if (loginSc) loginSc.style.display = 'flex';
+        const mainApp = document.getElementById('main-app');
+        if (mainApp) mainApp.style.display = 'none';
+      }
     }
   });
 
