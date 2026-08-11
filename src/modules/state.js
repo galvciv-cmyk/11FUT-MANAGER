@@ -20,7 +20,8 @@ export const DEFAULT_PERFIL = {
   email: "",
   whatsapp: "",
   estadoCuenta: "PRUEBA", // PRUEBA, ACTIVO, VENCIDO
-  fechaVencimiento: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 días por defecto
+  // Nota: fechaVencimiento se genera dinámicamente al registrar, no al importar el módulo
+  fechaVencimiento: "",
   categoriaActiva: "",
   categorias: [],
   maxPerfiles: 1,
@@ -37,6 +38,11 @@ export const DEFAULT_PERFIL = {
   ],
   esquemasCustom: []
 };
+
+/** Genera la fecha de vencimiento para un nuevo usuario (3 días desde ahora) */
+export function generarFechaVencimientoPrueba() {
+  return new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
+}
 
 export function isSuperAdmin() {
   const emailAuth = (window.firebaseAuth && window.firebaseAuth.currentUser && window.firebaseAuth.currentUser.email) ? window.firebaseAuth.currentUser.email : "";

@@ -32,8 +32,8 @@ export function renderAdminDashboard(containerElement) {
 
     let vicCat = 0, empCat = 0, derCat = 0, gfCat = 0, gcCat = 0;
     h.forEach(m => {
-      const gF = parseInt(m.golesFavor || 0);
-      const gC = parseInt(m.golesContra || 0);
+      const gF = parseInt(m.gf || 0);
+      const gC = parseInt(m.gc || 0);
       gfCat += gF;
       gcCat += gC;
       if (gF > gC) vicCat++;
@@ -74,18 +74,20 @@ export function renderAdminDashboard(containerElement) {
       asisRecords: asis
     };
 
+    const porCat = new Set(p.por || []);
     jugsCat.forEach(j => {
-      const s = st[j.nombre] || {};
+      // jugsCat son strings (nombres), no objetos
+      const nombre = typeof j === 'string' ? j : (j.nombre || '');
+      const s = st[nombre] || {};
       todosLosJugadores.push({
-        nombre: j.nombre,
-        dorsal: j.dorsal || '#',
-        posicion: j.posicion || 'JUG',
+        nombre,
         categoria: catName,
+        esPortero: porCat.has(nombre),
         goles: parseInt(s.goles || 0),
         asistencias: parseInt(s.asist || 0),
         pj: parseInt(s.pj || 0),
         rating: parseFloat(s.rat || 0),
-        vallas: parseInt(s.vallas || 0)
+        vallas: parseInt(s.vallaInvicta || 0)
       });
     });
   });
@@ -95,7 +97,8 @@ export function renderAdminDashboard(containerElement) {
 
   const topGoleadores = [...todosLosJugadores].sort((a, b) => b.goles - a.goles).slice(0, 5);
   const topAsistentes = [...todosLosJugadores].sort((a, b) => b.asistencias - a.asistencias).slice(0, 5);
-  const topPorteros = [...todosLosJugadores].filter(j => j.posicion === 'POR' || j.posicion === 'GK').sort((a, b) => b.vallas - a.vallas).slice(0, 5);
+  // Filtrar porteros correctamente usando el campo esPortero (basado en plantel.por)
+  const topPorteros = [...todosLosJugadores].filter(j => j.esPortero).sort((a, b) => b.vallas - a.vallas).slice(0, 5);
 
   containerElement.innerHTML = `
     <div style="padding:16px;max-width:1200px;margin:0 auto;">
@@ -425,10 +428,18 @@ function renderVistaDetalladaCategoria(catName, container) {
 
 window._adminIrACategoria = (catName) => {
   setCategoriaActiva(catName);
-  const selector = document.getElementById('admin-view-selector');
-  if (selector) {
-    selector.value = catName;
-    selector.dispatchEvent(new Event('change'));
+  // Actualizar selector de categoría en la pizarra táctica
+  const selectorTactica = document.getElementById('selector-categoria-tactica');
+  if (selectorTactica) selectorTactica.value = catName;
+  // Navegar al tab de Táctica (Tab 1)
+  if (typeof window._switchTab === 'function') {
+    window._switchTab(1);
+  } else {
+    // Fallback directo si switchTab no está expuesto
+    const s1 = document.getElementById('s1');
+    document.querySelectorAll('.seccion').forEach(s => { s.classList.remove('active'); s.style.display = 'none'; });
+    if (s1) { s1.classList.add('active'); s1.style.display = 'block'; }
+    document.querySelectorAll('.nav-horizontal-item').forEach(t => t.classList.toggle('active', parseInt(t.dataset.tab || t.id.replace('tab-', ''), 10) === 1));
   }
 };
 

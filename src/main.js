@@ -19,6 +19,7 @@ import { initEntrenamientosUI, renderBibliotecaEjercicios, renderPlannerUI, rend
 import { subirImagenCloudinary } from "./services/cloudinary.js";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged } from "firebase/auth";
 import { registerBiometric, loginBiometric, isBiometricSupported } from "./modules/biometric.js";
+import { generarFechaVencimientoPrueba } from "./modules/state.js";
 
 // ══════════════════════════════════════════
 // MAPEO DE RUTAS HASH URL (#tactica, #citacion, etc.)
@@ -65,7 +66,6 @@ export function switchTab(n, updateHash = true) {
   // esAdminRol: basado SOLO en el rol del perfil seleccionado (no en isMaster)
   // Un DT en cuenta SuperAdmin se trata como DT normal
   const esAdminRol = currentProfile && currentProfile.rol === 'ADMIN';
-  const maxContratado = isMaster ? 8 : (perfil.maxPerfiles || 1);
 
   // Contar cuántos perfiles DT existen activamente (sin contar el Admin)
   const dtActivos = (perfil.profiles || []).filter(p => p.rol === 'DT').length;
@@ -117,6 +117,8 @@ export function restaurarPestanaDesdeURL() {
 }
 
 window.addEventListener('hashchange', restaurarPestanaDesdeURL);
+// Exponer switchTab globalmente para uso desde otros módulos sin importación circular
+window._switchTab = switchTab;
 
 // Exponer para uso desde config.js (evita circular import)
 window._refrescarVisibilidadTabs = () => {
@@ -563,9 +565,10 @@ async function ejecutarRegistroUsuario() {
     perfil.email = emailInput;
     perfil.whatsapp = waInput;
     perfil.estadoCuenta = isMaster ? "ACTIVO" : "PRUEBA";
+    // Calcular fecha al momento del registro (no al importar el módulo)
     perfil.fechaVencimiento = isMaster 
       ? new Date("2099-01-01").toISOString() 
-      : new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
+      : generarFechaVencimientoPrueba();
     perfil.maxPerfiles = isMaster ? 8 : 1;
     perfil.categorias = [];
     perfil.categoriaActiva = "";
@@ -848,7 +851,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (user && user.email) {
       setUserEmail(user.email);
       await cargarFirebase();
-      await guardarFirebase();
+      // No guardar inmediatamente al cargar (evita escrituras innecesarias en cada F5)
       await limpiarDocumentosObsoletosFirebase();
       
       const loginSc = document.getElementById('login-screen');
@@ -1079,14 +1082,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const drawerBench = document.getElementById(`fs-drawer-bench-${eq}`);
     if (drawerBench) drawerBench.classList.toggle('open');
   });
-
-  // Herramientas de dibujo en Fullscreen invocadas por onclick nativo en HTML para evitar doble disparo
-  document.getElementById(`btn-dash-fs-${eq}`)?.addEventListener('click', (e) => {
-    const isDashed = !e.target.classList.contains('active');
-    setLineDash(eq, isDashed);
-  });
-  document.getElementById(`btn-undo-fs-${eq}`)?.addEventListener('click', () => undoCanvas(eq));
-  document.getElementById(`btn-clear-fs-${eq}`)?.addEventListener('click', () => clearCanvas(eq));
 
   document.getElementById(`btn-rec-step-fs-${eq}`)?.addEventListener('click', () => grabarPasoAnimacion(eq));
   document.getElementById(`btn-play-anim-fs-${eq}`)?.addEventListener('click', () => reproducirAnimacion(eq));

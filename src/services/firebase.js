@@ -80,16 +80,33 @@ export function getFunctionUrl(functionName) {
 }
 
 let _guardarFirebaseTimer = null;
+let _hayGuardadoPendiente = false;
+
+// Protección: forzar guardado al cerrar la pestaña si hay cambios pendientes
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    if (_hayGuardadoPendiente && _guardarFirebaseTimer) {
+      clearTimeout(_guardarFirebaseTimer);
+      _hayGuardadoPendiente = false;
+      // Usar sendBeacon para el guardado final (no bloquea el cierre)
+      try {
+        autoSaveLocal(); // Al menos guardar localmente
+      } catch (e) { /* silencioso */ }
+    }
+  });
+}
 
 export async function guardarFirebase() {
   if (!db) return;
   
   // Guardado local instantáneo para respuesta de UI inmediata (<1ms)
   autoSaveLocal();
+  _hayGuardadoPendiente = true;
 
   clearTimeout(_guardarFirebaseTimer);
   return new Promise((resolve) => {
     _guardarFirebaseTimer = setTimeout(async () => {
+      _hayGuardadoPendiente = false;
       try {
         const fullPayload = {
           perfil, plantel, stats, historial, categoriasData,

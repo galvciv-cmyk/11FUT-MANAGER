@@ -76,19 +76,10 @@ export async function renderSuperAdminDashboard() {
         id: perfil.email ? perfil.email.replace(/[^a-zA-Z0-9_-]/g, '_') : 'master_club',
         club: perfil.club || '11FUT MANAGER MASTER',
         email: perfil.email || 'gyknova@gmail.com',
-        whatsapp: perfil.whatsapp || '+584141401560',
+        whatsapp: perfil.whatsapp || '',
         maxPerfiles: perfil.maxPerfiles || 8,
         estadoCuenta: perfil.estadoCuenta || 'ACTIVO',
         fechaVencimiento: perfil.fechaVencimiento || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        id: 'galvciv_gmail_com',
-        club: 'CLUB DEPORTIVO GALVCIV',
-        email: 'galvciv@gmail.com',
-        whatsapp: '+584140000000',
-        maxPerfiles: 3,
-        estadoCuenta: 'PRUEBA',
-        fechaVencimiento: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
       }
     ];
     renderSuperAdminCardsUI(container, clubesFallback);
@@ -196,7 +187,7 @@ function renderSuperAdminCardsUI(container, clubesValidos) {
       } else if (action === 'regalar') {
         await ejecutarRegalarPruebaSuperAdmin(pubDocId, email, wa, clubNombre);
       } else if (action === 'suspender') {
-        await ejecutarSuspenderSuperAdmin(pubDocId);
+        await ejecutarSuspenderSuperAdmin(pubDocId, email);
       } else if (action === 'wa') {
         ejecutarChatWASuperAdmin(wa, clubNombre);
       } else if (action === 'eliminar') {
@@ -281,7 +272,7 @@ async function ejecutarRegalarPruebaSuperAdmin(pubDocId, email, wa, clubNombre) 
   });
 }
 
-async function ejecutarSuspenderSuperAdmin(pubDocId) {
+async function ejecutarSuspenderSuperAdmin(pubDocId, email) {
   mostrarConfirmacionApp('Suspender Club', '¿Estás seguro de suspender el acceso de este club?', async () => {
     try {
       await setDoc(doc(db, 'publicos', pubDocId), {
@@ -291,7 +282,8 @@ async function ejecutarSuspenderSuperAdmin(pubDocId) {
       console.warn(e);
     }
 
-    if (perfil) {
+    // Solo modificar el perfil local si pertenece al mismo usuario
+    if (perfil && perfil.email && email && perfil.email.trim().toLowerCase() === email.trim().toLowerCase()) {
       perfil.estadoCuenta = 'VENCIDO';
       autoSaveLocal();
     }

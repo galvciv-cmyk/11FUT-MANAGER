@@ -610,14 +610,12 @@ function acumularStatsPartido(p) {
     if (p.tarjetasAmarillas && p.tarjetasAmarillas[nombre]) st.am = (st.am || 0) + p.tarjetasAmarillas[nombre];
     if (p.tarjetasRojas && p.tarjetasRojas[nombre]) st.ro = (st.ro || 0) + p.tarjetasRojas[nombre];
 
-    st.rematesFavor = (st.rematesFavor || 0) + (p.rematesA || 0);
-    st.rematesContra = (st.rematesContra || 0) + (p.rematesC || 0);
-    st.cornersFavor = (st.cornersFavor || 0) + (p.cornersA || 0);
-    st.cornersRival = (st.cornersRival || 0) + (p.cornersC || 0);
-
+    // rematesFavor/rematesContra son estadísticas de equipo, NO por jugador individual.
+    // Solo se acumulan para porteros (para el cálculo de atajadas) a nivel de partido.
     if (plantel.por.includes(nombre)) {
       if (p.golesRecibidosPor && p.golesRecibidosPor[nombre]) {
         st.golesRecibidos = (st.golesRecibidos || 0) + p.golesRecibidosPor[nombre];
+        st.rematesContra = (st.rematesContra || 0) + p.golesRecibidosPor[nombre];
       }
       if (p.gc === 0) st.vallaInvicta = (st.vallaInvicta || 0) + 1;
     }

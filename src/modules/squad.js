@@ -123,7 +123,10 @@ export function importarCSV(input) {
         }
       }
     });
-    mostrarNotificacionApp('Plantel Importado', '📥 Plantilla importada. Pulsa GUARDAR PLANTEL.');
+    // Sincronizar a memoria inmediatamente para no perder datos al cambiar de pestaña
+    syncPlantelFromUI();
+    autoSaveLocal();
+    mostrarNotificacionApp('Plantel Importado', '📥 Plantilla importada y guardada localmente. Pulsa GUARDAR PLANTEL para sincronizar con la nube.');
   };
   if (input.files[0]) reader.readAsText(input.files[0]);
 }
