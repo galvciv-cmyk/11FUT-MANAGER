@@ -17,9 +17,174 @@ import { renderSuperAdminDashboard } from "./modules/superAdmin.js";
 import { currentProfile, setCurrentProfile, getCurrentProfile } from "./modules/state.js";
 import { initEntrenamientosUI, renderBibliotecaEjercicios, renderPlannerUI, renderAsistenciaUI, renderLesionesUI } from "./modules/training.js";
 import { subirImagenCloudinary } from "./services/cloudinary.js";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, sendEmailVerification } from "firebase/auth";
 import { registerBiometric, loginBiometric, isBiometricSupported } from "./modules/biometric.js";
 import { generarFechaVencimientoPrueba } from "./modules/state.js";
+
+// ══════════════════════════════════════════
+// LISTA NEGRA — DOMINIOS DE EMAIL DESECHABLES
+// ══════════════════════════════════════════
+const DISPOSABLE_EMAIL_DOMAINS = new Set([
+  'mailinator.com','guerrillamail.com','guerrillamail.net','guerrillamail.org',
+  '10minutemail.com','10minutemail.net','tempmail.com','temp-mail.org',
+  'throwam.com','yopmail.com','yopmail.fr','sharklasers.com','guerrillamailblock.com',
+  'spam4.me','trashmail.com','trashmail.me','trashmail.at','trashmail.net',
+  'maildrop.cc','dispostable.com','discard.email','fakeinbox.com',
+  'mailnesia.com','mailnull.com','spamcero.com','spamspot.com',
+  'tempinbox.com','mailscrap.com','tempr.email','emailondeck.com',
+  'filzmail.com','binkmail.com','bobmail.info','devnullmail.com',
+  'incognitomail.com','incognitomail.net','spamevader.com','mailexpire.com',
+  'temporaryemail.net','throwaway.email','inboxalias.com','getairmail.com',
+  'mailbucket.org','junk1.com','meltmail.com','mailzilla.org','mbx.cc',
+  'wegwerfmail.de','kurzepost.de','maileimer.de','inoutmail.de',
+  'getonemail.com','gowikibooks.com','gowikicampus.com','gowikifilms.com',
+]);
+
+function esDominioDesechable(email) {
+  const domain = (email || '').split('@')[1]?.toLowerCase().trim();
+  return domain ? DISPOSABLE_EMAIL_DOMAINS.has(domain) : false;
+}
+
+// ══════════════════════════════════════════
+// PANTALLA: VERIFICACIÓN DE EMAIL
+// ══════════════════════════════════════════
+const _DEFAULT_LOGO = "https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png";
+
+function _ocultarTodasLasPantallas() {
+  ['login-screen','main-app'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  const overlay = document.getElementById('profile-selector-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+export function mostrarPantallaVerificacionEmail(user) {
+  _ocultarTodasLasPantallas();
+  let screen = document.getElementById('email-verification-screen');
+  if (!screen) {
+    screen = document.createElement('div');
+    screen.id = 'email-verification-screen';
+    document.body.appendChild(screen);
+  }
+  screen.style.cssText = 'position:fixed;inset:0;background:#050505;z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;';
+  screen.innerHTML = `
+    <div style="text-align:center;max-width:480px;width:100%;animation:fadeIn 0.5s ease;padding:20px 0;">
+      <img src="${_DEFAULT_LOGO}" style="height:60px;margin-bottom:24px;filter:drop-shadow(0 0 14px rgba(212,175,55,0.45));" onerror="this.style.display='none'">
+      <div style="font-size:58px;margin-bottom:14px;">📧</div>
+      <h1 style="font-family:'Barlow Condensed',sans-serif;font-size:24px;color:#fff;margin:0 0 10px;letter-spacing:1px;">VERIFICA TU CORREO ELECTRÓNICO</h1>
+      <div style="font-size:13px;color:#aaa;margin-bottom:6px;">Te enviamos un correo de verificación a:</div>
+      <div style="font-size:15px;font-weight:700;color:var(--oro);margin-bottom:20px;word-break:break-all;">${user.email}</div>
+      <div style="background:rgba(212,175,55,0.07);border:1px solid rgba(212,175,55,0.22);border-radius:10px;padding:14px 16px;margin-bottom:22px;font-size:12px;color:#ccc;line-height:1.7;text-align:left;">
+        📌 <strong>Instrucciones:</strong><br>
+        1. Revisa tu <strong>Bandeja de Entrada</strong> (también la carpeta <strong>Spam/Correo No Deseado</strong>)<br>
+        2. Haz clic en el enlace <strong>"Verificar correo"</strong> del mensaje<br>
+        3. Regresa aquí y pulsa el botón <strong>"Ya verifiqué"</strong>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button id="btn-check-verificacion" style="background:linear-gradient(135deg,var(--oro),#b8960c);border:none;color:#000;padding:14px;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;cursor:pointer;letter-spacing:0.5px;">✅ YA VERIFIQUÉ — CONTINUAR</button>
+        <button id="btn-reenviar-verificacion" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);color:#ccc;padding:11px;border-radius:8px;font-size:13px;cursor:pointer;">📧 Reenviar correo de verificación</button>
+        <button id="btn-logout-verificacion" style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);color:#e74c3c;padding:10px;border-radius:8px;font-size:12px;cursor:pointer;">🚪 Cerrar sesión y usar otro correo</button>
+      </div>
+      <div id="verif-status-msg" style="font-size:12px;color:#aaa;margin-top:14px;min-height:18px;"></div>
+    </div>
+  `;
+  document.getElementById('btn-check-verificacion')?.addEventListener('click', async () => {
+    const msg = document.getElementById('verif-status-msg');
+    if (msg) msg.textContent = '⏳ Verificando...';
+    try {
+      await user.reload();
+      if (auth.currentUser?.emailVerified) {
+        screen.style.display = 'none';
+        await cargarFirebase();
+        aplicarPerfil();
+        if (perfil.estadoCuenta === 'PENDIENTE') {
+          mostrarPantallaEsperaAprobacion();
+        } else {
+          renderProfileSelector(handleProfileSelected);
+        }
+      } else {
+        if (msg) msg.textContent = '⚠️ Correo aún no verificado. Revisa tu bandeja de entrada y spam.';
+      }
+    } catch (e) {
+      if (msg) msg.textContent = '❌ Error: ' + e.message;
+    }
+  });
+  document.getElementById('btn-reenviar-verificacion')?.addEventListener('click', async () => {
+    const msg = document.getElementById('verif-status-msg');
+    try {
+      await sendEmailVerification(auth.currentUser);
+      if (msg) msg.textContent = '✅ Correo de verificación reenviado.';
+    } catch (e) {
+      if (msg) msg.textContent = '⚠️ Espera un momento antes de reenviar.';
+    }
+  });
+  document.getElementById('btn-logout-verificacion')?.addEventListener('click', () => cerrarSesion());
+}
+
+// ══════════════════════════════════════════
+// PANTALLA: ESPERA APROBACIÓN SUPERADMIN
+// ══════════════════════════════════════════
+export function mostrarPantallaEsperaAprobacion() {
+  _ocultarTodasLasPantallas();
+  const prev = document.getElementById('email-verification-screen');
+  if (prev) prev.style.display = 'none';
+  let panel = document.getElementById('pending-approval-screen');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'pending-approval-screen';
+    document.body.appendChild(panel);
+  }
+  panel.style.cssText = 'position:fixed;inset:0;background:#050505;z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;';
+  panel.innerHTML = `
+    <div style="text-align:center;max-width:480px;width:100%;animation:fadeIn 0.5s ease;padding:20px 0;">
+      <img src="${_DEFAULT_LOGO}" style="height:60px;margin-bottom:24px;filter:drop-shadow(0 0 14px rgba(212,175,55,0.45));" onerror="this.style.display='none'">
+      <div style="font-size:58px;margin-bottom:14px;">⏳</div>
+      <h1 style="font-family:'Barlow Condensed',sans-serif;font-size:24px;color:#fff;margin:0 0 12px;letter-spacing:1px;">CUENTA PENDIENTE DE ACTIVACIÓN</h1>
+      <div style="font-size:13px;color:#aaa;margin-bottom:18px;line-height:1.7;">
+        Tu correo fue verificado exitosamente ✅<br>
+        El equipo de <strong style="color:var(--oro)">11FUT MANAGER</strong> revisará tu solicitud.<br>
+        Recibirás confirmación por <strong>WhatsApp</strong> cuando tu período de prueba sea activado.
+      </div>
+      <div style="background:#0d0d0d;border:1px solid rgba(212,175,55,0.22);border-radius:10px;padding:14px 16px;margin-bottom:22px;font-size:12px;color:#ccc;line-height:1.7;text-align:left;">
+        ⚽ <strong style="color:var(--oro)">¿Por qué revisamos tu cuenta?</strong><br>
+        Para garantizar que cada club que acceda a 11FUT MANAGER sea auténtico y pueda recibir el mejor soporte y experiencia personalizada.
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button id="btn-actualizar-estado" style="background:linear-gradient(135deg,var(--oro),#b8960c);border:none;color:#000;padding:14px;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;cursor:pointer;">🔄 VERIFICAR ESTADO DE APROBACIÓN</button>
+        <button id="btn-wa-soporte-pendiente" style="background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.3);color:#25d366;padding:11px;border-radius:8px;font-size:13px;cursor:pointer;">💬 Contactar Soporte por WhatsApp</button>
+        <button id="btn-logout-pendiente" style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);color:#e74c3c;padding:10px;border-radius:8px;font-size:12px;cursor:pointer;">🚪 Cerrar sesión</button>
+      </div>
+      <div id="pending-status-msg" style="font-size:12px;color:#aaa;margin-top:14px;min-height:18px;"></div>
+    </div>
+  `;
+  document.getElementById('btn-actualizar-estado')?.addEventListener('click', async () => {
+    const msg = document.getElementById('pending-status-msg');
+    if (msg) msg.textContent = '⏳ Actualizando...';
+    try {
+      await cargarFirebase();
+      if (perfil.estadoCuenta !== 'PENDIENTE') {
+        panel.style.display = 'none';
+        aplicarPerfil();
+        if (perfil.wizardCompletado) {
+          renderProfileSelector(handleProfileSelected);
+        } else {
+          abrirOnboardingWizard(true);
+        }
+      } else {
+        if (msg) msg.textContent = 'ℹ️ Tu cuenta aún está en revisión. Te notificaremos por WhatsApp.';
+      }
+    } catch (e) {
+      if (msg) msg.textContent = '❌ Error: ' + e.message;
+    }
+  });
+  document.getElementById('btn-wa-soporte-pendiente')?.addEventListener('click', () => {
+    const emailUser = perfil.email || auth?.currentUser?.email || '';
+    const msgWA = encodeURIComponent(`Hola, me registré en 11FUT MANAGER y mi cuenta (${emailUser}) está pendiente de activación. ¿Cuándo será activada mi prueba?`);
+    window.open(`https://wa.me/584241895407?text=${msgWA}`, '_blank');
+  });
+  document.getElementById('btn-logout-pendiente')?.addEventListener('click', () => cerrarSesion());
+}
 
 // ══════════════════════════════════════════
 // MAPEO DE RUTAS HASH URL (#tactica, #citacion, etc.)
@@ -422,8 +587,29 @@ async function login() {
     const hashed = await hashPin(pinInput + user.email);
     setPinHash(hashed);
 
+    const isMaster = (user.email || '').toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+
+    // 1. Validar si el correo está verificado
+    if (!user.emailVerified && !isMaster) {
+      document.getElementById('login-screen').style.display = 'none';
+      mostrarPantallaVerificacionEmail(user);
+      return;
+    }
+
     if (statusEl) statusEl.textContent = '☁️ Cargando datos...';
     await cargarFirebase();
+
+    // 2. Validar si la cuenta está pendiente de activación por SuperAdmin
+    if (perfil.estadoCuenta === 'PENDIENTE' && !isMaster) {
+      document.getElementById('login-screen').style.display = 'none';
+      mostrarPantallaEsperaAprobacion();
+      return;
+    }
+
+    const emailVerifScreen = document.getElementById('email-verification-screen');
+    if (emailVerifScreen) emailVerifScreen.style.display = 'none';
+    const pendingScreen = document.getElementById('pending-approval-screen');
+    if (pendingScreen) pendingScreen.style.display = 'none';
 
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('main-app').style.display = 'none';
@@ -553,6 +739,10 @@ async function ejecutarRegistroUsuario() {
     return alert('❌ Las contraseñas ingresadas no coinciden.');
   }
 
+  if (esDominioDesechable(emailInput)) {
+    return alert('❌ No se permiten correos temporales o desechables. Por favor ingresa un correo real o institucional (Gmail, Outlook, Yahoo, corporativo, etc.).');
+  }
+
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, emailInput, pinInput);
     const user = userCredential.user;
@@ -564,11 +754,11 @@ async function ejecutarRegistroUsuario() {
 
     perfil.email = emailInput;
     perfil.whatsapp = waInput;
-    perfil.estadoCuenta = isMaster ? "ACTIVO" : "PRUEBA";
-    // Calcular fecha al momento del registro (no al importar el módulo)
+    // Cuentas nuevas inician como PENDIENTE de aprobación por SuperAdmin (a menos que sea el Master)
+    perfil.estadoCuenta = isMaster ? "ACTIVO" : "PENDIENTE";
     perfil.fechaVencimiento = isMaster 
       ? new Date("2099-01-01").toISOString() 
-      : generarFechaVencimientoPrueba();
+      : "";
     perfil.maxPerfiles = isMaster ? 8 : 1;
     perfil.categorias = [];
     perfil.categoriaActiva = "";
@@ -584,14 +774,46 @@ async function ejecutarRegistroUsuario() {
 
     await guardarFirebase();
 
+    // Sincronizar documento público para que el SuperAdmin lo vea inmediatamente en su panel
+    try {
+      const { setDoc, doc } = await import("firebase/firestore");
+      const { db } = await import("./services/firebase.js");
+      const pubDocId = emailInput.toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
+      await setDoc(doc(db, 'publicos', pubDocId), {
+        club: perfil.club || 'Nuevo Club',
+        email: emailInput,
+        whatsapp: waInput,
+        estadoCuenta: perfil.estadoCuenta,
+        fechaVencimiento: perfil.fechaVencimiento || '',
+        maxPerfiles: perfil.maxPerfiles,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+    } catch (pubErr) {
+      console.warn('Aviso al registrar club público:', pubErr);
+    }
+
+    // Enviar correo de verificación si no es SuperAdmin
+    if (!isMaster) {
+      try {
+        await sendEmailVerification(user);
+      } catch (errVerif) {
+        console.warn('Error al enviar correo de verificación:', errVerif);
+      }
+    }
+
     cerrarModalRegistro();
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('main-app').style.display = 'none';
     const profScreen = document.getElementById('profile-selector-screen');
     if (profScreen) profScreen.style.display = 'none';
 
-    aplicarPerfil();
-    abrirOnboardingWizard(true);
+    if (isMaster) {
+      aplicarPerfil();
+      abrirOnboardingWizard(true);
+    } else {
+      mostrarPantallaVerificacionEmail(user);
+    }
 
   } catch (e) {
     if (e.code === 'auth/email-already-in-use' || e.message?.includes('email-already-in-use')) {
@@ -849,10 +1071,37 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (user && user.email) {
+      const isMaster = user.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+
+      // 1. Si no ha verificado el email (y no es SuperAdmin), mostrar pantalla de verificación
+      if (!user.emailVerified && !isMaster) {
+        const loginSc = document.getElementById('login-screen');
+        if (loginSc) loginSc.style.display = 'none';
+        const mainApp = document.getElementById('main-app');
+        if (mainApp) mainApp.style.display = 'none';
+        mostrarPantallaVerificacionEmail(user);
+        return;
+      }
+
       setUserEmail(user.email);
       await cargarFirebase();
       // No guardar inmediatamente al cargar (evita escrituras innecesarias en cada F5)
       await limpiarDocumentosObsoletosFirebase();
+
+      // 2. Si está en estado PENDIENTE de aprobación por SuperAdmin
+      if (perfil.estadoCuenta === 'PENDIENTE' && !isMaster) {
+        const loginSc = document.getElementById('login-screen');
+        if (loginSc) loginSc.style.display = 'none';
+        const mainApp = document.getElementById('main-app');
+        if (mainApp) mainApp.style.display = 'none';
+        mostrarPantallaEsperaAprobacion();
+        return;
+      }
+
+      const emailVerifScreen = document.getElementById('email-verification-screen');
+      if (emailVerifScreen) emailVerifScreen.style.display = 'none';
+      const pendingScreen = document.getElementById('pending-approval-screen');
+      if (pendingScreen) pendingScreen.style.display = 'none';
       
       const loginSc = document.getElementById('login-screen');
       if (loginSc) loginSc.style.display = 'none';

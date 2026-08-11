@@ -116,12 +116,17 @@ function renderSuperAdminCardsUI(container, clubesValidos) {
     let badgeColor = 'var(--oro)';
     let badgeLabel = `⏳ PRUEBA (${diasRestantes}d)`;
 
-    if (estado === 'ACTIVO') {
+    if (estado === 'PENDIENTE') {
+      badgeBg = 'rgba(52,152,219,0.15)';
+      badgeBorder = '#3498db';
+      badgeColor = '#3498db';
+      badgeLabel = `⏳ PENDIENTE ACTIVACIÓN`;
+    } else if (estado === 'ACTIVO') {
       badgeBg = 'rgba(46,204,113,0.15)';
       badgeBorder = '#2ecc71';
       badgeColor = '#2ecc71';
       badgeLabel = `🟢 ACTIVO (${diasRestantes}d)`;
-    } else if (estado === 'VENCIDO' || diasRestantes <= 0) {
+    } else if (estado === 'VENCIDO' || (estado !== 'PENDIENTE' && diasRestantes <= 0)) {
       badgeBg = 'rgba(231,76,60,0.15)';
       badgeBorder = '#e74c3c';
       badgeColor = '#e74c3c';
@@ -156,8 +161,12 @@ function renderSuperAdminCardsUI(container, clubesValidos) {
 
         <!-- FILA DE BOTONES DE ACCIÓN RESPONSIVOS -->
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(110px, 1fr));gap:6px;margin-top:2px;">
-          <button class="btn btn-green sa-btn-action" data-action="aprobar" data-id="${c.id}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟢 APROBAR (30D)</button>
-          <button class="btn btn-gold sa-btn-action" data-action="regalar" data-id="${c.id}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟡 +PRUEBA</button>
+          ${estado === 'PENDIENTE' ? `
+            <button class="btn btn-green sa-btn-action" data-action="activar_prueba" data-id="${c.id}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:900;justify-content:center;background:linear-gradient(135deg,#2ecc71,#27ae60);grid-column:span 2;">⚡ ACTIVAR PRUEBA (3 DÍAS)</button>
+          ` : `
+            <button class="btn btn-green sa-btn-action" data-action="aprobar" data-id="${c.id}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟢 APROBAR (30D)</button>
+            <button class="btn btn-gold sa-btn-action" data-action="regalar" data-id="${c.id}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟡 +PRUEBA</button>
+          `}
           <button class="btn btn-gray sa-btn-action" data-action="suspender" data-id="${c.id}" style="font-size:11px;padding:8px;font-weight:800;color:var(--rojo);justify-content:center;">🔴 SUSPENDER</button>
           <button class="btn btn-gray sa-btn-action" data-action="wa" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">💬 CHAT WA</button>
           <button class="btn btn-red sa-btn-action" data-action="eliminar" data-id="${c.id}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🗑️ BORRAR</button>
@@ -182,7 +191,9 @@ function renderSuperAdminCardsUI(container, clubesValidos) {
       const wa = btn.dataset.wa;
       const clubNombre = btn.dataset.club;
 
-      if (action === 'aprobar') {
+      if (action === 'activar_prueba') {
+        await ejecutarActivarPruebaSuperAdmin(pubDocId, email, wa, clubNombre);
+      } else if (action === 'aprobar') {
         await ejecutarAprobarSuperAdmin(pubDocId, email, wa, clubNombre);
       } else if (action === 'regalar') {
         await ejecutarRegalarPruebaSuperAdmin(pubDocId, email, wa, clubNombre);
@@ -195,6 +206,44 @@ function renderSuperAdminCardsUI(container, clubesValidos) {
       }
     });
   }
+}
+
+async function ejecutarActivarPruebaSuperAdmin(pubDocId, email, wa, clubNombre) {
+  const dias = 3;
+  const nuevaFecha = new Date(Date.now() + dias * 24 * 60 * 60 * 1000).toISOString();
+  const emailKey = (email || '').trim().toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
+
+  const payload = {
+    estadoCuenta: 'PRUEBA',
+    fechaVencimiento: nuevaFecha,
+    club: clubNombre,
+    email: email,
+    updatedAt: new Date().toISOString()
+  };
+
+  try {
+    if (pubDocId) await setDoc(doc(db, 'publicos', pubDocId), payload, { merge: true }).catch(() => {});
+    if (emailKey && emailKey !== pubDocId) await setDoc(doc(db, 'publicos', emailKey), payload, { merge: true }).catch(() => {});
+  } catch (e) {
+    console.warn(e);
+  }
+
+  if (perfil && perfil.email === email) {
+    perfil.estadoCuenta = 'PRUEBA';
+    perfil.fechaVencimiento = nuevaFecha;
+    autoSaveLocal();
+  }
+
+  mostrarToastRapido('Prueba Activada', `⚡ Período de prueba de 3 días activado para ${clubNombre}.`, true);
+
+  const msgWA = encodeURIComponent(`¡Hola ${clubNombre}! 🎉 Tu cuenta en 11FUT MANAGER ha sido APROBADA y ACTIVADA con 3 días de prueba gratuita (Vence el ${new Date(nuevaFecha).toLocaleDateString()}). Ya puedes ingresar a la plataforma y comenzar a usar todas las herramientas tácticas. ¡Mucho éxito! ⚽🏆`);
+  const waClean = (wa || '').replace(/\D/g, '');
+
+  if (waClean) {
+    window.open(`https://wa.me/${waClean}?text=${msgWA}`, '_blank');
+  }
+
+  renderSuperAdminDashboard();
 }
 
 async function ejecutarAprobarSuperAdmin(pubDocId, email, wa, clubNombre) {

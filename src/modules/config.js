@@ -479,35 +479,6 @@ export function abrirSoporteWhatsApp() {
   window.open(link, '_blank');
 }
 
-export function mostrarModalUpgradePlan(totalActual, maxPlan) {
-  const modal = document.getElementById('modal');
-  const modalContent = document.getElementById('modal-content');
-  if (!modal || !modalContent) return;
-
-  const msgWA = encodeURIComponent(`Hola, estoy usando 11FUT MANAGER y necesito ampliar mi plan. Actualmente tengo ${totalActual} perfiles activos y mi plan permite ${maxPlan}. ¿Cómo puedo ampliar?`);
-
-  modalContent.innerHTML = `
-    <div class="modal-title">🚀 AMPLIAR PLAN DE PERFILES</div>
-    <div class="card" style="text-align:center;padding:20px 14px;">
-      <div style="font-size:18px;margin-bottom:10px;">📋 Límite de Perfiles Alcanzado</div>
-      <div style="font-size:13px;color:#aaa;margin-bottom:16px;">
-        Tienes <strong style="color:var(--oro)">${totalActual}/${maxPlan} perfiles</strong> activos en tu plan actual.<br>
-        Para agregar más entrenadores, contacta al soporte para ampliar tu suscripción.
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <button class="btn btn-green" onclick="window.open('https://wa.me/584241895407?text=${msgWA}', '_blank');document.getElementById('modal').style.display='none'">
-          💬 CONTACTAR POR WHATSAPP
-        </button>
-        <button class="btn btn-gray" onclick="document.getElementById('modal').style.display='none'">CERRAR</button>
-      </div>
-    </div>
-  `;
-
-  modal.style.display = 'flex';
-}
-
-window.mostrarModalUpgradePlan = mostrarModalUpgradePlan;
-
 export function getTorneosCategoria(catNombre) {
   if (!categoriasData[catNombre]) {
     categoriasData[catNombre] = { torneos: ['Torneo Oficial'] };
@@ -642,6 +613,8 @@ export function mostrarModalUpgradePlan(actual, max) {
 
   modal.style.display = 'flex';
 }
+
+window.mostrarModalUpgradePlan = mostrarModalUpgradePlan;
 
 export async function agregarNuevaCategoriaConfig() {
   const esDT = currentProfile && currentProfile.rol === 'DT';
