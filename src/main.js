@@ -1210,6 +1210,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     toggleFullscreen();
   });
 
+  document.getElementById('btn-lock-logout')?.addEventListener('click', cerrarSesion);
+
   // Bind Onboarding Wizard
   window._mostrarProfileSelectorSetup = () => {
     document.getElementById('login-screen').style.display = 'none';
