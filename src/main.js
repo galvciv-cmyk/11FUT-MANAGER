@@ -1085,23 +1085,25 @@ function handleProfileSelected(prof) {
   renderSelectorCategoria();
   refrescarTodaLaVista();
 
-  // Restaurar la pestaña exacta donde estaba el usuario según el URL Hash (#tactica, #stats, #plantel, etc.)
+  // Restaurar la pestaña exacta donde estaba el usuario según el URL Hash (#tactica, #stats, #superadmin, etc.)
   const currentHash = window.location.hash || '';
   const tabFromHash = ROUTE_TABS[currentHash];
 
-  if (tabFromHash) {
-    switchTab(tabFromHash, false);
+  if (typeof tabFromHash === 'number') {
+    switchTab(tabFromHash, true);
   } else {
     const isMaster = isSuperAdmin();
     const maxContratado = isMaster ? 8 : (perfil.maxPerfiles || 1);
     const esAdminRol = prof && prof.rol === 'ADMIN';
     const dtActivos = (perfil.profiles || []).filter(p => p.rol === 'DT').length;
-    if (esAdminRol && dtActivos > 0) {
-      switchTab(7);
-    } else if (esAdminRol && (maxContratado === 1 || isMaster)) {
-      switchTab(7);
+    if (isMaster && esAdminRol) {
+      switchTab(8, true);
+    } else if (esAdminRol && dtActivos > 0) {
+      switchTab(7, true);
+    } else if (esAdminRol && maxContratado === 1) {
+      switchTab(7, true);
     } else {
-      switchTab(1);
+      switchTab(1, true);
     }
   }
 

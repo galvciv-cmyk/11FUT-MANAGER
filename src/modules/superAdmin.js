@@ -32,19 +32,33 @@ export async function renderSuperAdminDashboard() {
         const updatedAt = d.updatedAt || d.createdAt || '';
 
         const key = (rawEmail && rawEmail.includes('@')) ? rawEmail : docSnap.id.toLowerCase();
-        
-        mapClubes.set(key, {
-          id: docSnap.id,
-          docId: docSnap.id,
-          club: clubNombre,
-          email: rawEmail || docSnap.id,
-          whatsapp: wa,
-          logo: logo,
-          estadoCuenta: estado,
-          fechaVencimiento: fechaExp,
-          maxPerfiles: maxP,
-          updatedAt: updatedAt
-        });
+        const prev = mapClubes.get(key);
+
+        if (!prev) {
+          mapClubes.set(key, {
+            id: docSnap.id,
+            docId: docSnap.id,
+            club: clubNombre,
+            email: rawEmail || docSnap.id,
+            whatsapp: wa,
+            logo: logo,
+            estadoCuenta: estado,
+            fechaVencimiento: fechaExp,
+            maxPerfiles: maxP,
+            updatedAt: updatedAt
+          });
+        } else {
+          mapClubes.set(key, {
+            ...prev,
+            club: (clubNombre && clubNombre !== 'Nuevo Club' && clubNombre !== 'Club Registrado') ? clubNombre : prev.club,
+            whatsapp: wa || prev.whatsapp,
+            logo: logo || prev.logo,
+            estadoCuenta: (estado && estado !== 'PENDIENTE') ? estado : (prev.estadoCuenta || estado),
+            fechaVencimiento: fechaExp || prev.fechaVencimiento,
+            maxPerfiles: maxP || prev.maxPerfiles,
+            updatedAt: updatedAt || prev.updatedAt
+          });
+        }
       });
     } catch (errPub) {
       console.warn('Aviso leyendo publicos en SuperAdmin:', errPub);
@@ -72,14 +86,14 @@ export async function renderSuperAdminDashboard() {
             id: prev ? prev.id : `usr_${docSnap.id}`,
             docId: prev ? prev.docId : `usr_${docSnap.id}`,
             uid: docSnap.id,
-            club: clubNombre,
+            club: (clubNombre && clubNombre !== 'Nuevo Club' && clubNombre !== 'Club Registrado') ? clubNombre : (prev?.club || clubNombre),
             email: rawEmail,
-            whatsapp: wa,
-            logo: logo,
-            estadoCuenta: estado,
-            fechaVencimiento: fechaExp,
-            maxPerfiles: maxP,
-            updatedAt: updatedAt
+            whatsapp: wa || prev?.whatsapp || '',
+            logo: logo || prev?.logo || '',
+            estadoCuenta: estado || prev?.estadoCuenta || 'PENDIENTE',
+            fechaVencimiento: fechaExp || prev?.fechaVencimiento || '',
+            maxPerfiles: maxP || prev?.maxPerfiles || 1,
+            updatedAt: updatedAt || prev?.updatedAt || ''
           });
         }
       });

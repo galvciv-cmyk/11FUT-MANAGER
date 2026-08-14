@@ -1377,14 +1377,44 @@ export async function finalizarOnboardingWizard() {
     perfil.wizardCompletado = true;
     aplicarPerfil();
     autoSaveLocal();
+
+    const user = (window.firebaseAuth && window.firebaseAuth.currentUser) ? window.firebaseAuth.currentUser : null;
+    const isMaster = isSuperAdmin();
+    const emailUser = (perfil.email || (user ? user.email : '') || '').trim();
+    const uid = user ? user.uid : null;
+
+    // Sincronizar inmediatamente en Firestore 'publicos' y 'usuarios'
+    try {
+      const pubPayload = {
+        club: perfil.club || 'Nuevo Club',
+        email: emailUser,
+        whatsapp: perfil.whatsapp || '',
+        logo: perfil.logo || '',
+        estadoCuenta: isMaster ? 'ACTIVO' : (perfil.estadoCuenta || 'PENDIENTE'),
+        fechaVencimiento: perfil.fechaVencimiento || '',
+        maxPerfiles: perfil.maxPerfiles || 1,
+        wizardCompletado: true,
+        perfil,
+        updatedAt: new Date().toISOString()
+      };
+
+      if (uid) {
+        setDoc(doc(db, 'publicos', `usr_${uid}`), pubPayload, { merge: true }).catch(() => {});
+        setDoc(doc(db, 'usuarios', uid), { perfil, categoriasData, updatedAt: new Date().toISOString() }, { merge: true }).catch(() => {});
+      }
+      if (emailUser) {
+        const emailDocId = emailUser.toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
+        setDoc(doc(db, 'publicos', emailDocId), pubPayload, { merge: true }).catch(() => {});
+      }
+    } catch (syncErr) {
+      console.warn('Aviso sincronizando wizard a Firestore:', syncErr);
+    }
+
     await guardarFirebase();
 
     if (modal) modal.style.display = 'none';
 
     mostrarNotificacionApp('¡Bienvenido a 11FUT!', `🏆 Configuración completada para ${perfil.club || 'tu Club'}.`);
-
-    const user = (window.firebaseAuth && window.firebaseAuth.currentUser) ? window.firebaseAuth.currentUser : null;
-    const isMaster = isSuperAdmin();
 
     if (user && !user.emailVerified && !isMaster) {
       if (typeof window._mostrarPantallaVerificacionEmail === 'function') {
