@@ -1383,7 +1383,14 @@ export async function finalizarOnboardingWizard() {
 
     mostrarNotificacionApp('¡Bienvenido a 11FUT!', `🏆 Configuración completada para ${perfil.club || 'tu Club'}.`);
 
-    if (perfil.estadoCuenta === 'PENDIENTE' && !isSuperAdmin()) {
+    const user = (window.firebaseAuth && window.firebaseAuth.currentUser) ? window.firebaseAuth.currentUser : null;
+    const isMaster = isSuperAdmin();
+
+    if (user && !user.emailVerified && !isMaster) {
+      if (typeof window._mostrarPantallaVerificacionEmail === 'function') {
+        window._mostrarPantallaVerificacionEmail(user);
+      }
+    } else if (perfil.estadoCuenta === 'PENDIENTE' && !isMaster) {
       if (typeof window._mostrarPantallaEsperaAprobacion === 'function') {
         window._mostrarPantallaEsperaAprobacion();
       }
@@ -1396,7 +1403,14 @@ export async function finalizarOnboardingWizard() {
     console.error('Error al finalizar Wizard:', err);
     perfil.wizardCompletado = true;
     if (modal) modal.style.display = 'none';
-    if (perfil.estadoCuenta === 'PENDIENTE' && !isSuperAdmin()) {
+    const user = (window.firebaseAuth && window.firebaseAuth.currentUser) ? window.firebaseAuth.currentUser : null;
+    const isMaster = isSuperAdmin();
+
+    if (user && !user.emailVerified && !isMaster) {
+      if (typeof window._mostrarPantallaVerificacionEmail === 'function') {
+        window._mostrarPantallaVerificacionEmail(user);
+      }
+    } else if (perfil.estadoCuenta === 'PENDIENTE' && !isMaster) {
       if (typeof window._mostrarPantallaEsperaAprobacion === 'function') {
         window._mostrarPantallaEsperaAprobacion();
       }

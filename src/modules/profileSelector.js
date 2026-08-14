@@ -45,6 +45,7 @@ export function renderProfileSelector(onProfileSelected, forceShow = false) {
 
 
   // RENDERIZADO INTERFAZ STREAMING ("¿Quién está dirigiendo hoy?")
+  window.location.hash = '#profiles';
   modalOverlay.style.display = 'flex';
   modalOverlay.innerHTML = `
     <!-- BOTÓN CERRAR SESIÓN — ESQUINA SUPERIOR DERECHA -->

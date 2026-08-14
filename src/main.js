@@ -61,6 +61,7 @@ function _ocultarTodasLasPantallas() {
 }
 
 export function mostrarPantallaVerificacionEmail(user) {
+  window.location.hash = '#verificar-email';
   _ocultarTodasLasPantallas();
   let screen = document.getElementById('email-verification-screen');
   if (!screen) {
@@ -75,7 +76,7 @@ export function mostrarPantallaVerificacionEmail(user) {
       <div style="font-size:58px;margin-bottom:14px;">📧</div>
       <h1 style="font-family:'Barlow Condensed',sans-serif;font-size:24px;color:#fff;margin:0 0 10px;letter-spacing:1px;">VERIFICA TU CORREO ELECTRÓNICO</h1>
       <div style="font-size:13px;color:#aaa;margin-bottom:6px;">Te enviamos un correo de verificación a:</div>
-      <div style="font-size:15px;font-weight:700;color:var(--oro);margin-bottom:20px;word-break:break-all;">${user.email}</div>
+      <div style="font-size:15px;font-weight:700;color:var(--oro);margin-bottom:20px;word-break:break-all;">${user?.email || ''}</div>
       <div style="background:rgba(212,175,55,0.07);border:1px solid rgba(212,175,55,0.22);border-radius:10px;padding:14px 16px;margin-bottom:22px;font-size:12px;color:#ccc;line-height:1.7;text-align:left;">
         📌 <strong>Instrucciones:</strong><br>
         1. Revisa tu <strong>Bandeja de Entrada</strong> (también la carpeta <strong>Spam/Correo No Deseado</strong>)<br>
@@ -94,14 +95,13 @@ export function mostrarPantallaVerificacionEmail(user) {
     const msg = document.getElementById('verif-status-msg');
     if (msg) msg.textContent = '⏳ Verificando...';
     try {
-      await user.reload();
+      await (user || auth.currentUser)?.reload();
       if (auth.currentUser?.emailVerified) {
         screen.style.display = 'none';
         await cargarFirebase();
         aplicarPerfil();
-        if (!perfil.wizardCompletado) {
-          abrirOnboardingWizard(true);
-        } else if (perfil.estadoCuenta === 'PENDIENTE') {
+        const isMaster = isSuperAdmin();
+        if (perfil.estadoCuenta === 'PENDIENTE' && !isMaster) {
           mostrarPantallaEsperaAprobacion();
         } else {
           renderProfileSelector(handleProfileSelected);
@@ -125,10 +125,13 @@ export function mostrarPantallaVerificacionEmail(user) {
   document.getElementById('btn-logout-verificacion')?.addEventListener('click', () => cerrarSesion());
 }
 
+window._mostrarPantallaVerificacionEmail = mostrarPantallaVerificacionEmail;
+
 // ══════════════════════════════════════════
 // PANTALLA: ESPERA APROBACIÓN SUPERADMIN
 // ══════════════════════════════════════════
 export function mostrarPantallaEsperaAprobacion() {
+  window.location.hash = '#pendiente-aprobacion';
   _ocultarTodasLasPantallas();
   const prev = document.getElementById('email-verification-screen');
   if (prev) prev.style.display = 'none';
@@ -222,7 +225,7 @@ export function mostrarPantallaEsperaAprobacion() {
 window._mostrarPantallaEsperaAprobacion = mostrarPantallaEsperaAprobacion;
 
 // ══════════════════════════════════════════
-// MAPEO DE RUTAS HASH URL (#tactica, #citacion, etc.)
+// MAPEO DE RUTAS HASH URL (#tactica, #citacion, #profiles, etc.)
 // ══════════════════════════════════════════
 const TAB_ROUTES = {
   1: 'tactica',
@@ -243,7 +246,11 @@ const ROUTE_TABS = {
   '#historial': 5,
   '#entrenamientos': 6,
   '#admin': 7,
-  '#superadmin': 8
+  '#superadmin': 8,
+  '#profiles': 'profiles',
+  '#perfiles': 'profiles',
+  '#verificar-email': 'verificar-email',
+  '#pendiente-aprobacion': 'pendiente-aprobacion'
 };
 
 const TAB_LABELS = {
@@ -317,8 +324,27 @@ export function switchTab(n, updateHash = true) {
 
 export function restaurarPestanaDesdeURL() {
   const hash = window.location.hash || '#tactica';
-  const tabNum = ROUTE_TABS[hash] || 1;
-  switchTab(tabNum, false);
+  const target = ROUTE_TABS[hash];
+
+  if (typeof target === 'number') {
+    switchTab(target, false);
+  } else if (target === 'profiles') {
+    if (auth && auth.currentUser) {
+      const mainApp = document.getElementById('main-app');
+      if (mainApp) mainApp.style.display = 'none';
+      const loginSc = document.getElementById('login-screen');
+      if (loginSc) loginSc.style.display = 'none';
+      renderProfileSelector(handleProfileSelected, true);
+    }
+  } else if (target === 'verificar-email') {
+    if (auth && auth.currentUser && !auth.currentUser.emailVerified) {
+      mostrarPantallaVerificacionEmail(auth.currentUser);
+    }
+  } else if (target === 'pendiente-aprobacion') {
+    if (auth && auth.currentUser && perfil.estadoCuenta === 'PENDIENTE') {
+      mostrarPantallaEsperaAprobacion();
+    }
+  }
 }
 
 window.addEventListener('hashchange', restaurarPestanaDesdeURL);
@@ -849,12 +875,8 @@ async function ejecutarRegistroUsuario() {
     const profScreen = document.getElementById('profile-selector-screen');
     if (profScreen) profScreen.style.display = 'none';
 
-    if (isMaster) {
-      aplicarPerfil();
-      abrirOnboardingWizard(true);
-    } else {
-      mostrarPantallaVerificacionEmail(user);
-    }
+    aplicarPerfil();
+    abrirOnboardingWizard(true);
 
   } catch (e) {
     if (e.code === 'auth/email-already-in-use' || e.message?.includes('email-already-in-use')) {
@@ -1109,17 +1131,29 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Restauración instantánea desde localStorage para que F5 no parpadee al login screen
   const localProfId = localStorage.getItem('11fut_active_profile_id');
   const localEmail = localStorage.getItem('11fut_user_email') || perfil?.email;
+  const isMasterLocal = (localEmail || '').toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
 
   if (localProfId || localEmail) {
-    const loginSc = document.getElementById('login-screen');
-    if (loginSc) loginSc.style.display = 'none';
-    const mainApp = document.getElementById('main-app');
-    if (mainApp) mainApp.style.display = 'block';
-    aplicarPerfil();
+    if (perfil.estadoCuenta === 'PENDIENTE' && !isMasterLocal) {
+      mostrarPantallaEsperaAprobacion();
+    } else if (!perfil.wizardCompletado) {
+      abrirOnboardingWizard(true);
+    } else {
+      const loginSc = document.getElementById('login-screen');
+      if (loginSc) loginSc.style.display = 'none';
+      const mainApp = document.getElementById('main-app');
+      if (mainApp) mainApp.style.display = 'block';
+      aplicarPerfil();
 
-    const foundProfile = (perfil.profiles || []).find(p => p.id === localProfId) || (perfil.profiles && perfil.profiles[0]);
-    if (foundProfile) {
-      handleProfileSelected(foundProfile);
+      const currentHash = window.location.hash || '';
+      if (currentHash === '#profiles' || currentHash === '#perfiles') {
+        renderProfileSelector(handleProfileSelected, true);
+      } else {
+        const foundProfile = (perfil.profiles || []).find(p => p.id === localProfId) || (perfil.profiles && perfil.profiles[0]);
+        if (foundProfile) {
+          handleProfileSelected(foundProfile);
+        }
+      }
     }
   } else {
     // Si no hay sesión local previa, mostrar pantalla de inicio de sesión
@@ -1139,15 +1173,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       setUserEmail(user.email);
       await cargarFirebase();
-      // No guardar inmediatamente al cargar (evita escrituras innecesarias en cada F5)
       await limpiarDocumentosObsoletosFirebase();
 
-      // Si está en estado PENDIENTE de aprobación por SuperAdmin
+      // 1. Si no ha completado el Wizard de su club
+      if (!perfil.wizardCompletado) {
+        _ocultarTodasLasPantallas();
+        aplicarPerfil();
+        abrirOnboardingWizard(true);
+        return;
+      }
+
+      // 2. Si el correo no está verificado (después del wizard)
+      if (!user.emailVerified && !isMaster) {
+        _ocultarTodasLasPantallas();
+        mostrarPantallaVerificacionEmail(user);
+        return;
+      }
+
+      // 3. Si está en estado PENDIENTE de aprobación por SuperAdmin
       if (perfil.estadoCuenta === 'PENDIENTE' && !isMaster) {
-        const loginSc = document.getElementById('login-screen');
-        if (loginSc) loginSc.style.display = 'none';
-        const mainApp = document.getElementById('main-app');
-        if (mainApp) mainApp.style.display = 'none';
+        _ocultarTodasLasPantallas();
         mostrarPantallaEsperaAprobacion();
         return;
       }
@@ -1165,22 +1210,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       verificarMembresiaYLock();
 
-      if (!perfil.wizardCompletado) {
+      const currentHash = window.location.hash || '';
+      if (currentHash === '#profiles' || currentHash === '#perfiles') {
+        renderProfileSelector(handleProfileSelected, true);
+        return;
+      }
+
+      const activeProfId = localStorage.getItem('11fut_active_profile_id');
+      const foundProfile = (perfil.profiles || []).find(p => p.id === activeProfId) || (perfil.profiles && perfil.profiles[0]);
+
+      if (foundProfile) {
         const profScreen = document.getElementById('profile-selector-screen');
         if (profScreen) profScreen.style.display = 'none';
-        if (mainApp) mainApp.style.display = 'none';
-        abrirOnboardingWizard(true);
+        handleProfileSelected(foundProfile);
       } else {
-        const activeProfId = localStorage.getItem('11fut_active_profile_id');
-        const foundProfile = (perfil.profiles || []).find(p => p.id === activeProfId) || (perfil.profiles && perfil.profiles[0]);
-
-        if (foundProfile) {
-          const profScreen = document.getElementById('profile-selector-screen');
-          if (profScreen) profScreen.style.display = 'none';
-          handleProfileSelected(foundProfile);
-        } else {
-          renderProfileSelector(handleProfileSelected);
-        }
+        renderProfileSelector(handleProfileSelected);
       }
     } else {
       const activeProfId = localStorage.getItem('11fut_active_profile_id');
