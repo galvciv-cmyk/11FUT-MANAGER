@@ -6,6 +6,7 @@ import { subirImagenCloudinary } from "../services/cloudinary.js";
 import { renderStats } from "./stats.js";
 import { renderHistorial } from "./history.js";
 import { actualizarTactica, FORMACIONES } from "./tactics.js";
+import { enviarNotificacionTelegram } from "../services/telegram.js";
 
 const DEFAULT_LOGO = "https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png";
 
@@ -110,6 +111,11 @@ export function mostrarToastRapido(titulo, mensaje, esExito = true) {
 
 export function mostrarNotificacionApp(titulo, mensaje, esExito = true) {
   mostrarToastRapido(titulo, mensaje, esExito);
+  
+  // Enviar a Telegram si está configurado y habilitado
+  if (perfil.telegramEnabled && perfil.telegramBotToken && perfil.telegramChatId) {
+    enviarNotificacionTelegram(perfil.telegramBotToken, perfil.telegramChatId, titulo, mensaje);
+  }
 }
 
 export function mostrarConfirmacionApp(titulo, mensaje, onConfirm) {
@@ -197,6 +203,14 @@ export function abrirConfig() {
     renderKitGallery('A');
     renderEsquemaPredeterminadoUI();
     renderPerfilesPinsUI();
+
+    const cfgTelegramToken = document.getElementById('cfg-telegram-token');
+    const cfgTelegramChatId = document.getElementById('cfg-telegram-chatid');
+    const cfgTelegramEnabled = document.getElementById('cfg-telegram-enabled');
+    
+    if (cfgTelegramToken) cfgTelegramToken.value = perfil.telegramBotToken || '';
+    if (cfgTelegramChatId) cfgTelegramChatId.value = perfil.telegramChatId || '';
+    if (cfgTelegramEnabled) cfgTelegramEnabled.checked = perfil.telegramEnabled || false;
 
     const imgPrev = document.getElementById('img-prev-cfg-logo');
     const divPrev = document.getElementById('prev-cfg-logo');
@@ -798,6 +812,43 @@ window._limpiarCustomKits = async () => {
   mostrarToastRapido('Kits Restaurados', 'Se restauraron los kits oficiales prediseñados.', true);
 };
 
+export async function guardarTelegramConfig() {
+  const tokenInput = document.getElementById('cfg-telegram-token');
+  const chatIdInput = document.getElementById('cfg-telegram-chatid');
+  const enabledInput = document.getElementById('cfg-telegram-enabled');
+
+  if (tokenInput) perfil.telegramBotToken = tokenInput.value.trim();
+  if (chatIdInput) perfil.telegramChatId = chatIdInput.value.trim();
+  if (enabledInput) perfil.telegramEnabled = enabledInput.checked;
+
+  autoSaveLocal();
+  await guardarFirebase();
+  mostrarNotificacionApp('Configuración Guardada', 'La configuración de Telegram se ha guardado correctamente.');
+}
+window._guardarTelegramConfig = guardarTelegramConfig;
+
+export async function testTelegramConfig() {
+  const tokenInput = document.getElementById('cfg-telegram-token');
+  const chatIdInput = document.getElementById('cfg-telegram-chatid');
+
+  const botToken = tokenInput ? tokenInput.value.trim() : '';
+  const chatId = chatIdInput ? chatIdInput.value.trim() : '';
+
+  if (!botToken || !chatId) {
+    return mostrarNotificacionApp('Faltan Datos', 'Por favor, ingresa el Token del Bot y el Chat ID para probar.', false);
+  }
+
+  mostrarToastRapido('Prueba Telegram', 'Enviando mensaje de prueba...', true);
+  const exito = await enviarNotificacionTelegram(botToken, chatId, 'Notificación de Prueba', '¡Hola! La conexión entre 11FUT MANAGER y Telegram funciona correctamente. ✅');
+  
+  if (exito) {
+    mostrarNotificacionApp('Éxito', 'Mensaje de prueba enviado a Telegram.');
+  } else {
+    mostrarNotificacionApp('Error', 'No se pudo enviar el mensaje a Telegram. Verifica el Token y el Chat ID.', false);
+  }
+}
+window._testTelegramConfig = testTelegramConfig;
+
 export function renderKitGallery(eq) {
   const containerKits = document.getElementById('cfg-sec-kits');
   const esAdmin = currentProfile && currentProfile.rol === 'ADMIN';
@@ -1332,15 +1383,24 @@ export async function finalizarOnboardingWizard() {
 
     mostrarNotificacionApp('¡Bienvenido a 11FUT!', `🏆 Configuración completada para ${perfil.club || 'tu Club'}.`);
 
-    // Mostrar el Selector de Perfiles DESPUÉS de finalizar el Wizard
-    if (typeof window._mostrarProfileSelectorSetup === 'function') {
-      window._mostrarProfileSelectorSetup();
+    if (perfil.estadoCuenta === 'PENDIENTE' && !isSuperAdmin()) {
+      if (typeof window._mostrarPantallaEsperaAprobacion === 'function') {
+        window._mostrarPantallaEsperaAprobacion();
+      }
+    } else {
+      if (typeof window._mostrarProfileSelectorSetup === 'function') {
+        window._mostrarProfileSelectorSetup();
+      }
     }
   } catch (err) {
     console.error('Error al finalizar Wizard:', err);
     perfil.wizardCompletado = true;
     if (modal) modal.style.display = 'none';
-    if (typeof window._mostrarProfileSelectorSetup === 'function') {
+    if (perfil.estadoCuenta === 'PENDIENTE' && !isSuperAdmin()) {
+      if (typeof window._mostrarPantallaEsperaAprobacion === 'function') {
+        window._mostrarPantallaEsperaAprobacion();
+      }
+    } else if (typeof window._mostrarProfileSelectorSetup === 'function') {
       window._mostrarProfileSelectorSetup();
     }
   }

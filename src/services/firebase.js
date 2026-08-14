@@ -173,9 +173,35 @@ export async function cargarFirebase() {
         if (data.stats) updateStats(data.stats);
         if (data.historial) updateHistorial(data.historial);
       }
-      autoSaveLocal();
-      return true;
     }
+
+    // Sincronizar estado de aprobación y membresía actualizada por Súper Admin desde 'publicos'
+    try {
+      const pubKey = (auth && auth.currentUser && auth.currentUser.uid) ? `usr_${auth.currentUser.uid}` : null;
+      const userEmail = perfil.email || (auth && auth.currentUser && auth.currentUser.email) || '';
+      const emailKey = userEmail ? userEmail.trim().toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_') : null;
+
+      let pubSnap = null;
+      if (pubKey) {
+        pubSnap = await getDoc(doc(db, 'publicos', pubKey)).catch(() => null);
+      }
+      if ((!pubSnap || !pubSnap.exists()) && emailKey) {
+        pubSnap = await getDoc(doc(db, 'publicos', emailKey)).catch(() => null);
+      }
+
+      if (pubSnap && pubSnap.exists()) {
+        const pubData = pubSnap.data() || {};
+        if (pubData.estadoCuenta) perfil.estadoCuenta = pubData.estadoCuenta;
+        if (pubData.fechaVencimiento) perfil.fechaVencimiento = pubData.fechaVencimiento;
+        if (pubData.maxPerfiles) perfil.maxPerfiles = pubData.maxPerfiles;
+        if (pubData.club && !perfil.club) perfil.club = pubData.club;
+      }
+    } catch (pubErr) {
+      console.warn('Aviso sincronizando estado público:', pubErr);
+    }
+
+    autoSaveLocal();
+    return true;
   } catch (e) {
     console.error('Error al cargar de Firebase:', e);
   }

@@ -1351,7 +1351,42 @@
             </div>
           </div>
 
-          <!-- SECCIÓN 6: SEGURIDAD Y REINICIO -->
+          <!-- SECCIÓN 6: NOTIFICACIONES DE TELEGRAM -->
+          <div>
+            <button class="cfg-accordion-header" id="header-cfg-sec-telegram" onclick="window._toggleConfigSection('cfg-sec-telegram')">
+              <span>✈️ NOTIFICACIONES POR TELEGRAM</span>
+              <span class="cfg-arrow">►</span>
+            </button>
+            <div class="cfg-accordion-content" id="cfg-sec-telegram" style="display:none;padding-top:8px;">
+              <div class="card" style="margin:0;">
+                <div style="font-size:11px;color:#aaa;margin-bottom:12px;line-height:1.4;">
+                  Recibe notificaciones importantes de 11FUT MANAGER directamente en tu cuenta o grupo de Telegram, incluso cuando la app esté cerrada.
+                  <br><br>
+                  <b>Instrucciones:</b><br>
+                  1. Busca el bot <b>@BotFather</b> en Telegram, envía <code>/newbot</code> y obtén tu <b>Bot Token</b>.<br>
+                  2. Busca el bot <b>@userinfobot</b> para obtener tu <b>Chat ID</b> (ID numérico).
+                </div>
+                
+                <label style="font-size:11px;color:var(--oro);font-weight:700;margin-bottom:4px;display:block;">Token del Bot de Telegram:</label>
+                <input type="text" id="cfg-telegram-token" placeholder="ej. 123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ">
+                
+                <label style="font-size:11px;color:var(--oro);font-weight:700;margin-top:10px;margin-bottom:4px;display:block;">Chat ID (Usuario o Grupo):</label>
+                <input type="text" id="cfg-telegram-chatid" placeholder="ej. 987654321 o -100123456789">
+
+                <div style="display:flex;align-items:center;gap:8px;margin-top:12px;margin-bottom:12px;">
+                  <input type="checkbox" id="cfg-telegram-enabled" style="width:16px;height:16px;accent-color:var(--oro);">
+                  <label for="cfg-telegram-enabled" style="font-size:12px;color:#fff;font-weight:700;cursor:pointer;">Habilitar Notificaciones de Telegram</label>
+                </div>
+                
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                  <button class="btn btn-blue" id="btn-cfg-test-telegram" style="font-size:11px;" onclick="window._testTelegramConfig()">✈️ ENVIAR PRUEBA</button>
+                  <button class="btn btn-green" id="btn-cfg-save-telegram" style="font-size:11px;" onclick="window._guardarTelegramConfig()">💾 GUARDAR</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN 7: SEGURIDAD Y REINICIO -->
           <div>
             <button class="cfg-accordion-header" id="header-cfg-sec-seguridad" onclick="window._toggleConfigSection('cfg-sec-seguridad')">
               <span>🔐 SEGURIDAD Y CONTRASEÑA</span>

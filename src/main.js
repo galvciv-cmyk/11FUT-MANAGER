@@ -1,7 +1,8 @@
 import "./styles/main.css";
 import { isSuperAdmin, SUPER_ADMIN_EMAIL, perfil, setPinHash, setUserEmail, setCategoriaActiva, autoSaveLocal, historial, categoriasData, autoLoadLocal, plantel, setPublicViewActive } from "./modules/state.js";
 
-import { auth, hashPin, cargarFirebase, guardarFirebase, cargarFirebasePublico, limpiarDocumentosObsoletosFirebase } from "./services/firebase.js";
+import { auth, hashPin, cargarFirebase, guardarFirebase, cargarFirebasePublico, limpiarDocumentosObsoletosFirebase, db } from "./services/firebase.js";
+import { setDoc, doc } from "firebase/firestore";
 import { cargarKits } from "./services/cloudinary.js";
 import { actualizarTactica, exportarPNG, setDrawingMode, setDrawingColor, setLineWidth, setLineDash, agregarMarcador, clearCanvas, toggleFullscreen, salirFullscreenTotal, guardarEsquemaCustom, limpiarCanchaYBanco, setVistaCancha, setModoPizarra, agregarFichaLibre, limpiarFichasLibres, abrirModalSustitucion, ejecutarSustitucion, undoCanvas, grabarPasoAnimacion, reproducirAnimacion, detenerAnimacion } from "./modules/tactics.js";
 import { renderStats, guardarStatJugador, cerrarStatModal, renderRankings, renderDashboardColectivo } from "./modules/stats.js";
@@ -98,7 +99,9 @@ export function mostrarPantallaVerificacionEmail(user) {
         screen.style.display = 'none';
         await cargarFirebase();
         aplicarPerfil();
-        if (perfil.estadoCuenta === 'PENDIENTE') {
+        if (!perfil.wizardCompletado) {
+          abrirOnboardingWizard(true);
+        } else if (perfil.estadoCuenta === 'PENDIENTE') {
           mostrarPantallaEsperaAprobacion();
         } else {
           renderProfileSelector(handleProfileSelected);
@@ -129,6 +132,36 @@ export function mostrarPantallaEsperaAprobacion() {
   _ocultarTodasLasPantallas();
   const prev = document.getElementById('email-verification-screen');
   if (prev) prev.style.display = 'none';
+
+  // Sincronizar inmediatamente en Firestore para que el SuperAdmin lo vea al instante
+  try {
+    const emailUser = (perfil.email || auth?.currentUser?.email || '').trim();
+    const uidUser = auth?.currentUser?.uid || '';
+    if (emailUser || uidUser) {
+      const pubDocId = uidUser ? `usr_${uidUser}` : emailUser.toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
+      const emailKey = emailUser ? emailUser.toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_') : null;
+
+      const payload = {
+        club: perfil.club || 'Nuevo Club (Pendiente)',
+        email: emailUser,
+        whatsapp: perfil.whatsapp || '',
+        logo: perfil.logo || '',
+        estadoCuenta: 'PENDIENTE',
+        fechaVencimiento: perfil.fechaVencimiento || '',
+        maxPerfiles: perfil.maxPerfiles || 1,
+        perfil,
+        updatedAt: new Date().toISOString()
+      };
+
+      setDoc(doc(db, 'publicos', pubDocId), payload, { merge: true }).catch(() => {});
+      if (emailKey && emailKey !== pubDocId) {
+        setDoc(doc(db, 'publicos', emailKey), payload, { merge: true }).catch(() => {});
+      }
+    }
+  } catch (e) {
+    console.warn('Aviso sincronizando pending en publicos:', e);
+  }
+
   let panel = document.getElementById('pending-approval-screen');
   if (!panel) {
     panel = document.createElement('div');
@@ -186,6 +219,8 @@ export function mostrarPantallaEsperaAprobacion() {
   document.getElementById('btn-logout-pendiente')?.addEventListener('click', () => cerrarSesion());
 }
 
+window._mostrarPantallaEsperaAprobacion = mostrarPantallaEsperaAprobacion;
+
 // ══════════════════════════════════════════
 // MAPEO DE RUTAS HASH URL (#tactica, #citacion, etc.)
 // ══════════════════════════════════════════
@@ -228,9 +263,12 @@ const TAB_LABELS = {
 export function switchTab(n, updateHash = true) {
   // Protección de seguridad por rol: Bloquear acceso a Tab 7 y Tab 8 por Hash si no tiene permisos
   const isMaster = isSuperAdmin();
+  const profActivo = currentProfile || (perfil.profiles || []).find(p => p.id === localStorage.getItem('11fut_active_profile_id')) || (perfil.profiles && perfil.profiles[0]);
+  if (profActivo && !currentProfile) {
+    setCurrentProfile(profActivo);
+  }
   // esAdminRol: basado SOLO en el rol del perfil seleccionado (no en isMaster)
-  // Un DT en cuenta SuperAdmin se trata como DT normal
-  const esAdminRol = currentProfile && currentProfile.rol === 'ADMIN';
+  const esAdminRol = profActivo && profActivo.rol === 'ADMIN';
 
   // Contar cuántos perfiles DT existen activamente (sin contar el Admin)
   const dtActivos = (perfil.profiles || []).filter(p => p.rol === 'DT').length;
@@ -271,6 +309,8 @@ export function switchTab(n, updateHash = true) {
   if (n === 6) initEntrenamientosUI();
   if (n === 7) renderAdminDashboard(document.getElementById('admin-dashboard-container'));
   if (n === 8) renderSuperAdminDashboard();
+
+  verificarMembresiaYLock();
 }
 
 
@@ -599,13 +639,6 @@ async function login() {
     if (statusEl) statusEl.textContent = '☁️ Cargando datos...';
     await cargarFirebase();
 
-    // 2. Validar si la cuenta está pendiente de activación por SuperAdmin
-    if (perfil.estadoCuenta === 'PENDIENTE' && !isMaster) {
-      document.getElementById('login-screen').style.display = 'none';
-      mostrarPantallaEsperaAprobacion();
-      return;
-    }
-
     const emailVerifScreen = document.getElementById('email-verification-screen');
     if (emailVerifScreen) emailVerifScreen.style.display = 'none';
     const pendingScreen = document.getElementById('pending-approval-screen');
@@ -615,13 +648,21 @@ async function login() {
     document.getElementById('main-app').style.display = 'none';
     aplicarPerfil();
 
+    // 1. Si aún no ha completado el Wizard de configuración de su Club
     if (!perfil.wizardCompletado) {
       const profScreen = document.getElementById('profile-selector-screen');
       if (profScreen) profScreen.style.display = 'none';
       abrirOnboardingWizard(true);
-    } else {
-      renderProfileSelector(handleProfileSelected);
+      return;
     }
+
+    // 2. Si ya configuró su Club pero su cuenta está pendiente de aprobación por SuperAdmin
+    if (perfil.estadoCuenta === 'PENDIENTE' && !isMaster) {
+      mostrarPantallaEsperaAprobacion();
+      return;
+    }
+
+    renderProfileSelector(handleProfileSelected);
   } catch (e) {
     console.error('Error de inicio de sesión:', e);
     const isEmulatorActive = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && 
@@ -725,6 +766,8 @@ export function verificarMembresiaYLock() {
   }
 }
 
+window._verificarMembresiaYLock = verificarMembresiaYLock;
+
 async function ejecutarRegistroUsuario() {
   const emailInput = document.getElementById('reg-email')?.value?.trim();
   const waInput = document.getElementById('reg-wa')?.value?.trim() || "";
@@ -776,8 +819,6 @@ async function ejecutarRegistroUsuario() {
 
     // Sincronizar documento público para que el SuperAdmin lo vea inmediatamente en su panel
     try {
-      const { setDoc, doc } = await import("firebase/firestore");
-      const { db } = await import("./services/firebase.js");
       const pubDocId = emailInput.toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
       await setDoc(doc(db, 'publicos', pubDocId), {
         club: perfil.club || 'Nuevo Club',
@@ -910,9 +951,12 @@ export function cerrarModalBiometria() {
 
 export function actualizarVisibilidadPestanasRol() {
   const isMaster = isSuperAdmin();
+  const profActivo = currentProfile || (perfil.profiles || []).find(p => p.id === localStorage.getItem('11fut_active_profile_id')) || (perfil.profiles && perfil.profiles[0]);
+  if (profActivo && !currentProfile) {
+    setCurrentProfile(profActivo);
+  }
   // esAdminRol: basado SOLO en el rol del perfil seleccionado actualmente
-  // (NO en si la cuenta es SuperAdmin, para que un DT en cuenta SuperAdmin se trate como DT)
-  const esAdminRol = currentProfile && currentProfile.rol === 'ADMIN';
+  const esAdminRol = profActivo && profActivo.rol === 'ADMIN';
   const maxContratado = isMaster ? 8 : (perfil.maxPerfiles || 1);
 
   const tab1 = document.getElementById('tab-1'); // Táctica
@@ -997,8 +1041,11 @@ export function actualizarVisibilidadPestanasRol() {
 
 // handleProfileSelected: disponible en scope de módulo para login, registro y onAuthStateChanged
 function handleProfileSelected(prof) {
-  if (prof && prof.id) {
-    localStorage.setItem('11fut_active_profile_id', prof.id);
+  if (prof) {
+    setCurrentProfile(prof);
+    if (prof.id) {
+      localStorage.setItem('11fut_active_profile_id', prof.id);
+    }
   }
   const loginSc = document.getElementById('login-screen');
   if (loginSc) loginSc.style.display = 'none';

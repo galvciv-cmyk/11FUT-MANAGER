@@ -15,42 +15,86 @@ export async function renderSuperAdminDashboard() {
   container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--oro);">⏳ Cargando lista de clubes e instituciones...</div>`;
 
   try {
-    const querySnapshot = await getDocs(collection(db, 'publicos'));
-    const mapClubesPorEmail = new Map();
-    const duplicadosABorrar = [];
+    const mapClubes = new Map();
 
-    querySnapshot.forEach(docSnap => {
-      const d = docSnap.data() || {};
-      const rawEmail = (d.email || d.perfil?.email || '').trim().toLowerCase();
-      
-      if (rawEmail && rawEmail.includes('@') && rawEmail !== 'sin correo') {
-        const itemObj = { id: docSnap.id, ...d, email: rawEmail };
-        if (!mapClubesPorEmail.has(rawEmail)) {
-          mapClubesPorEmail.set(rawEmail, itemObj);
-        } else {
-          const prev = mapClubesPorEmail.get(rawEmail);
-          const tNew = new Date(d.updatedAt || 0).getTime();
-          const tPrev = new Date(prev.updatedAt || 0).getTime();
-          if (tNew > tPrev) {
-            duplicadosABorrar.push(prev.id);
-            mapClubesPorEmail.set(rawEmail, itemObj);
-          } else {
-            duplicadosABorrar.push(docSnap.id);
-          }
-        }
-      } else {
-        duplicadosABorrar.push(docSnap.id);
-      }
-    });
+    // 1. Consultar colección 'publicos'
+    try {
+      const pubSnap = await getDocs(collection(db, 'publicos'));
+      pubSnap.forEach(docSnap => {
+        const d = docSnap.data() || {};
+        const rawEmail = (d.email || d.perfil?.email || d.userEmail || '').trim().toLowerCase();
+        const clubNombre = d.club || d.perfil?.club || 'Club Registrado';
+        const wa = d.whatsapp || d.perfil?.whatsapp || d.telefono || '';
+        const logo = d.logo || d.perfil?.logo || '';
+        const estado = d.estadoCuenta || d.perfil?.estadoCuenta || 'PENDIENTE';
+        const fechaExp = d.fechaVencimiento || d.perfil?.fechaVencimiento || '';
+        const maxP = d.maxPerfiles || d.perfil?.maxPerfiles || 1;
+        const updatedAt = d.updatedAt || d.createdAt || '';
 
-    if (duplicadosABorrar.length > 0) {
-      duplicadosABorrar.forEach(id => {
-        deleteDoc(doc(db, 'publicos', id)).catch(() => {});
+        const key = (rawEmail && rawEmail.includes('@')) ? rawEmail : docSnap.id.toLowerCase();
+        
+        mapClubes.set(key, {
+          id: docSnap.id,
+          docId: docSnap.id,
+          club: clubNombre,
+          email: rawEmail || docSnap.id,
+          whatsapp: wa,
+          logo: logo,
+          estadoCuenta: estado,
+          fechaVencimiento: fechaExp,
+          maxPerfiles: maxP,
+          updatedAt: updatedAt
+        });
       });
+    } catch (errPub) {
+      console.warn('Aviso leyendo publicos en SuperAdmin:', errPub);
     }
 
-    const clubesValidos = Array.from(mapClubesPorEmail.values());
+    // 2. Consultar colección 'usuarios' para capturar registros que solo estén en usuarios
+    try {
+      const usrSnap = await getDocs(collection(db, 'usuarios'));
+      usrSnap.forEach(docSnap => {
+        const d = docSnap.data() || {};
+        const p = d.perfil || {};
+        const rawEmail = (p.email || d.email || '').trim().toLowerCase();
+        if (rawEmail && rawEmail.includes('@')) {
+          const key = rawEmail;
+          const prev = mapClubes.get(key);
+          const clubNombre = p.club || d.club || (prev ? prev.club : 'Club Registrado');
+          const wa = p.whatsapp || d.whatsapp || (prev ? prev.whatsapp : '');
+          const logo = p.logo || d.logo || (prev ? prev.logo : '');
+          const estado = p.estadoCuenta || d.estadoCuenta || (prev ? prev.estadoCuenta : 'PENDIENTE');
+          const fechaExp = p.fechaVencimiento || d.fechaVencimiento || (prev ? prev.fechaVencimiento : '');
+          const maxP = p.maxPerfiles || d.maxPerfiles || (prev ? prev.maxPerfiles : 1);
+          const updatedAt = d.updatedAt || p.updatedAt || (prev ? prev.updatedAt : '');
 
+          mapClubes.set(key, {
+            id: prev ? prev.id : `usr_${docSnap.id}`,
+            docId: prev ? prev.docId : `usr_${docSnap.id}`,
+            uid: docSnap.id,
+            club: clubNombre,
+            email: rawEmail,
+            whatsapp: wa,
+            logo: logo,
+            estadoCuenta: estado,
+            fechaVencimiento: fechaExp,
+            maxPerfiles: maxP,
+            updatedAt: updatedAt
+          });
+        }
+      });
+    } catch (errUsr) {
+      console.warn('Aviso leyendo usuarios en SuperAdmin:', errUsr);
+    }
+
+    // Convertir a array y ordenar: PENDIENTE primero, luego por fecha reciente
+    const clubesValidos = Array.from(mapClubes.values()).sort((a, b) => {
+      if (a.estadoCuenta === 'PENDIENTE' && b.estadoCuenta !== 'PENDIENTE') return -1;
+      if (a.estadoCuenta !== 'PENDIENTE' && b.estadoCuenta === 'PENDIENTE') return 1;
+      return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0);
+    });
+
+    // Asegurar que la cuenta master aparezca si la lista está vacía
     if (!clubesValidos.length) {
       const fallbackList = [
         {
@@ -90,7 +134,12 @@ function renderSuperAdminCardsUI(container, clubesValidos) {
   let html = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--oro);">👑 PANEL DE SÚPER ADMINISTRADOR (PANEL MASTER)</div>
-      <div style="font-size:16px;font-weight:900;color:var(--oro);background:rgba(212,175,55,0.15);padding:6px 16px;border-radius:20px;border:1px solid var(--oro);">Total Registrados: <b>${clubesValidos.length} Clubes</b></div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <button id="btn-refresh-superadmin-list" style="background:rgba(212,175,55,0.15);border:1px solid var(--oro);color:var(--oro);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:900;cursor:pointer;display:flex;align-items:center;gap:6px;">
+          🔄 Recargar Clubes
+        </button>
+        <div style="font-size:14px;font-weight:900;color:var(--oro);background:rgba(212,175,55,0.15);padding:6px 16px;border-radius:20px;border:1px solid var(--oro);">Total Registrados: <b>${clubesValidos.length} Clubes</b></div>
+      </div>
     </div>
 
     <!-- VISTA EN TARJETAS RESPONSIVAS (MÓVIL Y DESKTOP) -->
@@ -179,6 +228,10 @@ function renderSuperAdminCardsUI(container, clubesValidos) {
   html += `</div>`;
   container.innerHTML = html;
 
+  document.getElementById('btn-refresh-superadmin-list')?.addEventListener('click', () => {
+    renderSuperAdminDashboard();
+  });
+
   const rows = document.getElementById('tb-superadmin-rows');
   if (rows) {
     rows.addEventListener('click', async (e) => {
@@ -228,7 +281,7 @@ async function ejecutarActivarPruebaSuperAdmin(pubDocId, email, wa, clubNombre) 
     console.warn(e);
   }
 
-  if (perfil && perfil.email === email) {
+  if (perfil && perfil.email && email && perfil.email.trim().toLowerCase() === email.trim().toLowerCase()) {
     perfil.estadoCuenta = 'PRUEBA';
     perfil.fechaVencimiento = nuevaFecha;
     autoSaveLocal();
@@ -266,7 +319,7 @@ async function ejecutarAprobarSuperAdmin(pubDocId, email, wa, clubNombre) {
     console.warn(e);
   }
 
-  if (perfil && (perfil.email === email || isSuperAdmin())) {
+  if (perfil && perfil.email && email && perfil.email.trim().toLowerCase() === email.trim().toLowerCase()) {
     perfil.estadoCuenta = 'ACTIVO';
     perfil.fechaVencimiento = nuevaFecha;
     autoSaveLocal();
@@ -302,7 +355,7 @@ async function ejecutarRegalarPruebaSuperAdmin(pubDocId, email, wa, clubNombre) 
       console.warn(e);
     }
 
-    if (perfil && (perfil.email === email || isSuperAdmin())) {
+    if (perfil && perfil.email && email && perfil.email.trim().toLowerCase() === email.trim().toLowerCase()) {
       perfil.estadoCuenta = 'PRUEBA';
       perfil.fechaVencimiento = nuevaFecha;
       autoSaveLocal();

@@ -200,6 +200,11 @@ export function autoSaveLocal() {
   try {
     localStorage.setItem("11fut_perfil", JSON.stringify(perfil));
     localStorage.setItem("11fut_categorias_data", JSON.stringify(categoriasData));
+    if (perfil.email) localStorage.setItem("11fut_user_email", perfil.email);
+    if (currentProfile && currentProfile.id) {
+      localStorage.setItem("11fut_active_profile_id", currentProfile.id);
+      localStorage.setItem("11fut_current_profile_id", currentProfile.id);
+    }
   } catch (e) {
     console.error("Error guardando localStorage:", e);
   }
@@ -208,10 +213,23 @@ export function autoSaveLocal() {
 
 export function autoLoadLocal() {
   try {
+    const savedEmail = localStorage.getItem("11fut_user_email");
+    if (savedEmail) {
+      userEmail = savedEmail;
+      perfil.email = savedEmail;
+    }
     const rawP = localStorage.getItem("11fut_perfil");
     const rawC = localStorage.getItem("11fut_categorias_data");
     if (rawP) updatePerfil(JSON.parse(rawP));
     if (rawC) updateCategoriasData(JSON.parse(rawC));
+
+    const savedProfId = localStorage.getItem("11fut_active_profile_id") || localStorage.getItem("11fut_current_profile_id");
+    if (savedProfId && perfil.profiles && perfil.profiles.length > 0) {
+      const found = perfil.profiles.find(p => p.id === savedProfId);
+      currentProfile = found || perfil.profiles[0];
+    } else if (perfil.profiles && perfil.profiles.length > 0) {
+      currentProfile = perfil.profiles[0];
+    }
   } catch (e) {
     console.error("Error cargando localStorage:", e);
   }

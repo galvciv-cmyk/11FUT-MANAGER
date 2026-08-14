@@ -1173,6 +1173,10 @@ export function salirFullscreenTotal(eq = 'A') {
   if (btn) btn.textContent = '⛶ PANTALLA COMPLETA';
 
   actualizarTactica(eq);
+
+  if (typeof window._verificarMembresiaYLock === 'function') {
+    window._verificarMembresiaYLock();
+  }
 }
 
 window._salirFullscreenTotal = salirFullscreenTotal;
