@@ -198,6 +198,30 @@ export function mostrarPantallaEsperaAprobacion() {
     const msg = document.getElementById('pending-status-msg');
     if (msg) msg.textContent = '⏳ Actualizando...';
     try {
+      const emailUser = (perfil.email || auth?.currentUser?.email || '').trim();
+      const uidUser = auth?.currentUser?.uid || '';
+      if (emailUser || uidUser) {
+        const pubDocId = uidUser ? `usr_${uidUser}` : emailUser.toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
+        const emailKey = emailUser ? emailUser.toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_') : null;
+
+        const payload = {
+          club: perfil.club || 'Nuevo Club (Pendiente)',
+          email: emailUser,
+          whatsapp: perfil.whatsapp || '',
+          logo: perfil.logo || '',
+          estadoCuenta: 'PENDIENTE',
+          fechaVencimiento: perfil.fechaVencimiento || '',
+          maxPerfiles: perfil.maxPerfiles || 1,
+          perfil,
+          updatedAt: new Date().toISOString()
+        };
+
+        await setDoc(doc(db, 'publicos', pubDocId), payload, { merge: true }).catch(() => {});
+        if (emailKey && emailKey !== pubDocId) {
+          await setDoc(doc(db, 'publicos', emailKey), payload, { merge: true }).catch(() => {});
+        }
+      }
+
       await cargarFirebase();
       if (perfil.estadoCuenta !== 'PENDIENTE') {
         panel.style.display = 'none';
