@@ -2,7 +2,7 @@ import "./styles/main.css";
 import { isSuperAdmin, SUPER_ADMIN_EMAIL, perfil, setPinHash, setUserEmail, setCategoriaActiva, autoSaveLocal, historial, categoriasData, autoLoadLocal, plantel, setPublicViewActive } from "./modules/state.js";
 
 import { auth, hashPin, cargarFirebase, guardarFirebase, cargarFirebasePublico, limpiarDocumentosObsoletosFirebase, db } from "./services/firebase.js";
-import { setDoc, doc } from "firebase/firestore";
+import { setDoc, doc, onSnapshot } from "firebase/firestore";
 import { cargarKits } from "./services/cloudinary.js";
 import { actualizarTactica, exportarPNG, setDrawingMode, setDrawingColor, setLineWidth, setLineDash, agregarMarcador, clearCanvas, toggleFullscreen, salirFullscreenTotal, guardarEsquemaCustom, limpiarCanchaYBanco, setVistaCancha, setModoPizarra, agregarFichaLibre, limpiarFichasLibres, abrirModalSustitucion, ejecutarSustitucion, undoCanvas, grabarPasoAnimacion, reproducirAnimacion, detenerAnimacion } from "./modules/tactics.js";
 import { renderStats, guardarStatJugador, cerrarStatModal, renderRankings, renderDashboardColectivo } from "./modules/stats.js";
@@ -1366,6 +1366,42 @@ document.addEventListener('DOMContentLoaded', async () => {
         handleProfileSelected(foundProfile);
       } else {
         renderProfileSelector(handleProfileSelected);
+      }
+
+      // ── ESCUCHA EN TIEMPO REAL: Si el Súper Admin borra o cancela la cuenta, cerrar sesión inmediatamente (<100ms) ──
+      if (!isMaster && user && user.uid) {
+        if (window._unsubAccountLive) {
+          try { window._unsubAccountLive(); } catch (e) {}
+        }
+
+        const pubKey = `usr_${user.uid}`;
+        const emailKey = user.email ? user.email.toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_') : null;
+
+        const handleLiveSnap = (snap) => {
+          if (!snap.exists()) {
+            // El documento fue borrado de Firebase
+            perfil.estadoCuenta = 'CANCELADA';
+            perfil.cancelada = true;
+            mostrarPantallaCuentaCancelada();
+            return;
+          }
+          const d = snap.data() || {};
+          const p = d.perfil || {};
+          const est = d.estadoCuenta || p.estadoCuenta;
+          if (est === 'CANCELADA' || est === 'CANCELADO' || d.cancelada || p.cancelada) {
+            perfil.estadoCuenta = 'CANCELADA';
+            perfil.cancelada = true;
+            mostrarPantallaCuentaCancelada();
+          }
+        };
+
+        const u1 = onSnapshot(doc(db, 'publicos', pubKey), handleLiveSnap, () => {});
+        const u2 = emailKey ? onSnapshot(doc(db, 'publicos', emailKey), handleLiveSnap, () => {}) : () => {};
+        const u3 = onSnapshot(doc(db, 'usuarios', user.uid), handleLiveSnap, () => {});
+
+        window._unsubAccountLive = () => {
+          try { u1(); u2(); u3(); } catch (e) {}
+        };
       }
     } else {
       const activeProfId = localStorage.getItem('11fut_active_profile_id');

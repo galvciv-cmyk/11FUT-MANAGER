@@ -234,11 +234,11 @@ function renderSuperAdminCardsUI(container, clubesValidos) {
             </div>
           ` : `
             ${estado === 'PENDIENTE' ? `
-              <button class="btn btn-green sa-btn-action" data-action="activar_prueba" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:900;justify-content:center;background:linear-gradient(135deg,#2ecc71,#27ae60);">⚡ ACTIVAR PRUEBA (3 DÍAS)</button>
-              <button class="btn btn-green sa-btn-action" data-action="aprobar" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟢 APROBAR (30D)</button>
+              <button class="btn btn-green sa-btn-action" data-action="activar_prueba" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" data-fecha="${c.fechaVencimiento || ''}" style="font-size:11px;padding:8px;font-weight:900;justify-content:center;background:linear-gradient(135deg,#2ecc71,#27ae60);">⚡ ACTIVAR PRUEBA (3 DÍAS)</button>
+              <button class="btn btn-green sa-btn-action" data-action="aprobar" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" data-fecha="${c.fechaVencimiento || ''}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟢 APROBAR (30D)</button>
             ` : `
-              <button class="btn btn-green sa-btn-action" data-action="aprobar" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟢 APROBAR (30D)</button>
-              <button class="btn btn-gold sa-btn-action" data-action="regalar" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟡 +PRUEBA</button>
+              <button class="btn btn-green sa-btn-action" data-action="aprobar" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" data-fecha="${c.fechaVencimiento || ''}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟢 APROBAR (30D)</button>
+              <button class="btn btn-gold sa-btn-action" data-action="regalar" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" data-fecha="${c.fechaVencimiento || ''}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟡 +PRUEBA</button>
             `}
             <button class="btn btn-gray sa-btn-action" data-action="suspender" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" style="font-size:11px;padding:8px;font-weight:800;color:var(--rojo);justify-content:center;">🔴 SUSPENDER</button>
             <button class="btn btn-gray sa-btn-action" data-action="wa" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">💬 CHAT WA</button>
@@ -269,13 +269,14 @@ function renderSuperAdminCardsUI(container, clubesValidos) {
       const email = btn.dataset.email;
       const wa = btn.dataset.wa;
       const clubNombre = btn.dataset.club;
+      const fechaVenc = btn.dataset.fecha;
 
       if (action === 'activar_prueba') {
-        await ejecutarActivarPruebaSuperAdmin(pubDocId, email, wa, clubNombre, uid);
+        await ejecutarActivarPruebaSuperAdmin(pubDocId, email, wa, clubNombre, uid, fechaVenc);
       } else if (action === 'aprobar') {
-        await ejecutarAprobarSuperAdmin(pubDocId, email, wa, clubNombre, uid);
+        await ejecutarAprobarSuperAdmin(pubDocId, email, wa, clubNombre, uid, fechaVenc);
       } else if (action === 'regalar') {
-        await ejecutarRegalarPruebaSuperAdmin(pubDocId, email, wa, clubNombre, uid);
+        await ejecutarRegalarPruebaSuperAdmin(pubDocId, email, wa, clubNombre, uid, fechaVenc);
       } else if (action === 'suspender') {
         await ejecutarSuspenderSuperAdmin(pubDocId, email, uid);
       } else if (action === 'wa') {
@@ -300,9 +301,12 @@ function normalizarTelefonoWhatsApp(wa) {
   return clean;
 }
 
-async function ejecutarActivarPruebaSuperAdmin(pubDocId, email, wa, clubNombre, uid) {
+async function ejecutarActivarPruebaSuperAdmin(pubDocId, email, wa, clubNombre, uid, currentFechaExp) {
   const dias = 3;
-  const nuevaFecha = new Date(Date.now() + dias * 24 * 60 * 60 * 1000).toISOString();
+  const fechaBase = (currentFechaExp && new Date(currentFechaExp) > new Date())
+    ? new Date(currentFechaExp)
+    : new Date();
+  const nuevaFecha = new Date(fechaBase.getTime() + dias * 24 * 60 * 60 * 1000).toISOString();
   const emailKey = (email || '').trim().toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
 
   const waClean = normalizarTelefonoWhatsApp(wa);
@@ -313,7 +317,7 @@ async function ejecutarActivarPruebaSuperAdmin(pubDocId, email, wa, clubNombre, 
     window.open(`https://wa.me/${waClean}?text=${msgWA}`, '_blank');
   }
 
-  mostrarToastRapido('Prueba Activada', `⚡ Período de prueba de 3 días activado para ${clubNombre}.`, true);
+  mostrarToastRapido('Prueba Activada', `⚡ Período de prueba de 3 días activado para ${clubNombre} (Vence: ${new Date(nuevaFecha).toLocaleDateString()}).`, true);
 
   const payload = {
     estadoCuenta: 'PRUEBA',
@@ -348,20 +352,23 @@ async function ejecutarActivarPruebaSuperAdmin(pubDocId, email, wa, clubNombre, 
   renderSuperAdminDashboard();
 }
 
-async function ejecutarAprobarSuperAdmin(pubDocId, email, wa, clubNombre, uid) {
+async function ejecutarAprobarSuperAdmin(pubDocId, email, wa, clubNombre, uid, currentFechaExp) {
   const dias = 30;
-  const nuevaFecha = new Date(Date.now() + dias * 24 * 60 * 60 * 1000).toISOString();
+  const fechaBase = (currentFechaExp && new Date(currentFechaExp) > new Date())
+    ? new Date(currentFechaExp)
+    : new Date();
+  const nuevaFecha = new Date(fechaBase.getTime() + dias * 24 * 60 * 60 * 1000).toISOString();
   const emailKey = (email || '').trim().toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
 
   const waClean = normalizarTelefonoWhatsApp(wa);
-  const msgWA = encodeURIComponent(`¡Hola ${clubNombre}! 👋 Confirmo la recepción de tu pago. La membresía para tu club ha sido ACTIVADA exitosamente por 30 días (Vence el ${new Date(nuevaFecha).toLocaleDateString()}). ¡Gracias por confiar en 11FUT MANAGER! ⚽🏆`);
+  const msgWA = encodeURIComponent(`¡Hola ${clubNombre}! 👋 Confirmo la recepción de tu pago. La membresía para tu club ha sido ACTIVADA exitosamente por 30 días adicionales (Vence el ${new Date(nuevaFecha).toLocaleDateString()}). ¡Gracias por confiar en 11FUT MANAGER! ⚽🏆`);
 
   // Abrir WhatsApp inmediatamente
   if (waClean) {
     window.open(`https://wa.me/${waClean}?text=${msgWA}`, '_blank');
   }
 
-  mostrarToastRapido('Membresía Aprobada', `🟢 Membresía para ${clubNombre} aprobada por 30 días.`, true);
+  mostrarToastRapido('Membresía Aprobada', `🟢 Membresía para ${clubNombre} aprobada por 30 días (Vence: ${new Date(nuevaFecha).toLocaleDateString()}).`, true);
 
   const payload = {
     estadoCuenta: 'ACTIVO',
@@ -396,30 +403,47 @@ async function ejecutarAprobarSuperAdmin(pubDocId, email, wa, clubNombre, uid) {
   renderSuperAdminDashboard();
 }
 
-async function ejecutarRegalarPruebaSuperAdmin(pubDocId, email, wa, clubNombre) {
-  mostrarPromptModal(`Días de Prueba para ${clubNombre}`, 'Días a otorgar (ej: 7, 14, 30)', async (inputDias) => {
-    const dias = parseInt(inputDias, 10) || 7;
-    const nuevaFecha = new Date(Date.now() + dias * 24 * 60 * 60 * 1000).toISOString();
+async function ejecutarRegalarPruebaSuperAdmin(pubDocId, email, wa, clubNombre, uid, currentFechaExp) {
+  mostrarPromptModal(`Días Adicionales para ${clubNombre}`, 'Indica la cantidad de días a SUMAR (ej: 3, 7, 14, 30)', async (inputDias) => {
+    const dias = parseInt(inputDias, 10) || 3;
+    
+    // Sumar acumulativamente a la fecha actual si está vigente, o desde hoy si ya venció
+    const fechaBase = (currentFechaExp && new Date(currentFechaExp) > new Date())
+      ? new Date(currentFechaExp)
+      : new Date();
+    const nuevaFecha = new Date(fechaBase.getTime() + dias * 24 * 60 * 60 * 1000).toISOString();
+    const emailKey = (email || '').trim().toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
 
     const waClean = normalizarTelefonoWhatsApp(wa);
-    const msgWA = encodeURIComponent(`¡Hola ${clubNombre}! 🎉 Te hemos otorgado una prueba especial de ${dias} días en 11FUT MANAGER para que disfrutes de todas las funciones de tu club. ¡Bienvenido! ⚽`);
+    const msgWA = encodeURIComponent(`¡Hola ${clubNombre}! 🎉 Te hemos sumado +${dias} días adicionales en 11FUT MANAGER (Tu nueva fecha de vencimiento es el ${new Date(nuevaFecha).toLocaleDateString()}). ¡A disfrutar de tu club! ⚽🏆`);
 
     if (waClean) {
       window.open(`https://wa.me/${waClean}?text=${msgWA}`, '_blank');
     }
 
-    mostrarToastRapido('Prueba Otorgada', `🟡 Se regalaron ${dias} días de prueba a ${clubNombre}.`, true);
+    mostrarToastRapido('Días Sumados', `🟡 Se sumaron +${dias} días a ${clubNombre} (Nuevo vencimiento: ${new Date(nuevaFecha).toLocaleDateString()}).`, true);
+
+    const payload = {
+      estadoCuenta: 'PRUEBA',
+      fechaVencimiento: nuevaFecha,
+      club: clubNombre,
+      email: email,
+      updatedAt: new Date().toISOString()
+    };
+
+    const writes = [];
+    if (pubDocId) writes.push(setDoc(doc(db, 'publicos', pubDocId), payload, { merge: true }).catch(() => {}));
+    if (emailKey && emailKey !== pubDocId) writes.push(setDoc(doc(db, 'publicos', emailKey), payload, { merge: true }).catch(() => {}));
+    const targetUid = uid || (pubDocId && pubDocId.startsWith('usr_') ? pubDocId.replace('usr_', '') : null);
+    if (targetUid) {
+      writes.push(setDoc(doc(db, 'publicos', `usr_${targetUid}`), payload, { merge: true }).catch(() => {}));
+      writes.push(setDoc(doc(db, 'usuarios', targetUid), { perfil: { estadoCuenta: 'PRUEBA', fechaVencimiento: nuevaFecha, club: clubNombre } }, { merge: true }).catch(() => {}));
+    }
 
     try {
-      if (pubDocId) {
-        setDoc(doc(db, 'publicos', pubDocId), {
-          estadoCuenta: 'PRUEBA',
-          fechaVencimiento: nuevaFecha,
-          updatedAt: new Date().toISOString()
-        }, { merge: true }).catch(err => console.warn('Aviso Firestore en prueba:', err));
-      }
+      await Promise.all(writes);
     } catch (e) {
-      console.warn(e);
+      console.warn('Aviso guardando en Firestore:', e);
     }
 
     if (perfil && perfil.email && email && perfil.email.trim().toLowerCase() === email.trim().toLowerCase()) {
