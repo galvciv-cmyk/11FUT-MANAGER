@@ -102,28 +102,31 @@ export async function renderSuperAdminDashboard() {
     }
 
     // Convertir a array y ordenar: PENDIENTE primero, luego por fecha reciente
+    const masterEmail = (SUPER_ADMIN_EMAIL || 'gyknova@gmail.com').trim().toLowerCase();
+    if (!mapClubes.has(masterEmail)) {
+      mapClubes.set(masterEmail, {
+        id: 'master_club',
+        docId: 'master_club',
+        uid: 'master_club',
+        club: '11FUT MANAGER MASTER',
+        email: SUPER_ADMIN_EMAIL,
+        whatsapp: '+584141401560',
+        logo: 'https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png',
+        estadoCuenta: 'ACTIVO',
+        fechaVencimiento: new Date('2099-01-01').toISOString(),
+        maxPerfiles: 8,
+        updatedAt: new Date().toISOString(),
+        isMaster: true
+      });
+    }
+
     const clubesValidos = Array.from(mapClubes.values()).sort((a, b) => {
+      if (a.isMaster) return -1;
+      if (b.isMaster) return 1;
       if (a.estadoCuenta === 'PENDIENTE' && b.estadoCuenta !== 'PENDIENTE') return -1;
       if (a.estadoCuenta !== 'PENDIENTE' && b.estadoCuenta === 'PENDIENTE') return 1;
       return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0);
     });
-
-    // Asegurar que la cuenta master aparezca si la lista está vacía
-    if (!clubesValidos.length) {
-      const fallbackList = [
-        {
-          id: perfil.email ? perfil.email.replace(/[^a-zA-Z0-9_-]/g, '_') : 'master_club',
-          club: perfil.club || '11FUT MANAGER MASTER',
-          email: perfil.email || 'gyknova@gmail.com',
-          whatsapp: perfil.whatsapp || '+584141401560',
-          maxPerfiles: perfil.maxPerfiles || 8,
-          estadoCuenta: perfil.estadoCuenta || 'ACTIVO',
-          fechaVencimiento: perfil.fechaVencimiento || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-        }
-      ];
-      renderSuperAdminCardsUI(container, fallbackList);
-      return;
-    }
 
     renderSuperAdminCardsUI(container, clubesValidos);
 
@@ -131,13 +134,14 @@ export async function renderSuperAdminDashboard() {
     console.warn('Advertencia al consultar Firestore en Súper Admin:', e);
     const clubesFallback = [
       {
-        id: perfil.email ? perfil.email.replace(/[^a-zA-Z0-9_-]/g, '_') : 'master_club',
-        club: perfil.club || '11FUT MANAGER MASTER',
-        email: perfil.email || 'gyknova@gmail.com',
-        whatsapp: perfil.whatsapp || '',
-        maxPerfiles: perfil.maxPerfiles || 8,
-        estadoCuenta: perfil.estadoCuenta || 'ACTIVO',
-        fechaVencimiento: perfil.fechaVencimiento || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        id: 'master_club',
+        club: '11FUT MANAGER MASTER',
+        email: SUPER_ADMIN_EMAIL,
+        whatsapp: '+584141401560',
+        maxPerfiles: 8,
+        estadoCuenta: 'ACTIVO',
+        fechaVencimiento: new Date('2099-01-01').toISOString(),
+        isMaster: true
       }
     ];
     renderSuperAdminCardsUI(container, clubesFallback);
@@ -224,16 +228,22 @@ function renderSuperAdminCardsUI(container, clubesValidos) {
 
         <!-- FILA DE BOTONES DE ACCIÓN RESPONSIVOS -->
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(110px, 1fr));gap:6px;margin-top:2px;">
-          ${estado === 'PENDIENTE' ? `
-            <button class="btn btn-green sa-btn-action" data-action="activar_prueba" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:900;justify-content:center;background:linear-gradient(135deg,#2ecc71,#27ae60);">⚡ ACTIVAR PRUEBA (3 DÍAS)</button>
-            <button class="btn btn-green sa-btn-action" data-action="aprobar" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟢 APROBAR (30D)</button>
+          ${c.isMaster ? `
+            <div style="grid-column:1/-1;background:rgba(212,175,55,0.1);border:1px dashed var(--oro);color:var(--oro);padding:8px 12px;border-radius:8px;font-size:12px;font-weight:900;text-align:center;">
+              👑 CUENTA MASTER PRINCIPAL (ADMINISTRADOR GLOBAL)
+            </div>
           ` : `
-            <button class="btn btn-green sa-btn-action" data-action="aprobar" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟢 APROBAR (30D)</button>
-            <button class="btn btn-gold sa-btn-action" data-action="regalar" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟡 +PRUEBA</button>
+            ${estado === 'PENDIENTE' ? `
+              <button class="btn btn-green sa-btn-action" data-action="activar_prueba" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:900;justify-content:center;background:linear-gradient(135deg,#2ecc71,#27ae60);">⚡ ACTIVAR PRUEBA (3 DÍAS)</button>
+              <button class="btn btn-green sa-btn-action" data-action="aprobar" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟢 APROBAR (30D)</button>
+            ` : `
+              <button class="btn btn-green sa-btn-action" data-action="aprobar" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟢 APROBAR (30D)</button>
+              <button class="btn btn-gold sa-btn-action" data-action="regalar" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟡 +PRUEBA</button>
+            `}
+            <button class="btn btn-gray sa-btn-action" data-action="suspender" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" style="font-size:11px;padding:8px;font-weight:800;color:var(--rojo);justify-content:center;">🔴 SUSPENDER</button>
+            <button class="btn btn-gray sa-btn-action" data-action="wa" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">💬 CHAT WA</button>
+            <button class="btn btn-red sa-btn-action" data-action="eliminar" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🗑️ BORRAR</button>
           `}
-          <button class="btn btn-gray sa-btn-action" data-action="suspender" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" style="font-size:11px;padding:8px;font-weight:800;color:var(--rojo);justify-content:center;">🔴 SUSPENDER</button>
-          <button class="btn btn-gray sa-btn-action" data-action="wa" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">💬 CHAT WA</button>
-          <button class="btn btn-red sa-btn-action" data-action="eliminar" data-id="${c.id}" data-uid="${c.uid || ''}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🗑️ BORRAR</button>
         </div>
 
       </div>
@@ -271,7 +281,7 @@ function renderSuperAdminCardsUI(container, clubesValidos) {
       } else if (action === 'wa') {
         ejecutarChatWASuperAdmin(wa, clubNombre);
       } else if (action === 'eliminar') {
-        await ejecutarEliminarClubSuperAdmin(pubDocId, clubNombre, uid);
+        await ejecutarEliminarClubSuperAdmin(pubDocId, clubNombre, uid, email);
       }
     });
   }
@@ -452,10 +462,11 @@ function ejecutarChatWASuperAdmin(wa, clubNombre) {
   window.open(`https://wa.me/${waClean}?text=${msg}`, '_blank');
 }
 
-async function ejecutarEliminarClubSuperAdmin(pubDocId, clubNombre, uid) {
-  mostrarConfirmacionApp('Eliminar Club', `¿Estás seguro de eliminar permanentemente el registro del club "${clubNombre}" y purgar todos sus datos de Firebase?`, async () => {
+async function ejecutarEliminarClubSuperAdmin(pubDocId, clubNombre, uid, email) {
+  mostrarConfirmacionApp('Eliminar Club', `¿Estás seguro de eliminar permanentemente a "${clubNombre}" (${email || pubDocId}) y purgar todos sus datos de Firebase?`, async () => {
     try {
-      const emailKey = pubDocId && pubDocId.includes('@') ? pubDocId.toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_') : null;
+      const emailClean = (email || '').trim().toLowerCase();
+      const emailKey = emailClean ? emailClean.replace(/[^a-zA-Z0-9_-]/g, '_') : null;
       const targetUid = uid || (pubDocId && pubDocId.startsWith('usr_') ? pubDocId.replace('usr_', '') : null);
 
       const deletes = [];
@@ -466,9 +477,34 @@ async function ejecutarEliminarClubSuperAdmin(pubDocId, clubNombre, uid) {
         deletes.push(deleteDoc(doc(db, 'usuarios', targetUid)).catch(() => {}));
       }
 
+      // Escaneo y purga exhaustiva de cualquier registro residual vinculado al email
+      if (emailClean) {
+        try {
+          const pubSnap = await getDocs(collection(db, 'publicos'));
+          pubSnap.forEach(dSnap => {
+            const dat = dSnap.data() || {};
+            const dEmail = (dat.email || dat.perfil?.email || dat.userEmail || '').trim().toLowerCase();
+            if (dEmail === emailClean || dSnap.id.toLowerCase() === emailClean.replace(/[^a-zA-Z0-9_-]/g, '_')) {
+              deletes.push(deleteDoc(doc(db, 'publicos', dSnap.id)).catch(() => {}));
+            }
+          });
+
+          const usrSnap = await getDocs(collection(db, 'usuarios'));
+          usrSnap.forEach(dSnap => {
+            const dat = dSnap.data() || {};
+            const dEmail = (dat.perfil?.email || dat.email || '').trim().toLowerCase();
+            if (dEmail === emailClean) {
+              deletes.push(deleteDoc(doc(db, 'usuarios', dSnap.id)).catch(() => {}));
+            }
+          });
+        } catch (scanErr) {
+          console.warn('Aviso escaneando documentos al purgar club:', scanErr);
+        }
+      }
+
       await Promise.all(deletes);
-      mostrarToastRapido('Club Eliminado', `El club "${clubNombre}" ha sido completamente eliminado de Firebase.`, true);
-      renderSuperAdminDashboard();
+      mostrarToastRapido('Club Eliminado', `El club "${clubNombre}" ha sido completamente purgado del sistema.`, true);
+      await renderSuperAdminDashboard();
     } catch (e) {
       mostrarNotificacionApp('Error', 'No se pudo eliminar el club de la base de datos: ' + e.message, false);
     }
