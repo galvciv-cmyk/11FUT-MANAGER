@@ -314,6 +314,10 @@ async function ejecutarActivarPruebaSuperAdmin(pubDocId, email, wa, clubNombre) 
   try {
     if (pubDocId) setDoc(doc(db, 'publicos', pubDocId), payload, { merge: true }).catch(() => {});
     if (emailKey && emailKey !== pubDocId) setDoc(doc(db, 'publicos', emailKey), payload, { merge: true }).catch(() => {});
+    if (pubDocId && pubDocId.startsWith('usr_')) {
+      const uid = pubDocId.replace('usr_', '');
+      setDoc(doc(db, 'usuarios', uid), { perfil: { estadoCuenta: 'PRUEBA', fechaVencimiento: nuevaFecha, club: clubNombre } }, { merge: true }).catch(() => {});
+    }
   } catch (e) {
     console.warn(e);
   }
@@ -353,6 +357,10 @@ async function ejecutarAprobarSuperAdmin(pubDocId, email, wa, clubNombre) {
   try {
     if (pubDocId) setDoc(doc(db, 'publicos', pubDocId), payload, { merge: true }).catch(() => {});
     if (emailKey && emailKey !== pubDocId) setDoc(doc(db, 'publicos', emailKey), payload, { merge: true }).catch(() => {});
+    if (pubDocId && pubDocId.startsWith('usr_')) {
+      const uid = pubDocId.replace('usr_', '');
+      setDoc(doc(db, 'usuarios', uid), { perfil: { estadoCuenta: 'ACTIVO', fechaVencimiento: nuevaFecha, club: clubNombre } }, { merge: true }).catch(() => {});
+    }
   } catch (e) {
     console.warn(e);
   }

@@ -76,13 +76,16 @@ export function mostrarPantallaVerificacionEmail(user) {
     document.body.appendChild(screen);
   }
   screen.style.cssText = 'position:fixed;inset:0;background:#050505;z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;';
+  
+  const emailMostrar = user?.email || auth?.currentUser?.email || '';
+
   screen.innerHTML = `
     <div style="text-align:center;max-width:480px;width:100%;animation:fadeIn 0.5s ease;padding:20px 0;">
       <img src="${_DEFAULT_LOGO}" style="height:60px;margin-bottom:24px;filter:drop-shadow(0 0 14px rgba(212,175,55,0.45));" onerror="this.style.display='none'">
       <div style="font-size:58px;margin-bottom:14px;">📧</div>
       <h1 style="font-family:'Barlow Condensed',sans-serif;font-size:24px;color:#fff;margin:0 0 10px;letter-spacing:1px;">VERIFICA TU CORREO ELECTRÓNICO</h1>
       <div style="font-size:13px;color:#aaa;margin-bottom:6px;">Te enviamos un enlace de confirmación a:</div>
-      <div style="font-size:16px;font-weight:900;color:var(--oro);margin-bottom:16px;word-break:break-all;">${user?.email || auth?.currentUser?.email || ''}</div>
+      <div style="font-size:16px;font-weight:900;color:var(--oro);margin-bottom:16px;word-break:break-all;">${emailMostrar}</div>
       
       <!-- ALERTA DESTACADA DE SPAM -->
       <div style="background:rgba(230,126,34,0.15);border:1px solid rgba(230,126,34,0.4);border-radius:10px;padding:12px 14px;margin-bottom:18px;font-size:12px;color:#f39c12;line-height:1.6;text-align:left;">
@@ -93,7 +96,7 @@ export function mostrarPantallaVerificacionEmail(user) {
       <div style="background:rgba(212,175,55,0.07);border:1px solid rgba(212,175,55,0.22);border-radius:10px;padding:14px 16px;margin-bottom:22px;font-size:12px;color:#ccc;line-height:1.7;text-align:left;">
         📌 <strong>Pasos rápidos:</strong><br>
         1. Abre el correo y haz clic en el enlace <strong>"Verificar correo"</strong>.<br>
-        2. Regresa a esta pantalla y pulsa el botón <strong>"Ya verifiqué"</strong> (o se activará automáticamente al detectarlo).
+        2. Regresa a esta pantalla y pulsa el botón <strong>"Ya verifiqué"</strong> (o entrará automáticamente al detectarlo).
       </div>
 
       <div style="display:flex;flex-direction:column;gap:10px;">
@@ -105,48 +108,85 @@ export function mostrarPantallaVerificacionEmail(user) {
     </div>
   `;
 
-  const verificarEstadoLocal = async (mostrarToast = false) => {
+  const verificarEstadoLocal = async (manualClick = false) => {
     const msg = document.getElementById('verif-status-msg');
+    const btnCheck = document.getElementById('btn-check-verificacion');
+    if (manualClick && btnCheck) btnCheck.textContent = '⏳ Comprobando con Google...';
+
     try {
-      await (auth.currentUser || user)?.reload();
-      if (auth.currentUser?.emailVerified) {
+      if (auth && auth.currentUser) {
+        await auth.currentUser.reload();
+      }
+      if (auth?.currentUser?.emailVerified) {
         if (_verifPollTimer) clearInterval(_verifPollTimer);
-        screen.style.display = 'none';
-        await cargarFirebase();
-        aplicarPerfil();
-        const isMaster = isSuperAdmin();
-        if (perfil.estadoCuenta === 'PENDIENTE' && !isMaster) {
-          mostrarPantallaEsperaAprobacion();
-        } else {
-          renderProfileSelector(handleProfileSelected);
+        if (msg) {
+          msg.innerHTML = '<span style="color:#2ecc71;font-weight:bold;">✅ ¡Correo verificado exitosamente! Cargando tu club...</span>';
         }
-      } else if (mostrarToast) {
-        if (msg) msg.textContent = '⚠️ Correo aún no verificado. Revisa tu bandeja de entrada y spam.';
+        setTimeout(async () => {
+          screen.style.display = 'none';
+          await cargarFirebase();
+          aplicarPerfil();
+          const isMaster = isSuperAdmin();
+          if (perfil.estadoCuenta === 'PENDIENTE' && !isMaster) {
+            mostrarPantallaEsperaAprobacion();
+          } else {
+            renderProfileSelector(handleProfileSelected);
+          }
+        }, 800);
+      } else if (manualClick) {
+        if (btnCheck) btnCheck.textContent = '✅ YA VERIFIQUÉ — CONTINUAR';
+        if (msg) msg.textContent = '⚠️ Google indica que aún no has hecho clic en el enlace. Revisa tu bandeja de entrada o spam.';
       }
     } catch (e) {
-      if (mostrarToast && msg) msg.textContent = '❌ Error al verificar: ' + e.message;
+      if (btnCheck) btnCheck.textContent = '✅ YA VERIFIQUÉ — CONTINUAR';
+      if (manualClick && msg) msg.textContent = '❌ Error al verificar: ' + e.message;
     }
   };
 
   document.getElementById('btn-check-verificacion')?.addEventListener('click', async () => {
-    const msg = document.getElementById('verif-status-msg');
-    if (msg) msg.textContent = '⏳ Verificando...';
     await verificarEstadoLocal(true);
   });
 
+  let cooldownReenviar = false;
   document.getElementById('btn-reenviar-verificacion')?.addEventListener('click', async () => {
     const msg = document.getElementById('verif-status-msg');
+    const btnReenv = document.getElementById('btn-reenviar-verificacion');
+    if (cooldownReenviar) return;
+
     try {
-      await sendEmailVerification(auth.currentUser);
-      if (msg) msg.textContent = '✅ Correo de verificación reenviado exitosamente.';
+      if (auth && auth.currentUser) {
+        await sendEmailVerification(auth.currentUser);
+        if (msg) msg.innerHTML = '<span style="color:#2ecc71;">✅ Correo de verificación reenviado. Revisa tu bandeja y spam.</span>';
+        cooldownReenviar = true;
+        let segs = 30;
+        if (btnReenv) btnReenv.textContent = `⏳ Espera ${segs}s para reenviar`;
+        const timerCD = setInterval(() => {
+          segs--;
+          if (segs <= 0) {
+            clearInterval(timerCD);
+            cooldownReenviar = false;
+            if (btnReenv) btnReenv.textContent = '📧 Reenviar correo de verificación';
+          } else if (btnReenv) {
+            btnReenv.textContent = `⏳ Espera ${segs}s para reenviar`;
+          }
+        }, 1000);
+      }
     } catch (e) {
-      if (msg) msg.textContent = '⚠️ Espera unos segundos antes de reenviar otro correo.';
+      if (msg) msg.textContent = '⚠️ Espera unos momentos antes de solicitar otro correo.';
     }
   });
 
-  document.getElementById('btn-logout-verificacion')?.addEventListener('click', () => {
+  document.getElementById('btn-logout-verificacion')?.addEventListener('click', async () => {
     if (_verifPollTimer) clearInterval(_verifPollTimer);
-    cerrarSesion();
+    screen.style.display = 'none';
+    try {
+      if (auth) await signOut(auth);
+    } catch (e) {}
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.hash = '';
+    const loginSc = document.getElementById('login-screen');
+    if (loginSc) loginSc.style.display = 'block';
   });
 
   // Auto-detección en segundo plano cada 4 segundos
@@ -168,39 +208,6 @@ export function mostrarPantallaEsperaAprobacion() {
 
   const prev = document.getElementById('email-verification-screen');
   if (prev) prev.style.display = 'none';
-
-  // Sincronizar inmediatamente en Firestore para que el SuperAdmin lo vea al instante
-  const syncPendingFirestore = async () => {
-    try {
-      const emailUser = (perfil.email || auth?.currentUser?.email || '').trim();
-      const uidUser = auth?.currentUser?.uid || '';
-      if (emailUser || uidUser) {
-        const pubDocId = uidUser ? `usr_${uidUser}` : emailUser.toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
-        const emailKey = emailUser ? emailUser.toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_') : null;
-
-        const payload = {
-          club: perfil.club || 'Nuevo Club (Pendiente)',
-          email: emailUser,
-          whatsapp: perfil.whatsapp || '',
-          logo: perfil.logo || '',
-          estadoCuenta: 'PENDIENTE',
-          fechaVencimiento: perfil.fechaVencimiento || '',
-          maxPerfiles: perfil.maxPerfiles || 1,
-          perfil,
-          updatedAt: new Date().toISOString()
-        };
-
-        setDoc(doc(db, 'publicos', pubDocId), payload, { merge: true }).catch(() => {});
-        if (emailKey && emailKey !== pubDocId) {
-          setDoc(doc(db, 'publicos', emailKey), payload, { merge: true }).catch(() => {});
-        }
-      }
-    } catch (e) {
-      console.warn('Aviso sincronizando pending en publicos:', e);
-    }
-  };
-
-  syncPendingFirestore();
 
   let panel = document.getElementById('pending-approval-screen');
   if (!panel) {
@@ -234,29 +241,34 @@ export function mostrarPantallaEsperaAprobacion() {
 
   const verificarAprobacionServidor = async (mostrarMensaje = false) => {
     const msg = document.getElementById('pending-status-msg');
+    const btnAct = document.getElementById('btn-actualizar-estado');
+    if (mostrarMensaje && btnAct) btnAct.textContent = '⏳ Consultando servidor...';
+
     try {
-      await syncPendingFirestore();
       await cargarFirebase();
       if (perfil.estadoCuenta && perfil.estadoCuenta !== 'PENDIENTE') {
         if (_pendingPollTimer) clearInterval(_pendingPollTimer);
-        panel.style.display = 'none';
-        aplicarPerfil();
-        if (perfil.wizardCompletado) {
-          renderProfileSelector(handleProfileSelected);
-        } else {
-          abrirOnboardingWizard(true);
-        }
+        if (msg) msg.innerHTML = '<span style="color:#2ecc71;font-weight:bold;">🎉 ¡Cuenta Aprobada! Iniciando tu club...</span>';
+        setTimeout(() => {
+          panel.style.display = 'none';
+          aplicarPerfil();
+          if (perfil.wizardCompletado) {
+            renderProfileSelector(handleProfileSelected);
+          } else {
+            abrirOnboardingWizard(true);
+          }
+        }, 600);
       } else if (mostrarMensaje) {
-        if (msg) msg.textContent = 'ℹ️ Tu cuenta aún está en revisión. Te notificaremos por WhatsApp.';
+        if (btnAct) btnAct.textContent = '🔄 VERIFICAR ESTADO DE APROBACIÓN';
+        if (msg) msg.textContent = 'ℹ️ Tu cuenta aún está en revisión por el Administrador. Te notificaremos por WhatsApp.';
       }
     } catch (e) {
-      if (mostrarMensaje && msg) msg.textContent = '❌ Error: ' + e.message;
+      if (btnAct) btnAct.textContent = '🔄 VERIFICAR ESTADO DE APROBACIÓN';
+      if (mostrarMensaje && msg) msg.textContent = '❌ Error de conexión: ' + e.message;
     }
   };
 
   document.getElementById('btn-actualizar-estado')?.addEventListener('click', async () => {
-    const msg = document.getElementById('pending-status-msg');
-    if (msg) msg.textContent = '⏳ Actualizando estado...';
     await verificarAprobacionServidor(true);
   });
 
@@ -266,15 +278,23 @@ export function mostrarPantallaEsperaAprobacion() {
     window.open(`https://wa.me/584241895407?text=${msgWA}`, '_blank');
   });
 
-  document.getElementById('btn-logout-pendiente')?.addEventListener('click', () => {
+  document.getElementById('btn-logout-pendiente')?.addEventListener('click', async () => {
     if (_pendingPollTimer) clearInterval(_pendingPollTimer);
-    cerrarSesion();
+    panel.style.display = 'none';
+    try {
+      if (auth) await signOut(auth);
+    } catch (e) {}
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.hash = '';
+    const loginSc = document.getElementById('login-screen');
+    if (loginSc) loginSc.style.display = 'block';
   });
 
-  // Auto-detección periódica de aprobación cada 5 segundos
+  // Auto-detección periódica de aprobación en vivo cada 3 segundos
   _pendingPollTimer = setInterval(() => {
     verificarAprobacionServidor(false);
-  }, 5000);
+  }, 3000);
 }
 
 window._mostrarPantallaEsperaAprobacion = mostrarPantallaEsperaAprobacion;
