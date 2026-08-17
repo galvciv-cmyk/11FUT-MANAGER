@@ -1,6 +1,6 @@
 import { db } from "../services/firebase.js";
 import { collection, getDocs, doc, setDoc, deleteDoc } from "firebase/firestore";
-import { isSuperAdmin, perfil, autoSaveLocal } from "./state.js";
+import { isSuperAdmin, perfil, autoSaveLocal, SUPER_ADMIN_EMAIL } from "./state.js";
 import { mostrarConfirmacionApp, mostrarToastRapido, mostrarPromptModal, mostrarNotificacionApp } from "./config.js";
 
 export async function renderSuperAdminDashboard() {
