@@ -432,25 +432,39 @@ async function ejecutarRegalarPruebaSuperAdmin(pubDocId, email, wa, clubNombre) 
   });
 }
 
-async function ejecutarSuspenderSuperAdmin(pubDocId, email) {
-  mostrarConfirmacionApp('Suspender Club', '¿Estás seguro de suspender el acceso de este club?', async () => {
+async function ejecutarSuspenderSuperAdmin(pubDocId, email, uid) {
+  mostrarConfirmacionApp('Cancelar / Suspender Club', '¿Estás seguro de CANCELAR el acceso de este club? Su sesión se cerrará de inmediato con el aviso de cuenta cancelada.', async () => {
+    const payload = {
+      estadoCuenta: 'CANCELADA',
+      cancelada: true,
+      updatedAt: new Date().toISOString()
+    };
+
     try {
-      if (pubDocId) {
-        setDoc(doc(db, 'publicos', pubDocId), {
-          estadoCuenta: 'VENCIDO',
-          updatedAt: new Date().toISOString()
-        }, { merge: true }).catch(err => console.warn('Aviso Firestore en suspensión:', err));
+      const emailClean = (email || '').trim().toLowerCase();
+      const emailKey = emailClean ? emailClean.replace(/[^a-zA-Z0-9_-]/g, '_') : null;
+      const targetUid = uid || (pubDocId && pubDocId.startsWith('usr_') ? pubDocId.replace('usr_', '') : null);
+
+      const writes = [];
+      if (pubDocId) writes.push(setDoc(doc(db, 'publicos', pubDocId), payload, { merge: true }).catch(() => {}));
+      if (emailKey && emailKey !== pubDocId) writes.push(setDoc(doc(db, 'publicos', emailKey), payload, { merge: true }).catch(() => {}));
+      if (targetUid) {
+        writes.push(setDoc(doc(db, 'publicos', `usr_${targetUid}`), payload, { merge: true }).catch(() => {}));
+        writes.push(setDoc(doc(db, 'usuarios', targetUid), { perfil: payload }, { merge: true }).catch(() => {}));
       }
+
+      await Promise.all(writes);
     } catch (e) {
-      console.warn(e);
+      console.warn('Aviso cancelando club en Firestore:', e);
     }
 
     if (perfil && perfil.email && email && perfil.email.trim().toLowerCase() === email.trim().toLowerCase()) {
-      perfil.estadoCuenta = 'VENCIDO';
+      perfil.estadoCuenta = 'CANCELADA';
+      perfil.cancelada = true;
       autoSaveLocal();
     }
 
-    mostrarToastRapido('Cuenta Suspendida', 'Se ha cambiado el estado a VENCIDO.', true);
+    mostrarToastRapido('Cuenta Cancelada', 'La cuenta ha sido marcada como CANCELADA.', true);
     renderSuperAdminDashboard();
   });
 }
@@ -468,6 +482,20 @@ async function ejecutarEliminarClubSuperAdmin(pubDocId, clubNombre, uid, email) 
       const emailClean = (email || '').trim().toLowerCase();
       const emailKey = emailClean ? emailClean.replace(/[^a-zA-Z0-9_-]/g, '_') : null;
       const targetUid = uid || (pubDocId && pubDocId.startsWith('usr_') ? pubDocId.replace('usr_', '') : null);
+
+      // Notificar cancelación a clientes conectados antes de purgar
+      const cancelPayload = { estadoCuenta: 'CANCELADA', cancelada: true, updatedAt: new Date().toISOString() };
+      const preDeletes = [];
+      if (pubDocId) preDeletes.push(setDoc(doc(db, 'publicos', pubDocId), cancelPayload, { merge: true }).catch(() => {}));
+      if (emailKey && emailKey !== pubDocId) preDeletes.push(setDoc(doc(db, 'publicos', emailKey), cancelPayload, { merge: true }).catch(() => {}));
+      if (targetUid) {
+        preDeletes.push(setDoc(doc(db, 'publicos', `usr_${targetUid}`), cancelPayload, { merge: true }).catch(() => {}));
+        preDeletes.push(setDoc(doc(db, 'usuarios', targetUid), { perfil: cancelPayload }, { merge: true }).catch(() => {}));
+      }
+      await Promise.all(preDeletes);
+
+      // Pequeño delay de 800ms para que sockets/listeners del cliente reciban la cancelación antes del delete físico
+      await new Promise(r => setTimeout(r, 800));
 
       const deletes = [];
       if (pubDocId) deletes.push(deleteDoc(doc(db, 'publicos', pubDocId)).catch(() => {}));

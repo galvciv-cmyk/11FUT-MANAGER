@@ -196,6 +196,14 @@ export async function cargarFirebase() {
       ].filter(Boolean);
 
       for (const d of candidatos) {
+        if (d.estadoCuenta === 'CANCELADA' || d.estadoCuenta === 'CANCELADO' || d.cancelada) {
+          perfil.estadoCuenta = 'CANCELADA';
+          perfil.cancelada = true;
+          if (typeof window._mostrarPantallaCuentaCancelada === 'function') {
+            window._mostrarPantallaCuentaCancelada();
+          }
+          break;
+        }
         if (d.estadoCuenta === 'ACTIVO' || (d.estadoCuenta === 'PRUEBA' && perfil.estadoCuenta !== 'ACTIVO')) {
           perfil.estadoCuenta = d.estadoCuenta;
           if (d.fechaVencimiento) perfil.fechaVencimiento = d.fechaVencimiento;

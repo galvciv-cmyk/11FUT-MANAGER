@@ -299,6 +299,58 @@ export function mostrarPantallaEsperaAprobacion() {
 
 window._mostrarPantallaEsperaAprobacion = mostrarPantallaEsperaAprobacion;
 
+export function mostrarPantallaCuentaCancelada() {
+  _ocultarTodasLasPantallas();
+  let overlay = document.getElementById('overlay-cuenta-cancelada');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'overlay-cuenta-cancelada';
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.96);z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;';
+    overlay.innerHTML = `
+      <div style="background:#111;border:2px solid var(--rojo);border-radius:16px;padding:32px 24px;max-width:440px;width:100%;text-align:center;box-shadow:0 0 50px rgba(231,76,60,0.5);">
+        <div style="font-size:52px;margin-bottom:12px;">⛔</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--rojo);margin-bottom:12px;letter-spacing:1px;">
+          ESTA CUENTA HA SIDO CANCELADA
+        </div>
+        <p style="font-size:13px;color:#ddd;line-height:1.6;margin-bottom:24px;">
+          Tu cuenta ha sido cancelada por la administración de <strong>11FUT MANAGER</strong>.<br>
+          Si piensas que se trata de un error, por favor comunícate con el soporte vía WhatsApp.
+        </p>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <button id="btn-cancelada-wa" style="background:#25d366;color:#000;border:none;padding:14px;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+            💬 Contactar Soporte vía WhatsApp
+          </button>
+          <button id="btn-cancelada-salir" style="background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);color:#e74c3c;padding:12px;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;">
+            🚪 Salir al Inicio de Sesión
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    document.getElementById('btn-cancelada-wa')?.addEventListener('click', () => {
+      const emailUser = perfil.email || (auth?.currentUser?.email) || '';
+      const msg = encodeURIComponent(`Hola, mi cuenta en 11FUT MANAGER (${emailUser}) indica que ha sido cancelada. Por favor solicito soporte.`);
+      window.open(`https://wa.me/584141401560?text=${msg}`, '_blank');
+    });
+
+    document.getElementById('btn-cancelada-salir')?.addEventListener('click', async () => {
+      try {
+        if (auth) await signOut(auth);
+      } catch (e) {}
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.hash = '';
+      window.location.href = window.location.origin + window.location.pathname;
+    });
+  }
+
+  overlay.style.display = 'flex';
+  window.location.hash = '#cuenta-cancelada';
+}
+
+window._mostrarPantallaCuentaCancelada = mostrarPantallaCuentaCancelada;
+
 // ══════════════════════════════════════════
 // MAPEO DE RUTAS HASH URL (#tactica, #citacion, #profiles, etc.)
 // ══════════════════════════════════════════
@@ -847,6 +899,13 @@ export function verificarMembresiaYLock() {
   const diffMs = fechaExp - new Date();
   const diasRestantes = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
   const estado = perfil.estadoCuenta || 'PRUEBA';
+
+  if (estado === 'CANCELADA' || estado === 'CANCELADO' || perfil.cancelada) {
+    if (overlayLock) overlayLock.style.display = 'none';
+    if (bannerRenovacion) bannerRenovacion.style.display = 'none';
+    mostrarPantallaCuentaCancelada();
+    return;
+  }
 
   if (estado === 'VENCIDO' || diasRestantes <= 0) {
     if (overlayLock) overlayLock.style.display = 'flex';
