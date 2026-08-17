@@ -181,20 +181,30 @@ export async function cargarFirebase() {
       const userEmail = perfil.email || (auth && auth.currentUser && auth.currentUser.email) || '';
       const emailKey = userEmail ? userEmail.trim().toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_') : null;
 
-      let pubSnap = null;
+      let pubSnap1 = null;
+      let pubSnap2 = null;
       if (pubKey) {
-        pubSnap = await getDoc(doc(db, 'publicos', pubKey)).catch(() => null);
+        pubSnap1 = await getDoc(doc(db, 'publicos', pubKey)).catch(() => null);
       }
-      if ((!pubSnap || !pubSnap.exists()) && emailKey) {
-        pubSnap = await getDoc(doc(db, 'publicos', emailKey)).catch(() => null);
+      if (emailKey && emailKey !== pubKey) {
+        pubSnap2 = await getDoc(doc(db, 'publicos', emailKey)).catch(() => null);
       }
 
-      if (pubSnap && pubSnap.exists()) {
-        const pubData = pubSnap.data() || {};
-        if (pubData.estadoCuenta) perfil.estadoCuenta = pubData.estadoCuenta;
-        if (pubData.fechaVencimiento) perfil.fechaVencimiento = pubData.fechaVencimiento;
-        if (pubData.maxPerfiles) perfil.maxPerfiles = pubData.maxPerfiles;
-        if (pubData.club && !perfil.club) perfil.club = pubData.club;
+      const candidatos = [
+        pubSnap1?.exists() ? pubSnap1.data() : null,
+        pubSnap2?.exists() ? pubSnap2.data() : null
+      ].filter(Boolean);
+
+      for (const d of candidatos) {
+        if (d.estadoCuenta === 'ACTIVO' || (d.estadoCuenta === 'PRUEBA' && perfil.estadoCuenta !== 'ACTIVO')) {
+          perfil.estadoCuenta = d.estadoCuenta;
+          if (d.fechaVencimiento) perfil.fechaVencimiento = d.fechaVencimiento;
+        } else if (d.estadoCuenta && (!perfil.estadoCuenta || perfil.estadoCuenta === 'PENDIENTE')) {
+          perfil.estadoCuenta = d.estadoCuenta;
+        }
+        if (d.fechaVencimiento && !perfil.fechaVencimiento) perfil.fechaVencimiento = d.fechaVencimiento;
+        if (d.maxPerfiles) perfil.maxPerfiles = d.maxPerfiles;
+        if (d.club && (!perfil.club || perfil.club === 'Club Registrado' || perfil.club === 'Nuevo Club (Pendiente)')) perfil.club = d.club;
       }
     } catch (pubErr) {
       console.warn('Aviso sincronizando estado público:', pubErr);

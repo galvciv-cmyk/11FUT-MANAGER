@@ -225,14 +225,14 @@ function renderSuperAdminCardsUI(container, clubesValidos) {
         <!-- FILA DE BOTONES DE ACCIÓN RESPONSIVOS -->
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(110px, 1fr));gap:6px;margin-top:2px;">
           ${estado === 'PENDIENTE' ? `
-            <button class="btn btn-green sa-btn-action" data-action="activar_prueba" data-id="${c.id}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:900;justify-content:center;background:linear-gradient(135deg,#2ecc71,#27ae60);grid-column:span 2;">⚡ ACTIVAR PRUEBA (3 DÍAS)</button>
+            <button class="btn btn-green sa-btn-action" data-action="activar_prueba" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:900;justify-content:center;background:linear-gradient(135deg,#2ecc71,#27ae60);grid-column:span 2;">⚡ ACTIVAR PRUEBA (3 DÍAS)</button>
           ` : `
-            <button class="btn btn-green sa-btn-action" data-action="aprobar" data-id="${c.id}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟢 APROBAR (30D)</button>
-            <button class="btn btn-gold sa-btn-action" data-action="regalar" data-id="${c.id}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟡 +PRUEBA</button>
+            <button class="btn btn-green sa-btn-action" data-action="aprobar" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟢 APROBAR (30D)</button>
+            <button class="btn btn-gold sa-btn-action" data-action="regalar" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟡 +PRUEBA</button>
           `}
-          <button class="btn btn-gray sa-btn-action" data-action="suspender" data-id="${c.id}" style="font-size:11px;padding:8px;font-weight:800;color:var(--rojo);justify-content:center;">🔴 SUSPENDER</button>
+          <button class="btn btn-gray sa-btn-action" data-action="suspender" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" style="font-size:11px;padding:8px;font-weight:800;color:var(--rojo);justify-content:center;">🔴 SUSPENDER</button>
           <button class="btn btn-gray sa-btn-action" data-action="wa" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">💬 CHAT WA</button>
-          <button class="btn btn-red sa-btn-action" data-action="eliminar" data-id="${c.id}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🗑️ BORRAR</button>
+          <button class="btn btn-red sa-btn-action" data-action="eliminar" data-id="${c.id}" data-uid="${c.uid || ''}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🗑️ BORRAR</button>
         </div>
 
       </div>
@@ -254,22 +254,23 @@ function renderSuperAdminCardsUI(container, clubesValidos) {
 
       const action = btn.dataset.action;
       const pubDocId = btn.dataset.id;
+      const uid = btn.dataset.uid;
       const email = btn.dataset.email;
       const wa = btn.dataset.wa;
       const clubNombre = btn.dataset.club;
 
       if (action === 'activar_prueba') {
-        await ejecutarActivarPruebaSuperAdmin(pubDocId, email, wa, clubNombre);
+        await ejecutarActivarPruebaSuperAdmin(pubDocId, email, wa, clubNombre, uid);
       } else if (action === 'aprobar') {
-        await ejecutarAprobarSuperAdmin(pubDocId, email, wa, clubNombre);
+        await ejecutarAprobarSuperAdmin(pubDocId, email, wa, clubNombre, uid);
       } else if (action === 'regalar') {
-        await ejecutarRegalarPruebaSuperAdmin(pubDocId, email, wa, clubNombre);
+        await ejecutarRegalarPruebaSuperAdmin(pubDocId, email, wa, clubNombre, uid);
       } else if (action === 'suspender') {
-        await ejecutarSuspenderSuperAdmin(pubDocId, email);
+        await ejecutarSuspenderSuperAdmin(pubDocId, email, uid);
       } else if (action === 'wa') {
         ejecutarChatWASuperAdmin(wa, clubNombre);
       } else if (action === 'eliminar') {
-        await ejecutarEliminarClubSuperAdmin(pubDocId, clubNombre);
+        await ejecutarEliminarClubSuperAdmin(pubDocId, clubNombre, uid);
       }
     });
   }
@@ -288,7 +289,7 @@ function normalizarTelefonoWhatsApp(wa) {
   return clean;
 }
 
-async function ejecutarActivarPruebaSuperAdmin(pubDocId, email, wa, clubNombre) {
+async function ejecutarActivarPruebaSuperAdmin(pubDocId, email, wa, clubNombre, uid) {
   const dias = 3;
   const nuevaFecha = new Date(Date.now() + dias * 24 * 60 * 60 * 1000).toISOString();
   const emailKey = (email || '').trim().toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
@@ -311,15 +312,20 @@ async function ejecutarActivarPruebaSuperAdmin(pubDocId, email, wa, clubNombre) 
     updatedAt: new Date().toISOString()
   };
 
+  const writes = [];
+  if (pubDocId) writes.push(setDoc(doc(db, 'publicos', pubDocId), payload, { merge: true }).catch(() => {}));
+  if (emailKey && emailKey !== pubDocId) writes.push(setDoc(doc(db, 'publicos', emailKey), payload, { merge: true }).catch(() => {}));
+
+  const targetUid = uid || (pubDocId && pubDocId.startsWith('usr_') ? pubDocId.replace('usr_', '') : null);
+  if (targetUid) {
+    writes.push(setDoc(doc(db, 'publicos', `usr_${targetUid}`), payload, { merge: true }).catch(() => {}));
+    writes.push(setDoc(doc(db, 'usuarios', targetUid), { perfil: { estadoCuenta: 'PRUEBA', fechaVencimiento: nuevaFecha, club: clubNombre } }, { merge: true }).catch(() => {}));
+  }
+
   try {
-    if (pubDocId) setDoc(doc(db, 'publicos', pubDocId), payload, { merge: true }).catch(() => {});
-    if (emailKey && emailKey !== pubDocId) setDoc(doc(db, 'publicos', emailKey), payload, { merge: true }).catch(() => {});
-    if (pubDocId && pubDocId.startsWith('usr_')) {
-      const uid = pubDocId.replace('usr_', '');
-      setDoc(doc(db, 'usuarios', uid), { perfil: { estadoCuenta: 'PRUEBA', fechaVencimiento: nuevaFecha, club: clubNombre } }, { merge: true }).catch(() => {});
-    }
+    await Promise.all(writes);
   } catch (e) {
-    console.warn(e);
+    console.warn('Aviso guardando en Firestore:', e);
   }
 
   if (perfil && perfil.email && email && perfil.email.trim().toLowerCase() === email.trim().toLowerCase()) {
@@ -331,7 +337,7 @@ async function ejecutarActivarPruebaSuperAdmin(pubDocId, email, wa, clubNombre) 
   renderSuperAdminDashboard();
 }
 
-async function ejecutarAprobarSuperAdmin(pubDocId, email, wa, clubNombre) {
+async function ejecutarAprobarSuperAdmin(pubDocId, email, wa, clubNombre, uid) {
   const dias = 30;
   const nuevaFecha = new Date(Date.now() + dias * 24 * 60 * 60 * 1000).toISOString();
   const emailKey = (email || '').trim().toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
@@ -354,15 +360,20 @@ async function ejecutarAprobarSuperAdmin(pubDocId, email, wa, clubNombre) {
     updatedAt: new Date().toISOString()
   };
 
+  const writes = [];
+  if (pubDocId) writes.push(setDoc(doc(db, 'publicos', pubDocId), payload, { merge: true }).catch(() => {}));
+  if (emailKey && emailKey !== pubDocId) writes.push(setDoc(doc(db, 'publicos', emailKey), payload, { merge: true }).catch(() => {}));
+
+  const targetUid = uid || (pubDocId && pubDocId.startsWith('usr_') ? pubDocId.replace('usr_', '') : null);
+  if (targetUid) {
+    writes.push(setDoc(doc(db, 'publicos', `usr_${targetUid}`), payload, { merge: true }).catch(() => {}));
+    writes.push(setDoc(doc(db, 'usuarios', targetUid), { perfil: { estadoCuenta: 'ACTIVO', fechaVencimiento: nuevaFecha, club: clubNombre } }, { merge: true }).catch(() => {}));
+  }
+
   try {
-    if (pubDocId) setDoc(doc(db, 'publicos', pubDocId), payload, { merge: true }).catch(() => {});
-    if (emailKey && emailKey !== pubDocId) setDoc(doc(db, 'publicos', emailKey), payload, { merge: true }).catch(() => {});
-    if (pubDocId && pubDocId.startsWith('usr_')) {
-      const uid = pubDocId.replace('usr_', '');
-      setDoc(doc(db, 'usuarios', uid), { perfil: { estadoCuenta: 'ACTIVO', fechaVencimiento: nuevaFecha, club: clubNombre } }, { merge: true }).catch(() => {});
-    }
+    await Promise.all(writes);
   } catch (e) {
-    console.warn(e);
+    console.warn('Aviso guardando en Firestore:', e);
   }
 
   if (perfil && perfil.email && email && perfil.email.trim().toLowerCase() === email.trim().toLowerCase()) {
