@@ -602,6 +602,9 @@
                   <input type="file" id="input-csv" accept=".csv" style="display:none;">
                 </label>
               </div>
+              <button class="btn btn-red" id="btn-eliminar-plantel" onclick="window._eliminarListadoPlantel()" style="font-size:11px;padding:9px;margin-top:8px;width:100%;font-weight:800;justify-content:center;">
+                🗑️ ELIMINAR LISTADO
+              </button>
             </div>
 
           </div>
@@ -751,13 +754,19 @@
 
             <!-- CONTROL DE ASISTENCIA DEL PLANTEL -->
             <div class="card">
-              <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
+              <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
                 <span>📋 CONTROL DE ASISTENCIA</span>
-                <span id="attendance-today-date" style="font-size:11px;color:var(--verde-campo);font-weight:800;"></span>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <label for="attendance-date-picker" style="font-size:11px;color:#aaa;font-weight:700;">📅 Fecha:</label>
+                  <input type="date" id="attendance-date-picker" style="font-size:12px;padding:4px 8px;background:#111;border:1px solid var(--oro);color:#fff;border-radius:6px;cursor:pointer;">
+                </div>
               </div>
               
               <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">
-                <button class="btn btn-green" id="btn-iniciar-pasar-lista" style="font-size:13px;padding:12px;font-weight:900;">📋 PASAR LISTA (1 POR 1)</button>
+                <div style="display:flex;gap:6px;">
+                  <button class="btn btn-green" id="btn-iniciar-pasar-lista" style="flex:2;font-size:13px;padding:10px;font-weight:900;">📋 PASAR LISTA (1 POR 1)</button>
+                  <button class="btn btn-gold" id="btn-asistencia-hoy" onclick="window._setAsistenciaFechaHoy()" style="flex:1;font-size:11px;padding:10px;font-weight:800;" title="Ir a la fecha de hoy">⚡ HOY</button>
+                </div>
                 <div style="display:flex;gap:6px;">
                   <button class="btn btn-gray" id="btn-toggle-listado-completo" style="flex:1;font-size:11px;padding:8px;background:#181818;border:1px solid #333;color:#ccc;">📊 VER LISTADO COMPLETO Y PORCENTAJES</button>
                   <button id="btn-export-attendance-csv" onclick="window._exportarAsistenciaCSV()" style="background:#092113;border:1px solid var(--verde-campo);color:var(--verde-campo);padding:8px 12px;border-radius:6px;font-size:11px;font-weight:900;cursor:pointer;">📊 EXPORTAR CSV</button>

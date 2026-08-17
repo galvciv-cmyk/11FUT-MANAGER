@@ -7,7 +7,7 @@ import { cargarKits } from "./services/cloudinary.js";
 import { actualizarTactica, exportarPNG, setDrawingMode, setDrawingColor, setLineWidth, setLineDash, agregarMarcador, clearCanvas, toggleFullscreen, salirFullscreenTotal, guardarEsquemaCustom, limpiarCanchaYBanco, setVistaCancha, setModoPizarra, agregarFichaLibre, limpiarFichasLibres, abrirModalSustitucion, ejecutarSustitucion, undoCanvas, grabarPasoAnimacion, reproducirAnimacion, detenerAnimacion } from "./modules/tactics.js";
 import { renderStats, guardarStatJugador, cerrarStatModal, renderRankings, renderDashboardColectivo } from "./modules/stats.js";
 import { renderHistorial, formatFecha } from "./modules/history.js";
-import { initPlantelUI, aplicarPlantelUI, guardarSquad, descargarPlantilla, importarCSV, exportarPDF } from "./modules/squad.js";
+import { initPlantelUI, aplicarPlantelUI, guardarSquad, descargarPlantilla, importarCSV, exportarPDF, eliminarListadoPlantel } from "./modules/squad.js";
 import { buscarMaps, enviarWA, renderTorneosCitacionUI } from "./modules/citacion.js";
 import { abrirConfig, cerrarConfig, guardarNombres, guardarKits, guardarLogo, guardarFondo, cambiarPin, resetearStats, borrarHistorial, cerrarSesion, aplicarPerfil, copiarEnlacePublico, agregarNuevaCategoriaConfig, abrirSoporteWhatsApp, abrirOnboardingWizard, siguientePasoWizard, anteriorPasoWizard, finalizarOnboardingWizard, renderEsquemaPredeterminadoUI, guardarEsquemaPredeterminadoConfig, renderPerfilesPinsUI, guardarPinsConfig, limpiarHistorialNotificaciones } from "./modules/config.js";
 
@@ -503,14 +503,14 @@ export function renderSelectorCategoria(isPublic = false) {
   let categorias = Array.isArray(perfil.categorias) ? perfil.categorias.filter(Boolean) : [];
   perfil.categorias = categorias;
 
-  // AISLAMIENTO DE EQUIPOS POR PERFIL DT (APLICA EN VISTA PRIVADA Y PÚBLICA):
-  const esPerfilDT = currentProfile && currentProfile.rol === 'DT';
+  // En la vista pública oficial del club (portal para padres, jugadores y scouts), SIEMPRE mostrar TODAS las categorías del club
+  const esPerfilDT = !isPublic && currentProfile && currentProfile.rol === 'DT';
   if (esPerfilDT) {
     let equiposDT = currentProfile.equipos && Array.isArray(currentProfile.equipos) && currentProfile.equipos.length 
       ? currentProfile.equipos.filter(Boolean) 
       : (currentProfile.categoria ? [currentProfile.categoria] : []);
     
-    equiposDT = equiposDT.slice(0, 3); // Máximo 3 equipos por perfil DT
+    equiposDT = equiposDT.slice(0, 3); // Máximo 3 equipos por perfil DT en su panel privado
     if (equiposDT.length) {
       categorias = equiposDT;
     }
@@ -1388,10 +1388,53 @@ document.addEventListener('DOMContentLoaded', async () => {
           const d = snap.data() || {};
           const p = d.perfil || {};
           const est = d.estadoCuenta || p.estadoCuenta;
+          const fVenc = d.fechaVencimiento || p.fechaVencimiento;
+          const maxP = d.maxPerfiles || p.maxPerfiles;
+          const clubNom = d.club || p.club;
+
           if (est === 'CANCELADA' || est === 'CANCELADO' || d.cancelada || p.cancelada) {
             perfil.estadoCuenta = 'CANCELADA';
             perfil.cancelada = true;
             mostrarPantallaCuentaCancelada();
+            return;
+          }
+
+          let huboCambios = false;
+
+          if (est && est !== perfil.estadoCuenta) {
+            perfil.estadoCuenta = est;
+            huboCambios = true;
+          }
+          if (fVenc && fVenc !== perfil.fechaVencimiento) {
+            perfil.fechaVencimiento = fVenc;
+            huboCambios = true;
+          }
+          if (maxP && maxP !== perfil.maxPerfiles) {
+            perfil.maxPerfiles = maxP;
+            huboCambios = true;
+          }
+          if (clubNom && (!perfil.club || perfil.club === '11FUT MANAGER' || perfil.club === 'Club Registrado')) {
+            perfil.club = clubNom;
+            huboCambios = true;
+          }
+
+          if (huboCambios) {
+            autoSaveLocal();
+            verificarMembresiaYLock();
+            aplicarPerfil();
+            
+            // Si estaba en pantalla de espera de aprobación y el estado ya no es PENDIENTE
+            const pendingScreen = document.getElementById('pending-approval-screen');
+            if (pendingScreen && pendingScreen.style.display !== 'none' && perfil.estadoCuenta !== 'PENDIENTE') {
+              pendingScreen.style.display = 'none';
+              const mainApp = document.getElementById('main-app');
+              if (mainApp) mainApp.style.display = 'block';
+              if (perfil.wizardCompletado) {
+                renderProfileSelector(handleProfileSelected);
+              } else {
+                abrirOnboardingWizard(true);
+              }
+            }
           }
         };
 
@@ -1637,6 +1680,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-guardar-squad')?.addEventListener('click', guardarSquad);
   document.getElementById('btn-export-pdf')?.addEventListener('click', exportarPDF);
   document.getElementById('btn-descargar-csv')?.addEventListener('click', descargarPlantilla);
+  document.getElementById('btn-eliminar-plantel')?.addEventListener('click', eliminarListadoPlantel);
   document.getElementById('input-csv')?.addEventListener('change', (e) => importarCSV(e.target));
 
   // Bind Stats

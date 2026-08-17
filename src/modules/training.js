@@ -1506,6 +1506,16 @@ window._eliminarSesion = (i) => eliminarSesion(i);
 let pasarListaJugadores = [];
 let pasarListaIndex = 0;
 let listadoCompletoVisible = false;
+let selectedAttendanceDate = new Date().toISOString().split('T')[0];
+
+export function setAsistenciaFechaHoy() {
+  selectedAttendanceDate = new Date().toISOString().split('T')[0];
+  const dateInput = document.getElementById('attendance-date-picker');
+  if (dateInput) dateInput.value = selectedAttendanceDate;
+  renderAsistenciaUI();
+}
+
+window._setAsistenciaFechaHoy = setAsistenciaFechaHoy;
 
 export function iniciarPasarListaWizard() {
   const catObj = getEntrenamientosData();
@@ -1538,7 +1548,7 @@ export function renderPasarListaStep() {
   if (pasarListaIndex >= pasarListaJugadores.length) {
     const modal = document.getElementById('modal-pasar-lista-wizard');
     if (modal) modal.style.display = 'none';
-    mostrarNotificacionApp('¡Lista Completada!', `🎉 Se tomó asistencia a los ${pasarListaJugadores.length} jugadores de ${perfil.categoriaActiva}.`);
+    mostrarNotificacionApp('¡Lista Completada!', `🎉 Se tomó asistencia a los ${pasarListaJugadores.length} jugadores de ${perfil.categoriaActiva} (Fecha: ${selectedAttendanceDate}).`);
     renderAsistenciaUI();
     return;
   }
@@ -1548,7 +1558,7 @@ export function renderPasarListaStep() {
   const playerName = document.getElementById('pasar-lista-player-name');
   const playerRole = document.getElementById('pasar-lista-player-role');
 
-  if (stepCounter) stepCounter.textContent = `JUGADOR ${pasarListaIndex + 1} DE ${pasarListaJugadores.length}`;
+  if (stepCounter) stepCounter.textContent = `JUGADOR ${pasarListaIndex + 1} DE ${pasarListaJugadores.length} (Fecha: ${selectedAttendanceDate})`;
   if (playerName) playerName.textContent = `⚽ ${jugador.nombre}`;
   if (playerRole) playerRole.textContent = `${jugador.rol} | Equipo: ${perfil.categoriaActiva}`;
 }
@@ -1558,10 +1568,10 @@ export async function marcarAsistenciaIndividual(estado) {
 
   const jugador = pasarListaJugadores[pasarListaIndex];
   const catObj = getEntrenamientosData();
-  const hoyFecha = new Date().toISOString().split('T')[0];
-  if (!catObj.asistencia[hoyFecha]) catObj.asistencia[hoyFecha] = {};
+  const targetFecha = selectedAttendanceDate || new Date().toISOString().split('T')[0];
+  if (!catObj.asistencia[targetFecha]) catObj.asistencia[targetFecha] = {};
 
-  catObj.asistencia[hoyFecha][jugador.nombre] = estado;
+  catObj.asistencia[targetFecha][jugador.nombre] = estado;
 
   if (estado === 'lesionado') {
     abrirModalLesion(jugador.nombre);
@@ -1597,15 +1607,30 @@ window._toggleListadoCompleto = toggleListadoCompleto;
 
 export function renderAsistenciaUI() {
   const container = document.getElementById('attendance-players-list');
-  const dateBadge = document.getElementById('attendance-today-date');
   if (!container) return;
 
   const catObj = getEntrenamientosData();
   const asistenciaData = catObj.asistencia || {};
   const lesionesData = catObj.lesiones || {};
 
-  const hoyFecha = new Date().toISOString().split('T')[0];
-  if (dateBadge) dateBadge.textContent = `📅 ${hoyFecha}`;
+  const dateInput = document.getElementById('attendance-date-picker');
+  if (dateInput) {
+    if (!dateInput.value) {
+      dateInput.value = selectedAttendanceDate;
+    } else {
+      selectedAttendanceDate = dateInput.value;
+    }
+
+    if (!dateInput._hasBoundEvent) {
+      dateInput._hasBoundEvent = true;
+      dateInput.addEventListener('change', (e) => {
+        if (e.target.value) {
+          selectedAttendanceDate = e.target.value;
+          renderAsistenciaUI();
+        }
+      });
+    }
+  }
 
   const activePlantel = catObj.plantel || plantel || {};
   let listaJugadores = [];
@@ -1626,12 +1651,86 @@ export function renderAsistenciaUI() {
     return;
   }
 
-  const registroHoy = asistenciaData[hoyFecha] || {};
+  const registroSeleccionado = asistenciaData[selectedAttendanceDate] || {};
+  const esHoy = selectedAttendanceDate === new Date().toISOString().split('T')[0];
+
+  // CÁLCULO DE MÉTRICAS GLOBALES DE ASISTENCIA E INASISTENCIA DE TODA LA PLANTILLA
+  let totalGlobalEvaluaciones = 0;
+  let totalGlobalPresentes = 0;
+  let totalGlobalAusentes = 0;
+  let totalGlobalJustificadas = 0;
+  let totalGlobalLesionados = 0;
+
+  Object.keys(asistenciaData).forEach(f => {
+    listaJugadores.forEach(nombre => {
+      const st = asistenciaData[f][nombre];
+      if (st) {
+        totalGlobalEvaluaciones++;
+        if (st === 'presente') totalGlobalPresentes++;
+        else if (st === 'ausente') totalGlobalAusentes++;
+        else if (st === 'justificada') totalGlobalJustificadas++;
+        else if (st === 'lesionado') totalGlobalLesionados++;
+      }
+    });
+  });
+
+  const pctAsistenciaGlobal = totalGlobalEvaluaciones > 0
+    ? Math.round((totalGlobalPresentes / totalGlobalEvaluaciones) * 100)
+    : 100;
+  const pctInasistenciaGlobal = totalGlobalEvaluaciones > 0
+    ? Math.round((totalGlobalAusentes / totalGlobalEvaluaciones) * 100)
+    : 0;
+  const pctJustificadaGlobal = totalGlobalEvaluaciones > 0
+    ? Math.round((totalGlobalJustificadas / totalGlobalEvaluaciones) * 100)
+    : 0;
 
   container.innerHTML = `
+    <!-- DASHBOARD GLOBAL DE ASISTENCIA E INASISTENCIA DEL PLANTEL -->
+    <div style="background:linear-gradient(135deg,rgba(15,20,25,0.95),rgba(6,10,16,0.95));border:1px solid rgba(80,227,194,0.35);border-radius:12px;padding:14px;margin-bottom:14px;box-shadow:0 4px 20px rgba(0,0,0,0.6);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;color:var(--oro);letter-spacing:0.5px;">
+          📊 BALANCE GENERAL DE ASISTENCIA (${perfil.categoriaActiva || 'Equipo'})
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span style="font-size:11px;color:${esHoy ? 'var(--verde-campo)' : 'var(--oro)'};font-weight:800;">
+            📅 ${selectedAttendanceDate} ${esHoy ? '(HOY)' : '(FECHA SELECCIONADA)'}
+          </span>
+          <button onclick="window._exportarAsistenciaCSV()" style="background:#092113;border:1px solid var(--verde-campo);color:var(--verde-campo);padding:4px 8px;border-radius:6px;font-size:10px;font-weight:800;cursor:pointer;">📊 Exportar CSV</button>
+        </div>
+      </div>
+
+      <!-- TARJETAS KPI GLOBALES -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:6px;margin-bottom:12px;">
+        <div style="background:rgba(46,204,113,0.12);border:1px solid rgba(46,204,113,0.4);border-radius:8px;padding:8px 4px;text-align:center;">
+          <div style="font-size:18px;font-weight:900;color:#2ecc71;">${pctAsistenciaGlobal}%</div>
+          <div style="font-size:9px;color:#aaa;font-weight:700;">🟢 ASISTENCIA</div>
+        </div>
+        <div style="background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.4);border-radius:8px;padding:8px 4px;text-align:center;">
+          <div style="font-size:18px;font-weight:900;color:#e74c3c;">${pctInasistenciaGlobal}%</div>
+          <div style="font-size:9px;color:#aaa;font-weight:700;">🔴 INASISTENCIA</div>
+        </div>
+        <div style="background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.4);border-radius:8px;padding:8px 4px;text-align:center;">
+          <div style="font-size:18px;font-weight:900;color:var(--oro);">${totalGlobalPresentes}</div>
+          <div style="font-size:9px;color:#aaa;font-weight:700;">PRESENTES</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.05);border:1px solid #333;border-radius:8px;padding:8px 4px;text-align:center;">
+          <div style="font-size:18px;font-weight:900;color:#fff;">${totalGlobalAusentes}</div>
+          <div style="font-size:9px;color:#aaa;font-weight:700;">FALTAS</div>
+        </div>
+      </div>
+
+      <!-- BARRA DE PORCENTAJE VISUAL COMPARATIVA -->
+      <div style="height:8px;background:#222;border-radius:4px;overflow:hidden;display:flex;">
+        <div style="width:${pctAsistenciaGlobal}%;background:#2ecc71;transition:width 0.3s;" title="Asistencia: ${pctAsistenciaGlobal}%"></div>
+        <div style="width:${pctJustificadaGlobal}%;background:var(--oro);transition:width 0.3s;" title="Justificadas: ${pctJustificadaGlobal}%"></div>
+        <div style="width:${pctInasistenciaGlobal}%;background:#e74c3c;transition:width 0.3s;" title="Inasistencia: ${pctInasistenciaGlobal}%"></div>
+      </div>
+    </div>
+
+    <!-- LISTADO INDIVIDUAL DE JUGADORES -->
     <div style="display:flex;flex-direction:column;gap:8px;">
       ${listaJugadores.map(nombre => {
-        const estado = registroHoy[nombre] || (lesionesData[nombre] ? 'lesionado' : 'presente');
+        const estado = registroSeleccionado[nombre] || (lesionesData[nombre] ? 'lesionado' : 'presente');
 
         let totalFechas = 0;
         let asistencias = 0;
@@ -1646,17 +1745,17 @@ export function renderAsistenciaUI() {
             if (asistenciaData[f][nombre] === 'justificada') justificadas++;
           }
         });
-        const pct = totalFechas > 0 ? Math.round((asistencias / totalFechas) * 100) : 100;
+        const pctAsist = totalFechas > 0 ? Math.round((asistencias / totalFechas) * 100) : 100;
+        const pctInasist = totalFechas > 0 ? Math.round((inasistencias / totalFechas) * 100) : 0;
 
         return `
           <div style="background:#111;border:1px solid #222;border-radius:8px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
             <div>
               <div style="font-size:13px;font-weight:800;color:#fff;">⚽ ${nombre}</div>
               <div style="font-size:10px;color:#aaa;margin-top:2px;">
-                🟢 Asistencias: <strong style="color:#50e3c2;">${asistencias}</strong> | 
-                🔴 Faltas: <strong style="color:#ff5252;">${inasistencias}</strong> | 
-                🟡 Justificadas: <strong style="color:var(--oro);">${justificadas}</strong> | 
-                % Asistencia: <strong style="color:${pct >= 80 ? '#50e3c2' : pct >= 60 ? 'var(--oro)' : '#ff5252'};">${pct}%</strong>
+                🟢 Asistencias: <strong style="color:#50e3c2;">${asistencias} (${pctAsist}%)</strong> | 
+                🔴 Faltas: <strong style="color:#ff5252;">${inasistencias} (${pctInasist}%)</strong> | 
+                🟡 Justificadas: <strong style="color:var(--oro);">${justificadas}</strong>
               </div>
             </div>
             <div style="display:flex;gap:4px;">
@@ -1674,10 +1773,10 @@ export function renderAsistenciaUI() {
 
 export async function setAsistenciaEstado(nombre, estado) {
   const catObj = getEntrenamientosData();
-  const hoyFecha = new Date().toISOString().split('T')[0];
-  if (!catObj.asistencia[hoyFecha]) catObj.asistencia[hoyFecha] = {};
+  const targetFecha = selectedAttendanceDate || new Date().toISOString().split('T')[0];
+  if (!catObj.asistencia[targetFecha]) catObj.asistencia[targetFecha] = {};
 
-  catObj.asistencia[hoyFecha][nombre] = estado;
+  catObj.asistencia[targetFecha][nombre] = estado;
 
   if (estado === 'lesionado') {
     abrirModalLesion(nombre);
