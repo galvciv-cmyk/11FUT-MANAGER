@@ -444,22 +444,19 @@ window._adminIrACategoria = (catName) => {
 };
 
 window._abrirPizarraFullscreenAdmin = () => {
-  const s1 = document.getElementById('s1');
-  if (!s1) return;
-
-  // Activar pestaña de táctica (s1) temporalmente
-  document.querySelectorAll('.seccion').forEach(s => s.classList.remove('active'));
-  s1.classList.add('active');
-
-  const btnFullscreen = document.getElementById('btn-fs-A');
-  if (btnFullscreen) {
-    btnFullscreen.click();
+  if (typeof window._switchTab === 'function') {
+    window._switchTab(1, false);
   } else {
-    const el = document.querySelector('.col-cancha-centro');
-    if (el) {
-      if (el.requestFullscreen) el.requestFullscreen();
-      else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-    }
+    const s1 = document.getElementById('s1');
+    document.querySelectorAll('.seccion').forEach(s => { s.classList.remove('active'); s.style.display = 'none'; });
+    if (s1) { s1.classList.add('active'); s1.style.display = 'block'; }
   }
+
+  setTimeout(() => {
+    const btnFullscreen = document.getElementById('btn-fs-A');
+    if (btnFullscreen) {
+      btnFullscreen.click();
+    }
+  }, 60);
 };
 

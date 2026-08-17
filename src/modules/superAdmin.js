@@ -275,10 +275,33 @@ function renderSuperAdminCardsUI(container, clubesValidos) {
   }
 }
 
+function normalizarTelefonoWhatsApp(wa) {
+  if (!wa) return '';
+  let clean = wa.toString().replace(/\D/g, '');
+  if (!clean) return '';
+  // Si empieza con 0 y tiene 11 dígitos (ej: 04141234567) -> 584141234567
+  if (clean.startsWith('0') && clean.length === 11) {
+    clean = '58' + clean.slice(1);
+  } else if (clean.length === 10 && (clean.startsWith('414') || clean.startsWith('424') || clean.startsWith('412') || clean.startsWith('416') || clean.startsWith('426'))) {
+    clean = '58' + clean;
+  }
+  return clean;
+}
+
 async function ejecutarActivarPruebaSuperAdmin(pubDocId, email, wa, clubNombre) {
   const dias = 3;
   const nuevaFecha = new Date(Date.now() + dias * 24 * 60 * 60 * 1000).toISOString();
   const emailKey = (email || '').trim().toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
+
+  const waClean = normalizarTelefonoWhatsApp(wa);
+  const msgWA = encodeURIComponent(`¡Hola ${clubNombre}! 🎉 Tu cuenta en 11FUT MANAGER ha sido APROBADA y ACTIVADA con 3 días de prueba gratuita (Vence el ${new Date(nuevaFecha).toLocaleDateString()}). Ya puedes ingresar a la plataforma y comenzar a usar todas las herramientas tácticas. ¡Mucho éxito! ⚽🏆`);
+
+  // Abrir WhatsApp de forma inmediata (síncrona) para que el navegador no lo bloquee como popup
+  if (waClean) {
+    window.open(`https://wa.me/${waClean}?text=${msgWA}`, '_blank');
+  }
+
+  mostrarToastRapido('Prueba Activada', `⚡ Período de prueba de 3 días activado para ${clubNombre}.`, true);
 
   const payload = {
     estadoCuenta: 'PRUEBA',
@@ -289,8 +312,8 @@ async function ejecutarActivarPruebaSuperAdmin(pubDocId, email, wa, clubNombre) 
   };
 
   try {
-    if (pubDocId) await setDoc(doc(db, 'publicos', pubDocId), payload, { merge: true }).catch(() => {});
-    if (emailKey && emailKey !== pubDocId) await setDoc(doc(db, 'publicos', emailKey), payload, { merge: true }).catch(() => {});
+    if (pubDocId) setDoc(doc(db, 'publicos', pubDocId), payload, { merge: true }).catch(() => {});
+    if (emailKey && emailKey !== pubDocId) setDoc(doc(db, 'publicos', emailKey), payload, { merge: true }).catch(() => {});
   } catch (e) {
     console.warn(e);
   }
@@ -301,15 +324,6 @@ async function ejecutarActivarPruebaSuperAdmin(pubDocId, email, wa, clubNombre) 
     autoSaveLocal();
   }
 
-  mostrarToastRapido('Prueba Activada', `⚡ Período de prueba de 3 días activado para ${clubNombre}.`, true);
-
-  const msgWA = encodeURIComponent(`¡Hola ${clubNombre}! 🎉 Tu cuenta en 11FUT MANAGER ha sido APROBADA y ACTIVADA con 3 días de prueba gratuita (Vence el ${new Date(nuevaFecha).toLocaleDateString()}). Ya puedes ingresar a la plataforma y comenzar a usar todas las herramientas tácticas. ¡Mucho éxito! ⚽🏆`);
-  const waClean = (wa || '').replace(/\D/g, '');
-
-  if (waClean) {
-    window.open(`https://wa.me/${waClean}?text=${msgWA}`, '_blank');
-  }
-
   renderSuperAdminDashboard();
 }
 
@@ -317,6 +331,16 @@ async function ejecutarAprobarSuperAdmin(pubDocId, email, wa, clubNombre) {
   const dias = 30;
   const nuevaFecha = new Date(Date.now() + dias * 24 * 60 * 60 * 1000).toISOString();
   const emailKey = (email || '').trim().toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
+
+  const waClean = normalizarTelefonoWhatsApp(wa);
+  const msgWA = encodeURIComponent(`¡Hola ${clubNombre}! 👋 Confirmo la recepción de tu pago. La membresía para tu club ha sido ACTIVADA exitosamente por 30 días (Vence el ${new Date(nuevaFecha).toLocaleDateString()}). ¡Gracias por confiar en 11FUT MANAGER! ⚽🏆`);
+
+  // Abrir WhatsApp inmediatamente
+  if (waClean) {
+    window.open(`https://wa.me/${waClean}?text=${msgWA}`, '_blank');
+  }
+
+  mostrarToastRapido('Membresía Aprobada', `🟢 Membresía para ${clubNombre} aprobada por 30 días.`, true);
 
   const payload = {
     estadoCuenta: 'ACTIVO',
@@ -327,8 +351,8 @@ async function ejecutarAprobarSuperAdmin(pubDocId, email, wa, clubNombre) {
   };
 
   try {
-    if (pubDocId) await setDoc(doc(db, 'publicos', pubDocId), payload, { merge: true }).catch(() => {});
-    if (emailKey && emailKey !== pubDocId) await setDoc(doc(db, 'publicos', emailKey), payload, { merge: true }).catch(() => {});
+    if (pubDocId) setDoc(doc(db, 'publicos', pubDocId), payload, { merge: true }).catch(() => {});
+    if (emailKey && emailKey !== pubDocId) setDoc(doc(db, 'publicos', emailKey), payload, { merge: true }).catch(() => {});
   } catch (e) {
     console.warn(e);
   }
@@ -339,19 +363,6 @@ async function ejecutarAprobarSuperAdmin(pubDocId, email, wa, clubNombre) {
     autoSaveLocal();
   }
 
-  mostrarToastRapido('Membresía Aprobada', `🟢 Membresía para ${clubNombre} aprobada por 30 días.`, true);
-
-  const msgWA = encodeURIComponent(`¡Hola ${clubNombre}! 👋 Confirmo la recepción de tu pago. La membresía para tu club ha sido ACTIVADA exitosamente por 30 días (Vence el ${new Date(nuevaFecha).toLocaleDateString()}). ¡Gracias por confiar en 11FUT MANAGER! ⚽🏆`);
-  const waClean = (wa || '').replace(/\D/g, '');
-
-  if (waClean) {
-    window.open(`https://wa.me/${waClean}?text=${msgWA}`, '_blank');
-  }
-
-  const mailSubject = encodeURIComponent('¡Membresía Aprobada! - 11FUT MANAGER');
-  const mailBody = encodeURIComponent(`Hola ${clubNombre},\n\nTu suscripción en 11FUT MANAGER ha sido activada exitosamente por 30 días (Vencimiento: ${new Date(nuevaFecha).toLocaleDateString()}).\n\nYa puedes acceder con todos tus entrenadores.\n\nAtentamente,\nEquipo 11FUT MANAGER`);
-  window.open(`mailto:${email}?subject=${mailSubject}&body=${mailBody}`, '_blank');
-
   renderSuperAdminDashboard();
 }
 
@@ -360,11 +371,23 @@ async function ejecutarRegalarPruebaSuperAdmin(pubDocId, email, wa, clubNombre) 
     const dias = parseInt(inputDias, 10) || 7;
     const nuevaFecha = new Date(Date.now() + dias * 24 * 60 * 60 * 1000).toISOString();
 
+    const waClean = normalizarTelefonoWhatsApp(wa);
+    const msgWA = encodeURIComponent(`¡Hola ${clubNombre}! 🎉 Te hemos otorgado una prueba especial de ${dias} días en 11FUT MANAGER para que disfrutes de todas las funciones de tu club. ¡Bienvenido! ⚽`);
+
+    if (waClean) {
+      window.open(`https://wa.me/${waClean}?text=${msgWA}`, '_blank');
+    }
+
+    mostrarToastRapido('Prueba Otorgada', `🟡 Se regalaron ${dias} días de prueba a ${clubNombre}.`, true);
+
     try {
-      await setDoc(doc(db, 'publicos', pubDocId), {
-        estadoCuenta: 'PRUEBA',
-        fechaVencimiento: nuevaFecha
-      }, { merge: true }).catch(err => console.warn('Aviso Firestore en prueba:', err));
+      if (pubDocId) {
+        setDoc(doc(db, 'publicos', pubDocId), {
+          estadoCuenta: 'PRUEBA',
+          fechaVencimiento: nuevaFecha,
+          updatedAt: new Date().toISOString()
+        }, { merge: true }).catch(err => console.warn('Aviso Firestore en prueba:', err));
+      }
     } catch (e) {
       console.warn(e);
     }
@@ -375,15 +398,6 @@ async function ejecutarRegalarPruebaSuperAdmin(pubDocId, email, wa, clubNombre) 
       autoSaveLocal();
     }
 
-    mostrarToastRapido('Prueba Otorgada', `🟡 Se regalaron ${dias} días de prueba a ${clubNombre}.`, true);
-
-    const msgWA = encodeURIComponent(`¡Hola ${clubNombre}! 🎉 Te hemos otorgado una prueba especial de ${dias} días en 11FUT MANAGER para que disfrutes de todas las funciones de tu club. ¡Bienvenido! ⚽`);
-    const waClean = (wa || '').replace(/\D/g, '');
-
-    if (waClean) {
-      window.open(`https://wa.me/${waClean}?text=${msgWA}`, '_blank');
-    }
-
     renderSuperAdminDashboard();
   });
 }
@@ -391,14 +405,16 @@ async function ejecutarRegalarPruebaSuperAdmin(pubDocId, email, wa, clubNombre) 
 async function ejecutarSuspenderSuperAdmin(pubDocId, email) {
   mostrarConfirmacionApp('Suspender Club', '¿Estás seguro de suspender el acceso de este club?', async () => {
     try {
-      await setDoc(doc(db, 'publicos', pubDocId), {
-        estadoCuenta: 'VENCIDO'
-      }, { merge: true }).catch(err => console.warn('Aviso Firestore en suspensión:', err));
+      if (pubDocId) {
+        setDoc(doc(db, 'publicos', pubDocId), {
+          estadoCuenta: 'VENCIDO',
+          updatedAt: new Date().toISOString()
+        }, { merge: true }).catch(err => console.warn('Aviso Firestore en suspensión:', err));
+      }
     } catch (e) {
       console.warn(e);
     }
 
-    // Solo modificar el perfil local si pertenece al mismo usuario
     if (perfil && perfil.email && email && perfil.email.trim().toLowerCase() === email.trim().toLowerCase()) {
       perfil.estadoCuenta = 'VENCIDO';
       autoSaveLocal();
@@ -410,7 +426,7 @@ async function ejecutarSuspenderSuperAdmin(pubDocId, email) {
 }
 
 function ejecutarChatWASuperAdmin(wa, clubNombre) {
-  const waClean = (wa || '').replace(/\D/g, '');
+  const waClean = normalizarTelefonoWhatsApp(wa);
   if (!waClean) return mostrarNotificacionApp('WhatsApp', 'No hay número de WhatsApp registrado para este club.', false);
   const msg = encodeURIComponent(`Hola ${clubNombre}, te contacto de la administración de 11FUT MANAGER.`);
   window.open(`https://wa.me/${waClean}?text=${msg}`, '_blank');
@@ -423,7 +439,8 @@ async function ejecutarEliminarClubSuperAdmin(pubDocId, clubNombre) {
       mostrarToastRapido('Club Eliminado', `El registro de "${clubNombre}" se ha eliminado del sistema.`, true);
       renderSuperAdminDashboard();
     } catch (e) {
-      mostrarToastRapido('Error', 'No se pudo eliminar el registro: ' + e.message, false);
+      mostrarNotificacionApp('Error', 'No se pudo eliminar el club de la base de datos: ' + e.message, false);
     }
   });
 }
+
