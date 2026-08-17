@@ -225,7 +225,8 @@ function renderSuperAdminCardsUI(container, clubesValidos) {
         <!-- FILA DE BOTONES DE ACCIÓN RESPONSIVOS -->
         <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(110px, 1fr));gap:6px;margin-top:2px;">
           ${estado === 'PENDIENTE' ? `
-            <button class="btn btn-green sa-btn-action" data-action="activar_prueba" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:900;justify-content:center;background:linear-gradient(135deg,#2ecc71,#27ae60);grid-column:span 2;">⚡ ACTIVAR PRUEBA (3 DÍAS)</button>
+            <button class="btn btn-green sa-btn-action" data-action="activar_prueba" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:900;justify-content:center;background:linear-gradient(135deg,#2ecc71,#27ae60);">⚡ ACTIVAR PRUEBA (3 DÍAS)</button>
+            <button class="btn btn-green sa-btn-action" data-action="aprobar" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟢 APROBAR (30D)</button>
           ` : `
             <button class="btn btn-green sa-btn-action" data-action="aprobar" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟢 APROBAR (30D)</button>
             <button class="btn btn-gold sa-btn-action" data-action="regalar" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟡 +PRUEBA</button>
@@ -451,11 +452,22 @@ function ejecutarChatWASuperAdmin(wa, clubNombre) {
   window.open(`https://wa.me/${waClean}?text=${msg}`, '_blank');
 }
 
-async function ejecutarEliminarClubSuperAdmin(pubDocId, clubNombre) {
-  mostrarConfirmacionApp('Eliminar Club', `¿Estás seguro de eliminar permanentemente el registro del club "${clubNombre}"?`, async () => {
+async function ejecutarEliminarClubSuperAdmin(pubDocId, clubNombre, uid) {
+  mostrarConfirmacionApp('Eliminar Club', `¿Estás seguro de eliminar permanentemente el registro del club "${clubNombre}" y purgar todos sus datos de Firebase?`, async () => {
     try {
-      await deleteDoc(doc(db, 'publicos', pubDocId));
-      mostrarToastRapido('Club Eliminado', `El registro de "${clubNombre}" se ha eliminado del sistema.`, true);
+      const emailKey = pubDocId && pubDocId.includes('@') ? pubDocId.toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_') : null;
+      const targetUid = uid || (pubDocId && pubDocId.startsWith('usr_') ? pubDocId.replace('usr_', '') : null);
+
+      const deletes = [];
+      if (pubDocId) deletes.push(deleteDoc(doc(db, 'publicos', pubDocId)).catch(() => {}));
+      if (emailKey && emailKey !== pubDocId) deletes.push(deleteDoc(doc(db, 'publicos', emailKey)).catch(() => {}));
+      if (targetUid) {
+        deletes.push(deleteDoc(doc(db, 'publicos', `usr_${targetUid}`)).catch(() => {}));
+        deletes.push(deleteDoc(doc(db, 'usuarios', targetUid)).catch(() => {}));
+      }
+
+      await Promise.all(deletes);
+      mostrarToastRapido('Club Eliminado', `El club "${clubNombre}" ha sido completamente eliminado de Firebase.`, true);
       renderSuperAdminDashboard();
     } catch (e) {
       mostrarNotificacionApp('Error', 'No se pudo eliminar el club de la base de datos: ' + e.message, false);

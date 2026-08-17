@@ -24,6 +24,7 @@ export const DEFAULT_PERFIL = {
   fechaVencimiento: "",
   categoriaActiva: "",
   categorias: [],
+  wizardCompletado: false,
   maxPerfiles: 1,
   modoPredeterminado: "11",
   esquemaPredeterminado: "1-4-4-2",
@@ -156,10 +157,18 @@ export function setUserEmail(email) { userEmail = email; perfil.email = email; }
 
 export function updatePerfil(newPerfil) {
   if (newPerfil) {
+    const prevWizard = perfil.wizardCompletado;
     perfil = { ...DEFAULT_PERFIL, ...newPerfil };
     if (!perfil.categorias) perfil.categorias = [];
     if (!perfil.esquemasCustom) perfil.esquemasCustom = [];
     
+    // Si ya completó wizard antes o tiene categorías/club configurado, mantener wizardCompletado: true
+    if (newPerfil.wizardCompletado !== undefined) {
+      perfil.wizardCompletado = !!newPerfil.wizardCompletado;
+    } else if (prevWizard || (perfil.categorias && perfil.categorias.length > 0) || (perfil.club && perfil.club !== '11FUT MANAGER')) {
+      perfil.wizardCompletado = true;
+    }
+
     const catActual = (perfil.categoriaActiva && perfil.categorias.includes(perfil.categoriaActiva))
       ? perfil.categoriaActiva
       : (perfil.categorias.length > 0 ? perfil.categorias[0] : '');

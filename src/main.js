@@ -1253,7 +1253,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       await limpiarDocumentosObsoletosFirebase();
 
       // 1. Si no ha completado el Wizard de su club
-      if (!perfil.wizardCompletado) {
+      const tieneConfiguracionPrevia = (perfil.categorias && perfil.categorias.length > 0) || (perfil.club && perfil.club !== '11FUT MANAGER' && perfil.club !== 'Nuevo Club');
+      if (tieneConfiguracionPrevia) {
+        perfil.wizardCompletado = true;
+      }
+
+      if (!perfil.wizardCompletado && !isMaster) {
         _ocultarTodasLasPantallas();
         aplicarPerfil();
         abrirOnboardingWizard(true);

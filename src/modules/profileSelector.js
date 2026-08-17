@@ -236,9 +236,6 @@ export function renderProfileSelector(onProfileSelected, forceShow = false) {
 
 
   window._cerrarSesionCompleta = () => {
-    if (document.getElementById('profile-selector-overlay')) {
-      document.getElementById('profile-selector-overlay').style.display = 'none';
-    }
     cerrarSesion();
   };
 

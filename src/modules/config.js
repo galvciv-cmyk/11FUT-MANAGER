@@ -1310,6 +1310,12 @@ export async function finalizarOnboardingWizard() {
   const modal = document.getElementById('modal-onboarding-wizard');
 
   try {
+    const clubNombreInput = document.getElementById('wiz-club-nombre')?.value?.trim();
+    if (clubNombreInput) {
+      perfil.club = clubNombreInput;
+      perfil.eqA = clubNombreInput;
+    }
+
     const selectNum = document.getElementById('wiz-num-profiles');
     const numProfiles = parseInt(selectNum ? selectNum.value : '1', 10) || 1;
     perfil.maxPerfiles = numProfiles;
