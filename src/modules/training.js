@@ -2,9 +2,9 @@
 // 11FUT MANAGER - MÓDULO DE ENTRENAMIENTOS, PLANNER, ASISTENCIA Y MÉDICO
 // ══════════════════════════════════════════════════════════════════════════
 
-import { perfil, categoriasData, plantel, setCategoriaActiva, autoSaveLocal } from './state.js';
+import { perfil, categoriasData, plantel, setCategoriaActiva, autoSaveLocal, DEFAULT_PLANTEL } from './state.js';
 import { guardarFirebase } from '../services/firebase.js';
-import { mostrarNotificacionApp } from './config.js';
+import { mostrarNotificacionApp, mostrarConfirmacionApp } from './config.js';
 
 // BASE DE DATOS DE 70 EJERCICIOS (35 COMPETITIVOS + 35 FORMATIVOS)
 export const EJERCICIOS_DB = [
@@ -111,7 +111,21 @@ let modalCatFilter = 'all';
 let searchQuery = '';
 
 export function getEntrenamientosData() {
-  const catObj = categoriasData[perfil.categoriaActiva] || {};
+  const cat = perfil.categoriaActiva || 'Sub-14';
+  if (!categoriasData[cat]) {
+    categoriasData[cat] = {
+      plantel: JSON.parse(JSON.stringify(DEFAULT_PLANTEL)),
+      stats: {},
+      historial: [],
+      juegosProgramados: [],
+      torneo: 'Torneo Oficial',
+      sesiones: [],
+      asistencia: {},
+      lesiones: {},
+      customDrills: []
+    };
+  }
+  const catObj = categoriasData[cat];
   if (!catObj.sesiones) catObj.sesiones = [];
   if (!catObj.asistencia) catObj.asistencia = {};
   if (!catObj.lesiones) catObj.lesiones = {};
@@ -1798,7 +1812,8 @@ export function abrirModalLesion(nombreJugador) {
   const modal = document.getElementById('modal-injury-report');
   if (!modal) return;
 
-  document.getElementById('injury-player-name').textContent = nombreJugador;
+  const titleEl = document.getElementById('injury-player-name');
+  if (titleEl) titleEl.textContent = nombreJugador;
   modal.style.display = 'flex';
 }
 
@@ -1810,15 +1825,23 @@ export async function guardarParteMedico() {
   const inputNotas = document.getElementById('injury-notes-input');
 
   const tipo = inputTipo ? inputTipo.value.trim() : 'Sobrecarga Muscular';
-  const tiempo = inputTiempo ? inputTiempo.value.trim() : '7 días';
+  const tiempoStr = inputTiempo ? inputTiempo.value.trim() : '7 días';
   const notas = inputNotas ? inputNotas.value.trim() : '';
+
+  const numDias = parseInt(tiempoStr.replace(/[^0-9]/g, ''), 10) || 7;
+  const hoyMs = Date.now();
+  const fechaAltaMs = hoyMs + numDias * 24 * 60 * 60 * 1000;
+  const fechaAltaEstimada = new Date(fechaAltaMs).toISOString().split('T')[0];
+  const fechaInicio = new Date().toISOString().split('T')[0];
 
   const catObj = getEntrenamientosData();
   catObj.lesiones[targetJugadorLesion] = {
     tipo,
-    tiempo,
+    tiempo: `${numDias} días`,
+    diasEstimados: numDias,
     notas,
-    fechaInicio: new Date().toISOString().split('T')[0]
+    fechaInicio,
+    fechaAltaEstimada
   };
 
   const modal = document.getElementById('modal-injury-report');
@@ -1828,7 +1851,7 @@ export async function guardarParteMedico() {
   renderAsistenciaUI();
   autoSaveLocal();
   await guardarFirebase();
-  mostrarNotificacionApp('Parte Médico Guardado', `Lesión de ${targetJugadorLesion} registrada (${tipo}).`);
+  mostrarNotificacionApp('Parte Médico Guardado', `🏥 Lesión de ${targetJugadorLesion} registrada (${tipo}, ${numDias} días de reposo).`);
 }
 
 export function renderLesionesUI() {
@@ -1844,34 +1867,95 @@ export function renderLesionesUI() {
     return;
   }
 
-  container.innerHTML = nombres.map(nombre => {
-    const info = lesiones[nombre];
-    return `
-      <div style="background:#160d1b;border:1px solid #9c27b0;border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
-        <div>
-          <div style="font-size:14px;font-weight:800;color:#e1bee7;">🏥 ${nombre}</div>
-          <div style="font-size:12px;color:#ba68c8;margin-top:2px;">Lesión: <strong>${info.tipo}</strong> | Tiempo Estimado: <strong>${info.tiempo}</strong></div>
-          ${info.notas ? `<div style="font-size:11px;color:#aaa;margin-top:4px;">📝 ${info.notas}</div>` : ''}
+  const hoyDate = new Date();
+  hoyDate.setHours(0, 0, 0, 0);
+
+  container.innerHTML = `
+    <div style="font-size:11px;color:#e1bee7;font-weight:800;margin-bottom:8px;">
+      🏥 JUGADORES EN TRATAMIENTO MÉDICO (${nombres.length}):
+    </div>
+    ${nombres.map(nombre => {
+      const info = lesiones[nombre];
+      const fAlta = info.fechaAltaEstimada ? new Date(info.fechaAltaEstimada + 'T00:00:00') : new Date();
+      const diffMs = fAlta - hoyDate;
+      const diasRestantes = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      const cumpleTiempo = diasRestantes <= 0;
+
+      return `
+        <div style="background:#160d1b;border:1px solid ${cumpleTiempo ? '#4caf50' : '#9c27b0'};border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:14px;font-weight:800;color:#e1bee7;">🏥 ${nombre}</div>
+            <div style="font-size:11px;color:#ba68c8;margin-top:2px;">
+              Lesión: <strong>${info.tipo}</strong> | Reposo: <strong>${info.tiempo || '7 días'}</strong>
+            </div>
+            <div style="font-size:10px;margin-top:4px;">
+              ${cumpleTiempo 
+                ? `<span style="color:#4caf50;font-weight:800;background:rgba(76,175,80,0.15);padding:2px 6px;border-radius:4px;">✅ Período de recuperación cumplido</span>`
+                : `<span style="color:var(--oro);font-weight:800;background:rgba(212,175,55,0.15);padding:2px 6px;border-radius:4px;">⏳ En recuperación (Faltan ${diasRestantes} días • Alta prevista: ${info.fechaAltaEstimada})</span>`
+              }
+            </div>
+            ${info.notas ? `<div style="font-size:10px;color:#aaa;margin-top:4px;">📝 ${info.notas}</div>` : ''}
+          </div>
+          <div>
+            <button onclick="window._darAltaMedica('${nombre}')" style="background:${cumpleTiempo ? '#4caf50' : '#333'};color:${cumpleTiempo ? '#000' : '#ccc'};border:1px solid ${cumpleTiempo ? '#4caf50' : '#555'};padding:6px 12px;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;">
+              ${cumpleTiempo ? '🟢 Dar Alta Médica' : '⚠️ Alta Anticipada'}
+            </button>
+          </div>
         </div>
-        <button onclick="window._darAltaMedica('${nombre}')" style="background:#4caf50;border:none;color:#000;padding:6px 12px;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;">🟢 Alta Médica</button>
-      </div>
-    `;
-  }).join('');
+      `;
+    }).join('')}
+  `;
 }
 
-export async function darAltaMedica(nombre) {
+export async function darAltaMedica(nombre, forzar = false) {
   const catObj = getEntrenamientosData();
-  if (catObj.lesiones && catObj.lesiones[nombre]) {
-    delete catObj.lesiones[nombre];
-    renderLesionesUI();
-    renderAsistenciaUI();
-    autoSaveLocal();
-    await guardarFirebase();
-    mostrarNotificacionApp('Alta Médica', `${nombre} ha recibido el Alta Médica y está disponible.`);
+  if (!catObj.lesiones || !catObj.lesiones[nombre]) return;
+
+  const info = catObj.lesiones[nombre];
+  const hoyDate = new Date();
+  hoyDate.setHours(0, 0, 0, 0);
+  const fAlta = info.fechaAltaEstimada ? new Date(info.fechaAltaEstimada + 'T00:00:00') : new Date();
+  const diffMs = fAlta - hoyDate;
+  const diasRestantes = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diasRestantes > 0 && !forzar) {
+    return mostrarConfirmacionApp(
+      'Recuperación No Cumplida',
+      `⚠️ A ${nombre} todavía le faltan ${diasRestantes} días de recuperación médica (Alta prevista: ${info.fechaAltaEstimada || 'Próximamente'}).\n\n¿Deseas otorgar el Alta Médica anticipada bajo tu responsabilidad?`,
+      () => darAltaMedica(nombre, true)
+    );
   }
+
+  delete catObj.lesiones[nombre];
+  renderLesionesUI();
+  renderAsistenciaUI();
+  autoSaveLocal();
+  await guardarFirebase();
+  mostrarNotificacionApp('Alta Médica Otorgada', `✅ ${nombre} ha recibido el Alta Médica y vuelve a estar disponible.`);
 }
 
 window._darAltaMedica = (n) => darAltaMedica(n);
+
+export function borrarAsistencia() {
+  mostrarConfirmacionApp(
+    'Borrar Asistencia',
+    `¿Deseas vaciar el registro de asistencia del día seleccionado (${selectedAttendanceDate}) en la categoría "${perfil.categoriaActiva}"?`,
+    async () => {
+      const catObj = getEntrenamientosData();
+      if (catObj.asistencia && catObj.asistencia[selectedAttendanceDate]) {
+        delete catObj.asistencia[selectedAttendanceDate];
+        renderAsistenciaUI();
+        autoSaveLocal();
+        await guardarFirebase();
+        mostrarNotificacionApp('Asistencia Eliminada', `🗑️ Se eliminó la asistencia del día ${selectedAttendanceDate}.`);
+      } else {
+        mostrarNotificacionApp('Sin Registro', `No había asistencia registrada para la fecha ${selectedAttendanceDate}.`);
+      }
+    }
+  );
+}
+
+window._borrarAsistencia = () => borrarAsistencia();
 
 // ══════════════════════════════════════════════════════════════════════════
 // EXPORTACIÓN DE ASISTENCIA Y RENDIMIENTO A EXCEL / CSV

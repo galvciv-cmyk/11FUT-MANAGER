@@ -204,15 +204,18 @@ export async function cargarFirebase() {
           }
           break;
         }
-        if (d.estadoCuenta === 'ACTIVO' || (d.estadoCuenta === 'PRUEBA' && perfil.estadoCuenta !== 'ACTIVO')) {
-          perfil.estadoCuenta = d.estadoCuenta;
-          if (d.fechaVencimiento) perfil.fechaVencimiento = d.fechaVencimiento;
-        } else if (d.estadoCuenta && (!perfil.estadoCuenta || perfil.estadoCuenta === 'PENDIENTE')) {
+        if (d.estadoCuenta) {
           perfil.estadoCuenta = d.estadoCuenta;
         }
-        if (d.fechaVencimiento && !perfil.fechaVencimiento) perfil.fechaVencimiento = d.fechaVencimiento;
-        if (d.maxPerfiles) perfil.maxPerfiles = d.maxPerfiles;
-        if (d.club && (!perfil.club || perfil.club === 'Club Registrado' || perfil.club === 'Nuevo Club (Pendiente)')) perfil.club = d.club;
+        if (d.fechaVencimiento) {
+          perfil.fechaVencimiento = d.fechaVencimiento;
+        }
+        if (d.maxPerfiles) {
+          perfil.maxPerfiles = d.maxPerfiles;
+        }
+        if (d.club && (!perfil.club || perfil.club === 'Club Registrado' || perfil.club === 'Nuevo Club (Pendiente)')) {
+          perfil.club = d.club;
+        }
       }
     } catch (pubErr) {
       console.warn('Aviso sincronizando estado público:', pubErr);
