@@ -1,594 +1,1203 @@
 import { db } from "../services/firebase.js";
-import { collection, getDocs, doc, setDoc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
 import { isSuperAdmin, perfil, autoSaveLocal, SUPER_ADMIN_EMAIL } from "./state.js";
 import { mostrarConfirmacionApp, mostrarToastRapido, mostrarPromptModal, mostrarNotificacionApp } from "./config.js";
 
+// ════════════════════════════════════════════════════════════════
+// CONFIGURACIÓN PREDETERMINADA DE PASARELAS DE COBRO DIGITALES
+// ════════════════════════════════════════════════════════════════
+export const DEFAULT_PAYMENT_CONFIG = {
+  pagoMovil: {
+    activo: true,
+    nombre: "Pago Móvil (Venezuela)",
+    banco: "Banesco (0134)",
+    telefono: "04141401560",
+    cedula: "V-12345678",
+    titular: "G&K NOVA / Linarez",
+    moneda: "VES",
+    instrucciones: "Realiza el pago a tasa BCV del día y coloca los últimos 4 dígitos de la referencia."
+  },
+  binance: {
+    activo: true,
+    nombre: "Binance Pay (USDT)",
+    payId: "839201948",
+    correo: "gyknova@gmail.com",
+    red: "Binance Pay / BEP20",
+    moneda: "USDT",
+    instrucciones: "Transfiere vía Binance Pay (sin comisiones) o por red BSC/BEP20 y coloca los últimos 4 dígitos del Order ID o TxID."
+  },
+  zelle: {
+    activo: true,
+    nombre: "Zelle (USA)",
+    correo: "gyknova@gmail.com",
+    titular: "Linarez Zelle",
+    moneda: "USD",
+    instrucciones: "Envía el monto neto acordado y coloca los últimos 4 dígitos del número de confirmación."
+  },
+  airtm: {
+    activo: true,
+    nombre: "Airtm",
+    correo: "gyknova@gmail.com",
+    titular: "Linarez Airtm",
+    moneda: "AirUSD",
+    instrucciones: "Envía AirUSD de forma directa e indica los últimos 4 dígitos del ID de transferencia."
+  },
+  zinli: {
+    activo: true,
+    nombre: "Zinli",
+    correo: "gyknova@gmail.com",
+    titular: "Linarez Zinli",
+    moneda: "USD",
+    instrucciones: "Envía de billetera Zinli a Zinli y anota los últimos 4 dígitos de la referencia."
+  },
+  paypal: {
+    activo: true,
+    nombre: "PayPal (Comisión asumida por cliente)",
+    correo: "gyknova@gmail.com",
+    link: "https://paypal.me/gyknova",
+    comisionPorcentaje: 5.4,
+    comisionFija: 0.30,
+    moneda: "USD",
+    instrucciones: "El cliente debe enviar el importe bruto con la comisión PayPal para recibir el valor neto exacto de la membresía."
+  }
+};
+
+let currentPaymentConfig = { ...DEFAULT_PAYMENT_CONFIG };
+let currentBackofficeTab = 'clubes'; // 'clubes', 'pagos', 'finanzas', 'cuentas'
+let currentClubFilter = 'TODOS'; // 'TODOS', 'PENDIENTE', 'PRUEBA', 'ACTIVO', 'VENCIDO'
+let currentClubSearch = '';
+
+// ════════════════════════════════════════════════════════════════
+// SERVICIOS FIRESTORE DE PASARELAS Y PAGOS
+// ════════════════════════════════════════════════════════════════
+export async function obtenerConfiguracionPasarelas() {
+  try {
+    const docRef = doc(db, 'configuraciones', 'pagos');
+    const snap = await getDoc(docRef);
+    if (snap.exists()) {
+      const data = snap.data();
+      currentPaymentConfig = { ...DEFAULT_PAYMENT_CONFIG, ...data };
+      return currentPaymentConfig;
+    }
+  } catch (e) {
+    console.warn('Aviso leyendo configuración de pagos:', e);
+  }
+  return DEFAULT_PAYMENT_CONFIG;
+}
+
+export async function guardarConfiguracionPasarelas(newConfig) {
+  try {
+    currentPaymentConfig = { ...newConfig };
+    await setDoc(doc(db, 'configuraciones', 'pagos'), newConfig, { merge: true });
+    mostrarToastRapido('Configuración Guardada', '✅ Métodos de cobro actualizados en la nube.', true);
+    return true;
+  } catch (e) {
+    mostrarNotificacionApp('Error al Guardar', 'No se pudo guardar la configuración: ' + e.message, false);
+    return false;
+  }
+}
+
+export async function obtenerPagosReportados() {
+  const pagos = [];
+  try {
+    const snap = await getDocs(collection(db, 'pagos_reportados'));
+    snap.forEach(d => {
+      pagos.push({ id: d.id, ...d.data() });
+    });
+    // Ordenar los no conciliados primero, luego por fecha descendente
+    pagos.sort((a, b) => {
+      if (a.estado === 'PENDIENTE' && b.estado !== 'PENDIENTE') return -1;
+      if (a.estado !== 'PENDIENTE' && b.estado === 'PENDIENTE') return 1;
+      return new Date(b.createdAt || b.fechaReporte || 0) - new Date(a.createdAt || a.fechaReporte || 0);
+    });
+  } catch (e) {
+    console.warn('Aviso consultando pagos_reportados:', e);
+  }
+  return pagos;
+}
+
+export async function obtenerHistorialFinanzas() {
+  const transacciones = [];
+  try {
+    const snap = await getDocs(collection(db, 'finanzas_ingresos'));
+    snap.forEach(d => {
+      transacciones.push({ id: d.id, ...d.data() });
+    });
+    transacciones.sort((a, b) => new Date(b.fecha || 0) - new Date(a.fecha || 0));
+  } catch (e) {
+    console.warn('Aviso consultando finanzas_ingresos:', e);
+  }
+  return transacciones;
+}
+
+// ════════════════════════════════════════════════════════════════
+// RENDER PRINCIPAL DEL BACKOFFICE SAAS (SÚPER ADMIN)
+// ════════════════════════════════════════════════════════════════
 export async function renderSuperAdminDashboard() {
   const container = document.getElementById('super-admin-content');
   if (!container) return;
 
   if (!isSuperAdmin()) {
-    container.innerHTML = `<div class="card" style="text-align:center;padding:30px;"><div style="font-size:18px;color:var(--rojo);font-weight:900;">⛔ ACCESO RESTRINGIDO</div><div style="font-size:12px;color:#aaa;margin-top:8px;">Este panel es exclusivo para la administración general de 11FUT MANAGER.</div></div>`;
+    container.innerHTML = `
+      <div class="card" style="text-align:center;padding:40px;margin:20px auto;max-width:500px;">
+        <div style="font-size:36px;margin-bottom:10px;">⛔</div>
+        <div style="font-size:20px;color:var(--rojo);font-weight:900;letter-spacing:1px;">ACCESO EXCLUSIVO MASTER</div>
+        <div style="font-size:12px;color:#aaa;margin-top:8px;line-height:1.6;">
+          Este centro de control es reservado únicamente para el Administrador Global del SaaS 11FUT MANAGER.
+        </div>
+      </div>
+    `;
     return;
   }
 
-  container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--oro);">⏳ Cargando lista de clubes e instituciones...</div>`;
+  // Cargar configuración de pagos en background si no está en memoria
+  await obtenerConfiguracionPasarelas();
+
+  // Estructura general de la Consola Backoffice
+  container.innerHTML = `
+    <div style="max-width:1300px;margin:0 auto;padding-bottom:50px;">
+      
+      <!-- HEADER SAAS MASTER INDEPENDIENTE -->
+      <div style="background:linear-gradient(135deg, #111 0%, #080808 100%);border:1px solid var(--oro);border-radius:14px;padding:16px 20px;margin-bottom:20px;box-shadow:0 10px 30px rgba(0,0,0,0.7);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:24px;">👑</span>
+            <h1 style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:var(--oro);margin:0;letter-spacing:1px;">11FUT MANAGER — BACKOFFICE SAAS</h1>
+          </div>
+          <div style="font-size:11px;color:#888;margin-top:2px;">Centro de Control Maestro de Clubes, Pagos Digitales y Finanzas</div>
+        </div>
+
+        <!-- BOTONES PRINCIPALES DE SUB-PESTAÑAS -->
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <button class="sa-tab-btn ${currentBackofficeTab === 'clubes' ? 'active' : ''}" onclick="window._switchBackofficeTab('clubes')" style="background:${currentBackofficeTab === 'clubes' ? 'var(--oro)' : '#181818'};color:${currentBackofficeTab === 'clubes' ? '#000' : '#ccc'};border:1px solid ${currentBackofficeTab === 'clubes' ? 'var(--oro)' : '#333'};padding:8px 14px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;">
+            🏢 Directorio de Clubes
+          </button>
+          <button class="sa-tab-btn ${currentBackofficeTab === 'pagos' ? 'active' : ''}" onclick="window._switchBackofficeTab('pagos')" style="background:${currentBackofficeTab === 'pagos' ? 'var(--oro)' : '#181818'};color:${currentBackofficeTab === 'pagos' ? '#000' : '#ccc'};border:1px solid ${currentBackofficeTab === 'pagos' ? 'var(--oro)' : '#333'};padding:8px 14px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;">
+            🔔 Bandeja de Pagos <span id="badge-pagos-pendientes-count" style="display:none;background:var(--rojo);color:#fff;border-radius:10px;padding:2px 6px;font-size:10px;font-weight:900;">0</span>
+          </button>
+          <button class="sa-tab-btn ${currentBackofficeTab === 'finanzas' ? 'active' : ''}" onclick="window._switchBackofficeTab('finanzas')" style="background:${currentBackofficeTab === 'finanzas' ? 'var(--oro)' : '#181818'};color:${currentBackofficeTab === 'finanzas' ? '#000' : '#ccc'};border:1px solid ${currentBackofficeTab === 'finanzas' ? 'var(--oro)' : '#333'};padding:8px 14px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;">
+            💰 Finanzas & Caja
+          </button>
+          <button class="sa-tab-btn ${currentBackofficeTab === 'cuentas' ? 'active' : ''}" onclick="window._switchBackofficeTab('cuentas')" style="background:${currentBackofficeTab === 'cuentas' ? 'var(--oro)' : '#181818'};color:${currentBackofficeTab === 'cuentas' ? '#000' : '#ccc'};border:1px solid ${currentBackofficeTab === 'cuentas' ? 'var(--oro)' : '#333'};padding:8px 14px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;">
+            ⚙️ Cuentas de Cobro
+          </button>
+          <button onclick="window._cerrarSesionCompleta()" style="background:rgba(231,76,60,0.15);color:#e74c3c;border:1px solid rgba(231,76,60,0.35);padding:8px 14px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;">
+            🚪 Cerrar Sesión
+          </button>
+        </div>
+      </div>
+
+      <!-- CONTENEDOR DE LA SUB-PESTAÑA ACTIVA -->
+      <div id="sa-active-view-container">
+        <div style="text-align:center;padding:40px;color:var(--oro);">⏳ Cargando datos del Backoffice...</div>
+      </div>
+
+    </div>
+  `;
+
+  window._switchBackofficeTab = (tab) => {
+    currentBackofficeTab = tab;
+    renderSuperAdminDashboard();
+  };
+
+  const activeContainer = document.getElementById('sa-active-view-container');
+
+  if (currentBackofficeTab === 'clubes') {
+    await renderSubtabClubes(activeContainer);
+  } else if (currentBackofficeTab === 'pagos') {
+    await renderSubtabPagos(activeContainer);
+  } else if (currentBackofficeTab === 'finanzas') {
+    await renderSubtabFinanzas(activeContainer);
+  } else if (currentBackofficeTab === 'cuentas') {
+    renderSubtabCuentasCobro(activeContainer);
+  }
+
+  // Actualizar contador de badge de pagos en segundo plano
+  actualizarBadgePagosPendientes();
+}
+
+async function actualizarBadgePagosPendientes() {
+  const badge = document.getElementById('badge-pagos-pendientes-count');
+  if (!badge) return;
+  try {
+    const pagos = await obtenerPagosReportados();
+    const pendientes = pagos.filter(p => p.estado === 'PENDIENTE').length;
+    if (pendientes > 0) {
+      badge.textContent = pendientes;
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch (e) {}
+}
+
+// ════════════════════════════════════════════════════════════════
+// SUB-PESTAÑA 1: DIRECTORIO DE CLUBES CON BUSCADOR Y FILTROS
+// ════════════════════════════════════════════════════════════════
+async function renderSubtabClubes(container) {
+  container.innerHTML = `<div style="text-align:center;padding:30px;color:var(--oro);">⏳ Consultando instituciones registradas...</div>`;
+
+  const mapClubes = new Map();
+  const uidToEmailMap = new Map();
+  const emailToUidMap = new Map();
 
   try {
-    const mapClubes = new Map();
-    const uidToEmailMap = new Map();
-    const emailToUidMap = new Map();
+    // 1. Usuarios
+    const usrSnap = await getDocs(collection(db, 'usuarios'));
+    usrSnap.forEach(docSnap => {
+      const d = docSnap.data() || {};
+      const p = d.perfil || {};
+      const rawEmail = (p.email || d.email || '').trim().toLowerCase();
+      const uid = docSnap.id;
 
-    // 1. Consultar colección 'usuarios' primero para tener el mapeo real de UIDs a Correos
-    try {
-      const usrSnap = await getDocs(collection(db, 'usuarios'));
-      usrSnap.forEach(docSnap => {
-        const d = docSnap.data() || {};
-        const p = d.perfil || {};
-        const rawEmail = (p.email || d.email || '').trim().toLowerCase();
-        const uid = docSnap.id;
+      if (rawEmail && rawEmail.includes('@')) {
+        uidToEmailMap.set(uid, rawEmail);
+        emailToUidMap.set(rawEmail, uid);
 
-        if (rawEmail && rawEmail.includes('@')) {
-          uidToEmailMap.set(uid, rawEmail);
-          emailToUidMap.set(rawEmail, uid);
+        mapClubes.set(rawEmail, {
+          id: `usr_${uid}`,
+          uid: uid,
+          club: p.club || d.club || 'Club Registrado',
+          email: rawEmail,
+          whatsapp: p.whatsapp || d.whatsapp || '',
+          logo: p.logo || d.logo || '',
+          estadoCuenta: p.estadoCuenta || d.estadoCuenta || 'PENDIENTE',
+          fechaVencimiento: p.fechaVencimiento || d.fechaVencimiento || '',
+          maxPerfiles: p.maxPerfiles || d.maxPerfiles || 1,
+          updatedAt: d.updatedAt || p.updatedAt || ''
+        });
+      }
+    });
 
-          const clubNombre = p.club || d.club || 'Club Registrado';
-          const wa = p.whatsapp || d.whatsapp || '';
-          const logo = p.logo || d.logo || '';
-          const estado = p.estadoCuenta || d.estadoCuenta || 'PENDIENTE';
-          const fechaExp = p.fechaVencimiento || d.fechaVencimiento || '';
-          const maxP = p.maxPerfiles || d.maxPerfiles || 1;
-          const updatedAt = d.updatedAt || p.updatedAt || '';
+    // 2. Públicos
+    const pubSnap = await getDocs(collection(db, 'publicos'));
+    pubSnap.forEach(docSnap => {
+      const d = docSnap.data() || {};
+      let rawEmail = (d.email || d.perfil?.email || d.userEmail || '').trim().toLowerCase();
 
-          mapClubes.set(rawEmail, {
-            id: `usr_${uid}`,
-            docId: `usr_${uid}`,
-            uid: uid,
-            club: (clubNombre && clubNombre !== 'Nuevo Club' && clubNombre !== 'Club Registrado') ? clubNombre : 'Club Registrado',
-            email: rawEmail,
-            whatsapp: wa,
-            logo: logo,
-            estadoCuenta: estado,
-            fechaVencimiento: fechaExp,
-            maxPerfiles: maxP,
-            updatedAt: updatedAt
-          });
-        }
-      });
-    } catch (errUsr) {
-      console.warn('Aviso leyendo usuarios en SuperAdmin:', errUsr);
-    }
+      if ((!rawEmail || !rawEmail.includes('@') || rawEmail.startsWith('usr_')) && docSnap.id.startsWith('usr_')) {
+        const uidExt = docSnap.id.replace('usr_', '');
+        rawEmail = uidToEmailMap.get(uidExt) || '';
+      }
 
-    // 2. Consultar colección 'publicos' y fusionar por email
-    try {
-      const pubSnap = await getDocs(collection(db, 'publicos'));
-      pubSnap.forEach(docSnap => {
-        const d = docSnap.data() || {};
-        let rawEmail = (d.email || d.perfil?.email || d.userEmail || '').trim().toLowerCase();
-        
-        // Si no tiene email válido en data pero su ID es usr_UID, buscar su email en el mapa de usuarios
-        if ((!rawEmail || !rawEmail.includes('@') || rawEmail.startsWith('usr_')) && docSnap.id.startsWith('usr_')) {
-          const uidExt = docSnap.id.replace('usr_', '');
-          rawEmail = uidToEmailMap.get(uidExt) || '';
-          // Si ni en usuarios existe un email con @ para este usr_UID, purgar el documento huérfano de Firestore
-          if (!rawEmail || !rawEmail.includes('@') || rawEmail.startsWith('usr_')) {
-            deleteDoc(doc(db, 'publicos', docSnap.id)).catch(() => {});
-            return;
-          }
-        }
-
-        // Si el documento en publicos no tiene un email válido con @, purgarlo
-        if (!rawEmail || !rawEmail.includes('@') || rawEmail.startsWith('usr_')) {
-          deleteDoc(doc(db, 'publicos', docSnap.id)).catch(() => {});
-          return;
-        }
-
-        // Procesar y fusionar estrictamente bajo el correo único del club
+      if (rawEmail && rawEmail.includes('@')) {
         const prev = mapClubes.get(rawEmail);
         const resolvedUid = (prev && prev.uid) || emailToUidMap.get(rawEmail) || (docSnap.id.startsWith('usr_') ? docSnap.id.replace('usr_', '') : '');
-        const clubNombre = d.club || d.perfil?.club || '';
-        const wa = d.whatsapp || d.perfil?.whatsapp || d.telefono || '';
-        const logo = d.logo || d.perfil?.logo || '';
-        const estado = d.estadoCuenta || d.perfil?.estadoCuenta || '';
-        const fechaExp = d.fechaVencimiento || d.perfil?.fechaVencimiento || '';
-        const maxP = d.maxPerfiles || d.perfil?.maxPerfiles || 1;
-        const updatedAt = d.updatedAt || d.createdAt || '';
 
         if (!prev) {
           mapClubes.set(rawEmail, {
             id: resolvedUid ? `usr_${resolvedUid}` : docSnap.id,
-            docId: resolvedUid ? `usr_${resolvedUid}` : docSnap.id,
             uid: resolvedUid,
-            club: (clubNombre && clubNombre !== 'Nuevo Club') ? clubNombre : 'Club Registrado',
+            club: d.club || d.perfil?.club || 'Club Registrado',
             email: rawEmail,
-            whatsapp: wa,
-            logo: logo,
-            estadoCuenta: estado || 'PENDIENTE',
-            fechaVencimiento: fechaExp,
-            maxPerfiles: maxP,
-            updatedAt: updatedAt
-          });
-        } else {
-          mapClubes.set(rawEmail, {
-            ...prev,
-            id: resolvedUid ? `usr_${resolvedUid}` : prev.id,
-            docId: resolvedUid ? `usr_${resolvedUid}` : prev.docId,
-            uid: resolvedUid || prev.uid,
-            club: (clubNombre && clubNombre !== 'Nuevo Club' && clubNombre !== 'Club Registrado') ? clubNombre : prev.club,
-            whatsapp: wa || prev.whatsapp,
-            logo: logo || prev.logo,
-            estadoCuenta: (estado && estado !== 'PENDIENTE') ? estado : (prev.estadoCuenta || estado || 'PENDIENTE'),
-            fechaVencimiento: fechaExp || prev.fechaVencimiento,
-            maxPerfiles: maxP || prev.maxPerfiles,
-            updatedAt: updatedAt || prev.updatedAt
+            whatsapp: d.whatsapp || d.perfil?.whatsapp || '',
+            logo: d.logo || d.perfil?.logo || '',
+            estadoCuenta: d.estadoCuenta || d.perfil?.estadoCuenta || 'PENDIENTE',
+            fechaVencimiento: d.fechaVencimiento || d.perfil?.fechaVencimiento || '',
+            maxPerfiles: d.maxPerfiles || d.perfil?.maxPerfiles || 1,
+            updatedAt: d.updatedAt || d.createdAt || ''
           });
         }
-      });
-    } catch (errPub) {
-      console.warn('Aviso leyendo publicos en SuperAdmin:', errPub);
-    }
-
-    // Convertir a array y ordenar: PENDIENTE primero, luego por fecha reciente
-    const masterEmail = (SUPER_ADMIN_EMAIL || 'gyknova@gmail.com').trim().toLowerCase();
-    if (!mapClubes.has(masterEmail)) {
-      mapClubes.set(masterEmail, {
-        id: 'master_club',
-        docId: 'master_club',
-        uid: 'master_club',
-        club: '11FUT MANAGER MASTER',
-        email: SUPER_ADMIN_EMAIL,
-        whatsapp: '+584141401560',
-        logo: 'https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png',
-        estadoCuenta: 'ACTIVO',
-        fechaVencimiento: new Date('2099-01-01').toISOString(),
-        maxPerfiles: 8,
-        updatedAt: new Date().toISOString(),
-        isMaster: true
-      });
-    }
-
-    const clubesValidos = Array.from(mapClubes.values())
-      .filter(c => c.isMaster || (c.email && c.email.includes('@')))
-      .sort((a, b) => {
-        if (a.isMaster) return -1;
-        if (b.isMaster) return 1;
-        if (a.estadoCuenta === 'PENDIENTE' && b.estadoCuenta !== 'PENDIENTE') return -1;
-        if (a.estadoCuenta !== 'PENDIENTE' && b.estadoCuenta === 'PENDIENTE') return 1;
-        return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0);
-      });
-
-    renderSuperAdminCardsUI(container, clubesValidos);
-
-  } catch (e) {
-    console.warn('Advertencia al consultar Firestore en Súper Admin:', e);
-    const clubesFallback = [
-      {
-        id: 'master_club',
-        club: '11FUT MANAGER MASTER',
-        email: SUPER_ADMIN_EMAIL,
-        whatsapp: '+584141401560',
-        maxPerfiles: 8,
-        estadoCuenta: 'ACTIVO',
-        fechaVencimiento: new Date('2099-01-01').toISOString(),
-        isMaster: true
       }
-    ];
-    renderSuperAdminCardsUI(container, clubesFallback);
+    });
+  } catch (e) {
+    console.warn('Error leyendo clubes:', e);
   }
-}
 
-function renderSuperAdminCardsUI(container, clubesValidos) {
-  let html = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--oro);">👑 PANEL DE SÚPER ADMINISTRADOR (PANEL MASTER)</div>
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-        <button id="btn-refresh-superadmin-list" style="background:rgba(212,175,55,0.15);border:1px solid var(--oro);color:var(--oro);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:900;cursor:pointer;display:flex;align-items:center;gap:6px;">
-          🔄 Recargar Clubes
-        </button>
-        <div style="font-size:14px;font-weight:900;color:var(--oro);background:rgba(212,175,55,0.15);padding:6px 16px;border-radius:20px;border:1px solid var(--oro);">Total Registrados: <b>${clubesValidos.length} Clubes</b></div>
+  // Cuenta Master garantizada
+  const masterEmail = (SUPER_ADMIN_EMAIL || 'gyknova@gmail.com').trim().toLowerCase();
+  if (!mapClubes.has(masterEmail)) {
+    mapClubes.set(masterEmail, {
+      id: 'master_club',
+      uid: 'master_club',
+      club: '11FUT MANAGER MASTER',
+      email: SUPER_ADMIN_EMAIL,
+      whatsapp: '+584141401560',
+      logo: 'https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png',
+      estadoCuenta: 'ACTIVO',
+      fechaVencimiento: new Date('2099-01-01').toISOString(),
+      maxPerfiles: 8,
+      isMaster: true
+    });
+  }
+
+  let todosClubes = Array.from(mapClubes.values());
+
+  // Conteo para los chips de filtro
+  const totalCount = todosClubes.length;
+  const pendientesCount = todosClubes.filter(c => c.estadoCuenta === 'PENDIENTE' || c.estadoCuenta === 'EN_REVISION').length;
+  const pruebaCount = todosClubes.filter(c => c.estadoCuenta === 'PRUEBA').length;
+  const activosCount = todosClubes.filter(c => c.estadoCuenta === 'ACTIVO').length;
+  const vencidosCount = todosClubes.filter(c => {
+    if (c.isMaster) return false;
+    const diff = new Date(c.fechaVencimiento || 0) - new Date();
+    return c.estadoCuenta === 'VENCIDO' || c.estadoCuenta === 'CANCELADA' || diff <= 0;
+  }).length;
+
+  // Filtrado reactivo por buscador y chip
+  let clubesFiltrados = todosClubes.filter(c => {
+    if (c.isMaster) return true;
+
+    // Filtro de estado
+    if (currentClubFilter === 'PENDIENTE') {
+      if (c.estadoCuenta !== 'PENDIENTE' && c.estadoCuenta !== 'EN_REVISION') return false;
+    } else if (currentClubFilter === 'PRUEBA') {
+      if (c.estadoCuenta !== 'PRUEBA') return false;
+    } else if (currentClubFilter === 'ACTIVO') {
+      if (c.estadoCuenta !== 'ACTIVO') return false;
+    } else if (currentClubFilter === 'VENCIDO') {
+      const diff = new Date(c.fechaVencimiento || 0) - new Date();
+      if (c.estadoCuenta !== 'VENCIDO' && c.estadoCuenta !== 'CANCELADA' && diff > 0) return false;
+    }
+
+    // Buscador por texto
+    if (currentClubSearch) {
+      const q = currentClubSearch.toLowerCase();
+      const matchName = (c.club || '').toLowerCase().includes(q);
+      const matchEmail = (c.email || '').toLowerCase().includes(q);
+      const matchWA = (c.whatsapp || '').includes(q);
+      if (!matchName && !matchEmail && !matchWA) return false;
+    }
+
+    return true;
+  });
+
+  const filtrarYRenderizarListaDOM = () => {
+    const q = (currentClubSearch || '').toLowerCase();
+    const filtrados = todosLosClubes.filter(c => {
+      if (currentClubFilter === 'PENDIENTE') {
+        if (c.estadoCuenta !== 'PENDIENTE' && c.estadoCuenta !== 'EN_REVISION') return false;
+      } else if (currentClubFilter === 'PRUEBA') {
+        if (c.estadoCuenta !== 'PRUEBA') return false;
+      } else if (currentClubFilter === 'ACTIVO') {
+        if (c.estadoCuenta !== 'ACTIVO') return false;
+      } else if (currentClubFilter === 'VENCIDO') {
+        const diff = new Date(c.fechaVencimiento || 0) - new Date();
+        if (c.estadoCuenta !== 'VENCIDO' && c.estadoCuenta !== 'CANCELADA' && diff > 0) return false;
+      }
+
+      if (q) {
+        const matchName = (c.club || '').toLowerCase().includes(q);
+        const matchEmail = (c.email || '').toLowerCase().includes(q);
+        const matchWA = (c.whatsapp || '').includes(q);
+        if (!matchName && !matchEmail && !matchWA) return false;
+      }
+      return true;
+    });
+
+    filtrados.sort((a, b) => {
+      if (a.isMaster) return -1;
+      if (b.isMaster) return 1;
+      if (a.estadoCuenta === 'PENDIENTE' && b.estadoCuenta !== 'PENDIENTE') return -1;
+      if (a.estadoCuenta !== 'PENDIENTE' && b.estadoCuenta === 'PENDIENTE') return 1;
+      return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0);
+    });
+
+    const listEl = document.getElementById('sa-clubes-list');
+    if (listEl) {
+      listEl.innerHTML = filtrados.map(c => renderTarjetaClubHTML(c)).join('') || '<div style="text-align:center;padding:40px;color:#888;background:#111;border-radius:12px;">No se encontraron clubes con los filtros aplicados.</div>';
+    }
+  };
+
+  container.innerHTML = `
+    <!-- BARRA DE BÚSQUEDA Y FILTROS -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;background:#111;padding:14px;border-radius:12px;border:1px solid #222;">
+      <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:280px;">
+        <span style="font-size:16px;color:var(--oro);">🔍</span>
+        <input type="text" id="sa-search-input" value="${currentClubSearch}" placeholder="Buscar club por nombre, email o WhatsApp..." style="background:#181818;border:1px solid #333;color:#fff;padding:8px 12px;border-radius:8px;font-size:13px;width:100%;outline:none;">
+      </div>
+
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="sa-filter-chip ${currentClubFilter === 'TODOS' ? 'active' : ''}" onclick="window._setClubFilter('TODOS')">TODOS (${totalCount})</button>
+        <button class="sa-filter-chip ${currentClubFilter === 'PENDIENTE' ? 'active' : ''}" onclick="window._setClubFilter('PENDIENTE')" style="color:#3498db;border-color:#3498db;">⏳ PENDIENTES (${pendientesCount})</button>
+        <button class="sa-filter-chip ${currentClubFilter === 'PRUEBA' ? 'active' : ''}" onclick="window._setClubFilter('PRUEBA')" style="color:var(--oro);border-color:var(--oro);">⚡ EN PRUEBA (${pruebaCount})</button>
+        <button class="sa-filter-chip ${currentClubFilter === 'ACTIVO' ? 'active' : ''}" onclick="window._setClubFilter('ACTIVO')" style="color:#2ecc71;border-color:#2ecc71;">🟢 ACTIVOS (${activosCount})</button>
+        <button class="sa-filter-chip ${currentClubFilter === 'VENCIDO' ? 'active' : ''}" onclick="window._setClubFilter('VENCIDO')" style="color:#e74c3c;border-color:#e74c3c;">🔴 VENCIDOS (${vencidosCount})</button>
       </div>
     </div>
 
-    <!-- VISTA EN TARJETAS RESPONSIVAS (MÓVIL Y DESKTOP) -->
-    <div id="tb-superadmin-rows" style="display:flex;flex-direction:column;gap:12px;">
+    <!-- LISTA DE TARJETAS DE CLUBES -->
+    <div id="sa-clubes-list" style="display:flex;flex-direction:column;gap:12px;"></div>
   `;
 
-  clubesValidos.forEach(c => {
-    const clubNombre = c.club || c.perfil?.club || 'Sin Nombre';
-    const email = c.email || c.id;
-    const wa = c.whatsapp || c.perfil?.whatsapp || c.telefono || 'Sin WhatsApp';
-    const maxP = c.maxPerfiles || c.perfil?.maxPerfiles || 1;
-    const estado = c.estadoCuenta || c.perfil?.estadoCuenta || 'PRUEBA';
+  filtrarYRenderizarListaDOM();
 
-    const fechaExp = (c.fechaVencimiento || c.perfil?.fechaVencimiento) 
-      ? new Date(c.fechaVencimiento || c.perfil?.fechaVencimiento) 
-      : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-
-    const diffMs = fechaExp - new Date();
-    const diasRestantes = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
-
-    let badgeBg = 'rgba(212,175,55,0.15)';
-    let badgeBorder = 'var(--oro)';
-    let badgeColor = 'var(--oro)';
-    let badgeLabel = `⏳ PRUEBA (${diasRestantes}d)`;
-
-    if (estado === 'PENDIENTE') {
-      badgeBg = 'rgba(52,152,219,0.15)';
-      badgeBorder = '#3498db';
-      badgeColor = '#3498db';
-      badgeLabel = `⏳ PENDIENTE ACTIVACIÓN`;
-    } else if (estado === 'ACTIVO') {
-      badgeBg = 'rgba(46,204,113,0.15)';
-      badgeBorder = '#2ecc71';
-      badgeColor = '#2ecc71';
-      badgeLabel = `🟢 ACTIVO (${diasRestantes}d)`;
-    } else if (estado === 'VENCIDO' || (estado !== 'PENDIENTE' && diasRestantes <= 0)) {
-      badgeBg = 'rgba(231,76,60,0.15)';
-      badgeBorder = '#e74c3c';
-      badgeColor = '#e74c3c';
-      badgeLabel = `🔴 VENCIDO`;
-    }
-
-    html += `
-      <div style="background:#0d0d0d;border:1px solid #222;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 4px 15px rgba(0,0,0,0.4);">
-        
-        <!-- FILA SUPERIOR: LOGO, NOMBRE Y BADGE ESTADO -->
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <img src="${c.logo || c.perfil?.logo || 'https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'}" style="width:34px;height:34px;object-fit:contain;border-radius:6px;background:#181818;padding:2px;border:1px solid #333;">
-            <div>
-              <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#fff;line-height:1.1;">${clubNombre}</div>
-              <div style="font-size:11px;color:#aaa;">📧 ${email}</div>
-            </div>
-          </div>
-          <span style="background:${badgeBg};border:1px solid ${badgeBorder};color:${badgeColor};font-size:11px;font-weight:900;padding:4px 10px;border-radius:12px;">
-            ${badgeLabel}
-          </span>
-        </div>
-
-        <!-- DETALLES SECUNDARIOS: WHATSAPP, CANTIDAD DE PERFILES, FECHA VENCIMIENTO -->
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;background:#141414;padding:8px 12px;border-radius:8px;font-size:11px;color:#ccc;border:1px solid #222;">
-          <div>📱 Contacto WA: <span style="color:#fff;font-weight:700;">${wa}</span></div>
-          <div style="display:flex;gap:12px;align-items:center;">
-            <span style="color:var(--oro);font-weight:800;background:rgba(212,175,55,0.12);padding:2px 8px;border-radius:6px;">👤 ${maxP} Perfil(es)</span>
-            <span>📅 Vence: ${fechaExp.toLocaleDateString()}</span>
-          </div>
-        </div>
-
-        <!-- FILA DE BOTONES DE ACCIÓN RESPONSIVOS -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(110px, 1fr));gap:6px;margin-top:2px;">
-          ${c.isMaster ? `
-            <div style="grid-column:1/-1;background:rgba(212,175,55,0.1);border:1px dashed var(--oro);color:var(--oro);padding:8px 12px;border-radius:8px;font-size:12px;font-weight:900;text-align:center;">
-              👑 CUENTA MASTER PRINCIPAL (ADMINISTRADOR GLOBAL)
-            </div>
-          ` : `
-            ${estado === 'PENDIENTE' ? `
-              <button class="btn btn-green sa-btn-action" data-action="activar_prueba" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" data-fecha="${c.fechaVencimiento || ''}" style="font-size:11px;padding:8px;font-weight:900;justify-content:center;background:linear-gradient(135deg,#2ecc71,#27ae60);">⚡ ACTIVAR PRUEBA (3 DÍAS)</button>
-              <button class="btn btn-green sa-btn-action" data-action="aprobar" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" data-fecha="${c.fechaVencimiento || ''}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟢 APROBAR (30D)</button>
-            ` : `
-              <button class="btn btn-green sa-btn-action" data-action="aprobar" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" data-fecha="${c.fechaVencimiento || ''}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟢 APROBAR (30D)</button>
-              <button class="btn btn-gold sa-btn-action" data-action="regalar" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-wa="${wa}" data-club="${clubNombre}" data-fecha="${c.fechaVencimiento || ''}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟡 +PRUEBA</button>
-            `}
-            <button class="btn btn-gray sa-btn-action" data-action="suspender" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" style="font-size:11px;padding:8px;font-weight:800;color:var(--rojo);justify-content:center;">🔴 SUSPENDER</button>
-            <button class="btn btn-gray sa-btn-action" data-action="wa" data-wa="${wa}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">💬 CHAT WA</button>
-            <button class="btn btn-red sa-btn-action" data-action="eliminar" data-id="${c.id}" data-uid="${c.uid || ''}" data-email="${email}" data-club="${clubNombre}" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🗑️ BORRAR</button>
-          `}
-        </div>
-
-      </div>
-    `;
-  });
-
-  html += `</div>`;
-  container.innerHTML = html;
-
-  document.getElementById('btn-refresh-superadmin-list')?.addEventListener('click', () => {
-    renderSuperAdminDashboard();
-  });
-
-  const rows = document.getElementById('tb-superadmin-rows');
-  if (rows) {
-    rows.addEventListener('click', async (e) => {
-      const btn = e.target.closest('.sa-btn-action');
-      if (!btn) return;
-
-      const action = btn.dataset.action;
-      const pubDocId = btn.dataset.id;
-      const uid = btn.dataset.uid;
-      const email = btn.dataset.email;
-      const wa = btn.dataset.wa;
-      const clubNombre = btn.dataset.club;
-      const fechaVenc = btn.dataset.fecha;
-
-      if (action === 'activar_prueba') {
-        await ejecutarActivarPruebaSuperAdmin(pubDocId, email, wa, clubNombre, uid, fechaVenc);
-      } else if (action === 'aprobar') {
-        await ejecutarAprobarSuperAdmin(pubDocId, email, wa, clubNombre, uid, fechaVenc);
-      } else if (action === 'regalar') {
-        await ejecutarRegalarPruebaSuperAdmin(pubDocId, email, wa, clubNombre, uid, fechaVenc);
-      } else if (action === 'suspender') {
-        await ejecutarSuspenderSuperAdmin(pubDocId, email, uid);
-      } else if (action === 'wa') {
-        ejecutarChatWASuperAdmin(wa, clubNombre);
-      } else if (action === 'eliminar') {
-        await ejecutarEliminarClubSuperAdmin(pubDocId, clubNombre, uid, email);
-      }
+  // Listeners de búsqueda suave sin perder foco
+  const searchInput = document.getElementById('sa-search-input');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      currentClubSearch = e.target.value;
+      filtrarYRenderizarListaDOM();
     });
   }
+
+  window._setClubFilter = (filtro) => {
+    currentClubFilter = filtro;
+    renderSubtabClubes(container);
+  };
 }
 
-function normalizarTelefonoWhatsApp(wa) {
-  if (!wa) return '';
-  let clean = wa.toString().replace(/\D/g, '');
-  if (!clean) return '';
-  // Si empieza con 0 y tiene 11 dígitos (ej: 04141234567) -> 584141234567
-  if (clean.startsWith('0') && clean.length === 11) {
-    clean = '58' + clean.slice(1);
-  } else if (clean.length === 10 && (clean.startsWith('414') || clean.startsWith('424') || clean.startsWith('412') || clean.startsWith('416') || clean.startsWith('426'))) {
-    clean = '58' + clean;
+function renderTarjetaClubHTML(c) {
+  const clubNombre = c.club || 'Sin Nombre';
+  const email = c.email || c.id;
+  const wa = c.whatsapp || 'Sin WhatsApp';
+  const maxP = c.maxPerfiles || 1;
+  const estado = c.estadoCuenta || 'PENDIENTE';
+
+  const fechaExp = c.fechaVencimiento ? new Date(c.fechaVencimiento) : new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+  const diffMs = fechaExp - new Date();
+  const diasRestantes = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+
+  let badgeBg = 'rgba(212,175,55,0.15)';
+  let badgeBorder = 'var(--oro)';
+  let badgeColor = 'var(--oro)';
+  let badgeLabel = `⏳ PRUEBA (${diasRestantes}d)`;
+
+  if (estado === 'PENDIENTE') {
+    badgeBg = 'rgba(52,152,219,0.15)';
+    badgeBorder = '#3498db';
+    badgeColor = '#3498db';
+    badgeLabel = `⏳ PENDIENTE ACTIVACIÓN`;
+  } else if (estado === 'EN_REVISION') {
+    badgeBg = 'rgba(155,89,182,0.15)';
+    badgeBorder = '#9b59b6';
+    badgeColor = '#9b59b6';
+    badgeLabel = `💳 PAGO REPORTADO`;
+  } else if (estado === 'ACTIVO') {
+    badgeBg = 'rgba(46,204,113,0.15)';
+    badgeBorder = '#2ecc71';
+    badgeColor = '#2ecc71';
+    badgeLabel = `🟢 ACTIVO (${diasRestantes}d)`;
+  } else if (estado === 'VENCIDO' || (estado !== 'PENDIENTE' && estado !== 'EN_REVISION' && diasRestantes <= 0)) {
+    badgeBg = 'rgba(231,76,60,0.15)';
+    badgeBorder = '#e74c3c';
+    badgeColor = '#e74c3c';
+    badgeLabel = `🔴 VENCIDO`;
   }
-  return clean;
+
+  return `
+    <div style="background:#0d0d0d;border:1px solid #222;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 4px 15px rgba(0,0,0,0.4);">
+      
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <img src="${c.logo || 'https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'}" style="width:36px;height:36px;object-fit:contain;border-radius:6px;background:#181818;padding:2px;border:1px solid #333;" onerror="this.src='https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'">
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#fff;line-height:1.1;">${clubNombre}</div>
+            <div style="font-size:11px;color:#aaa;">📧 ${email}</div>
+          </div>
+        </div>
+        <span style="background:${badgeBg};border:1px solid ${badgeBorder};color:${badgeColor};font-size:11px;font-weight:900;padding:4px 10px;border-radius:12px;">
+          ${badgeLabel}
+        </span>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;background:#141414;padding:8px 12px;border-radius:8px;font-size:11px;color:#ccc;border:1px solid #222;">
+        <div>📱 WhatsApp: <span style="color:#fff;font-weight:700;">${wa}</span></div>
+        <div style="display:flex;gap:12px;align-items:center;">
+          <span style="color:var(--oro);font-weight:800;background:rgba(212,175,55,0.12);padding:2px 8px;border-radius:6px;">👤 ${maxP} Perfil(es) DT</span>
+          <span>📅 Vence: ${fechaExp.toLocaleDateString()}</span>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(110px, 1fr));gap:6px;margin-top:2px;">
+        ${c.isMaster ? `
+          <div style="grid-column:1/-1;background:rgba(212,175,55,0.1);border:1px dashed var(--oro);color:var(--oro);padding:8px;border-radius:8px;font-size:12px;font-weight:900;text-align:center;">
+            👑 CUENTA MASTER PRINCIPAL
+          </div>
+        ` : `
+          <button class="btn btn-green" onclick="window._aprobarMembresiaDirecta('${c.id}', '${email}', '${wa}', '${clubNombre}', '${c.uid || ''}', '${c.fechaVencimiento || ''}')" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟢 APROBAR (30D)</button>
+          <button class="btn btn-green" onclick="window._activarPruebaDirecta('${c.id}', '${email}', '${wa}', '${clubNombre}', '${c.uid || ''}', '${c.fechaVencimiento || ''}')" style="font-size:11px;padding:8px;font-weight:900;justify-content:center;background:linear-gradient(135deg,#2ecc71,#27ae60);">⚡ PRUEBA (7D)</button>
+          <button class="btn btn-gold" onclick="window._regalarDiasDirecto('${c.id}', '${email}', '${wa}', '${clubNombre}', '${c.uid || ''}', '${c.fechaVencimiento || ''}')" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟡 +DÍAS</button>
+          <button class="btn btn-gray" onclick="window._chatWhatsAppDirecto('${wa}', '${clubNombre}')" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">💬 CHAT WA</button>
+          <button class="btn btn-gray" onclick="window._suspenderClubDirecto('${c.id}', '${email}', '${c.uid || ''}')" style="font-size:11px;padding:8px;font-weight:800;color:var(--rojo);justify-content:center;">🔴 SUSPENDER</button>
+          <button class="btn btn-red" onclick="window._eliminarClubDirecto('${c.id}', '${clubNombre}', '${c.uid || ''}', '${email}')" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🗑️ BORRAR</button>
+        `}
+      </div>
+
+    </div>
+  `;
 }
 
-async function ejecutarActivarPruebaSuperAdmin(pubDocId, email, wa, clubNombre, uid, currentFechaExp) {
-  const dias = 3;
-  const fechaBase = (currentFechaExp && new Date(currentFechaExp) > new Date())
-    ? new Date(currentFechaExp)
-    : new Date();
-  const nuevaFecha = new Date(fechaBase.getTime() + dias * 24 * 60 * 60 * 1000).toISOString();
-  const emailKey = (email || '').trim().toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
+// ════════════════════════════════════════════════════════════════
+// SUB-PESTAÑA 2: BANDEJA DE PAGOS POR CONCILIAR (4 DÍGITOS)
+// ════════════════════════════════════════════════════════════════
+async function renderSubtabPagos(container) {
+  container.innerHTML = `<div style="text-align:center;padding:30px;color:var(--oro);">⏳ Consultando pagos reportados por los clubes...</div>`;
 
-  const waClean = normalizarTelefonoWhatsApp(wa);
-  const msgWA = encodeURIComponent(`¡Hola ${clubNombre}! 🎉 Tu cuenta en 11FUT MANAGER ha sido APROBADA y ACTIVADA con 3 días de prueba gratuita (Vence el ${new Date(nuevaFecha).toLocaleDateString()}). Ya puedes ingresar a la plataforma y comenzar a usar todas las herramientas tácticas. ¡Mucho éxito! ⚽🏆`);
+  const pagos = await obtenerPagosReportados();
 
-  // Abrir WhatsApp de forma inmediata (síncrona) para que el navegador no lo bloquee como popup
-  if (waClean) {
-    window.open(`https://wa.me/${waClean}?text=${msgWA}`, '_blank');
+  if (pagos.length === 0) {
+    container.innerHTML = `
+      <div class="card" style="text-align:center;padding:40px;background:#111;">
+        <div style="font-size:36px;margin-bottom:12px;">✅</div>
+        <div style="font-size:18px;font-weight:900;color:var(--oro);">BANDEJA AL DÍA</div>
+        <div style="font-size:12px;color:#aaa;margin-top:6px;">No hay pagos reportados pendientes por conciliar.</div>
+      </div>
+    `;
+    return;
   }
 
-  mostrarToastRapido('Prueba Activada', `⚡ Período de prueba de 3 días activado para ${clubNombre} (Vence: ${new Date(nuevaFecha).toLocaleDateString()}).`, true);
+  const pendientes = pagos.filter(p => p.estado === 'PENDIENTE');
+  const conciliados = pagos.filter(p => p.estado !== 'PENDIENTE');
 
-  const payload = {
-    estadoCuenta: 'PRUEBA',
-    fechaVencimiento: nuevaFecha,
-    club: clubNombre,
-    email: email,
-    updatedAt: new Date().toISOString()
+  container.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--oro);">
+        🔔 BANDEJA DE PAGOS REPORTADOS (${pendientes.length} Pendientes / ${conciliados.length} Conciliados)
+      </div>
+      <button onclick="window._renderPagosSubtab()" class="btn btn-gray" style="font-size:12px;padding:6px 12px;">🔄 Actualizar Pagos</button>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      ${pagos.map(p => `
+        <div style="background:#0d0d0d;border:1px solid ${p.estado === 'PENDIENTE' ? 'var(--oro)' : '#222'};border-radius:12px;padding:16px;box-shadow:0 4px 15px rgba(0,0,0,0.5);">
+          
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+            <div>
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#fff;">
+                🏢 ${p.clubNombre || 'Club'}
+              </div>
+              <div style="font-size:11px;color:#aaa;">📧 ${p.clubEmail || 'Sin email'} | 📱 WA: ${p.clubWhatsapp || 'Sin WA'}</div>
+            </div>
+
+            <span style="background:${p.estado === 'PENDIENTE' ? 'rgba(212,175,55,0.15)' : 'rgba(46,204,113,0.15)'};color:${p.estado === 'PENDIENTE' ? 'var(--oro)' : '#2ecc71'};border:1px solid ${p.estado === 'PENDIENTE' ? 'var(--oro)' : '#2ecc71'};padding:4px 12px;border-radius:12px;font-size:11px;font-weight:900;">
+              ${p.estado === 'PENDIENTE' ? '⏳ PENDIENTE DE CONCILIAR' : '🟢 CONCILIADO Y ACTIVO'}
+            </span>
+          </div>
+
+          <!-- DETALLES DEL PAGO DECLARADO -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:10px;background:#141414;padding:12px;border-radius:8px;font-size:12px;border:1px solid #222;margin-bottom:12px;">
+            <div>
+              <div style="font-size:10px;color:#888;text-transform:uppercase;">Pasarela / Método:</div>
+              <div style="color:var(--oro);font-weight:800;margin-top:2px;">💳 ${p.metodo || 'Digital'}</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:#888;text-transform:uppercase;">Monto Declarado:</div>
+              <div style="color:#2ecc71;font-weight:900;margin-top:2px;font-size:14px;">${p.monto} ${p.moneda || 'USD'}</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:#888;text-transform:uppercase;">Referencia Declarada:</div>
+              <div style="color:#fff;font-weight:900;margin-top:2px;letter-spacing:1px;font-size:14px;">...${p.referencia || '0000'}</div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:#888;text-transform:uppercase;">Fecha de Reporte:</div>
+              <div style="color:#ccc;margin-top:2px;">${new Date(p.fechaReporte || p.createdAt).toLocaleString()}</div>
+            </div>
+          </div>
+
+          <!-- BOTONES DE ACCIÓN: COMPROBANTE Y CONCILIAR -->
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            ${p.comprobanteUrl ? `
+              <button onclick="window._verComprobantePago('${p.comprobanteUrl}')" class="btn btn-gray" style="font-size:12px;padding:8px 14px;">
+                🖼️ Ver Comprobante Adjunto
+              </button>
+            ` : '<span style="font-size:11px;color:#666;">Sin comprobante adjunto</span>'}
+
+            ${p.estado === 'PENDIENTE' ? `
+              <div style="display:flex;gap:8px;margin-left:auto;align-items:center;flex-wrap:wrap;">
+                <button onclick="window._rechazarPagoReportado('${p.id}', '${p.clubNombre}', '${p.clubWhatsapp}')" class="btn btn-red" style="font-size:11px;padding:8px 12px;font-weight:700;">
+                  ❌ RECHAZAR
+                </button>
+                <button onclick="window._abrirModalConciliacionPago('${p.id}', '${p.referencia}', '${p.clubNombre}', '${p.monto}', '${p.moneda}', '${p.clubId || p.clubEmail}', '${p.clubWhatsapp}')" class="btn btn-gold" style="font-size:12px;padding:8px 16px;font-weight:900;">
+                  🔍 VERIFICAR Y CONCILIAR (4 DÍGITOS)
+                </button>
+              </div>
+            ` : (p.estado === 'RECHAZADO' ? `
+              <span style="font-size:12px;color:var(--rojo);font-weight:800;margin-left:auto;">❌ Reporte Rechazado</span>
+            ` : `
+              <span style="font-size:12px;color:#2ecc71;font-weight:800;margin-left:auto;">✅ Conciliado el ${new Date(p.fechaConciliacion || p.updatedAt).toLocaleDateString()}</span>
+            `)}
+          </div>
+
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  window._renderPagosSubtab = () => renderSubtabPagos(container);
+}
+
+// ════════════════════════════════════════════════════════════════
+// SUB-PESTAÑA 3: DASHBOARD FINANCIERO & CAJA (MRR)
+// ════════════════════════════════════════════════════════════════
+async function renderSubtabFinanzas(container) {
+  container.innerHTML = `<div style="text-align:center;padding:30px;color:var(--oro);">⏳ Cargando balance financiero...</div>`;
+
+  const finanzas = await obtenerHistorialFinanzas();
+
+  // Calcular métricas
+  const mesActual = new Date().getMonth();
+  const anioActual = new Date().getFullYear();
+
+  let totalMesUSD = 0;
+  let conteoMes = 0;
+  const desglosePorMetodo = {
+    pagoMovil: 0,
+    binance: 0,
+    zelle: 0,
+    airtm: 0,
+    zinli: 0,
+    paypal: 0
   };
 
-  const writes = [];
-  if (pubDocId) writes.push(setDoc(doc(db, 'publicos', pubDocId), payload, { merge: true }).catch(() => {}));
-  if (emailKey && emailKey !== pubDocId) writes.push(setDoc(doc(db, 'publicos', emailKey), payload, { merge: true }).catch(() => {}));
+  finanzas.forEach(t => {
+    const f = new Date(t.fecha || 0);
+    if (f.getMonth() === mesActual && f.getFullYear() === anioActual) {
+      const montoUSD = parseFloat(t.montoUSD || t.monto || 0);
+      totalMesUSD += montoUSD;
+      conteoMes++;
 
-  const targetUid = uid || (pubDocId && pubDocId.startsWith('usr_') ? pubDocId.replace('usr_', '') : null);
-  if (targetUid) {
-    writes.push(setDoc(doc(db, 'publicos', `usr_${targetUid}`), payload, { merge: true }).catch(() => {}));
-    writes.push(setDoc(doc(db, 'usuarios', targetUid), { perfil: { estadoCuenta: 'PRUEBA', fechaVencimiento: nuevaFecha, club: clubNombre } }, { merge: true }).catch(() => {}));
-  }
-
-  try {
-    await Promise.all(writes);
-  } catch (e) {
-    console.warn('Aviso guardando en Firestore:', e);
-  }
-
-  if (perfil && perfil.email && email && perfil.email.trim().toLowerCase() === email.trim().toLowerCase()) {
-    perfil.estadoCuenta = 'PRUEBA';
-    perfil.fechaVencimiento = nuevaFecha;
-    autoSaveLocal();
-  }
-
-  renderSuperAdminDashboard();
-}
-
-async function ejecutarAprobarSuperAdmin(pubDocId, email, wa, clubNombre, uid, currentFechaExp) {
-  const dias = 30;
-  const fechaBase = (currentFechaExp && new Date(currentFechaExp) > new Date())
-    ? new Date(currentFechaExp)
-    : new Date();
-  const nuevaFecha = new Date(fechaBase.getTime() + dias * 24 * 60 * 60 * 1000).toISOString();
-  const emailKey = (email || '').trim().toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
-
-  const waClean = normalizarTelefonoWhatsApp(wa);
-  const msgWA = encodeURIComponent(`¡Hola ${clubNombre}! 👋 Confirmo la recepción de tu pago. La membresía para tu club ha sido ACTIVADA exitosamente por 30 días adicionales (Vence el ${new Date(nuevaFecha).toLocaleDateString()}). ¡Gracias por confiar en 11FUT MANAGER! ⚽🏆`);
-
-  // Abrir WhatsApp inmediatamente
-  if (waClean) {
-    window.open(`https://wa.me/${waClean}?text=${msgWA}`, '_blank');
-  }
-
-  mostrarToastRapido('Membresía Aprobada', `🟢 Membresía para ${clubNombre} aprobada por 30 días (Vence: ${new Date(nuevaFecha).toLocaleDateString()}).`, true);
-
-  const payload = {
-    estadoCuenta: 'ACTIVO',
-    fechaVencimiento: nuevaFecha,
-    club: clubNombre,
-    email: email,
-    updatedAt: new Date().toISOString()
-  };
-
-  const writes = [];
-  if (pubDocId) writes.push(setDoc(doc(db, 'publicos', pubDocId), payload, { merge: true }).catch(() => {}));
-  if (emailKey && emailKey !== pubDocId) writes.push(setDoc(doc(db, 'publicos', emailKey), payload, { merge: true }).catch(() => {}));
-
-  const targetUid = uid || (pubDocId && pubDocId.startsWith('usr_') ? pubDocId.replace('usr_', '') : null);
-  if (targetUid) {
-    writes.push(setDoc(doc(db, 'publicos', `usr_${targetUid}`), payload, { merge: true }).catch(() => {}));
-    writes.push(setDoc(doc(db, 'usuarios', targetUid), { perfil: { estadoCuenta: 'ACTIVO', fechaVencimiento: nuevaFecha, club: clubNombre } }, { merge: true }).catch(() => {}));
-  }
-
-  try {
-    await Promise.all(writes);
-  } catch (e) {
-    console.warn('Aviso guardando en Firestore:', e);
-  }
-
-  if (perfil && perfil.email && email && perfil.email.trim().toLowerCase() === email.trim().toLowerCase()) {
-    perfil.estadoCuenta = 'ACTIVO';
-    perfil.fechaVencimiento = nuevaFecha;
-    autoSaveLocal();
-  }
-
-  renderSuperAdminDashboard();
-}
-
-async function ejecutarRegalarPruebaSuperAdmin(pubDocId, email, wa, clubNombre, uid, currentFechaExp) {
-  mostrarPromptModal(`Días Adicionales para ${clubNombre}`, 'Indica la cantidad de días a SUMAR (ej: 3, 7, 14, 30)', async (inputDias) => {
-    const dias = parseInt(inputDias, 10) || 3;
-    
-    // Sumar acumulativamente a la fecha actual si está vigente, o desde hoy si ya venció
-    const fechaBase = (currentFechaExp && new Date(currentFechaExp) > new Date())
-      ? new Date(currentFechaExp)
-      : new Date();
-    const nuevaFecha = new Date(fechaBase.getTime() + dias * 24 * 60 * 60 * 1000).toISOString();
-    const emailKey = (email || '').trim().toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
-
-    const waClean = normalizarTelefonoWhatsApp(wa);
-    const msgWA = encodeURIComponent(`¡Hola ${clubNombre}! 🎉 Te hemos sumado +${dias} días adicionales en 11FUT MANAGER (Tu nueva fecha de vencimiento es el ${new Date(nuevaFecha).toLocaleDateString()}). ¡A disfrutar de tu club! ⚽🏆`);
-
-    if (waClean) {
-      window.open(`https://wa.me/${waClean}?text=${msgWA}`, '_blank');
+      const met = (t.metodo || 'pagoMovil').toLowerCase();
+      if (desglosePorMetodo[met] !== undefined) {
+        desglosePorMetodo[met] += montoUSD;
+      }
     }
+  });
 
-    mostrarToastRapido('Días Sumados', `🟡 Se sumaron +${dias} días a ${clubNombre} (Nuevo vencimiento: ${new Date(nuevaFecha).toLocaleDateString()}).`, true);
+  container.innerHTML = `
+    <!-- CARDS DE RESUMEN FINANCIERO -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:14px;margin-bottom:20px;">
+      
+      <div class="card" style="margin:0;border-left:4px solid var(--oro);text-align:center;">
+        <div style="font-size:11px;color:#aaa;text-transform:uppercase;">💵 Facturación Este Mes</div>
+        <div style="font-size:32px;font-weight:900;color:var(--oro);margin-top:4px;">$${totalMesUSD.toFixed(2)} USD</div>
+        <div style="font-size:11px;color:#666;">${conteoMes} suscripciones cobradas</div>
+      </div>
 
+      <div class="card" style="margin:0;border-left:4px solid #3498db;text-align:center;">
+        <div style="font-size:11px;color:#aaa;text-transform:uppercase;">🇻🇪 Pago Móvil</div>
+        <div style="font-size:26px;font-weight:900;color:#3498db;margin-top:4px;">$${desglosePorMetodo.pagoMovil.toFixed(2)}</div>
+        <div style="font-size:11px;color:#666;">Cobros en moneda local</div>
+      </div>
+
+      <div class="card" style="margin:0;border-left:4px solid #f39c12;text-align:center;">
+        <div style="font-size:11px;color:#aaa;text-transform:uppercase;">🟡 Binance Pay</div>
+        <div style="font-size:26px;font-weight:900;color:#f39c12;margin-top:4px;">$${desglosePorMetodo.binance.toFixed(2)}</div>
+        <div style="font-size:11px;color:#666;">Cobros USDT sin comisión</div>
+      </div>
+
+      <div class="card" style="margin:0;border-left:4px solid #2ecc71;text-align:center;">
+        <div style="font-size:11px;color:#aaa;text-transform:uppercase;">🇺🇸 Zelle / Otras</div>
+        <div style="font-size:26px;font-weight:900;color:#2ecc71;margin-top:4px;">$${(desglosePorMetodo.zelle + desglosePorMetodo.airtm + desglosePorMetodo.zinli + desglosePorMetodo.paypal).toFixed(2)}</div>
+        <div style="font-size:11px;color:#666;">Zelle, Airtm, Zinli, PayPal</div>
+      </div>
+
+    </div>
+
+    <!-- TABLA DE HISTORIAL CONTABLE -->
+    <div class="card">
+      <div class="card-title">📚 HISTORIAL DE INGRESOS Y TRANSACCIONES CONCILIADAS</div>
+      
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="background:#141414;color:var(--oro);text-align:left;border-bottom:1px solid #333;">
+              <th style="padding:10px;">Fecha</th>
+              <th style="padding:10px;">Club / Institución</th>
+              <th style="padding:10px;">Pasarela</th>
+              <th style="padding:10px;">Monto</th>
+              <th style="padding:10px;">Referencia 4 Dígitos</th>
+              <th style="padding:10px;">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${finanzas.length ? finanzas.map(f => `
+              <tr style="border-bottom:1px solid #222;">
+                <td style="padding:10px;color:#aaa;">${new Date(f.fecha).toLocaleDateString()}</td>
+                <td style="padding:10px;font-weight:700;color:#fff;">${f.clubNombre}</td>
+                <td style="padding:10px;color:var(--oro);">${f.metodo}</td>
+                <td style="padding:10px;color:#2ecc71;font-weight:900;">$${parseFloat(f.montoUSD || f.monto || 0).toFixed(2)} USD</td>
+                <td style="padding:10px;font-family:monospace;font-size:14px;color:#fff;">...${f.referencia}</td>
+                <td style="padding:10px;"><span style="background:rgba(46,204,113,0.15);color:#2ecc71;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:900;">CONCILIADO</span></td>
+              </tr>
+            `).join('') : `<tr><td colspan="6" style="padding:20px;text-align:center;color:#666;">No hay transacciones registradas aún.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// ════════════════════════════════════════════════════════════════
+// SUB-PESTAÑA 4: CONFIGURACIÓN DE CUENTAS DE COBRO (SWITCHES ON/OFF)
+// ════════════════════════════════════════════════════════════════
+function renderSubtabCuentasCobro(container) {
+  const cfg = currentPaymentConfig;
+
+  container.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--oro);">
+          ⚙️ CONFIGURACIÓN DE PASARELAS Y CUENTAS BANCARIAS
+        </div>
+        <div style="font-size:12px;color:#aaa;">Activa o desactiva métodos de cobro y actualiza tus datos. Los clubes solo verán los métodos encendidos.</div>
+      </div>
+      <button onclick="window._guardarCuentasCobroForm()" class="btn btn-green" style="font-size:13px;padding:10px 18px;font-weight:900;">
+        💾 GUARDAR TODA LA CONFIGURACIÓN
+      </button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:16px;">
+      
+      <!-- 1. PAGO MÓVIL -->
+      <div class="card" style="border:1px solid ${cfg.pagoMovil.activo ? 'var(--oro)' : '#333'};">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div style="font-weight:900;color:var(--oro);font-size:16px;">🇻🇪 PAGO MÓVIL</div>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" id="cfg-sw-pm" ${cfg.pagoMovil.activo ? 'checked' : ''}>
+            <span style="font-size:12px;font-weight:800;color:${cfg.pagoMovil.activo ? '#2ecc71' : '#aaa'};">${cfg.pagoMovil.activo ? 'ACTIVO' : 'INACTIVO'}</span>
+          </label>
+        </div>
+        <label style="font-size:11px;color:#888;">Banco Receptor:</label>
+        <input type="text" id="cfg-pm-banco" value="${cfg.pagoMovil.banco || ''}">
+        <label style="font-size:11px;color:#888;">Teléfono Receptor:</label>
+        <input type="text" id="cfg-pm-telefono" value="${cfg.pagoMovil.telefono || ''}">
+        <label style="font-size:11px;color:#888;">Cédula o RIF:</label>
+        <input type="text" id="cfg-pm-cedula" value="${cfg.pagoMovil.cedula || ''}">
+        <label style="font-size:11px;color:#888;">Titular de la Cuenta:</label>
+        <input type="text" id="cfg-pm-titular" value="${cfg.pagoMovil.titular || ''}">
+      </div>
+
+      <!-- 2. BINANCE PAY -->
+      <div class="card" style="border:1px solid ${cfg.binance.activo ? '#f39c12' : '#333'};">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div style="font-weight:900;color:#f39c12;font-size:16px;">🟡 BINANCE PAY (USDT)</div>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" id="cfg-sw-binance" ${cfg.binance.activo ? 'checked' : ''}>
+            <span style="font-size:12px;font-weight:800;color:${cfg.binance.activo ? '#2ecc71' : '#aaa'};">${cfg.binance.activo ? 'ACTIVO' : 'INACTIVO'}</span>
+          </label>
+        </div>
+        <label style="font-size:11px;color:#888;">Binance Pay ID:</label>
+        <input type="text" id="cfg-binance-payid" value="${cfg.binance.payId || ''}">
+        <label style="font-size:11px;color:#888;">Correo de la Cuenta Binance:</label>
+        <input type="text" id="cfg-binance-correo" value="${cfg.binance.correo || ''}">
+        <label style="font-size:11px;color:#888;">Red Recomendada:</label>
+        <input type="text" id="cfg-binance-red" value="${cfg.binance.red || 'Binance Pay / BEP20'}">
+      </div>
+
+      <!-- 3. ZELLE -->
+      <div class="card" style="border:1px solid ${cfg.zelle.activo ? '#2ecc71' : '#333'};">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div style="font-weight:900;color:#2ecc71;font-size:16px;">🇺🇸 ZELLE (USA)</div>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" id="cfg-sw-zelle" ${cfg.zelle.activo ? 'checked' : ''}>
+            <span style="font-size:12px;font-weight:800;color:${cfg.zelle.activo ? '#2ecc71' : '#aaa'};">${cfg.zelle.activo ? 'ACTIVO' : 'INACTIVO'}</span>
+          </label>
+        </div>
+        <label style="font-size:11px;color:#888;">Correo o Teléfono Zelle:</label>
+        <input type="text" id="cfg-zelle-correo" value="${cfg.zelle.correo || ''}">
+        <label style="font-size:11px;color:#888;">Nombre del Titular:</label>
+        <input type="text" id="cfg-zelle-titular" value="${cfg.zelle.titular || ''}">
+      </div>
+
+      <!-- 4. AIRTM -->
+      <div class="card" style="border:1px solid ${cfg.airtm.activo ? '#3498db' : '#333'};">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div style="font-weight:900;color:#3498db;font-size:16px;">🔵 AIRTM</div>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" id="cfg-sw-airtm" ${cfg.airtm.activo ? 'checked' : ''}>
+            <span style="font-size:12px;font-weight:800;color:${cfg.airtm.activo ? '#2ecc71' : '#aaa'};">${cfg.airtm.activo ? 'ACTIVO' : 'INACTIVO'}</span>
+          </label>
+        </div>
+        <label style="font-size:11px;color:#888;">Correo de Airtm:</label>
+        <input type="text" id="cfg-airtm-correo" value="${cfg.airtm.correo || ''}">
+        <label style="font-size:11px;color:#888;">Nombre del Titular:</label>
+        <input type="text" id="cfg-airtm-titular" value="${cfg.airtm.titular || ''}">
+      </div>
+
+      <!-- 5. ZINLI -->
+      <div class="card" style="border:1px solid ${cfg.zinli.activo ? '#9b59b6' : '#333'};">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div style="font-weight:900;color:#9b59b6;font-size:16px;">🟣 ZINLI</div>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" id="cfg-sw-zinli" ${cfg.zinli.activo ? 'checked' : ''}>
+            <span style="font-size:12px;font-weight:800;color:${cfg.zinli.activo ? '#2ecc71' : '#aaa'};">${cfg.zinli.activo ? 'ACTIVO' : 'INACTIVO'}</span>
+          </label>
+        </div>
+        <label style="font-size:11px;color:#888;">Correo de Zinli:</label>
+        <input type="text" id="cfg-zinli-correo" value="${cfg.zinli.correo || ''}">
+        <label style="font-size:11px;color:#888;">Nombre del Titular:</label>
+        <input type="text" id="cfg-zinli-titular" value="${cfg.zinli.titular || ''}">
+      </div>
+
+      <!-- 6. PAYPAL -->
+      <div class="card" style="border:1px solid ${cfg.paypal.activo ? '#0070ba' : '#333'};">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div style="font-weight:900;color:#0070ba;font-size:16px;">🌐 PAYPAL</div>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+            <input type="checkbox" id="cfg-sw-paypal" ${cfg.paypal.activo ? 'checked' : ''}>
+            <span style="font-size:12px;font-weight:800;color:${cfg.paypal.activo ? '#2ecc71' : '#aaa'};">${cfg.paypal.activo ? 'ACTIVO' : 'INACTIVO'}</span>
+          </label>
+        </div>
+        <label style="font-size:11px;color:#888;">Correo PayPal:</label>
+        <input type="text" id="cfg-paypal-correo" value="${cfg.paypal.correo || ''}">
+        <label style="font-size:11px;color:#888;">Enlace Directo (paypal.me):</label>
+        <input type="text" id="cfg-paypal-link" value="${cfg.paypal.link || ''}">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div>
+            <label style="font-size:11px;color:#888;">Comisión %:</label>
+            <input type="number" id="cfg-paypal-pct" step="0.1" value="${cfg.paypal.comisionPorcentaje || 5.4}">
+          </div>
+          <div>
+            <label style="font-size:11px;color:#888;">Fija ($):</label>
+            <input type="number" id="cfg-paypal-fija" step="0.01" value="${cfg.paypal.comisionFija || 0.30}">
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="margin-top:20px;text-align:right;">
+      <button onclick="window._guardarCuentasCobroForm()" class="btn btn-green" style="font-size:14px;padding:12px 24px;font-weight:900;">
+        💾 GUARDAR TODA LA CONFIGURACIÓN
+      </button>
+    </div>
+  `;
+
+  window._guardarCuentasCobroForm = async () => {
+    const updated = {
+      pagoMovil: {
+        ...currentPaymentConfig.pagoMovil,
+        activo: document.getElementById('cfg-sw-pm')?.checked ?? true,
+        banco: document.getElementById('cfg-pm-banco')?.value.trim() || '',
+        telefono: document.getElementById('cfg-pm-telefono')?.value.trim() || '',
+        cedula: document.getElementById('cfg-pm-cedula')?.value.trim() || '',
+        titular: document.getElementById('cfg-pm-titular')?.value.trim() || ''
+      },
+      binance: {
+        ...currentPaymentConfig.binance,
+        activo: document.getElementById('cfg-sw-binance')?.checked ?? true,
+        payId: document.getElementById('cfg-binance-payid')?.value.trim() || '',
+        correo: document.getElementById('cfg-binance-correo')?.value.trim() || '',
+        red: document.getElementById('cfg-binance-red')?.value.trim() || ''
+      },
+      zelle: {
+        ...currentPaymentConfig.zelle,
+        activo: document.getElementById('cfg-sw-zelle')?.checked ?? true,
+        correo: document.getElementById('cfg-zelle-correo')?.value.trim() || '',
+        titular: document.getElementById('cfg-zelle-titular')?.value.trim() || ''
+      },
+      airtm: {
+        ...currentPaymentConfig.airtm,
+        activo: document.getElementById('cfg-sw-airtm')?.checked ?? true,
+        correo: document.getElementById('cfg-airtm-correo')?.value.trim() || '',
+        titular: document.getElementById('cfg-airtm-titular')?.value.trim() || ''
+      },
+      zinli: {
+        ...currentPaymentConfig.zinli,
+        activo: document.getElementById('cfg-sw-zinli')?.checked ?? true,
+        correo: document.getElementById('cfg-zinli-correo')?.value.trim() || '',
+        titular: document.getElementById('cfg-zinli-titular')?.value.trim() || ''
+      },
+      paypal: {
+        ...currentPaymentConfig.paypal,
+        activo: document.getElementById('cfg-sw-paypal')?.checked ?? true,
+        correo: document.getElementById('cfg-paypal-correo')?.value.trim() || '',
+        link: document.getElementById('cfg-paypal-link')?.value.trim() || '',
+        comisionPorcentaje: parseFloat(document.getElementById('cfg-paypal-pct')?.value) || 5.4,
+        comisionFija: parseFloat(document.getElementById('cfg-paypal-fija')?.value) || 0.30
+      }
+    };
+
+    await guardarConfiguracionPasarelas(updated);
+    renderSubtabCuentasCobro(container);
+  };
+}
+
+// ════════════════════════════════════════════════════════════════
+// MODAL DE CONCILIACIÓN CON 4 DÍGITOS (SÚPER ADMIN)
+// ════════════════════════════════════════════════════════════════
+window._abrirModalConciliacionPago = (pagoId, refEsperada, clubNombre, monto, moneda, targetUserKey, clubWA) => {
+  const modal = document.getElementById('modal');
+  const modalContent = document.getElementById('modal-content');
+  if (!modal || !modalContent) return;
+
+  modalContent.innerHTML = `
+    <div class="modal-title">🔐 CONCILIACIÓN DE PAGO — ${clubNombre}</div>
+    
+    <div class="card" style="margin-bottom:14px;background:#111;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-size:12px;color:#aaa;">Monto a Conciliar:</span>
+        <span style="font-size:18px;font-weight:900;color:#2ecc71;">${monto} ${moneda}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;color:#aaa;">Referencia Declarada por el Club:</span>
+        <span style="font-family:monospace;font-size:16px;font-weight:900;color:var(--oro);">...${refEsperada}</span>
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <label style="font-size:12px;color:var(--oro);font-weight:800;display:block;margin-bottom:6px;">
+        Ingresa los últimos 4 dígitos vistos en tu banco o billetera:
+      </label>
+      <input type="text" id="sa-input-conciliar-ref" maxlength="4" placeholder="ej. ${refEsperada}" style="font-family:monospace;font-size:20px;letter-spacing:6px;text-align:center;padding:12px;background:#181818;border:2px solid var(--oro);color:#fff;font-weight:900;">
+      <div id="sa-match-status" style="font-size:11px;color:#888;text-align:center;margin-top:6px;">Escribe los 4 dígitos para validar coincidencia</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <button id="sa-btn-confirm-conciliar" class="btn btn-green" disabled style="padding:12px;font-size:13px;font-weight:900;opacity:0.5;cursor:not-allowed;">
+        🟢 CONCILIAR Y ACTIVAR (+30 DÍAS)
+      </button>
+      <button onclick="document.getElementById('modal').style.display='none'" class="btn btn-gray">CANCELAR</button>
+    </div>
+  `;
+
+  modal.style.display = 'flex';
+
+  const inputRef = document.getElementById('sa-input-conciliar-ref');
+  const btnConfirm = document.getElementById('sa-btn-confirm-conciliar');
+  const matchStatus = document.getElementById('sa-match-status');
+
+  inputRef.focus();
+
+  inputRef.addEventListener('input', (e) => {
+    const val = e.target.value.trim();
+    if (val.length === 4) {
+      if (val === refEsperada) {
+        matchStatus.innerHTML = '<span style="color:#2ecc71;font-weight:900;">✅ ¡REFERENCIA COINCIDE EXACTAMENTE!</span>';
+        btnConfirm.disabled = false;
+        btnConfirm.style.opacity = '1';
+        btnConfirm.style.cursor = 'pointer';
+        btnConfirm.textContent = '🟢 CONCILIAR Y ACTIVAR (+30 DÍAS)';
+      } else {
+        matchStatus.innerHTML = `<span style="color:var(--rojo);font-weight:800;">⚠️ Discrepancia: El club declaró ...${refEsperada} y tú ingresaste ...${val}</span>`;
+        btnConfirm.disabled = false;
+        btnConfirm.style.opacity = '1';
+        btnConfirm.style.cursor = 'pointer';
+        btnConfirm.textContent = '⚠️ FORZAR APROBACIÓN CON DISCREPANCIA';
+      }
+    } else {
+      matchStatus.textContent = 'Escribe los 4 dígitos para validar coincidencia';
+      btnConfirm.disabled = true;
+      btnConfirm.style.opacity = '0.5';
+      btnConfirm.style.cursor = 'not-allowed';
+      btnConfirm.textContent = '🟢 CONCILIAR Y ACTIVAR (+30 DÍAS)';
+    }
+  });
+
+  btnConfirm.addEventListener('click', async () => {
+    modal.style.display = 'none';
+    mostrarToastRapido('Conciliando...', 'Actualizando membresía y registrando ingreso...', true);
+
+    const dias = 30;
+    const nuevaFecha = new Date(Date.now() + dias * 24 * 60 * 60 * 1000).toISOString();
+    const refConfirmada = inputRef.value.trim();
+
+    // 1. Actualizar el pago en 'pagos_reportados'
+    await setDoc(doc(db, 'pagos_reportados', pagoId), {
+      estado: 'CONCILIADO',
+      refConfirmadaAdmin: refConfirmada,
+      fechaConciliacion: new Date().toISOString()
+    }, { merge: true }).catch(() => {});
+
+    // 2. Asentar en 'finanzas_ingresos'
+    await setDoc(doc(db, 'finanzas_ingresos', `ing_${Date.now()}`), {
+      clubNombre,
+      clubEmail: targetUserKey,
+      monto: monto,
+      montoUSD: monto,
+      referencia: refConfirmada,
+      metodo: 'Digital',
+      fecha: new Date().toISOString()
+    }).catch(() => {});
+
+    // 3. Activar membresía en el club
     const payload = {
-      estadoCuenta: 'PRUEBA',
+      estadoCuenta: 'ACTIVO',
       fechaVencimiento: nuevaFecha,
       club: clubNombre,
-      email: email,
       updatedAt: new Date().toISOString()
     };
 
-    const writes = [];
-    if (pubDocId) writes.push(setDoc(doc(db, 'publicos', pubDocId), payload, { merge: true }).catch(() => {}));
-    if (emailKey && emailKey !== pubDocId) writes.push(setDoc(doc(db, 'publicos', emailKey), payload, { merge: true }).catch(() => {}));
-    const targetUid = uid || (pubDocId && pubDocId.startsWith('usr_') ? pubDocId.replace('usr_', '') : null);
+    const targetUid = targetUserKey.replace('usr_', '');
+    const emailKey = (targetUserKey.includes('@') ? targetUserKey : '').replace(/[@.]/g, '_');
+    const updatePromises = [
+      setDoc(doc(db, 'usuarios', targetUid), { perfil: payload }, { merge: true }).catch(() => {}),
+      setDoc(doc(db, 'publicos', `usr_${targetUid}`), payload, { merge: true }).catch(() => {})
+    ];
+    if (emailKey) {
+      updatePromises.push(setDoc(doc(db, 'publicos', emailKey), payload, { merge: true }).catch(() => {}));
+    }
+    await Promise.all(updatePromises);
+
+    // 4. Notificación WhatsApp al cliente
+    const waClean = (clubWA || '').toString().replace(/\D/g, '');
+    if (waClean) {
+      const msg = encodeURIComponent(`¡Hola ${clubNombre}! 🎉 Confirmamos la recepción de tu pago (${monto} ${moneda}, Ref: ...${refConfirmada}). Tu membresía en 11FUT MANAGER ha sido ACTIVADA exitosamente hasta el ${new Date(nuevaFecha).toLocaleDateString()}. ¡A disfrutar de todas las herramientas! ⚽🏆`);
+      window.open(`https://wa.me/${waClean}?text=${msg}`, '_blank');
+    }
+
+    mostrarToastRapido('Membresía Activada', `🟢 ${clubNombre} activado por 30 días.`, true);
+    renderSuperAdminDashboard();
+  });
+};
+
+window._rechazarPagoReportado = (pagoId, clubNombre, wa) => {
+  mostrarConfirmacionApp('Rechazar Pago', `¿Deseas rechazar el reporte de pago de "${clubNombre}"?`, async () => {
+    await setDoc(doc(db, 'pagos_reportados', pagoId), {
+      estado: 'RECHAZADO',
+      fechaRechazo: new Date().toISOString()
+    }, { merge: true }).catch(() => {});
+
+    const waClean = (wa || '').toString().replace(/\D/g, '');
+    if (waClean) {
+      const msg = encodeURIComponent(`Hola ${clubNombre}, te informamos desde la administración de 11FUT MANAGER que tu reporte de pago no pudo ser conciliado (referencia no encontrada o inconsistente). Por favor verifica los 4 últimos dígitos de la referencia o contáctanos por aquí para asistirte.`);
+      window.open(`https://wa.me/${waClean}?text=${msg}`, '_blank');
+    }
+
+    mostrarToastRapido('Pago Rechazado', `El reporte de ${clubNombre} fue marcado como RECHAZADO.`, true);
+    renderSuperAdminDashboard();
+  });
+};
+
+window._verComprobantePago = (url) => {
+  const modal = document.getElementById('modal');
+  const modalContent = document.getElementById('modal-content');
+  if (!modal || !modalContent) return;
+
+  modalContent.innerHTML = `
+    <div class="modal-title">🖼️ COMPROBANTE DE PAGO</div>
+    <div style="text-align:center;margin-bottom:14px;background:#050505;padding:10px;border-radius:10px;max-height:75vh;overflow:auto;">
+      <img src="${url}" style="max-width:100%;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.8);">
+    </div>
+    <button onclick="document.getElementById('modal').style.display='none'" class="btn btn-gold" style="width:100%;">CERRAR</button>
+  `;
+  modal.style.display = 'flex';
+};
+
+// ════════════════════════════════════════════════════════════════
+// HANDLERS DIRECTOS DE LA LISTA DE CLUBES
+// ════════════════════════════════════════════════════════════════
+window._aprobarMembresiaDirecta = async (pubDocId, email, wa, clubNombre, uid, currentFechaExp) => {
+  const dias = 30;
+  const fechaBase = (currentFechaExp && new Date(currentFechaExp) > new Date()) ? new Date(currentFechaExp) : new Date();
+  const nuevaFecha = new Date(fechaBase.getTime() + dias * 24 * 60 * 60 * 1000).toISOString();
+
+  const payload = { estadoCuenta: 'ACTIVO', fechaVencimiento: nuevaFecha, club: clubNombre, updatedAt: new Date().toISOString() };
+  const targetUid = uid || (pubDocId ? pubDocId.replace('usr_', '') : '');
+  const emailKey = (email || '').replace(/[@.]/g, '_');
+
+  const proms = [];
+  if (targetUid) {
+    proms.push(setDoc(doc(db, 'usuarios', targetUid), { perfil: payload }, { merge: true }).catch(() => {}));
+    proms.push(setDoc(doc(db, 'publicos', `usr_${targetUid}`), payload, { merge: true }).catch(() => {}));
+  }
+  if (pubDocId && pubDocId !== `usr_${targetUid}`) {
+    proms.push(setDoc(doc(db, 'publicos', pubDocId), payload, { merge: true }).catch(() => {}));
+  }
+  if (emailKey && emailKey !== pubDocId && emailKey !== `usr_${targetUid}`) {
+    proms.push(setDoc(doc(db, 'publicos', emailKey), payload, { merge: true }).catch(() => {}));
+  }
+  await Promise.all(proms);
+
+  mostrarToastRapido('Club Aprobado', `🟢 Membresía para ${clubNombre} aprobada por 30 días.`, true);
+  renderSuperAdminDashboard();
+};
+
+window._activarPruebaDirecta = async (pubDocId, email, wa, clubNombre, uid, currentFechaExp) => {
+  const dias = 7;
+  const fechaBase = (currentFechaExp && new Date(currentFechaExp) > new Date()) ? new Date(currentFechaExp) : new Date();
+  const nuevaFecha = new Date(fechaBase.getTime() + dias * 24 * 60 * 60 * 1000).toISOString();
+
+  const payload = { estadoCuenta: 'PRUEBA', fechaVencimiento: nuevaFecha, club: clubNombre, updatedAt: new Date().toISOString() };
+  const targetUid = uid || (pubDocId ? pubDocId.replace('usr_', '') : '');
+  const emailKey = (email || '').replace(/[@.]/g, '_');
+
+  const proms = [];
+  if (targetUid) {
+    proms.push(setDoc(doc(db, 'usuarios', targetUid), { perfil: payload }, { merge: true }).catch(() => {}));
+    proms.push(setDoc(doc(db, 'publicos', `usr_${targetUid}`), payload, { merge: true }).catch(() => {}));
+  }
+  if (pubDocId && pubDocId !== `usr_${targetUid}`) {
+    proms.push(setDoc(doc(db, 'publicos', pubDocId), payload, { merge: true }).catch(() => {}));
+  }
+  if (emailKey && emailKey !== pubDocId && emailKey !== `usr_${targetUid}`) {
+    proms.push(setDoc(doc(db, 'publicos', emailKey), payload, { merge: true }).catch(() => {}));
+  }
+  await Promise.all(proms);
+
+  mostrarToastRapido('Prueba Activada', `⚡ 7 días de prueba activados para ${clubNombre}.`, true);
+  renderSuperAdminDashboard();
+};
+
+window._regalarDiasDirecto = (pubDocId, email, wa, clubNombre, uid, currentFechaExp) => {
+  mostrarPromptModal(`Días Adicionales para ${clubNombre}`, 'Cantidad de días a sumar (ej: 3, 7, 14, 30)', async (inputDias) => {
+    const dias = parseInt(inputDias, 10) || 7;
+    const fechaBase = (currentFechaExp && new Date(currentFechaExp) > new Date()) ? new Date(currentFechaExp) : new Date();
+    const nuevaFecha = new Date(fechaBase.getTime() + dias * 24 * 60 * 60 * 1000).toISOString();
+
+    const payload = { estadoCuenta: 'ACTIVO', fechaVencimiento: nuevaFecha, club: clubNombre, updatedAt: new Date().toISOString() };
+    const targetUid = uid || (pubDocId ? pubDocId.replace('usr_', '') : '');
+    const emailKey = (email || '').replace(/[@.]/g, '_');
+
+    const proms = [];
     if (targetUid) {
-      writes.push(setDoc(doc(db, 'publicos', `usr_${targetUid}`), payload, { merge: true }).catch(() => {}));
-      writes.push(setDoc(doc(db, 'usuarios', targetUid), { perfil: { estadoCuenta: 'PRUEBA', fechaVencimiento: nuevaFecha, club: clubNombre } }, { merge: true }).catch(() => {}));
+      proms.push(setDoc(doc(db, 'usuarios', targetUid), { perfil: payload }, { merge: true }).catch(() => {}));
+      proms.push(setDoc(doc(db, 'publicos', `usr_${targetUid}`), payload, { merge: true }).catch(() => {}));
     }
-
-    try {
-      await Promise.all(writes);
-    } catch (e) {
-      console.warn('Aviso guardando en Firestore:', e);
+    if (pubDocId && pubDocId !== `usr_${targetUid}`) {
+      proms.push(setDoc(doc(db, 'publicos', pubDocId), payload, { merge: true }).catch(() => {}));
     }
-
-    if (perfil && perfil.email && email && perfil.email.trim().toLowerCase() === email.trim().toLowerCase()) {
-      perfil.estadoCuenta = 'PRUEBA';
-      perfil.fechaVencimiento = nuevaFecha;
-      autoSaveLocal();
+    if (emailKey && emailKey !== pubDocId && emailKey !== `usr_${targetUid}`) {
+      proms.push(setDoc(doc(db, 'publicos', emailKey), payload, { merge: true }).catch(() => {}));
     }
+    await Promise.all(proms);
 
+    mostrarToastRapido('Días Sumados', `🟡 Se sumaron +${dias} días a ${clubNombre}.`, true);
     renderSuperAdminDashboard();
   });
-}
+};
 
-async function ejecutarSuspenderSuperAdmin(pubDocId, email, uid) {
-  mostrarConfirmacionApp('Cancelar / Suspender Club', '¿Estás seguro de CANCELAR el acceso de este club? Su sesión se cerrará de inmediato con el aviso de cuenta cancelada.', async () => {
-    const payload = {
-      estadoCuenta: 'CANCELADA',
-      cancelada: true,
-      updatedAt: new Date().toISOString()
-    };
+window._suspenderClubDirecto = (pubDocId, email, uid) => {
+  mostrarConfirmacionApp('Suspender Club', '¿Estás seguro de suspender este club?', async () => {
+    const payload = { estadoCuenta: 'CANCELADA', cancelada: true, updatedAt: new Date().toISOString() };
+    const targetUid = uid || (pubDocId ? pubDocId.replace('usr_', '') : '');
+    const emailKey = (email || '').replace(/[@.]/g, '_');
 
-    try {
-      const emailClean = (email || '').trim().toLowerCase();
-      const emailKey = emailClean ? emailClean.replace(/[^a-zA-Z0-9_-]/g, '_') : null;
-      const targetUid = uid || (pubDocId && pubDocId.startsWith('usr_') ? pubDocId.replace('usr_', '') : null);
-
-      const writes = [];
-      if (pubDocId) writes.push(setDoc(doc(db, 'publicos', pubDocId), payload, { merge: true }).catch(() => {}));
-      if (emailKey && emailKey !== pubDocId) writes.push(setDoc(doc(db, 'publicos', emailKey), payload, { merge: true }).catch(() => {}));
-      if (targetUid) {
-        writes.push(setDoc(doc(db, 'publicos', `usr_${targetUid}`), payload, { merge: true }).catch(() => {}));
-        writes.push(setDoc(doc(db, 'usuarios', targetUid), { perfil: payload }, { merge: true }).catch(() => {}));
-      }
-
-      await Promise.all(writes);
-    } catch (e) {
-      console.warn('Aviso cancelando club en Firestore:', e);
+    const proms = [];
+    if (targetUid) {
+      proms.push(setDoc(doc(db, 'usuarios', targetUid), { perfil: payload }, { merge: true }).catch(() => {}));
+      proms.push(setDoc(doc(db, 'publicos', `usr_${targetUid}`), payload, { merge: true }).catch(() => {}));
     }
-
-    if (perfil && perfil.email && email && perfil.email.trim().toLowerCase() === email.trim().toLowerCase()) {
-      perfil.estadoCuenta = 'CANCELADA';
-      perfil.cancelada = true;
-      autoSaveLocal();
+    if (pubDocId && pubDocId !== `usr_${targetUid}`) {
+      proms.push(setDoc(doc(db, 'publicos', pubDocId), payload, { merge: true }).catch(() => {}));
     }
+    if (emailKey && emailKey !== pubDocId && emailKey !== `usr_${targetUid}`) {
+      proms.push(setDoc(doc(db, 'publicos', emailKey), payload, { merge: true }).catch(() => {}));
+    }
+    await Promise.all(proms);
 
-    mostrarToastRapido('Cuenta Cancelada', 'La cuenta ha sido marcada como CANCELADA.', true);
+    mostrarToastRapido('Club Suspendido', 'El club ha sido suspendido.', true);
     renderSuperAdminDashboard();
   });
-}
+};
 
-function ejecutarChatWASuperAdmin(wa, clubNombre) {
-  const waClean = normalizarTelefonoWhatsApp(wa);
-  if (!waClean) return mostrarNotificacionApp('WhatsApp', 'No hay número de WhatsApp registrado para este club.', false);
+window._chatWhatsAppDirecto = (wa, clubNombre) => {
+  const clean = (wa || '').toString().replace(/\D/g, '');
+  if (!clean) return mostrarNotificacionApp('WhatsApp', 'No hay WhatsApp registrado.', false);
   const msg = encodeURIComponent(`Hola ${clubNombre}, te contacto de la administración de 11FUT MANAGER.`);
-  window.open(`https://wa.me/${waClean}?text=${msg}`, '_blank');
-}
+  window.open(`https://wa.me/${clean}?text=${msg}`, '_blank');
+};
 
-async function ejecutarEliminarClubSuperAdmin(pubDocId, clubNombre, uid, email) {
-  mostrarConfirmacionApp('Eliminar Club', `¿Estás seguro de eliminar permanentemente a "${clubNombre}" (${email || pubDocId}) y purgar todos sus datos de Firebase?`, async () => {
-    try {
-      const emailClean = (email || '').trim().toLowerCase();
-      const emailKey = emailClean ? emailClean.replace(/[^a-zA-Z0-9_-]/g, '_') : null;
-      const targetUid = uid || (pubDocId && pubDocId.startsWith('usr_') ? pubDocId.replace('usr_', '') : null);
+window._eliminarClubDirecto = (pubDocId, clubNombre, uid, email) => {
+  mostrarConfirmacionApp('Eliminar Club', `¿Estás seguro de purgar permanentemente a "${clubNombre}"?`, async () => {
+    const targetUid = uid || (pubDocId ? pubDocId.replace('usr_', '') : '');
+    const emailKey = (email || '').replace(/[@.]/g, '_');
 
-      // Notificar cancelación a clientes conectados antes de purgar
-      const cancelPayload = { estadoCuenta: 'CANCELADA', cancelada: true, updatedAt: new Date().toISOString() };
-      const preDeletes = [];
-      if (pubDocId) preDeletes.push(setDoc(doc(db, 'publicos', pubDocId), cancelPayload, { merge: true }).catch(() => {}));
-      if (emailKey && emailKey !== pubDocId) preDeletes.push(setDoc(doc(db, 'publicos', emailKey), cancelPayload, { merge: true }).catch(() => {}));
-      if (targetUid) {
-        preDeletes.push(setDoc(doc(db, 'publicos', `usr_${targetUid}`), cancelPayload, { merge: true }).catch(() => {}));
-        preDeletes.push(setDoc(doc(db, 'usuarios', targetUid), { perfil: cancelPayload }, { merge: true }).catch(() => {}));
-      }
-      await Promise.all(preDeletes);
-
-      // Pequeño delay de 800ms para que sockets/listeners del cliente reciban la cancelación antes del delete físico
-      await new Promise(r => setTimeout(r, 800));
-
-      const deletes = [];
-      if (pubDocId) deletes.push(deleteDoc(doc(db, 'publicos', pubDocId)).catch(() => {}));
-      if (emailKey && emailKey !== pubDocId) deletes.push(deleteDoc(doc(db, 'publicos', emailKey)).catch(() => {}));
-      if (targetUid) {
-        deletes.push(deleteDoc(doc(db, 'publicos', `usr_${targetUid}`)).catch(() => {}));
-        deletes.push(deleteDoc(doc(db, 'usuarios', targetUid)).catch(() => {}));
-      }
-
-      // Escaneo y purga exhaustiva de cualquier registro residual vinculado al email
-      if (emailClean) {
-        try {
-          const pubSnap = await getDocs(collection(db, 'publicos'));
-          pubSnap.forEach(dSnap => {
-            const dat = dSnap.data() || {};
-            const dEmail = (dat.email || dat.perfil?.email || dat.userEmail || '').trim().toLowerCase();
-            if (dEmail === emailClean || dSnap.id.toLowerCase() === emailClean.replace(/[^a-zA-Z0-9_-]/g, '_')) {
-              deletes.push(deleteDoc(doc(db, 'publicos', dSnap.id)).catch(() => {}));
-            }
-          });
-
-          const usrSnap = await getDocs(collection(db, 'usuarios'));
-          usrSnap.forEach(dSnap => {
-            const dat = dSnap.data() || {};
-            const dEmail = (dat.perfil?.email || dat.email || '').trim().toLowerCase();
-            if (dEmail === emailClean) {
-              deletes.push(deleteDoc(doc(db, 'usuarios', dSnap.id)).catch(() => {}));
-            }
-          });
-        } catch (scanErr) {
-          console.warn('Aviso escaneando documentos al purgar club:', scanErr);
-        }
-      }
-
-      await Promise.all(deletes);
-      mostrarToastRapido('Club Eliminado', `El club "${clubNombre}" ha sido completamente purgado del sistema.`, true);
-      await renderSuperAdminDashboard();
-    } catch (e) {
-      mostrarNotificacionApp('Error', 'No se pudo eliminar el club de la base de datos: ' + e.message, false);
+    const proms = [];
+    if (targetUid) {
+      proms.push(deleteDoc(doc(db, 'usuarios', targetUid)).catch(() => {}));
+      proms.push(deleteDoc(doc(db, 'publicos', `usr_${targetUid}`)).catch(() => {}));
     }
-  });
-}
+    if (pubDocId && pubDocId !== `usr_${targetUid}`) {
+      proms.push(deleteDoc(doc(db, 'publicos', pubDocId)).catch(() => {}));
+    }
+    if (emailKey && emailKey !== pubDocId && emailKey !== `usr_${targetUid}`) {
+      proms.push(deleteDoc(doc(db, 'publicos', emailKey)).catch(() => {}));
+    }
+    await Promise.all(proms);
 
+    mostrarToastRapido('Club Eliminado', `El club "${clubNombre}" fue purgado.`, true);
+    renderSuperAdminDashboard();
+  });
+};

@@ -232,6 +232,7 @@ export function mostrarPantallaEsperaAprobacion() {
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;">
         <button id="btn-actualizar-estado" style="background:linear-gradient(135deg,var(--oro),#b8960c);border:none;color:#000;padding:14px;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;cursor:pointer;">🔄 VERIFICAR ESTADO DE APROBACIÓN</button>
+        <button id="btn-reportar-pago-espera" onclick="window._abrirModalReportarPago && window._abrirModalReportarPago()" style="background:linear-gradient(135deg,#00e676,#00b0ff);border:none;color:#000;padding:13px;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;cursor:pointer;">💳 REPORTAR PAGO / ACTIVACIÓN DIRECTA</button>
         <button id="btn-wa-soporte-pendiente" style="background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.3);color:#25d366;padding:11px;border-radius:8px;font-size:13px;cursor:pointer;">💬 Contactar Soporte por WhatsApp</button>
         <button id="btn-logout-pendiente" style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);color:#e74c3c;padding:10px;border-radius:8px;font-size:12px;cursor:pointer;">🚪 Cerrar sesión</button>
       </div>
@@ -412,9 +413,6 @@ export function switchTab(n, updateHash = true) {
     n = esAdminRol ? 7 : 1;
   } else if (n === 7 && !esAdminRol) {
     n = 1;
-  } else if (n === 1 && esAdminRol && dtActivos > 0) {
-    // Redirigir Tab 1 → Tab 7 cuando el perfil Admin ya tiene DTs creados
-    n = 7;
   }
 
   document.querySelectorAll('.nav-horizontal-item').forEach((t) => {
@@ -478,15 +476,8 @@ window.addEventListener('hashchange', restaurarPestanaDesdeURL);
 // Exponer switchTab globalmente para uso desde otros módulos sin importación circular
 window._switchTab = switchTab;
 
-// Exponer para uso desde config.js (evita circular import)
 window._refrescarVisibilidadTabs = () => {
   actualizarVisibilidadPestanasRol();
-  // Si el Admin ahora tiene DTs y está en Tab 1, redirigir a Panel Admin
-  const dtActivos = (perfil.profiles || []).filter(p => p.rol === 'DT').length;
-  const esPerfilAdmin = currentProfile && currentProfile.rol === 'ADMIN';
-  if (esPerfilAdmin && dtActivos > 0) {
-    switchTab(7);
-  }
 };
 
 
@@ -967,9 +958,9 @@ async function ejecutarRegistroUsuario() {
     perfil.categoriaActiva = "";
     perfil.profiles = [
       {
-        id: "admin",
-        nombre: "Director Deportivo",
-        rol: "ADMIN",
+        id: isMaster ? "admin" : "dt_principal",
+        nombre: isMaster ? "Director Deportivo" : "Entrenador Principal",
+        rol: isMaster ? "ADMIN" : "DT",
         pin: isMaster ? "1901" : "1234",
         avatar: perfil.logo || "https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png"
       }
@@ -980,16 +971,21 @@ async function ejecutarRegistroUsuario() {
     // Sincronizar documento público para que el SuperAdmin lo vea inmediatamente en su panel
     try {
       const pubDocId = emailInput.toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
-      await setDoc(doc(db, 'publicos', pubDocId), {
+      const pubPayload = {
         club: perfil.club || 'Nuevo Club',
         email: emailInput,
+        uid: user.uid,
         whatsapp: waInput,
         estadoCuenta: perfil.estadoCuenta,
         fechaVencimiento: perfil.fechaVencimiento || '',
         maxPerfiles: perfil.maxPerfiles,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
-      }, { merge: true });
+      };
+      await Promise.all([
+        setDoc(doc(db, 'publicos', pubDocId), pubPayload, { merge: true }),
+        setDoc(doc(db, 'publicos', `usr_${user.uid}`), pubPayload, { merge: true })
+      ]);
     } catch (pubErr) {
       console.warn('Aviso al registrar club público:', pubErr);
     }
@@ -1125,9 +1121,47 @@ export function actualizarVisibilidadPestanasRol() {
   const tab8 = document.getElementById('tab-8'); // Súper Admin
   const btnModoPartido = document.getElementById('btn-modo-partido');
 
-  // CUENTAS DE 1 SOLO PERFIL (maxContratado === 1 y no Master):
-  // Mantienen la interfaz COMPLETA de DT + Panel Admin (Tab 1 a 7 con Modo Partido)
-  if (maxContratado === 1 && !isMaster) {
+  // SÚPER ADMIN (CUENTA MASTER PLATAFORMA SAAS):
+  // Desacoplado al 100% de la gestión deportiva (no ve pizarra táctica, plantel, convocatorias, etc.)
+  if (isMaster) {
+    if (tab1) tab1.style.display = 'none';
+    if (tab2) tab2.style.display = 'none';
+    if (tab3) tab3.style.display = 'none';
+    if (tab4) tab4.style.display = 'none';
+    if (tab5) tab5.style.display = 'none';
+    if (tab6) tab6.style.display = 'none';
+    if (tab7) tab7.style.display = 'none';
+    if (tab8) tab8.style.display = 'block';
+    if (btnModoPartido) btnModoPartido.style.display = 'none';
+
+    const selCat = document.getElementById('header-category-selector');
+    if (selCat) selCat.style.display = 'none';
+    const btnSwitchProf = document.getElementById('btn-switch-profile');
+    if (btnSwitchProf) btnSwitchProf.style.display = 'none';
+    const bannerRenov = document.getElementById('banner-renovacion');
+    if (bannerRenov) bannerRenov.style.display = 'none';
+    return;
+  }
+
+  // CUENTAS DE 1 SOLO PERFIL (Plan DT Individual):
+  // El entrenador independiente trabaja directo en sus herramientas de cancha (Tabs 1 a 6 + Modo Partido)
+  // El Tab 7 (Panel Director Deportivo) queda reservado para planes de Club / Academia
+  if (maxContratado === 1) {
+    if (tab1) tab1.style.display = 'block';
+    if (tab2) tab2.style.display = 'block';
+    if (tab3) tab3.style.display = 'block';
+    if (tab4) tab4.style.display = 'block';
+    if (tab5) tab5.style.display = 'block';
+    if (tab6) tab6.style.display = 'block';
+    if (tab7) tab7.style.display = 'none';
+    if (tab8) tab8.style.display = 'none';
+    if (btnModoPartido) btnModoPartido.style.display = 'flex';
+    return;
+  }
+
+  // CUENTAS DE MÚLTIPLES PERFILES:
+  if (esAdminRol) {
+    // El Director Deportivo (ADMIN) tiene acceso de supervisión a todas las áreas del club:
     if (tab1) tab1.style.display = 'block';
     if (tab2) tab2.style.display = 'block';
     if (tab3) tab3.style.display = 'block';
@@ -1136,44 +1170,8 @@ export function actualizarVisibilidadPestanasRol() {
     if (tab6) tab6.style.display = 'block';
     if (tab7) tab7.style.display = 'block';
     if (tab8) tab8.style.display = 'none';
-    if (btnModoPartido) btnModoPartido.style.display = 'flex';
-    return;
-  }
-
-  // CUENTAS DE MÚLTIPLES PERFILES (maxContratado > 1 o Master):
-  if (esAdminRol) {
-    // Contar perfiles DT activos reales (no el plan máximo contratado)
-    const dtActivos = (perfil.profiles || []).filter(p => p.rol === 'DT').length;
-
-    if (dtActivos > 0) {
-      // El perfil Admin ya tiene DTs creados: ocultar Tab 1 (Táctica).
-      // La pizarra táctica se activa en Pantalla Completa desde el Panel Admin (Tab 7).
-      if (tab1) tab1.style.display = 'none';
-      if (tab2) tab2.style.display = 'none';
-      if (tab3) tab3.style.display = 'block';
-      if (tab4) tab4.style.display = 'block';
-      if (tab5) tab5.style.display = 'block';
-      if (tab6) tab6.style.display = 'none';
-      if (tab7) tab7.style.display = 'block';
-      if (tab8) tab8.style.display = (isMaster && esAdminRol) ? 'block' : 'none';
-      if (btnModoPartido) btnModoPartido.style.display = 'none';
-      return;
-    }
-
-    // Si NO se han creado perfiles DT todavía (dtActivos === 0):
-    // El Admin mantiene el acceso directo a la Pizarra Táctica (Tab 1), Citación (Tab 2) y Entrenamientos (Tab 6).
-    if (tab1) tab1.style.display = 'block';
-    if (tab2) tab2.style.display = 'block';
-    if (tab3) tab3.style.display = 'block';
-    if (tab4) tab4.style.display = 'block';
-    if (tab5) tab5.style.display = 'block';
-    if (tab6) tab6.style.display = 'block';
-    if (tab7) tab7.style.display = 'block';
-    // Tab 8 (Súper Admin): solo si cuenta SuperAdmin Y perfil Admin
-    if (tab8) tab8.style.display = (isMaster && esAdminRol) ? 'block' : 'none';
 
     if (btnModoPartido) btnModoPartido.style.display = 'flex';
-
   } else {
     // Para Perfiles DT (Entrenadores):
     // Muestra todas las pestañas de trabajo técnico diario con Modo Partido
@@ -1230,7 +1228,7 @@ function handleProfileSelected(prof) {
     const maxContratado = isMaster ? 8 : (perfil.maxPerfiles || 1);
     const esAdminRol = prof && prof.rol === 'ADMIN';
     const dtActivos = (perfil.profiles || []).filter(p => p.rol === 'DT').length;
-    if (isMaster && esAdminRol) {
+    if (isMaster) {
       switchTab(8, true);
     } else if (esAdminRol && dtActivos > 0) {
       switchTab(7, true);

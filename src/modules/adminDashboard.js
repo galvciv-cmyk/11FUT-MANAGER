@@ -334,7 +334,12 @@ function renderVistaDetalladaCategoria(catName, container) {
   const asisRecords = data.asistenciaRecords || [];
   const lesRecords = data.lesionesRecords || [];
 
-  const jugs = [...(p.por || []), ...(p.def || []), ...(p.med || []), ...(p.del || [])];
+  const jugs = [
+    ...(p.por || []).map(n => ({ nombre: typeof n === 'string' ? n : (n.nombre || ''), posicion: 'Portero', posBadge: 'POR' })),
+    ...(p.def || []).map(n => ({ nombre: typeof n === 'string' ? n : (n.nombre || ''), posicion: 'Defensa', posBadge: 'DEF' })),
+    ...(p.med || []).map(n => ({ nombre: typeof n === 'string' ? n : (n.nombre || ''), posicion: 'Mediocampista', posBadge: 'MED' })),
+    ...(p.del || []).map(n => ({ nombre: typeof n === 'string' ? n : (n.nombre || ''), posicion: 'Delantero', posBadge: 'DEL' }))
+  ].filter(j => j.nombre);
 
   const asistenciaPorJugador = {};
   jugs.forEach(j => {
@@ -361,7 +366,7 @@ function renderVistaDetalladaCategoria(catName, container) {
 
   container.innerHTML = `
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
         <div class="card-title" style="font-size:18px;margin:0;">🔍 DESGLOSE EXCLUSIVO CATEGORÍA: <span style="color:var(--oro);">${catName}</span></div>
         <button onclick="window._adminIrACategoria('${catName}')" class="btn btn-gold" style="font-size:12px;">📋 ABRIR EN PIZARRA TÁCTICA</button>
       </div>
@@ -390,7 +395,7 @@ function renderVistaDetalladaCategoria(catName, container) {
         <table style="width:100%;border-collapse:collapse;font-size:13px;">
           <thead>
             <tr style="background:#141414;color:var(--oro);text-align:left;border-bottom:1px solid #333;">
-              <th style="padding:8px;">Dorsal</th>
+              <th style="padding:8px;">#</th>
               <th style="padding:8px;">Nombre del Jugador</th>
               <th style="padding:8px;">Posición</th>
               <th style="padding:8px;">Goles</th>
@@ -401,15 +406,15 @@ function renderVistaDetalladaCategoria(catName, container) {
             </tr>
           </thead>
           <tbody>
-            ${jugs.map(j => {
+            ${jugs.length ? jugs.map((j, idx) => {
               const s = st[j.nombre] || {};
               const asis = asistenciaPorJugador[j.nombre] || { presentes: 0, ausentes: 0, justificados: 0, total: 0 };
               const pct = asis.total > 0 ? Math.round((asis.presentes / asis.total) * 100) : 100;
               return `
                 <tr style="border-bottom:1px solid #222;">
-                  <td style="padding:8px;font-weight:700;color:var(--oro);">${j.dorsal || '#'}</td>
+                  <td style="padding:8px;font-weight:700;color:var(--oro);">${idx + 1}</td>
                   <td style="padding:8px;font-weight:700;color:#fff;">${j.nombre}</td>
-                  <td style="padding:8px;color:#aaa;">${j.posicion || '-'}</td>
+                  <td style="padding:8px;"><span style="background:rgba(212,175,55,0.15);color:var(--oro);padding:2px 6px;border-radius:4px;font-size:10px;font-weight:800;">${j.posBadge}</span> <span style="color:#aaa;font-size:11px;">${j.posicion}</span></td>
                   <td style="padding:8px;color:var(--oro);font-weight:700;">${s.goles || 0}</td>
                   <td style="padding:8px;color:#3498db;font-weight:700;">${s.asist || 0}</td>
                   <td style="padding:8px;color:#2ecc71;">${asis.presentes} clases</td>
@@ -417,7 +422,7 @@ function renderVistaDetalladaCategoria(catName, container) {
                   <td style="padding:8px;font-weight:900;color:${pct >= 80 ? '#2ecc71' : pct >= 60 ? '#f39c12' : '#e74c3c'};">${pct}%</td>
                 </tr>
               `;
-            }).join('')}
+            }).join('') : `<tr><td colspan="8" style="padding:16px;text-align:center;color:#888;">No hay jugadores registrados en el plantel de esta categoría.</td></tr>`}
           </tbody>
         </table>
       </div>

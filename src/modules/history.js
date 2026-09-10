@@ -100,6 +100,7 @@ export function iniciarJuegoProgramado(id) {
 
   partidoEnVivoState = {
     activo: true,
+    origenJuegoProgramadoId: id,
     equipo: 'A',
     fecha: prog.fecha || new Date().toISOString().split('T')[0],
     torneo: prog.torneo || 'Campeonato',
@@ -118,13 +119,6 @@ export function iniciarJuegoProgramado(id) {
     tarjetasRojasMap: {},
     convocadosList: convocados
   };
-
-  const idx = juegosProgramados.findIndex(j => j.id === id);
-  if (idx !== -1) {
-    juegosProgramados.splice(idx, 1);
-    updateJuegosProgramados(juegosProgramados);
-    autoSaveLocal();
-  }
 
   const consolaCard = document.getElementById('consola-partido-vivo');
   if (consolaCard) consolaCard.style.display = 'block';
@@ -285,13 +279,21 @@ export function renderConsolaPartidoVivo() {
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;">
         <button class="btn btn-gold" onclick="window._finalizarYGuardarPartidoLive()">💾 FINALIZAR Y GUARDAR PARTIDO</button>
-        <button class="btn btn-gray" onclick="document.getElementById('consola-partido-vivo').style.display='none'">CANCELAR</button>
+        <button class="btn btn-gray" onclick="window._cancelarConsolaPartidoLive()">CANCELAR</button>
       </div>
     </div>
   `;
 
   container.innerHTML = html;
 }
+
+window._cancelarConsolaPartidoLive = () => {
+  partidoEnVivoState.activo = false;
+  partidoEnVivoState.origenJuegoProgramadoId = null;
+  const c = document.getElementById('consola-partido-vivo');
+  if (c) c.style.display = 'none';
+  renderHistorial();
+};
 
 window._actualizarLiveRival = (val) => { partidoEnVivoState.rival = val.trim(); };
 window._actualizarLiveDuracion = (val) => { partidoEnVivoState.duracionMin = parseInt(val, 10) || 30; };
@@ -557,6 +559,15 @@ window._finalizarYGuardarPartidoLive = async () => {
     participantes: st.convocadosList
   };
 
+  // Si proviene de un juego programado, removerlo de la lista ahora que ya se finalizó
+  if (st.origenJuegoProgramadoId) {
+    const idx = juegosProgramados.findIndex(j => j.id === st.origenJuegoProgramadoId);
+    if (idx !== -1) {
+      juegosProgramados.splice(idx, 1);
+      updateJuegosProgramados(juegosProgramados);
+    }
+  }
+
   historial.unshift(nuevoPartido);
   updateHistorial(historial);
 
@@ -642,7 +653,7 @@ export function renderHistorial() {
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <div>
               <div style="font-weight:900;color:var(--oro);font-size:15px;">🆚 vs ${j.rival} (${j.torneo})</div>
-              <div style="font-size:11px;color:#aaa;margin-top:2px;">📅 ${formatFecha(j.fecha)} • ⏰ ${formatHora(j.cita)} • Convocados: ${j.convocados.length}</div>
+              <div style="font-size:11px;color:#aaa;margin-top:2px;">📅 ${formatFecha(j.fecha)} • ⏰ ${formatHora(j.cita)} • Convocados: ${(j.convocados || []).length}</div>
             </div>
             <button class="btn btn-green" style="width:auto;padding:8px 12px;font-size:12px;" onclick="window._iniciarJuegoProgramado('${j.id}')">▶️ INICIO / REGISTRAR</button>
           </div>

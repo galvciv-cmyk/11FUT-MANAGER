@@ -235,9 +235,14 @@
           <span style="font-size:16px;">⏳</span>
           <span id="banner-renovacion-texto" style="font-weight:700;">Te quedan N días de membresía.</span>
         </div>
-        <button id="btn-renovar-wa-banner" style="background:#25D366;color:#000;border:none;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:900;cursor:pointer;display:flex;align-items:center;gap:6px;">
-          💬 RENOVAR VÍA WHATSAPP
-        </button>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <button id="btn-banner-reportar-pago" onclick="window._abrirModalReportarPago && window._abrirModalReportarPago()" style="background:var(--verde);color:#000;border:none;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:900;cursor:pointer;display:flex;align-items:center;gap:6px;">
+            💳 REPORTAR PAGO
+          </button>
+          <button id="btn-renovar-wa-banner" style="background:#25D366;color:#000;border:none;padding:6px 14px;border-radius:6px;font-size:11px;font-weight:900;cursor:pointer;display:flex;align-items:center;gap:6px;">
+            💬 RENOVAR VÍA WHATSAPP
+          </button>
+        </div>
       </div>
 
       <!-- OVERLAY DE BLOQUEO POR VENCIMIENTO -->
@@ -246,9 +251,12 @@
           <div style="font-size:48px;margin-bottom:12px;">⛔</div>
           <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--rojo);margin-bottom:10px;">MEMBRESÍA VENCIDA</div>
           <p style="font-size:13px;color:#eee;line-height:1.5;margin-bottom:20px;">
-            Tu membresía ha vencido. Ponte en contacto vía WhatsApp para reactivar el acceso completo a tus categorías y perfiles de entrenador.
+            Tu membresía ha vencido. Realiza tu pago digital para reactivar el acceso completo a tus categorías y perfiles de entrenador.
           </p>
           <div style="display:flex;flex-direction:column;gap:10px;">
+            <button id="btn-lock-reportar-pago" onclick="window._abrirModalReportarPago && window._abrirModalReportarPago()" style="background:linear-gradient(135deg, #00e676, #00b0ff);color:#000;border:none;padding:14px;border-radius:10px;font-size:14px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
+              💳 REPORTAR PAGO / TRANSFERENCIA
+            </button>
             <button id="btn-lock-wa" style="background:#25D366;color:#000;border:none;padding:14px;border-radius:10px;font-size:14px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">
               💬 RENOVAR VÍA WHATSAPP
             </button>
@@ -1065,14 +1073,15 @@
           <div class="card" style="margin:0;padding:16px;background:#141414;border:1px solid #282828;">
             <label style="font-size:12px;color:var(--oro);font-weight:800;display:block;margin-bottom:4px;">👤 Cantidad de Accesos / Perfiles Contratados:</label>
             <select id="wiz-num-profiles" style="margin-bottom:12px;padding:10px;font-size:13px;background:#0a0a0a;color:#fff;border:1px solid #333;border-radius:8px;width:100%;">
-              <option value="1">1 Perfil (1 Administrador Director Deportivo)</option>
-              <option value="2">2 Perfiles (1 Admin + 1 Entrenador DT)</option>
-              <option value="3">3 Perfiles (1 Admin + 2 Entrenadores DT)</option>
-              <option value="4">4 Perfiles (1 Admin + 3 Entrenadores DT)</option>
-              <option value="5">5 Perfiles (1 Admin + 4 Entrenadores DT)</option>
-              <option value="6">6 Perfiles (1 Admin + 5 Entrenadores DT)</option>
-              <option value="7">7 Perfiles (1 Admin + 6 Entrenadores DT)</option>
-              <option value="8">8 Perfiles (1 Admin + 7 Entrenadores DT)</option>
+              <option value="1">Plan DT Individual (1 Entrenador DT)</option>
+              <option value="2">2 Perfiles (1 Director Deportivo + 1 DT)</option>
+              <option value="3">3 Perfiles (1 Director Deportivo + 2 DTs)</option>
+              <option value="4">4 Perfiles (1 Director Deportivo + 3 DTs)</option>
+              <option value="5">5 Perfiles (1 Director Deportivo + 4 DTs)</option>
+              <option value="6">6 Perfiles (1 Director Deportivo + 5 DTs)</option>
+              <option value="7">7 Perfiles (1 Director Deportivo + 6 DTs)</option>
+              <option value="8">8 Perfiles (1 Director Deportivo + 7 DTs)</option>
+              <option value="9">9 Perfiles (1 Director Deportivo + 8 DTs Máximo)</option>
             </select>
 
             <div id="wiz-lista-cats-inputs" style="display:flex;flex-direction:column;gap:8px;"></div>

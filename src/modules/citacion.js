@@ -81,6 +81,7 @@ export function enviarWA(eq) {
     updateJuegosProgramados(juegosProgramados);
     autoSaveLocal();
     guardarFirebase();
+    renderHistorial();
   }
 
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');

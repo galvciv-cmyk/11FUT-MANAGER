@@ -1695,7 +1695,16 @@ export function abrirModalJugador(eq, idx, cat) {
   let html = `<div class="modal-title">⚽ SELECCIONAR TITULAR</div>`;
   html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
 
-  if (!disponibles.length) {
+  if (!todosLos25.length) {
+    html += `
+      <div style="color:#ccc;font-size:12px;text-align:center;padding:12px;line-height:1.6;">
+        Aún no has registrado jugadores en el plantel de <strong>${perfil.categoriaActiva || 'esta categoría'}</strong>.
+      </div>
+      <button class="btn btn-gold" style="margin:4px 0 8px;width:100%;font-weight:900;" onclick="document.getElementById('modal').style.display='none'; if(window._switchTab) window._switchTab(3);">
+        👥 INSCRIBIR JUGADORES EN PLANTEL →
+      </button>
+    `;
+  } else if (!disponibles.length) {
     html += `<div style="color:#aaa;font-size:12px;text-align:center;padding:10px;">No hay más jugadores disponibles (todos ya están ubicados en la cancha o el banco).</div>`;
   } else {
     disponibles.forEach(n => {
@@ -1747,7 +1756,16 @@ export function abrirModalSuplente(eq, idx) {
   let html = `<div class="modal-title">🔄 SELECCIONAR SUPLENTE</div>`;
   html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
 
-  if (!disponibles.length) {
+  if (!todosLos25.length) {
+    html += `
+      <div style="color:#ccc;font-size:12px;text-align:center;padding:12px;line-height:1.6;">
+        Aún no has registrado jugadores en el plantel de <strong>${perfil.categoriaActiva || 'esta categoría'}</strong>.
+      </div>
+      <button class="btn btn-gold" style="margin:4px 0 8px;width:100%;font-weight:900;" onclick="document.getElementById('modal').style.display='none'; if(window._switchTab) window._switchTab(3);">
+        👥 INSCRIBIR JUGADORES EN PLANTEL →
+      </button>
+    `;
+  } else if (!disponibles.length) {
     html += `<div style="color:#aaa;font-size:12px;text-align:center;padding:10px;">No hay más jugadores disponibles (todos ya están ubicados en la cancha o el banco).</div>`;
   } else {
     disponibles.forEach(n => {

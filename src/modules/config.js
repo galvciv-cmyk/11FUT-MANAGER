@@ -1,6 +1,8 @@
 import { perfil, setPinHash, setCategoriaActiva, autoSaveLocal, updateStats, updateHistorial, categoriasData, plantel, currentProfile, isSuperAdmin, DEFAULT_PLANTEL, DEFAULT_PERFIL } from "./state.js";
-import { guardarFirebase, hashPin, getPublicId, auth } from "../services/firebase.js";
+import { guardarFirebase, hashPin, getPublicId, auth, db } from "../services/firebase.js";
+import { doc, setDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
+import { obtenerConfiguracionPasarelas } from "./superAdmin.js";
 import { KITS } from "./state.js";
 import { subirImagenCloudinary } from "../services/cloudinary.js";
 import { renderStats } from "./stats.js";
@@ -154,13 +156,19 @@ function _dispararAutoGuardado() {
       perfil.club = cfgClubInput.value.trim();
       perfil.eqA = perfil.club;
     }
-    // Auto-guardar PINs y nombres de perfiles
+    // Auto-guardar PINs, nombres y equipos de perfiles
     if (perfil.profiles) {
       perfil.profiles.forEach(p => {
         const inputPin = document.getElementById(`cfg-pin-input-${p.id}`);
         const inputNombre = document.getElementById(`cfg-nombre-input-${p.id}`);
+        const inputEquipos = document.getElementById(`cfg-equipos-input-${p.id}`);
         if (inputPin !== null) p.pin = inputPin.value.trim();
         if (inputNombre && inputNombre.value.trim()) p.nombre = inputNombre.value.trim();
+        if (inputEquipos !== null) {
+          const eqList = inputEquipos.value ? inputEquipos.value.split(',').map(s => s.trim()).filter(Boolean).slice(0, 3) : [];
+          p.equipos = eqList;
+          if (eqList.length > 0 && !p.categoria) p.categoria = eqList[0];
+        }
         if (!p.avatar || p.avatar === DEFAULT_LOGO) p.avatar = perfil.logo || DEFAULT_LOGO;
       });
     }
@@ -284,12 +292,15 @@ export function renderPerfilesPinsUI() {
   const btnSavePins = document.getElementById('btn-cfg-guardar-pins');
   if (!cont) return;
 
+  const isMaster = isSuperAdmin();
+  const maxContratado = isMaster ? 8 : (perfil.maxPerfiles || 1);
   const esAdmin = currentProfile && currentProfile.rol === 'ADMIN';
+  const puedeGestionarPins = esAdmin || maxContratado === 1 || isMaster;
 
-  if (!esAdmin) {
+  if (!puedeGestionarPins) {
     cont.innerHTML = `
       <div style="font-size:12px;color:#aaa;padding:14px;text-align:center;background:#0d0d0d;border-radius:8px;border:1px dashed #444;">
-        🔒 La gestión de PINs y perfiles está reservada exclusivamente para el <strong>Director Deportivo (ADMIN)</strong>.
+        🔒 La gestión de PINs y perfiles está reservada para el <strong>Director Deportivo (ADMIN)</strong> del club.
       </div>
     `;
     if (btnSavePins) btnSavePins.style.display = 'none';
@@ -298,23 +309,39 @@ export function renderPerfilesPinsUI() {
 
   if (btnSavePins) btnSavePins.style.display = 'block';
 
-  const cats = perfil.categorias || ["Sub-14"];
   if (!perfil.profiles) perfil.profiles = [];
 
-  // Sincronizar: garantizar que el perfil predeterminado ADMIN exista siempre
-  let defaultAdmin = perfil.profiles.find(p => p.id === 'admin' || p.rol === 'ADMIN');
-  if (!defaultAdmin) {
-    defaultAdmin = {
-      id: "admin",
-      nombre: "Director Deportivo",
-      rol: "ADMIN",
-      pin: isSuperAdmin() ? "1901" : "1234",
-      equipos: ["Dirección General"],
-      avatar: perfil.logo || DEFAULT_LOGO
-    };
-    perfil.profiles.unshift(defaultAdmin);
+  if (maxContratado === 1 && !isMaster) {
+    // Cuenta de 1 solo perfil (Plan DT Individual)
+    let soloPerfil = perfil.profiles[0];
+    if (!soloPerfil) {
+      soloPerfil = {
+        id: "dt_principal",
+        nombre: "Entrenador Principal",
+        rol: "DT",
+        categoria: perfil.categoriaActiva || "Principal",
+        pin: "1234",
+        avatar: perfil.logo || DEFAULT_LOGO
+      };
+      perfil.profiles = [soloPerfil];
+    }
   } else {
-    defaultAdmin.id = 'admin'; // Forzar ID protegido
+    // Sincronizar: garantizar que el perfil predeterminado ADMIN exista siempre en cuentas multi-perfil
+    let defaultAdmin = perfil.profiles.find(p => p.id === 'admin' || p.rol === 'ADMIN');
+    if (!defaultAdmin) {
+      defaultAdmin = {
+        id: "admin",
+        nombre: "Director Deportivo",
+        rol: "ADMIN",
+        pin: isMaster ? "1901" : "1234",
+        equipos: ["Dirección General"],
+        avatar: perfil.logo || DEFAULT_LOGO
+      };
+      perfil.profiles.unshift(defaultAdmin);
+    } else {
+      defaultAdmin.id = 'admin'; // Forzar ID protegido
+      defaultAdmin.rol = 'ADMIN';
+    }
   }
 
   // Garantizar estructura de arreglo para equipos (máx 3) sin forzar valores por defecto
@@ -322,17 +349,8 @@ export function renderPerfilesPinsUI() {
     if (!p.equipos || !Array.isArray(p.equipos)) {
       p.equipos = p.categoria ? [p.categoria] : [];
     }
-    // Asegurar máximo 3 equipos
     p.equipos = p.equipos.slice(0, 3);
   });
-
-  const isMaster = isSuperAdmin();
-  const maxContratado = isMaster ? 8 : (perfil.maxPerfiles || 1);
-
-  // Si el plan es de 1 solo perfil, forzar que solo quede el perfil predeterminado ADMIN
-  if (maxContratado === 1 && !isMaster) {
-    perfil.profiles = [defaultAdmin];
-  }
 
   const totalPerfiles = perfil.profiles.length;
 
@@ -342,7 +360,7 @@ export function renderPerfilesPinsUI() {
       const tienePIN = p.pin && p.pin.trim() !== '';
       const pinIcon = tienePIN ? '🔒' : '🔓';
       const pinColor = tienePIN ? '#d4af37' : '#555';
-      const esPredeterminado = p.id === 'admin';
+      const esPredeterminado = p.id === 'admin' || (maxContratado === 1 && !isMaster);
       const tieneEquipos = p.equipos && p.equipos.length > 0;
       const equiposTexto = tieneEquipos ? p.equipos.join(', ') : '';
       const subLabel = tieneEquipos ? `(${equiposTexto})` : '<small style="color:#888;">(Sin equipos asignados)</small>';
@@ -350,8 +368,8 @@ export function renderPerfilesPinsUI() {
       <div style="background:#0d0d0d;border:1px solid ${esPredeterminado ? 'var(--oro)' : '#222'};padding:12px;border-radius:10px;margin-bottom:8px;display:flex;flex-direction:column;gap:8px;">
         <!-- Fila superior: rol + ícono PIN + botón eliminar -->
         <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-size:13px;font-weight:700;color:${esPredeterminado ? 'var(--oro)' : '#2ecc71'};">
-            ${esPredeterminado ? '👑' : '🧢'} ${p.rol} ${subLabel} ${esPredeterminado ? '<small style="color:var(--oro);font-weight:800;">(PREDETERMINADO)</small>' : ''}
+          <span style="font-size:13px;font-weight:700;color:${p.rol === 'ADMIN' ? 'var(--oro)' : '#2ecc71'};">
+            ${p.rol === 'ADMIN' ? '👑' : '🧢'} ${p.rol} ${subLabel} ${esPredeterminado ? '<small style="color:var(--oro);font-weight:800;">(PREDETERMINADO)</small>' : ''}
             <span style="font-size:16px;margin-left:6px;" title="${tienePIN ? 'PIN asignado' : 'Sin PIN — acceso libre'}">${pinIcon}</span>
           </span>
           ${!esPredeterminado ? `<button onclick="window._eliminarPerfilConfig('${p.id}')" style="background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);color:#e74c3c;padding:4px 8px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;" title="Eliminar este perfil DT">🗑️ ELIMINAR</button>` : `<span style="font-size:10px;color:var(--oro);font-weight:700;background:rgba(212,175,55,0.12);padding:2px 8px;border-radius:6px;">🔒 Protegido</span>`}
@@ -374,27 +392,39 @@ export function renderPerfilesPinsUI() {
       </div>`;
     }).join('')}
 
-    <!-- AGREGAR NUEVO PERFIL DT EXTRA -->
-    <div style="margin-top:10px;padding:12px;background:#080808;border:1px dashed var(--oro);border-radius:10px;">
-      <div style="font-size:12px;color:var(--oro);font-weight:700;margin-bottom:6px;">➕ AGREGAR NUEVO PERFIL DE ENTRENADOR (DT)</div>
-      <div style="font-size:10px;color:#666;margin-bottom:8px;">Tu plan actual permite <strong style="color:#aaa;">${maxContratado} perfil(es)</strong>. Tienes <strong style="color:#2ecc71;">${totalPerfiles}</strong> activos.</div>
-      ${totalPerfiles < maxContratado ? `
-        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:4px;">
-          <input type="text" id="cfg-nuevo-nombre-perfil" placeholder="Nombre del Entrenador (ej. DT Carlos Pérez)" style="font-size:12px;padding:8px;background:#181818;border:1px solid #333;color:#fff;border-radius:6px;">
-          <div style="display:flex;gap:8px;">
-            <input type="text" id="cfg-nueva-cat-perfil" placeholder="Equipos/Categorías (opcional, máx 3, ej: Sub-16 A, Sub-16 B)" style="flex:1;font-size:12px;padding:8px;background:#181818;border:1px solid #333;color:#fff;border-radius:6px;">
-            <div style="position:relative;display:flex;align-items:center;">
-              <input type="password" id="cfg-nuevo-pin-perfil" placeholder="PIN (4 dig)" maxlength="4" inputmode="numeric" style="width:110px;text-align:center;font-size:12px;padding:8px 24px 8px 8px;background:#181818;border:1px solid #333;color:#fff;border-radius:6px;">
-              <button type="button" onclick="window._togglePasswordVisibility('cfg-nuevo-pin-perfil', this)" style="position:absolute;right:2px;background:none;border:none;color:#aaa;cursor:pointer;font-size:13px;padding:2px;" title="Mostrar / Ocultar PIN">👁️</button>
-            </div>
-          </div>
-          <button class="btn btn-gold" onclick="window._agregarNuevoPerfilDT()" style="font-size:12px;padding:9px;width:100%;font-weight:700;">➕ CREAR Y GUARDAR NUEVO PERFIL DT</button>
+    <!-- AGREGAR NUEVO PERFIL O BANNER DE UPGRADE -->
+    ${maxContratado === 1 && !isMaster ? `
+      <div style="margin-top:10px;padding:14px;background:rgba(212,175,55,0.06);border:1px dashed var(--oro);border-radius:10px;text-align:center;">
+        <div style="font-size:13px;color:var(--oro);font-weight:900;margin-bottom:6px;">🚀 ¿TIENES MÁS ENTRENADORES O CATEGORÍAS?</div>
+        <div style="font-size:11px;color:#ccc;margin-bottom:12px;line-height:1.5;">
+          Pasa a un <strong>Plan Club o Academia</strong> para desbloquear el <strong>Panel de Director Deportivo (Supervisión Global)</strong> y asignar accesos independientes a cada entrenador.
         </div>
-      ` : `
-        <div style="font-size:11px;color:#aaa;margin-bottom:6px;">Límite de perfiles alcanzado para tu plan (${totalPerfiles}/${maxContratado}).</div>
-        <button class="btn btn-green" onclick="mostrarModalUpgradePlan(${totalPerfiles}, ${maxContratado})" style="font-size:11px;padding:6px 12px;width:auto;">💬 AMPLIAR PLAN O PERFILES</button>
-      `}
-    </div>
+        <button class="btn btn-gold" onclick="mostrarModalUpgradePlan(1, 1)" style="font-size:11px;padding:8px 16px;font-weight:900;">
+          ⭐ AMPLIAR A PLAN CLUB / DIRECTOR DEPORTIVO
+        </button>
+      </div>
+    ` : `
+      <div style="margin-top:10px;padding:12px;background:#080808;border:1px dashed var(--oro);border-radius:10px;">
+        <div style="font-size:12px;color:var(--oro);font-weight:700;margin-bottom:6px;">➕ AGREGAR NUEVO PERFIL DE ENTRENADOR (DT)</div>
+        <div style="font-size:10px;color:#666;margin-bottom:8px;">Tu plan actual permite <strong style="color:#aaa;">${maxContratado} perfil(es)</strong>. Tienes <strong style="color:#2ecc71;">${totalPerfiles}</strong> activos.</div>
+        ${totalPerfiles < maxContratado ? `
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:4px;">
+            <input type="text" id="cfg-nuevo-nombre-perfil" placeholder="Nombre del Entrenador (ej. DT Carlos Pérez)" style="font-size:12px;padding:8px;background:#181818;border:1px solid #333;color:#fff;border-radius:6px;">
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="cfg-nueva-cat-perfil" placeholder="Equipos/Categorías (opcional, máx 3, ej: Sub-16 A, Sub-16 B)" style="flex:1;font-size:12px;padding:8px;background:#181818;border:1px solid #333;color:#fff;border-radius:6px;">
+              <div style="position:relative;display:flex;align-items:center;">
+                <input type="password" id="cfg-nuevo-pin-perfil" placeholder="PIN (4 dig)" maxlength="4" inputmode="numeric" style="width:110px;text-align:center;font-size:12px;padding:8px 24px 8px 8px;background:#181818;border:1px solid #333;color:#fff;border-radius:6px;">
+                <button type="button" onclick="window._togglePasswordVisibility('cfg-nuevo-pin-perfil', this)" style="position:absolute;right:2px;background:none;border:none;color:#aaa;cursor:pointer;font-size:13px;padding:2px;" title="Mostrar / Ocultar PIN">👁️</button>
+              </div>
+            </div>
+            <button class="btn btn-gold" onclick="window._agregarNuevoPerfilDT()" style="font-size:12px;padding:9px;width:100%;font-weight:700;">➕ CREAR Y GUARDAR NUEVO PERFIL DT</button>
+          </div>
+        ` : `
+          <div style="font-size:11px;color:#aaa;margin-bottom:6px;">Límite de perfiles alcanzado para tu plan (${totalPerfiles}/${maxContratado}).</div>
+          <button class="btn btn-green" onclick="mostrarModalUpgradePlan(${totalPerfiles}, ${maxContratado})" style="font-size:11px;padding:6px 12px;width:auto;">💬 AMPLIAR PLAN O PERFILES</button>
+        `}
+      </div>
+    `}
   `;
 }
 
@@ -508,11 +538,23 @@ export function renderCategoriasConfigUI() {
   const cont = document.getElementById('cfg-lista-categorias');
   if (!cont) return;
 
-  const cats = Array.isArray(perfil.categorias) ? perfil.categorias : [];
+  const esAdmin = currentProfile && currentProfile.rol === 'ADMIN';
+  let cats = Array.isArray(perfil.categorias) ? perfil.categorias : [];
+
+  // Los DT solo ven sus equipos asignados en la configuración de torneos
+  if (!esAdmin) {
+    const misEquipos = (currentProfile && currentProfile.equipos && Array.isArray(currentProfile.equipos) && currentProfile.equipos.length)
+      ? currentProfile.equipos
+      : (currentProfile && currentProfile.categoria ? [currentProfile.categoria] : []);
+    if (misEquipos.length) {
+      cats = cats.filter(c => misEquipos.includes(c));
+    }
+  }
+
   if (cats.length === 0) {
     cont.innerHTML = `
       <div style="font-size:12px;color:#aaa;padding:12px;text-align:center;background:#0d0d0d;border-radius:8px;border:1px dashed #444;margin-bottom:10px;">
-        ⚠️ No tienes categorías ni equipos registrados. Agrega una nueva categoría abajo a tu gusto.
+        ⚠️ No tienes categorías asignadas actualmente. Agrega una nueva categoría abajo a tu gusto.
       </div>
     `;
     return;
@@ -522,9 +564,13 @@ export function renderCategoriasConfigUI() {
     const torneos = getTorneosCategoria(c);
     return `
       <div style="background:#0d0d0d;border:1px solid #222;padding:12px;border-radius:10px;margin-bottom:10px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px;">
           <span style="font-weight:700;color:var(--oro);">${c} ${c === perfil.categoriaActiva ? '⭐ (ACTIVA)' : ''}</span>
-          <button onclick="window._eliminarCategoriaConfig('${c}')" style="background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);color:#e74c3c;padding:4px 8px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;" title="Eliminar esta categoría">🗑️ ELIMINAR</button>
+          ${esAdmin ? `
+            <button onclick="window._eliminarCategoriaConfig('${c}')" style="background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);color:#e74c3c;padding:4px 8px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;" title="Eliminar esta categoría de la institución">🗑️ ELIMINAR</button>
+          ` : `
+            <span style="font-size:10px;color:#888;background:#181818;padding:2px 6px;border-radius:4px;border:1px solid #333;">🔒 Equipo Institucional</span>
+          `}
         </div>
         
         <div style="font-size:11px;color:#aaa;margin-bottom:6px;font-weight:600;">🏆 Torneos de esta categoría:</div>
@@ -694,6 +740,11 @@ export async function agregarNuevaCategoriaConfig() {
 }
 
 export function eliminarCategoriaConfig(catNombre) {
+  const esAdmin = currentProfile && currentProfile.rol === 'ADMIN';
+  if (!esAdmin) {
+    return mostrarNotificacionApp('Acceso Restringido', '🔒 Solo el Director Deportivo (ADMIN) puede eliminar categorías institucionales.', false);
+  }
+
   mostrarConfirmacionApp('Eliminar Categoría', `¿Estás seguro de eliminar la categoría ${catNombre}?`, async () => {
     perfil.categorias = (perfil.categorias || []).filter(c => c !== catNombre);
     if (categoriasData[catNombre]) {
@@ -1150,14 +1201,15 @@ export function actualizarDetallesPlanWizard(numProfiles) {
   const priceEl = document.getElementById('wiz-plan-price');
 
   const names = {
-    1: 'Plan Dirección Institucional (1 Perfil Admin)',
-    2: 'Plan Club Dúo (2 Perfiles: 1 Admin + 1 DT)',
-    3: 'Plan Club Trío (3 Perfiles: 1 Admin + 2 DTs)',
-    4: 'Plan Academia Pro (4 Perfiles: 1 Admin + 3 DTs)',
-    5: 'Plan Academia Pro (5 Perfiles: 1 Admin + 4 DTs)',
-    6: 'Plan Club Elite (6 Perfiles: 1 Admin + 5 DTs)',
-    7: 'Plan Club Elite (7 Perfiles: 1 Admin + 6 DTs)',
-    8: 'Plan Institución Máxima (8 Perfiles: 1 Admin + 7 DTs)'
+    1: 'Plan DT Individual (1 Entrenador)',
+    2: 'Plan Club Dúo (1 Director Deportivo + 1 DT)',
+    3: 'Plan Club Trío (1 Director Deportivo + 2 DTs)',
+    4: 'Plan Academia Pro (1 Director Deportivo + 3 DTs)',
+    5: 'Plan Academia Pro (1 Director Deportivo + 4 DTs)',
+    6: 'Plan Club Elite (1 Director Deportivo + 5 DTs)',
+    7: 'Plan Club Elite (1 Director Deportivo + 6 DTs)',
+    8: 'Plan Institución Máxima (1 Director Deportivo + 7 DTs)',
+    9: 'Plan Institución Máxima Pro (1 Director Deportivo + 8 DTs)'
   };
 
   const name = names[numProfiles] || `Plan Institucional (${numProfiles} Perfiles)`;
@@ -1166,9 +1218,9 @@ export function actualizarDetallesPlanWizard(numProfiles) {
   if (titleEl) titleEl.textContent = name;
   if (descEl) {
     if (numProfiles === 1) {
-      descEl.textContent = `Incluye 1 Perfil de Administrador (Director Deportivo) para gestionar la institución, visualizar estadísticas consolidadas, torneos, kits y usuarios del club. (Plan de 1 solo acceso exclusivo para Administración).`;
+      descEl.textContent = `Diseñado para el entrenador independiente o equipo único. Incluye pizarra táctica, gestión de plantel, convocatorias, estadísticas por jugador, calendario de partidos en vivo y biblioteca de entrenamientos.`;
     } else {
-      descEl.textContent = `Incluye 1 Perfil de Administrador (Director Deportivo) para control institucional + ${numProfiles - 1} Perfil(es) de Entrenador (DT) independientes para plantilla, tácticas, citaciones y estadísticas por categoría.`;
+      descEl.textContent = `Incluye 1 Perfil de Director Deportivo (ADMIN) con Panel de Supervisión global del club + ${numProfiles - 1} Perfil(es) de Entrenador (DT) independientes para plantilla, tácticas, citaciones y estadísticas por categoría.`;
     }
   }
   if (priceEl) priceEl.textContent = `$${price} USD / mes`;
@@ -1333,24 +1385,39 @@ export async function finalizarOnboardingWizard() {
     perfil.categoriaActiva = wizardTempCats[0] || '';
     perfil.kitA = wizardTempKit;
 
-    // Re-generar perfiles: 1 ADMIN (+ N-1 perfiles DTs contratados)
-    perfil.profiles = [
-      {
-        id: "admin",
-        nombre: "Director Deportivo",
-        rol: "ADMIN",
-        pin: pinAdminInput,
-        avatar: perfil.logo || DEFAULT_LOGO
-      }
-    ];
+    // Generar perfiles según el plan elegido
+    if (numProfiles === 1) {
+      perfil.profiles = [
+        {
+          id: "dt_principal",
+          nombre: "Entrenador Principal",
+          rol: "DT",
+          categoria: wizardTempCats[0] || "Principal",
+          equipos: [wizardTempCats[0] || "Principal"],
+          pin: pinAdminInput,
+          avatar: perfil.logo || DEFAULT_LOGO
+        }
+      ];
+    } else {
+      // Planes Club / Academia: 1 Director Deportivo (ADMIN) + (N-1) DTs
+      perfil.profiles = [
+        {
+          id: "admin",
+          nombre: "Director Deportivo",
+          rol: "ADMIN",
+          pin: pinAdminInput,
+          equipos: ["Dirección General"],
+          avatar: perfil.logo || DEFAULT_LOGO
+        }
+      ];
 
-    if (numProfiles > 1) {
       wizardTempCats.forEach(cat => {
         perfil.profiles.push({
           id: `dt_${cat.replace(/\s+/g, '_').toLowerCase()}_${Date.now()}`,
           nombre: `DT ${cat}`,
           rol: 'DT',
           categoria: cat,
+          equipos: [cat],
           pin: '1234',
           avatar: perfil.logo || DEFAULT_LOGO
         });
@@ -1393,6 +1460,7 @@ export async function finalizarOnboardingWizard() {
       const pubPayload = {
         club: perfil.club || 'Nuevo Club',
         email: emailUser,
+        uid: uid || '',
         whatsapp: perfil.whatsapp || '',
         logo: perfil.logo || '',
         estadoCuenta: isMaster ? 'ACTIVO' : (perfil.estadoCuenta || 'PENDIENTE'),
@@ -1510,6 +1578,302 @@ export async function guardarDatosPersonalesConfig() {
 }
 
 window._guardarDatosPersonalesConfig = guardarDatosPersonalesConfig;
+
+// ════════════════════════════════════════════════════════════════
+// MODAL REACTIVO DE REPORTE DE PAGO (LADO DEL CLUB)
+// ════════════════════════════════════════════════════════════════
+export async function abrirModalReportarPago() {
+  const modal = document.getElementById('modal');
+  const modalContent = document.getElementById('modal-content');
+  if (!modal || !modalContent) return;
+
+  modalContent.innerHTML = `
+    <div style="text-align:center;padding:24px;color:var(--oro);">
+      ⏳ Consultando pasarelas y métodos de pago disponibles...
+    </div>
+  `;
+  modal.style.display = 'flex';
+
+  const pasarelas = await obtenerConfiguracionPasarelas();
+  const pasarelasActivas = Object.entries(pasarelas).filter(([k, v]) => v && v.activo);
+
+  if (pasarelasActivas.length === 0) {
+    modalContent.innerHTML = `
+      <div class="modal-title">💳 MÉTODOS DE PAGO</div>
+      <div class="card" style="text-align:center;padding:24px;">
+        <div style="font-size:32px;margin-bottom:8px;">⚠️</div>
+        <div style="font-size:14px;color:#fff;font-weight:700;">No hay pasarelas activadas en este momento.</div>
+        <div style="font-size:12px;color:#aaa;margin:10px 0 16px;">Comunícate directamente con la administración general por WhatsApp para acordar tu método de pago.</div>
+        <button onclick="window.open('https://wa.me/584141401560?text=${encodeURIComponent('Hola, deseo renovar mi membresía en 11FUT MANAGER.')}', '_blank')" class="btn btn-green" style="width:100%;">
+          💬 Contactar por WhatsApp
+        </button>
+        <button onclick="document.getElementById('modal').style.display='none'" class="btn btn-gray" style="width:100%;margin-top:8px;">Cerrar</button>
+      </div>
+    `;
+    return;
+  }
+
+  let metodoSeleccionado = pasarelasActivas[0][0];
+  let screenshotBase64 = '';
+
+  function renderFormularioPago() {
+    const configMetodo = pasarelas[metodoSeleccionado] || {};
+
+    let textoCopiar = '';
+    let datosHTML = '';
+
+    if (metodoSeleccionado === 'pagoMovil') {
+      textoCopiar = `Banco: ${configMetodo.banco}\nTeléfono: ${configMetodo.telefono}\nCédula: ${configMetodo.cedula}\nTitular: ${configMetodo.titular}`;
+      datosHTML = `
+        <div>🏦 Banco: <b>${configMetodo.banco}</b></div>
+        <div>📱 Teléfono: <b>${configMetodo.telefono}</b></div>
+        <div>🪪 Cédula / RIF: <b>${configMetodo.cedula}</b></div>
+        <div>👤 Titular: <b>${configMetodo.titular}</b></div>
+      `;
+    } else if (metodoSeleccionado === 'binance') {
+      textoCopiar = `Binance Pay ID: ${configMetodo.payId}\nCorreo: ${configMetodo.correo}\nRed: ${configMetodo.red}`;
+      datosHTML = `
+        <div>🟡 Binance Pay ID: <b>${configMetodo.payId}</b></div>
+        <div>📧 Correo Binance: <b>${configMetodo.correo}</b></div>
+        <div>🌐 Red: <b>${configMetodo.red || 'Binance Pay / BEP20'}</b></div>
+      `;
+    } else if (metodoSeleccionado === 'zelle') {
+      textoCopiar = `Correo Zelle: ${configMetodo.correo}\nTitular: ${configMetodo.titular}`;
+      datosHTML = `
+        <div>📧 Correo Zelle: <b>${configMetodo.correo}</b></div>
+        <div>👤 Titular: <b>${configMetodo.titular}</b></div>
+      `;
+    } else if (metodoSeleccionado === 'airtm') {
+      textoCopiar = `Correo Airtm: ${configMetodo.correo}\nTitular: ${configMetodo.titular}`;
+      datosHTML = `
+        <div>📧 Correo Airtm: <b>${configMetodo.correo}</b></div>
+        <div>👤 Titular: <b>${configMetodo.titular}</b></div>
+      `;
+    } else if (metodoSeleccionado === 'zinli') {
+      textoCopiar = `Correo Zinli: ${configMetodo.correo}\nTitular: ${configMetodo.titular}`;
+      datosHTML = `
+        <div>📧 Correo Zinli: <b>${configMetodo.correo}</b></div>
+        <div>👤 Titular: <b>${configMetodo.titular}</b></div>
+      `;
+    } else if (metodoSeleccionado === 'paypal') {
+      textoCopiar = `Correo PayPal: ${configMetodo.correo}\nEnlace: ${configMetodo.link}`;
+      datosHTML = `
+        <div>📧 Correo PayPal: <b>${configMetodo.correo}</b></div>
+        ${configMetodo.link ? `<div>🔗 Enlace directo: <b>${configMetodo.link}</b></div>` : ''}
+        <div style="font-size:11px;color:#f39c12;margin-top:4px;">⚠️ El cliente cubre la comisión de PayPal (~5.4% + $0.30 USD) para recibir el monto neto.</div>
+      `;
+    }
+
+    // Campos dinámicos
+    let camposDinamicosHTML = '';
+    if (metodoSeleccionado === 'pagoMovil') {
+      camposDinamicosHTML = `
+        <label style="font-size:11px;color:#888;">Tu Banco Emisor:</label>
+        <input type="text" id="rep-banco-emisor" placeholder="ej. Banesco, Mercantil, Venezuela">
+        <label style="font-size:11px;color:#888;">Teléfono desde el que pagaste:</label>
+        <input type="text" id="rep-telefono-emisor" placeholder="ej. 0414-1234567">
+        <label style="font-size:11px;color:#888;">Monto pagado en Bolívares (Bs):</label>
+        <input type="text" id="rep-monto" placeholder="ej. 1.850 Bs">
+      `;
+    } else if (metodoSeleccionado === 'binance') {
+      camposDinamicosHTML = `
+        <label style="font-size:11px;color:#888;">Tu Nickname / Pay ID o Correo Binance:</label>
+        <input type="text" id="rep-binance-id" placeholder="ej. MiUsuario / 12345678">
+        <label style="font-size:11px;color:#888;">Monto enviado en USDT:</label>
+        <input type="number" id="rep-monto" placeholder="ej. 20.00" step="0.01">
+      `;
+    } else if (metodoSeleccionado === 'zelle') {
+      camposDinamicosHTML = `
+        <label style="font-size:11px;color:#888;">Nombre del Titular de la Cuenta Zelle Emisora:</label>
+        <input type="text" id="rep-zelle-titular" placeholder="ej. Carlos Pérez">
+        <label style="font-size:11px;color:#888;">Monto enviado en USD:</label>
+        <input type="number" id="rep-monto" placeholder="ej. 20.00" step="0.01">
+      `;
+    } else if (metodoSeleccionado === 'airtm' || metodoSeleccionado === 'zinli') {
+      camposDinamicosHTML = `
+        <label style="font-size:11px;color:#888;">Tu Correo de ${configMetodo.nombre}:</label>
+        <input type="text" id="rep-email-emisor" placeholder="ej. mi-correo@gmail.com">
+        <label style="font-size:11px;color:#888;">Monto enviado en USD:</label>
+        <input type="number" id="rep-monto" placeholder="ej. 20.00" step="0.01">
+      `;
+    } else if (metodoSeleccionado === 'paypal') {
+      camposDinamicosHTML = `
+        <label style="font-size:11px;color:#888;">Tu Correo PayPal:</label>
+        <input type="text" id="rep-paypal-email" placeholder="ej. mi-paypal@gmail.com">
+        <label style="font-size:11px;color:#888;">Monto Neto Enviado en USD:</label>
+        <input type="number" id="rep-monto" placeholder="ej. 20.00" step="0.01" oninput="window._calcularComisionPayPal(this.value)">
+        <div id="rep-paypal-calc-info" style="font-size:11px;color:var(--oro);margin:4px 0 8px;"></div>
+      `;
+    }
+
+    modalContent.innerHTML = `
+      <div class="modal-title">💳 REPORTAR PAGO DE MEMBRESÍA</div>
+
+      <!-- SELECTOR DE PASARELA -->
+      <div style="margin-bottom:14px;">
+        <label style="font-size:12px;color:var(--oro);font-weight:800;display:block;margin-bottom:6px;">
+          Selecciona tu Método de Pago:
+        </label>
+        <select id="rep-select-metodo" style="width:100%;padding:10px;background:#181818;border:1px solid var(--oro);color:#fff;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">
+          ${pasarelasActivas.map(([key, val]) => `
+            <option value="${key}" ${key === metodoSeleccionado ? 'selected' : ''}>${val.nombre || key}</option>
+          `).join('')}
+        </select>
+      </div>
+
+      <!-- CAJA DE DATOS DE RECEPCIÓN DEL ADMIN -->
+      <div style="background:#111;border:1px solid #333;border-radius:10px;padding:12px;margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:11px;color:var(--oro);font-weight:800;text-transform:uppercase;">Datos para transferir:</span>
+          <button id="btn-copiar-datos-pago" class="btn btn-gold" style="font-size:11px;padding:4px 10px;font-weight:800;">
+            📋 Copiar Datos
+          </button>
+        </div>
+        <div style="font-size:12px;color:#eee;line-height:1.6;">
+          ${datosHTML}
+        </div>
+        ${configMetodo.instrucciones ? `<div style="font-size:11px;color:#888;margin-top:8px;border-top:1px dashed #333;padding-top:6px;">ℹ️ ${configMetodo.instrucciones}</div>` : ''}
+      </div>
+
+      <!-- CAMPOS DINÁMICOS SEGÚN EL MÉTODO -->
+      <div style="margin-bottom:12px;">
+        ${camposDinamicosHTML}
+
+        <!-- CAMPO OBLIGATORIO: ÚLTIMOS 4 DÍGITOS DE LA REFERENCIA -->
+        <label style="font-size:12px;color:var(--oro);font-weight:900;display:block;margin-top:10px;margin-bottom:4px;">
+          🔢 ÚLTIMOS 4 DÍGITOS DE LA REFERENCIA O TRANSACCIÓN:
+        </label>
+        <input type="text" id="rep-ref-4" maxlength="4" placeholder="ej. 4892" style="font-family:monospace;font-size:22px;letter-spacing:6px;text-align:center;padding:10px;background:#181818;border:2px solid var(--oro);color:#fff;font-weight:900;">
+      </div>
+
+      <!-- SUBIR FOTO DEL COMPROBANTE -->
+      <div style="margin-bottom:16px;">
+        <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">📎 Comprobante o Captura (Opcional):</label>
+        <input type="file" id="rep-comprobante-file" accept="image/*" style="display:none;">
+        <div onclick="document.getElementById('rep-comprobante-file').click()" style="border:1px dashed #444;background:#141414;padding:10px;border-radius:8px;text-align:center;cursor:pointer;">
+          <span id="rep-comprobante-label" style="font-size:12px;color:#aaa;">🖼️ Toca aquí para adjuntar screenshot del comprobante</span>
+        </div>
+      </div>
+
+      <!-- BOTONES DE ACCIÓN -->
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button id="btn-enviar-reporte-pago" class="btn btn-green" style="padding:12px;font-size:14px;font-weight:900;">
+          🚀 ENVIAR REPORTE DE PAGO
+        </button>
+        <button onclick="document.getElementById('modal').style.display='none'" class="btn btn-gray" style="padding:8px;">
+          Cancelar
+        </button>
+      </div>
+    `;
+
+    // Eventos
+    document.getElementById('rep-select-metodo')?.addEventListener('change', (e) => {
+      metodoSeleccionado = e.target.value;
+      renderFormularioPago();
+    });
+
+    document.getElementById('btn-copiar-datos-pago')?.addEventListener('click', () => {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(textoCopiar).then(() => {
+          mostrarToastRapido('Copiado', 'Datos de pago copiados al portapapeles.', true);
+        });
+      }
+    });
+
+    document.getElementById('rep-comprobante-file')?.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          screenshotBase64 = ev.target.result;
+          const label = document.getElementById('rep-comprobante-label');
+          if (label) label.innerHTML = `✅ <span style="color:#2ecc71;font-weight:bold;">${file.name}</span> adjunto exitosamente`;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    document.getElementById('btn-enviar-reporte-pago')?.addEventListener('click', async () => {
+      const refVal = document.getElementById('rep-ref-4')?.value.trim();
+      const montoVal = document.getElementById('rep-monto')?.value.trim();
+
+      if (!refVal || refVal.length !== 4) {
+        return mostrarNotificacionApp('Referencia Inválida', 'Por favor ingresa exactamente los últimos 4 dígitos de la referencia bancaria o ID de transacción.', false);
+      }
+
+      const btnSubmit = document.getElementById('btn-enviar-reporte-pago');
+      if (btnSubmit) {
+        btnSubmit.disabled = true;
+        btnSubmit.textContent = '⏳ Enviando reporte...';
+      }
+
+      try {
+        const userUid = (auth && auth.currentUser && auth.currentUser.uid) ? auth.currentUser.uid : (perfil.email || 'club');
+        const pagoId = `pago_${Date.now()}`;
+
+        const payloadPago = {
+          id: pagoId,
+          clubId: userUid,
+          clubNombre: perfil.club || 'Club Registrado',
+          clubEmail: perfil.email || '',
+          clubWhatsapp: perfil.whatsapp || '',
+          metodo: configMetodo.nombre || metodoSeleccionado,
+          monto: montoVal || '20.00',
+          moneda: configMetodo.moneda || 'USD',
+          referencia: refVal,
+          comprobanteUrl: screenshotBase64 || '',
+          fechaReporte: new Date().toISOString(),
+          estado: 'PENDIENTE',
+          createdAt: new Date().toISOString()
+        };
+
+        await setDoc(doc(db, 'pagos_reportados', pagoId), payloadPago);
+
+        // Actualizar estado del club en memoria y nube a EN_REVISION
+        perfil.estadoCuenta = 'EN_REVISION';
+        autoSaveLocal();
+        await guardarFirebase();
+
+        modal.style.display = 'none';
+
+        mostrarConfirmacionApp(
+          '¡Reporte Enviado!',
+          `Tu pago con referencia final ...${refVal} ha sido reportado exitosamente. En breve el Administrador verificará tu transacción y activará tus 30 días de membresía. ¿Deseas notificarlo por WhatsApp ahora?`,
+          () => {
+            const msg = encodeURIComponent(`Hola, acabo de reportar mi pago en 11FUT MANAGER (${payloadPago.metodo}, Monto: ${payloadPago.monto}, Ref: ...${refVal}). Mi club es ${perfil.club}.`);
+            window.open(`https://wa.me/584141401560?text=${msg}`, '_blank');
+          }
+        );
+
+      } catch (err) {
+        console.error('Error reportando pago:', err);
+        mostrarNotificacionApp('Error', 'No se pudo enviar el reporte de pago: ' + err.message, false);
+        if (btnSubmit) {
+          btnSubmit.disabled = false;
+          btnSubmit.textContent = '🚀 ENVIAR REPORTE DE PAGO';
+        }
+      }
+    });
+  }
+
+  window._calcularComisionPayPal = (montoNeto) => {
+    const net = parseFloat(montoNeto) || 0;
+    const calcInfo = document.getElementById('rep-paypal-calc-info');
+    if (!calcInfo) return;
+    if (net <= 0) {
+      calcInfo.textContent = '';
+      return;
+    }
+    const comPct = currentPaymentConfig.paypal?.comisionPorcentaje || 5.4;
+    const comFija = currentPaymentConfig.paypal?.comisionFija || 0.30;
+    const bruto = (net + comFija) / (1 - comPct / 100);
+    calcInfo.innerHTML = `💡 Para recibir <b>$${net.toFixed(2)} netos</b>, debes transferir <b>$${bruto.toFixed(2)} USD</b> brutos por PayPal.`;
+  };
+
+  renderFormularioPago();
+}
+
+window._abrirModalReportarPago = abrirModalReportarPago;
 
 
 

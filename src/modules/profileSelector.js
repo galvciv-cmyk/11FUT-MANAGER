@@ -18,22 +18,32 @@ export function renderProfileSelector(onProfileSelected, forceShow = false) {
   const isMaster = isSuperAdmin();
   const maxAllowed = isMaster ? 8 : (perfil.maxPerfiles || 1);
 
-  // Asegurar que exista el perfil predeterminado ADMIN (Director Deportivo)
-  let hasAdmin = (perfil.profiles || []).find(p => p.id === 'admin');
-  if (!hasAdmin) {
-    hasAdmin = {
-      id: "admin",
-      nombre: "Director Deportivo",
-      rol: "ADMIN",
-      pin: isMaster ? "1901" : "1234",
-      avatar: perfil.logo || "https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png"
-    };
-    perfil.profiles = [hasAdmin, ...(perfil.profiles || [])];
-  }
-
-  // SI EL PLAN ES DE 1 SOLO PERFIL: Forzar que ÚNICAMENTE exista el perfil predeterminado ADMIN
   if (maxAllowed === 1 && !isMaster) {
-    perfil.profiles = [hasAdmin];
+    let soloPerfil = (perfil.profiles || [])[0];
+    if (!soloPerfil) {
+      soloPerfil = {
+        id: "dt_principal",
+        nombre: "Entrenador Principal",
+        rol: "DT",
+        categoria: perfil.categoriaActiva || (perfil.categorias && perfil.categorias[0]) || "Principal",
+        pin: "1234",
+        avatar: perfil.logo || "https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png"
+      };
+    }
+    perfil.profiles = [soloPerfil];
+  } else {
+    // Asegurar que exista el perfil predeterminado ADMIN (Director Deportivo) en cuentas multi-perfil
+    let hasAdmin = (perfil.profiles || []).find(p => p.id === 'admin');
+    if (!hasAdmin) {
+      hasAdmin = {
+        id: "admin",
+        nombre: "Director Deportivo",
+        rol: "ADMIN",
+        pin: isMaster ? "1901" : "1234",
+        avatar: perfil.logo || "https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png"
+      };
+      perfil.profiles = [hasAdmin, ...(perfil.profiles || [])];
+    }
   }
 
   let profilesList = perfil.profiles;
@@ -70,17 +80,17 @@ export function renderProfileSelector(onProfileSelected, forceShow = false) {
       <div style="display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:24px;margin-bottom:24px;">
         ${profilesList.map(p => `
           <div style="position:relative;display:flex;flex-direction:column;align-items:center;">
-            ${p.id !== 'admin' ? `
+            ${(p.id === 'admin' || p.id === 'dt_principal' || profilesList.length <= 1) ? `
+              <div title="Perfil Principal (No eliminable)" 
+                style="position:absolute;top:-6px;right:-6px;z-index:20;background:var(--oro);color:#000;border-radius:50%;width:24px;height:24px;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.5);">
+                👑
+              </div>
+            ` : `
               <button onclick="event.stopPropagation(); window._eliminarPerfilDT('${p.id}')" 
                 title="Eliminar este perfil de Entrenador" 
                 style="position:absolute;top:-6px;right:-6px;z-index:20;background:var(--rojo);border:2px solid #000;color:#fff;border-radius:50%;width:28px;height:28px;font-size:12px;font-weight:900;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;transition:transform 0.15s ease;">
                 🗑️
               </button>
-            ` : `
-              <div title="Perfil Predeterminado de la Institución (No eliminable)" 
-                style="position:absolute;top:-6px;right:-6px;z-index:20;background:var(--oro);color:#000;border-radius:50%;width:24px;height:24px;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.5);">
-                👑
-              </div>
             `}
             <div class="profile-card-item" onclick="window._onSelectProfileCard('${p.id}')" style="display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:transform 0.2s ease;">
               <div style="width:110px;height:110px;border-radius:50%;border:3px solid ${p.rol === 'ADMIN' ? 'var(--oro)' : '#2ecc71'};padding:4px;background:#111;box-shadow:0 8px 25px rgba(0,0,0,0.6);position:relative;display:flex;align-items:center;justify-content:center;">
@@ -128,8 +138,8 @@ export function renderProfileSelector(onProfileSelected, forceShow = false) {
     const profTarget = perfil.profiles.find(x => x.id === pId);
     if (!profTarget) return;
 
-    if (pId === 'admin') {
-      return mostrarNotificacionApp('Perfil Protegido', 'El perfil Director Deportivo (ADMIN) es el único perfil predeterminado de la institución y no se puede eliminar.', false);
+    if (pId === 'admin' || pId === 'dt_principal' || (perfil.profiles && perfil.profiles.length <= 1)) {
+      return mostrarNotificacionApp('Perfil Protegido', 'El perfil principal es indispensable para acceder a la cuenta y no se puede eliminar.', false);
     }
 
     const adminProfile = perfil.profiles.find(x => x.id === 'admin') || { pin: isSuperAdmin() ? '1901' : '1234' };
