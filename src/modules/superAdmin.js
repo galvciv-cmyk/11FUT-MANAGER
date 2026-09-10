@@ -449,13 +449,20 @@ async function renderSubtabClubes(container) {
 }
 
 function renderTarjetaClubHTML(c) {
-  const clubNombre = c.club || 'Sin Nombre';
-  const email = c.email || c.id;
-  const wa = c.whatsapp || 'Sin WhatsApp';
+  const clubNombre = (c.club || 'Sin Nombre').replace(/'/g, "\\'");
+  const email = (c.email || c.id || '').replace(/'/g, "\\'");
+  const wa = (c.whatsapp || 'Sin WhatsApp').replace(/'/g, "\\'");
+  const fechaVencSafe = (c.fechaVencimiento || '').replace(/'/g, "\\'");
   const maxP = c.maxPerfiles || 1;
   const estado = c.estadoCuenta || 'PENDIENTE';
 
-  const fechaExp = c.fechaVencimiento ? new Date(c.fechaVencimiento) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  let fechaExp = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  if (c.fechaVencimiento) {
+    try {
+      const d = new Date(c.fechaVencimiento);
+      if (!isNaN(d.getTime())) fechaExp = d;
+    } catch (e) {}
+  }
   const diffMs = fechaExp - new Date();
   const diasRestantes = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
 
@@ -516,9 +523,9 @@ function renderTarjetaClubHTML(c) {
             CUENTA MASTER PLATAFORMA SAAS
           </div>
         ` : `
-          <button class="btn btn-green" onclick="window._aprobarMembresiaDirecta('${c.id}', '${email}', '${wa}', '${clubNombre}', '${c.uid || ''}', '${c.fechaVencimiento || ''}')" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">APROBAR (30D)</button>
-          <button class="btn btn-green" onclick="window._activarPruebaDirecta('${c.id}', '${email}', '${wa}', '${clubNombre}', '${c.uid || ''}', '${c.fechaVencimiento || ''}')" style="font-size:11px;padding:8px;font-weight:900;justify-content:center;background:linear-gradient(135deg,#2ecc71,#27ae60);">PRUEBA (7D)</button>
-          <button class="btn btn-gold" onclick="window._regalarDiasDirecto('${c.id}', '${email}', '${wa}', '${clubNombre}', '${c.uid || ''}', '${c.fechaVencimiento || ''}')" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">+DÍAS</button>
+          <button class="btn btn-green" onclick="window._aprobarMembresiaDirecta('${c.id}', '${email}', '${wa}', '${clubNombre}', '${c.uid || ''}', '${fechaVencSafe}')" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">APROBAR (30D)</button>
+          <button class="btn btn-green" onclick="window._activarPruebaDirecta('${c.id}', '${email}', '${wa}', '${clubNombre}', '${c.uid || ''}', '${fechaVencSafe}')" style="font-size:11px;padding:8px;font-weight:900;justify-content:center;background:linear-gradient(135deg,#2ecc71,#27ae60);">PRUEBA (7D)</button>
+          <button class="btn btn-gold" onclick="window._regalarDiasDirecto('${c.id}', '${email}', '${wa}', '${clubNombre}', '${c.uid || ''}', '${fechaVencSafe}')" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">+DÍAS</button>
           <button class="btn btn-gray" onclick="window._chatWhatsAppDirecto('${wa}', '${clubNombre}')" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">CHAT WA</button>
           <button class="btn btn-gray" onclick="window._suspenderClubDirecto('${c.id}', '${email}', '${c.uid || ''}')" style="font-size:11px;padding:8px;font-weight:800;color:var(--rojo);justify-content:center;">SUSPENDER</button>
           <button class="btn btn-red" onclick="window._eliminarClubDirecto('${c.id}', '${clubNombre}', '${c.uid || ''}', '${email}')" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">BORRAR</button>
@@ -1082,10 +1089,57 @@ window._verComprobantePago = (url) => {
 // ════════════════════════════════════════════════════════════════
 // HANDLERS DIRECTOS DE LA LISTA DE CLUBES
 // ════════════════════════════════════════════════════════════════
+// Función ultra-robusta de cálculo de fechas protegida contra RangeError y formatos diversos
+function calcularNuevaFechaVencimiento(currentFechaExp, inputDiasOrDays, defaultDias = 7) {
+  let fechaBase = new Date();
+  if (currentFechaExp) {
+    try {
+      const d = new Date(currentFechaExp);
+      if (!isNaN(d.getTime()) && d.getTime() > fechaBase.getTime()) {
+        fechaBase = d;
+      }
+    } catch (e) {}
+  }
+
+  let targetDate = null;
+  const str = String(inputDiasOrDays !== undefined && inputDiasOrDays !== null ? inputDiasOrDays : '').trim();
+
+  // Caso A: Fecha directa (ej: 2026-10-15 o 15/10/2026 o 15-10-2026)
+  if (str.includes('/') || (str.includes('-') && str.length >= 8)) {
+    try {
+      if (str.includes('/')) {
+        const parts = str.split('/');
+        if (parts.length === 3) {
+          const d = parts[0].padStart(2, '0');
+          const m = parts[1].padStart(2, '0');
+          const y = parts[2].length === 2 ? '20' + parts[2] : parts[2];
+          const cand = new Date(`${y}-${m}-${d}T23:59:59.000Z`);
+          if (!isNaN(cand.getTime())) targetDate = cand;
+        }
+      }
+      if (!targetDate) {
+        const cand = new Date(str);
+        if (!isNaN(cand.getTime())) targetDate = cand;
+      }
+    } catch (e) {}
+  }
+
+  // Caso B: Número de días (ej: 3, 7, 14, 30, '+30 días')
+  if (!targetDate) {
+    const parsed = parseInt(str, 10);
+    const dias = (!isNaN(parsed) && parsed > 0 && parsed <= 3650) ? parsed : defaultDias;
+    targetDate = new Date(fechaBase.getTime() + dias * 24 * 60 * 60 * 1000);
+  }
+
+  if (!targetDate || isNaN(targetDate.getTime())) {
+    targetDate = new Date(Date.now() + defaultDias * 24 * 60 * 60 * 1000);
+  }
+
+  return targetDate.toISOString();
+}
+
 window._aprobarMembresiaDirecta = async (pubDocId, email, wa, clubNombre, uid, currentFechaExp) => {
-  const dias = 30;
-  const fechaBase = (currentFechaExp && new Date(currentFechaExp) > new Date()) ? new Date(currentFechaExp) : new Date();
-  const nuevaFecha = new Date(fechaBase.getTime() + dias * 24 * 60 * 60 * 1000).toISOString();
+  const nuevaFecha = calcularNuevaFechaVencimiento(currentFechaExp, 30, 30);
 
   const payload = { estadoCuenta: 'ACTIVO', fechaVencimiento: nuevaFecha, club: clubNombre, updatedAt: new Date().toISOString() };
   const targetUid = uid || (pubDocId ? pubDocId.replace('usr_', '') : '');
@@ -1104,14 +1158,12 @@ window._aprobarMembresiaDirecta = async (pubDocId, email, wa, clubNombre, uid, c
   }
   await Promise.all(proms);
 
-  mostrarToastRapido('Club Aprobado', `🟢 Membresía para ${clubNombre} aprobada por 30 días.`, true);
+  mostrarToastRapido('Club Aprobado', `Membresía para ${clubNombre} aprobada por 30 días.`, true);
   renderSuperAdminDashboard();
 };
 
 window._activarPruebaDirecta = async (pubDocId, email, wa, clubNombre, uid, currentFechaExp) => {
-  const dias = 7;
-  const fechaBase = (currentFechaExp && new Date(currentFechaExp) > new Date()) ? new Date(currentFechaExp) : new Date();
-  const nuevaFecha = new Date(fechaBase.getTime() + dias * 24 * 60 * 60 * 1000).toISOString();
+  const nuevaFecha = calcularNuevaFechaVencimiento(currentFechaExp, 7, 7);
 
   const payload = { estadoCuenta: 'PRUEBA', fechaVencimiento: nuevaFecha, club: clubNombre, updatedAt: new Date().toISOString() };
   const targetUid = uid || (pubDocId ? pubDocId.replace('usr_', '') : '');
@@ -1130,15 +1182,13 @@ window._activarPruebaDirecta = async (pubDocId, email, wa, clubNombre, uid, curr
   }
   await Promise.all(proms);
 
-  mostrarToastRapido('Prueba Activada', `⚡ 7 días de prueba activados para ${clubNombre}.`, true);
+  mostrarToastRapido('Prueba Activada', `7 días de prueba activados para ${clubNombre}.`, true);
   renderSuperAdminDashboard();
 };
 
 window._regalarDiasDirecto = (pubDocId, email, wa, clubNombre, uid, currentFechaExp) => {
-  mostrarPromptModal(`Días Adicionales para ${clubNombre}`, 'Cantidad de días a sumar (ej: 3, 7, 14, 30)', async (inputDias) => {
-    const dias = parseInt(inputDias, 10) || 7;
-    const fechaBase = (currentFechaExp && new Date(currentFechaExp) > new Date()) ? new Date(currentFechaExp) : new Date();
-    const nuevaFecha = new Date(fechaBase.getTime() + dias * 24 * 60 * 60 * 1000).toISOString();
+  mostrarPromptModal(`Días Adicionales para ${clubNombre}`, 'Cantidad de días o fecha (ej: 7, 30, 2026-12-31)', async (inputDias) => {
+    const nuevaFecha = calcularNuevaFechaVencimiento(currentFechaExp, inputDias, 7);
 
     const payload = { estadoCuenta: 'ACTIVO', fechaVencimiento: nuevaFecha, club: clubNombre, updatedAt: new Date().toISOString() };
     const targetUid = uid || (pubDocId ? pubDocId.replace('usr_', '') : '');
@@ -1157,7 +1207,8 @@ window._regalarDiasDirecto = (pubDocId, email, wa, clubNombre, uid, currentFecha
     }
     await Promise.all(proms);
 
-    mostrarToastRapido('Días Sumados', `🟡 Se sumaron +${dias} días a ${clubNombre}.`, true);
+    const fechaLegible = new Date(nuevaFecha).toLocaleDateString();
+    mostrarToastRapido('Días Asignados', `Vigencia de ${clubNombre} actualizada hasta ${fechaLegible}.`, true);
     renderSuperAdminDashboard();
   });
 };

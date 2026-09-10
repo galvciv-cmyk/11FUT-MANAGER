@@ -621,7 +621,9 @@ export function mostrarPromptModal(titulo, placeholder, onConfirm) {
   };
 
   modalContent.innerHTML = `
-    <div class="modal-title">✏️ ${titulo.toUpperCase()}</div>
+    <div class="modal-title" style="display:flex;align-items:center;justify-content:center;gap:8px;">
+      <span>${titulo.toUpperCase()}</span>
+    </div>
     <div class="card" style="text-align:center;padding:20px 14px;">
       <input type="text" id="modal-prompt-input" placeholder="${placeholder}" style="margin-bottom:16px;">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
@@ -633,7 +635,16 @@ export function mostrarPromptModal(titulo, placeholder, onConfirm) {
 
   modal.style.display = 'flex';
   setTimeout(() => {
-    document.getElementById('modal-prompt-input')?.focus();
+    const inputEl = document.getElementById('modal-prompt-input');
+    if (inputEl) {
+      inputEl.focus();
+      inputEl.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          window._modalCallbackPrompt();
+        }
+      };
+    }
   }, 100);
 }
 
