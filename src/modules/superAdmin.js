@@ -317,7 +317,14 @@ async function renderSubtabClubes(container) {
 
   // Cuenta Master garantizada
   const masterEmail = (SUPER_ADMIN_EMAIL || 'gyknova@gmail.com').trim().toLowerCase();
-  if (!mapClubes.has(masterEmail)) {
+  const masterClub = mapClubes.get(masterEmail);
+  if (masterClub) {
+    masterClub.isMaster = true;
+    masterClub.estadoCuenta = 'ACTIVO';
+    masterClub.fechaVencimiento = '2099-01-01T00:00:00.000Z';
+    masterClub.club = (masterClub.club && masterClub.club !== 'Club Registrado') ? masterClub.club : '11FUT MANAGER MASTER';
+    masterClub.maxPerfiles = 8;
+  } else {
     mapClubes.set(masterEmail, {
       id: 'master_club',
       uid: 'master_club',
@@ -326,7 +333,7 @@ async function renderSubtabClubes(container) {
       whatsapp: '+584141401560',
       logo: 'https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png',
       estadoCuenta: 'ACTIVO',
-      fechaVencimiento: new Date('2099-01-01').toISOString(),
+      fechaVencimiento: '2099-01-01T00:00:00.000Z',
       maxPerfiles: 8,
       isMaster: true
     });
@@ -336,8 +343,8 @@ async function renderSubtabClubes(container) {
 
   // Conteo para los chips de filtro
   const totalCount = todosClubes.length;
-  const pendientesCount = todosClubes.filter(c => c.estadoCuenta === 'PENDIENTE' || c.estadoCuenta === 'EN_REVISION').length;
-  const pruebaCount = todosClubes.filter(c => c.estadoCuenta === 'PRUEBA').length;
+  const pendientesCount = todosClubes.filter(c => !c.isMaster && (c.estadoCuenta === 'PENDIENTE' || c.estadoCuenta === 'EN_REVISION')).length;
+  const pruebaCount = todosClubes.filter(c => !c.isMaster && c.estadoCuenta === 'PRUEBA').length;
   const activosCount = todosClubes.filter(c => c.estadoCuenta === 'ACTIVO').length;
   const vencidosCount = todosClubes.filter(c => {
     if (c.isMaster) return false;
@@ -466,12 +473,19 @@ function renderTarjetaClubHTML(c) {
   const diffMs = fechaExp - new Date();
   const diasRestantes = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
 
+  const esMaster = c.isMaster || (c.email || '').toLowerCase() === (SUPER_ADMIN_EMAIL || 'gyknova@gmail.com').toLowerCase();
+
   let badgeBg = 'rgba(212,175,55,0.12)';
   let badgeBorder = 'var(--oro)';
   let badgeColor = 'var(--oro)';
   let badgeLabel = `PRUEBA (${diasRestantes}d)`;
 
-  if (estado === 'PENDIENTE') {
+  if (esMaster) {
+    badgeBg = 'rgba(212,175,55,0.2)';
+    badgeBorder = 'var(--oro)';
+    badgeColor = 'var(--oro)';
+    badgeLabel = 'ACCESO VITALICIO MASTER';
+  } else if (estado === 'PENDIENTE') {
     badgeBg = 'rgba(52,152,219,0.15)';
     badgeBorder = '#3498db';
     badgeColor = '#3498db';
@@ -513,14 +527,14 @@ function renderTarjetaClubHTML(c) {
         <div>WhatsApp: <span style="color:#fff;font-weight:700;">${wa}</span></div>
         <div style="display:flex;gap:14px;align-items:center;">
           <span style="color:var(--oro);font-weight:800;background:rgba(212,175,55,0.12);padding:2px 8px;border-radius:6px;">${maxP} Perfil(es) DT</span>
-          <span>Vence: ${fechaExp.toLocaleDateString()}</span>
+          <span>Vence: ${esMaster ? 'Vitalicio (Infinito)' : (isNaN(fechaExp.getTime()) ? 'Pendiente' : fechaExp.toLocaleDateString())}</span>
         </div>
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(110px, 1fr));gap:8px;margin-top:2px;">
-        ${c.isMaster ? `
+        ${esMaster ? `
           <div style="grid-column:1/-1;background:rgba(212,175,55,0.1);border:1px dashed var(--oro);color:var(--oro);padding:10px;border-radius:8px;font-size:12px;font-weight:900;text-align:center;letter-spacing:1px;">
-            CUENTA MASTER PLATAFORMA SAAS
+            CUENTA MASTER PLATAFORMA SAAS — ACCESO VITALICIO
           </div>
         ` : `
           <button class="btn btn-green" onclick="window._aprobarMembresiaDirecta('${c.id}', '${email}', '${wa}', '${clubNombre}', '${c.uid || ''}', '${fechaVencSafe}')" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">APROBAR (30D)</button>

@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, connectFirestoreEmulator, doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
 import { getAuth, connectAuthEmulator, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { perfil, plantel, stats, historial, pinHash, userEmail, setPinHash, setUserEmail, updatePerfil, updatePlantel, updateStats, updateHistorial, autoSaveLocal, categoriasData, updateCategoriasData } from "../modules/state.js";
+import { perfil, plantel, stats, historial, pinHash, userEmail, setPinHash, setUserEmail, updatePerfil, updatePlantel, updateStats, updateHistorial, autoSaveLocal, categoriasData, updateCategoriasData, isSuperAdmin, SUPER_ADMIN_EMAIL } from "../modules/state.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB6McwyGjozN5EAiEJ3J2Q-wP-SR4h68DQ",
@@ -108,6 +108,13 @@ export async function guardarFirebase() {
     _guardarFirebaseTimer = setTimeout(async () => {
       _hayGuardadoPendiente = false;
       try {
+        const isMaster = isSuperAdmin() || ((perfil.email || (auth && auth.currentUser && auth.currentUser.email) || '').toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase());
+        if (isMaster) {
+          perfil.estadoCuenta = 'ACTIVO';
+          perfil.fechaVencimiento = '2099-01-01T00:00:00.000Z';
+          perfil.maxPerfiles = 8;
+        }
+
         const fullPayload = {
           perfil, plantel, stats, historial, categoriasData,
           updatedAt: new Date().toISOString()
@@ -118,9 +125,9 @@ export async function guardarFirebase() {
           email: perfil.email || '',
           whatsapp: perfil.whatsapp || '',
           logo: perfil.logo || '',
-          estadoCuenta: perfil.estadoCuenta || 'PRUEBA',
-          fechaVencimiento: perfil.fechaVencimiento || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-          maxPerfiles: perfil.maxPerfiles || 1,
+          estadoCuenta: isMaster ? 'ACTIVO' : (perfil.estadoCuenta || 'PRUEBA'),
+          fechaVencimiento: isMaster ? '2099-01-01T00:00:00.000Z' : (perfil.fechaVencimiento || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()),
+          maxPerfiles: isMaster ? 8 : (perfil.maxPerfiles || 1),
           perfil,
           categoriasData,
           updatedAt: new Date().toISOString()
@@ -219,6 +226,12 @@ export async function cargarFirebase() {
       }
     } catch (pubErr) {
       console.warn('Aviso sincronizando estado público:', pubErr);
+    }
+
+    if (isSuperAdmin()) {
+      perfil.estadoCuenta = 'ACTIVO';
+      perfil.fechaVencimiento = '2099-01-01T00:00:00.000Z';
+      perfil.maxPerfiles = 8;
     }
 
     autoSaveLocal();
