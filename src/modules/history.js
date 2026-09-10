@@ -484,7 +484,10 @@ window._confirmarSustitucionLive = () => {
   const entra = document.getElementById('live-cambio-entra')?.value;
   const min = parseInt(document.getElementById('live-cambio-minuto')?.value, 10) || 45;
 
-  if (sale === entra) return alert('El jugador que entra debe ser distinto al que sale.');
+  if (sale === entra) {
+    mostrarNotificacionApp('Sustitución', 'El jugador que entra debe ser distinto al que sale.', false);
+    return;
+  }
 
   partidoEnVivoState.sustitucionesList.push({ sale, entra, min });
   document.getElementById('modal').style.display = 'none';

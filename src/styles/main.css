@@ -1762,3 +1762,61 @@ body.body-fullscreen-active {
 .step-line.active {
   background: var(--oro) !important;
 }
+
+/* ── LIQUID GLASS DESIGN SYSTEM ── */
+.liquid-glass {
+  background: rgba(14, 20, 30, 0.76) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(212, 175, 55, 0.22) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+.liquid-glass-subtle {
+  background: rgba(10, 14, 22, 0.68) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+.liquid-glass-card {
+  background: rgba(15, 20, 28, 0.75) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.liquid-glass-card:hover {
+  border-color: rgba(212, 175, 55, 0.35) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6) !important;
+}
+
+.btn-toggle-eye {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  padding: 4px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+}
+.btn-toggle-eye:hover {
+  color: var(--oro);
+}
+.badge-gold {
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  color: var(--oro);
+  font-weight: 800;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 6px;
+}

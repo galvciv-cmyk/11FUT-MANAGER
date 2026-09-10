@@ -1,7 +1,11 @@
 import { db } from "../services/firebase.js";
 import { collection, getDocs, doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
 import { isSuperAdmin, perfil, autoSaveLocal, SUPER_ADMIN_EMAIL } from "./state.js";
-import { mostrarConfirmacionApp, mostrarToastRapido, mostrarPromptModal, mostrarNotificacionApp } from "./config.js";
+import { mostrarConfirmacionApp, mostrarToastRapido, mostrarPromptModal, mostrarNotificacionApp, cerrarSesion } from "./config.js";
+
+window._cerrarSesionCompleta = () => {
+  cerrarSesion();
+};
 
 // ════════════════════════════════════════════════════════════════
 // CONFIGURACIÓN PREDETERMINADA DE PASARELAS DE COBRO DIGITALES
@@ -130,6 +134,14 @@ export async function obtenerHistorialFinanzas() {
   return transacciones;
 }
 
+const SVG_SHIELD_BOLT = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--oro)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polygon points="13 8 9 13 13 13 11 18 15 12 11 12 13 8" fill="var(--oro)"/></svg>`;
+const SVG_BUILDINGS = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><line x1="8" y1="6" x2="8.01" y2="6"/><line x1="16" y1="6" x2="16.01" y2="6"/><line x1="12" y1="6" x2="12.01" y2="6"/><line x1="12" y1="10" x2="12.01" y2="10"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="16" y1="10" x2="16.01" y2="10"/><line x1="16" y1="14" x2="16.01" y2="14"/><line x1="8" y1="10" x2="8.01" y2="10"/><line x1="8" y1="14" x2="8.01" y2="14"/></svg>`;
+const SVG_BELL = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`;
+const SVG_WALLET = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 10H18a2 2 0 0 0-2 2v0a2 2 0 0 0 2 2h4"/></svg>`;
+const SVG_SETTINGS = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`;
+const SVG_LOGOUT = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`;
+const SVG_SEARCH = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--oro)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`;
+
 // ════════════════════════════════════════════════════════════════
 // RENDER PRINCIPAL DEL BACKOFFICE SAAS (SÚPER ADMIN)
 // ════════════════════════════════════════════════════════════════
@@ -139,8 +151,7 @@ export async function renderSuperAdminDashboard() {
 
   if (!isSuperAdmin()) {
     container.innerHTML = `
-      <div class="card" style="text-align:center;padding:40px;margin:20px auto;max-width:500px;">
-        <div style="font-size:36px;margin-bottom:10px;">⛔</div>
+      <div class="liquid-glass-card" style="text-align:center;padding:40px;margin:20px auto;max-width:500px;">
         <div style="font-size:20px;color:var(--rojo);font-weight:900;letter-spacing:1px;">ACCESO EXCLUSIVO MASTER</div>
         <div style="font-size:12px;color:#aaa;margin-top:8px;line-height:1.6;">
           Este centro de control es reservado únicamente para el Administrador Global del SaaS 11FUT MANAGER.
@@ -153,15 +164,15 @@ export async function renderSuperAdminDashboard() {
   // Cargar configuración de pagos en background si no está en memoria
   await obtenerConfiguracionPasarelas();
 
-  // Estructura general de la Consola Backoffice
+  // Estructura general de la Consola Backoffice (Liquid Glass)
   container.innerHTML = `
     <div style="max-width:1300px;margin:0 auto;padding-bottom:50px;">
       
       <!-- HEADER SAAS MASTER INDEPENDIENTE -->
-      <div style="background:linear-gradient(135deg, #111 0%, #080808 100%);border:1px solid var(--oro);border-radius:14px;padding:16px 20px;margin-bottom:20px;box-shadow:0 10px 30px rgba(0,0,0,0.7);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;">
+      <div class="liquid-glass" style="border-radius:16px;padding:18px 24px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
         <div>
           <div style="display:flex;align-items:center;gap:10px;">
-            <span style="font-size:24px;">👑</span>
+            ${SVG_SHIELD_BOLT}
             <h1 style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:var(--oro);margin:0;letter-spacing:1px;">11FUT MANAGER — BACKOFFICE SAAS</h1>
           </div>
           <div style="font-size:11px;color:#888;margin-top:2px;">Centro de Control Maestro de Clubes, Pagos Digitales y Finanzas</div>
@@ -169,20 +180,20 @@ export async function renderSuperAdminDashboard() {
 
         <!-- BOTONES PRINCIPALES DE SUB-PESTAÑAS -->
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-          <button class="sa-tab-btn ${currentBackofficeTab === 'clubes' ? 'active' : ''}" onclick="window._switchBackofficeTab('clubes')" style="background:${currentBackofficeTab === 'clubes' ? 'var(--oro)' : '#181818'};color:${currentBackofficeTab === 'clubes' ? '#000' : '#ccc'};border:1px solid ${currentBackofficeTab === 'clubes' ? 'var(--oro)' : '#333'};padding:8px 14px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;">
-            🏢 Directorio de Clubes
+          <button class="sa-tab-btn ${currentBackofficeTab === 'clubes' ? 'active' : ''}" onclick="window._switchBackofficeTab('clubes')" style="background:${currentBackofficeTab === 'clubes' ? 'var(--oro)' : 'rgba(26,32,44,0.7)'};color:${currentBackofficeTab === 'clubes' ? '#000' : '#ccc'};border:1px solid ${currentBackofficeTab === 'clubes' ? 'var(--oro)' : 'rgba(255,255,255,0.12)'};padding:9px 16px;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all 0.2s ease;">
+            ${SVG_BUILDINGS} Directorio de Clubes
           </button>
-          <button class="sa-tab-btn ${currentBackofficeTab === 'pagos' ? 'active' : ''}" onclick="window._switchBackofficeTab('pagos')" style="background:${currentBackofficeTab === 'pagos' ? 'var(--oro)' : '#181818'};color:${currentBackofficeTab === 'pagos' ? '#000' : '#ccc'};border:1px solid ${currentBackofficeTab === 'pagos' ? 'var(--oro)' : '#333'};padding:8px 14px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;">
-            🔔 Bandeja de Pagos <span id="badge-pagos-pendientes-count" style="display:none;background:var(--rojo);color:#fff;border-radius:10px;padding:2px 6px;font-size:10px;font-weight:900;">0</span>
+          <button class="sa-tab-btn ${currentBackofficeTab === 'pagos' ? 'active' : ''}" onclick="window._switchBackofficeTab('pagos')" style="background:${currentBackofficeTab === 'pagos' ? 'var(--oro)' : 'rgba(26,32,44,0.7)'};color:${currentBackofficeTab === 'pagos' ? '#000' : '#ccc'};border:1px solid ${currentBackofficeTab === 'pagos' ? 'var(--oro)' : 'rgba(255,255,255,0.12)'};padding:9px 16px;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all 0.2s ease;">
+            ${SVG_BELL} Bandeja de Pagos <span id="badge-pagos-pendientes-count" style="display:none;background:var(--rojo);color:#fff;border-radius:10px;padding:2px 7px;font-size:10px;font-weight:900;">0</span>
           </button>
-          <button class="sa-tab-btn ${currentBackofficeTab === 'finanzas' ? 'active' : ''}" onclick="window._switchBackofficeTab('finanzas')" style="background:${currentBackofficeTab === 'finanzas' ? 'var(--oro)' : '#181818'};color:${currentBackofficeTab === 'finanzas' ? '#000' : '#ccc'};border:1px solid ${currentBackofficeTab === 'finanzas' ? 'var(--oro)' : '#333'};padding:8px 14px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;">
-            💰 Finanzas & Caja
+          <button class="sa-tab-btn ${currentBackofficeTab === 'finanzas' ? 'active' : ''}" onclick="window._switchBackofficeTab('finanzas')" style="background:${currentBackofficeTab === 'finanzas' ? 'var(--oro)' : 'rgba(26,32,44,0.7)'};color:${currentBackofficeTab === 'finanzas' ? '#000' : '#ccc'};border:1px solid ${currentBackofficeTab === 'finanzas' ? 'var(--oro)' : 'rgba(255,255,255,0.12)'};padding:9px 16px;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all 0.2s ease;">
+            ${SVG_WALLET} Finanzas & Caja
           </button>
-          <button class="sa-tab-btn ${currentBackofficeTab === 'cuentas' ? 'active' : ''}" onclick="window._switchBackofficeTab('cuentas')" style="background:${currentBackofficeTab === 'cuentas' ? 'var(--oro)' : '#181818'};color:${currentBackofficeTab === 'cuentas' ? '#000' : '#ccc'};border:1px solid ${currentBackofficeTab === 'cuentas' ? 'var(--oro)' : '#333'};padding:8px 14px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;">
-            ⚙️ Cuentas de Cobro
+          <button class="sa-tab-btn ${currentBackofficeTab === 'cuentas' ? 'active' : ''}" onclick="window._switchBackofficeTab('cuentas')" style="background:${currentBackofficeTab === 'cuentas' ? 'var(--oro)' : 'rgba(26,32,44,0.7)'};color:${currentBackofficeTab === 'cuentas' ? '#000' : '#ccc'};border:1px solid ${currentBackofficeTab === 'cuentas' ? 'var(--oro)' : 'rgba(255,255,255,0.12)'};padding:9px 16px;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all 0.2s ease;">
+            ${SVG_SETTINGS} Cuentas de Cobro
           </button>
-          <button onclick="window._cerrarSesionCompleta()" style="background:rgba(231,76,60,0.15);color:#e74c3c;border:1px solid rgba(231,76,60,0.35);padding:8px 14px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;">
-            🚪 Cerrar Sesión
+          <button onclick="window._cerrarSesionCompleta()" style="background:rgba(231,76,60,0.15);color:#e74c3c;border:1px solid rgba(231,76,60,0.35);padding:9px 16px;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all 0.2s ease;">
+            ${SVG_LOGOUT} Cerrar Sesión
           </button>
         </div>
       </div>
@@ -362,9 +373,14 @@ async function renderSubtabClubes(container) {
     return true;
   });
 
+  window._setClubFilter = (filtro) => {
+    currentClubFilter = filtro;
+    renderSubtabClubes(container);
+  };
+
   const filtrarYRenderizarListaDOM = () => {
     const q = (currentClubSearch || '').toLowerCase();
-    const filtrados = todosLosClubes.filter(c => {
+    const filtrados = todosClubes.filter(c => {
       if (currentClubFilter === 'PENDIENTE') {
         if (c.estadoCuenta !== 'PENDIENTE' && c.estadoCuenta !== 'EN_REVISION') return false;
       } else if (currentClubFilter === 'PRUEBA') {
@@ -395,24 +411,24 @@ async function renderSubtabClubes(container) {
 
     const listEl = document.getElementById('sa-clubes-list');
     if (listEl) {
-      listEl.innerHTML = filtrados.map(c => renderTarjetaClubHTML(c)).join('') || '<div style="text-align:center;padding:40px;color:#888;background:#111;border-radius:12px;">No se encontraron clubes con los filtros aplicados.</div>';
+      listEl.innerHTML = filtrados.map(c => renderTarjetaClubHTML(c)).join('') || '<div class="liquid-glass-card" style="text-align:center;padding:40px;color:#888;">No se encontraron clubes con los filtros aplicados.</div>';
     }
   };
 
   container.innerHTML = `
-    <!-- BARRA DE BÚSQUEDA Y FILTROS -->
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;background:#111;padding:14px;border-radius:12px;border:1px solid #222;">
-      <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:280px;">
-        <span style="font-size:16px;color:var(--oro);">🔍</span>
-        <input type="text" id="sa-search-input" value="${currentClubSearch}" placeholder="Buscar club por nombre, email o WhatsApp..." style="background:#181818;border:1px solid #333;color:#fff;padding:8px 12px;border-radius:8px;font-size:13px;width:100%;outline:none;">
+    <!-- BARRA DE BÚSQUEDA Y FILTROS (LIQUID GLASS) -->
+    <div class="liquid-glass-subtle" style="border-radius:14px;padding:14px 18px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:280px;">
+        ${SVG_SEARCH}
+        <input type="text" id="sa-search-input" value="${currentClubSearch}" placeholder="Buscar club por nombre, email o WhatsApp..." style="background:rgba(8,12,18,0.7);border:1px solid rgba(255,255,255,0.12);color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;width:100%;outline:none;">
       </div>
 
       <div style="display:flex;gap:6px;flex-wrap:wrap;">
         <button class="sa-filter-chip ${currentClubFilter === 'TODOS' ? 'active' : ''}" onclick="window._setClubFilter('TODOS')">TODOS (${totalCount})</button>
-        <button class="sa-filter-chip ${currentClubFilter === 'PENDIENTE' ? 'active' : ''}" onclick="window._setClubFilter('PENDIENTE')" style="color:#3498db;border-color:#3498db;">⏳ PENDIENTES (${pendientesCount})</button>
-        <button class="sa-filter-chip ${currentClubFilter === 'PRUEBA' ? 'active' : ''}" onclick="window._setClubFilter('PRUEBA')" style="color:var(--oro);border-color:var(--oro);">⚡ EN PRUEBA (${pruebaCount})</button>
-        <button class="sa-filter-chip ${currentClubFilter === 'ACTIVO' ? 'active' : ''}" onclick="window._setClubFilter('ACTIVO')" style="color:#2ecc71;border-color:#2ecc71;">🟢 ACTIVOS (${activosCount})</button>
-        <button class="sa-filter-chip ${currentClubFilter === 'VENCIDO' ? 'active' : ''}" onclick="window._setClubFilter('VENCIDO')" style="color:#e74c3c;border-color:#e74c3c;">🔴 VENCIDOS (${vencidosCount})</button>
+        <button class="sa-filter-chip ${currentClubFilter === 'PENDIENTE' ? 'active' : ''}" onclick="window._setClubFilter('PENDIENTE')" style="color:#3498db;border-color:rgba(52,152,219,0.4);">PENDIENTES (${pendientesCount})</button>
+        <button class="sa-filter-chip ${currentClubFilter === 'PRUEBA' ? 'active' : ''}" onclick="window._setClubFilter('PRUEBA')" style="color:var(--oro);border-color:rgba(212,175,55,0.4);">EN PRUEBA (${pruebaCount})</button>
+        <button class="sa-filter-chip ${currentClubFilter === 'ACTIVO' ? 'active' : ''}" onclick="window._setClubFilter('ACTIVO')" style="color:#2ecc71;border-color:rgba(46,204,113,0.4);">ACTIVOS (${activosCount})</button>
+        <button class="sa-filter-chip ${currentClubFilter === 'VENCIDO' ? 'active' : ''}" onclick="window._setClubFilter('VENCIDO')" style="color:#e74c3c;border-color:rgba(231,76,60,0.4);">VENCIDOS (${vencidosCount})</button>
       </div>
     </div>
 
@@ -430,11 +446,6 @@ async function renderSubtabClubes(container) {
       filtrarYRenderizarListaDOM();
     });
   }
-
-  window._setClubFilter = (filtro) => {
-    currentClubFilter = filtro;
-    renderSubtabClubes(container);
-  };
 }
 
 function renderTarjetaClubHTML(c) {
@@ -444,73 +455,73 @@ function renderTarjetaClubHTML(c) {
   const maxP = c.maxPerfiles || 1;
   const estado = c.estadoCuenta || 'PENDIENTE';
 
-  const fechaExp = c.fechaVencimiento ? new Date(c.fechaVencimiento) : new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+  const fechaExp = c.fechaVencimiento ? new Date(c.fechaVencimiento) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
   const diffMs = fechaExp - new Date();
   const diasRestantes = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
 
-  let badgeBg = 'rgba(212,175,55,0.15)';
+  let badgeBg = 'rgba(212,175,55,0.12)';
   let badgeBorder = 'var(--oro)';
   let badgeColor = 'var(--oro)';
-  let badgeLabel = `⏳ PRUEBA (${diasRestantes}d)`;
+  let badgeLabel = `PRUEBA (${diasRestantes}d)`;
 
   if (estado === 'PENDIENTE') {
     badgeBg = 'rgba(52,152,219,0.15)';
     badgeBorder = '#3498db';
     badgeColor = '#3498db';
-    badgeLabel = `⏳ PENDIENTE ACTIVACIÓN`;
+    badgeLabel = `PENDIENTE ACTIVACIÓN`;
   } else if (estado === 'EN_REVISION') {
     badgeBg = 'rgba(155,89,182,0.15)';
     badgeBorder = '#9b59b6';
     badgeColor = '#9b59b6';
-    badgeLabel = `💳 PAGO REPORTADO`;
+    badgeLabel = `PAGO REPORTADO`;
   } else if (estado === 'ACTIVO') {
     badgeBg = 'rgba(46,204,113,0.15)';
     badgeBorder = '#2ecc71';
     badgeColor = '#2ecc71';
-    badgeLabel = `🟢 ACTIVO (${diasRestantes}d)`;
+    badgeLabel = `ACTIVO (${diasRestantes}d)`;
   } else if (estado === 'VENCIDO' || (estado !== 'PENDIENTE' && estado !== 'EN_REVISION' && diasRestantes <= 0)) {
     badgeBg = 'rgba(231,76,60,0.15)';
     badgeBorder = '#e74c3c';
     badgeColor = '#e74c3c';
-    badgeLabel = `🔴 VENCIDO`;
+    badgeLabel = `VENCIDO`;
   }
 
   return `
-    <div style="background:#0d0d0d;border:1px solid #222;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 4px 15px rgba(0,0,0,0.4);">
+    <div class="liquid-glass-card" style="padding:16px;display:flex;flex-direction:column;gap:12px;">
       
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <img src="${c.logo || 'https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'}" style="width:36px;height:36px;object-fit:contain;border-radius:6px;background:#181818;padding:2px;border:1px solid #333;" onerror="this.src='https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <img src="${c.logo || 'https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'}" style="width:40px;height:40px;object-fit:contain;border-radius:8px;background:#141822;padding:3px;border:1px solid rgba(255,255,255,0.1);" onerror="this.src='https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'">
           <div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#fff;line-height:1.1;">${clubNombre}</div>
-            <div style="font-size:11px;color:#aaa;">📧 ${email}</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#fff;line-height:1.1;">${clubNombre}</div>
+            <div style="font-size:11px;color:#aaa;margin-top:2px;">${email}</div>
           </div>
         </div>
-        <span style="background:${badgeBg};border:1px solid ${badgeBorder};color:${badgeColor};font-size:11px;font-weight:900;padding:4px 10px;border-radius:12px;">
+        <span style="background:${badgeBg};border:1px solid ${badgeBorder};color:${badgeColor};font-size:11px;font-weight:900;padding:4px 12px;border-radius:12px;letter-spacing:0.5px;">
           ${badgeLabel}
         </span>
       </div>
 
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;background:#141414;padding:8px 12px;border-radius:8px;font-size:11px;color:#ccc;border:1px solid #222;">
-        <div>📱 WhatsApp: <span style="color:#fff;font-weight:700;">${wa}</span></div>
-        <div style="display:flex;gap:12px;align-items:center;">
-          <span style="color:var(--oro);font-weight:800;background:rgba(212,175,55,0.12);padding:2px 8px;border-radius:6px;">👤 ${maxP} Perfil(es) DT</span>
-          <span>📅 Vence: ${fechaExp.toLocaleDateString()}</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;background:rgba(8,12,18,0.5);padding:10px 14px;border-radius:10px;font-size:11px;color:#ccc;border:1px solid rgba(255,255,255,0.06);">
+        <div>WhatsApp: <span style="color:#fff;font-weight:700;">${wa}</span></div>
+        <div style="display:flex;gap:14px;align-items:center;">
+          <span style="color:var(--oro);font-weight:800;background:rgba(212,175,55,0.12);padding:2px 8px;border-radius:6px;">${maxP} Perfil(es) DT</span>
+          <span>Vence: ${fechaExp.toLocaleDateString()}</span>
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(110px, 1fr));gap:6px;margin-top:2px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(110px, 1fr));gap:8px;margin-top:2px;">
         ${c.isMaster ? `
-          <div style="grid-column:1/-1;background:rgba(212,175,55,0.1);border:1px dashed var(--oro);color:var(--oro);padding:8px;border-radius:8px;font-size:12px;font-weight:900;text-align:center;">
-            👑 CUENTA MASTER PRINCIPAL
+          <div style="grid-column:1/-1;background:rgba(212,175,55,0.1);border:1px dashed var(--oro);color:var(--oro);padding:10px;border-radius:8px;font-size:12px;font-weight:900;text-align:center;letter-spacing:1px;">
+            CUENTA MASTER PLATAFORMA SAAS
           </div>
         ` : `
-          <button class="btn btn-green" onclick="window._aprobarMembresiaDirecta('${c.id}', '${email}', '${wa}', '${clubNombre}', '${c.uid || ''}', '${c.fechaVencimiento || ''}')" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟢 APROBAR (30D)</button>
-          <button class="btn btn-green" onclick="window._activarPruebaDirecta('${c.id}', '${email}', '${wa}', '${clubNombre}', '${c.uid || ''}', '${c.fechaVencimiento || ''}')" style="font-size:11px;padding:8px;font-weight:900;justify-content:center;background:linear-gradient(135deg,#2ecc71,#27ae60);">⚡ PRUEBA (7D)</button>
-          <button class="btn btn-gold" onclick="window._regalarDiasDirecto('${c.id}', '${email}', '${wa}', '${clubNombre}', '${c.uid || ''}', '${c.fechaVencimiento || ''}')" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🟡 +DÍAS</button>
-          <button class="btn btn-gray" onclick="window._chatWhatsAppDirecto('${wa}', '${clubNombre}')" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">💬 CHAT WA</button>
-          <button class="btn btn-gray" onclick="window._suspenderClubDirecto('${c.id}', '${email}', '${c.uid || ''}')" style="font-size:11px;padding:8px;font-weight:800;color:var(--rojo);justify-content:center;">🔴 SUSPENDER</button>
-          <button class="btn btn-red" onclick="window._eliminarClubDirecto('${c.id}', '${clubNombre}', '${c.uid || ''}', '${email}')" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">🗑️ BORRAR</button>
+          <button class="btn btn-green" onclick="window._aprobarMembresiaDirecta('${c.id}', '${email}', '${wa}', '${clubNombre}', '${c.uid || ''}', '${c.fechaVencimiento || ''}')" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">APROBAR (30D)</button>
+          <button class="btn btn-green" onclick="window._activarPruebaDirecta('${c.id}', '${email}', '${wa}', '${clubNombre}', '${c.uid || ''}', '${c.fechaVencimiento || ''}')" style="font-size:11px;padding:8px;font-weight:900;justify-content:center;background:linear-gradient(135deg,#2ecc71,#27ae60);">PRUEBA (7D)</button>
+          <button class="btn btn-gold" onclick="window._regalarDiasDirecto('${c.id}', '${email}', '${wa}', '${clubNombre}', '${c.uid || ''}', '${c.fechaVencimiento || ''}')" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">+DÍAS</button>
+          <button class="btn btn-gray" onclick="window._chatWhatsAppDirecto('${wa}', '${clubNombre}')" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">CHAT WA</button>
+          <button class="btn btn-gray" onclick="window._suspenderClubDirecto('${c.id}', '${email}', '${c.uid || ''}')" style="font-size:11px;padding:8px;font-weight:800;color:var(--rojo);justify-content:center;">SUSPENDER</button>
+          <button class="btn btn-red" onclick="window._eliminarClubDirecto('${c.id}', '${clubNombre}', '${c.uid || ''}', '${email}')" style="font-size:11px;padding:8px;font-weight:800;justify-content:center;">BORRAR</button>
         `}
       </div>
 
@@ -528,9 +539,8 @@ async function renderSubtabPagos(container) {
 
   if (pagos.length === 0) {
     container.innerHTML = `
-      <div class="card" style="text-align:center;padding:40px;background:#111;">
-        <div style="font-size:36px;margin-bottom:12px;">✅</div>
-        <div style="font-size:18px;font-weight:900;color:var(--oro);">BANDEJA AL DÍA</div>
+      <div class="liquid-glass-card" style="text-align:center;padding:40px;">
+        <div style="font-size:18px;font-weight:900;color:var(--oro);letter-spacing:1px;">BANDEJA AL DÍA</div>
         <div style="font-size:12px;color:#aaa;margin-top:6px;">No hay pagos reportados pendientes por conciliar.</div>
       </div>
     `;
@@ -542,34 +552,34 @@ async function renderSubtabPagos(container) {
 
   container.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--oro);">
-        🔔 BANDEJA DE PAGOS REPORTADOS (${pendientes.length} Pendientes / ${conciliados.length} Conciliados)
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--oro);letter-spacing:1px;">
+        BANDEJA DE PAGOS REPORTADOS (${pendientes.length} Pendientes / ${conciliados.length} Conciliados)
       </div>
-      <button onclick="window._renderPagosSubtab()" class="btn btn-gray" style="font-size:12px;padding:6px 12px;">🔄 Actualizar Pagos</button>
+      <button onclick="window._renderPagosSubtab()" class="btn btn-gray" style="font-size:12px;padding:8px 16px;width:auto;">Actualizar Pagos</button>
     </div>
 
     <div style="display:flex;flex-direction:column;gap:12px;">
       ${pagos.map(p => `
-        <div style="background:#0d0d0d;border:1px solid ${p.estado === 'PENDIENTE' ? 'var(--oro)' : '#222'};border-radius:12px;padding:16px;box-shadow:0 4px 15px rgba(0,0,0,0.5);">
+        <div class="liquid-glass-card" style="padding:18px;border-color:${p.estado === 'PENDIENTE' ? 'var(--oro)' : 'rgba(255,255,255,0.1)'};">
           
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
             <div>
               <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#fff;">
-                🏢 ${p.clubNombre || 'Club'}
+                ${p.clubNombre || 'Club'}
               </div>
-              <div style="font-size:11px;color:#aaa;">📧 ${p.clubEmail || 'Sin email'} | 📱 WA: ${p.clubWhatsapp || 'Sin WA'}</div>
+              <div style="font-size:11px;color:#aaa;margin-top:2px;">Email: ${p.clubEmail || 'Sin email'} | WA: ${p.clubWhatsapp || 'Sin WA'}</div>
             </div>
 
-            <span style="background:${p.estado === 'PENDIENTE' ? 'rgba(212,175,55,0.15)' : 'rgba(46,204,113,0.15)'};color:${p.estado === 'PENDIENTE' ? 'var(--oro)' : '#2ecc71'};border:1px solid ${p.estado === 'PENDIENTE' ? 'var(--oro)' : '#2ecc71'};padding:4px 12px;border-radius:12px;font-size:11px;font-weight:900;">
-              ${p.estado === 'PENDIENTE' ? '⏳ PENDIENTE DE CONCILIAR' : '🟢 CONCILIADO Y ACTIVO'}
+            <span style="background:${p.estado === 'PENDIENTE' ? 'rgba(212,175,55,0.12)' : 'rgba(46,204,113,0.12)'};color:${p.estado === 'PENDIENTE' ? 'var(--oro)' : '#2ecc71'};border:1px solid ${p.estado === 'PENDIENTE' ? 'var(--oro)' : '#2ecc71'};padding:4px 12px;border-radius:12px;font-size:11px;font-weight:900;">
+              ${p.estado === 'PENDIENTE' ? 'PENDIENTE DE CONCILIAR' : 'CONCILIADO Y ACTIVO'}
             </span>
           </div>
 
           <!-- DETALLES DEL PAGO DECLARADO -->
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:10px;background:#141414;padding:12px;border-radius:8px;font-size:12px;border:1px solid #222;margin-bottom:12px;">
+          <div class="liquid-glass-subtle" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;padding:14px;border-radius:10px;font-size:12px;margin-bottom:14px;">
             <div>
               <div style="font-size:10px;color:#888;text-transform:uppercase;">Pasarela / Método:</div>
-              <div style="color:var(--oro);font-weight:800;margin-top:2px;">💳 ${p.metodo || 'Digital'}</div>
+              <div style="color:var(--oro);font-weight:800;margin-top:2px;">${p.metodo || 'Digital'}</div>
             </div>
             <div>
               <div style="font-size:10px;color:#888;text-transform:uppercase;">Monto Declarado:</div>
@@ -588,24 +598,24 @@ async function renderSubtabPagos(container) {
           <!-- BOTONES DE ACCIÓN: COMPROBANTE Y CONCILIAR -->
           <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
             ${p.comprobanteUrl ? `
-              <button onclick="window._verComprobantePago('${p.comprobanteUrl}')" class="btn btn-gray" style="font-size:12px;padding:8px 14px;">
-                🖼️ Ver Comprobante Adjunto
+              <button onclick="window._verComprobantePago('${p.comprobanteUrl}')" class="btn btn-gray" style="font-size:12px;padding:8px 16px;width:auto;">
+                Ver Comprobante Adjunto
               </button>
             ` : '<span style="font-size:11px;color:#666;">Sin comprobante adjunto</span>'}
 
             ${p.estado === 'PENDIENTE' ? `
               <div style="display:flex;gap:8px;margin-left:auto;align-items:center;flex-wrap:wrap;">
-                <button onclick="window._rechazarPagoReportado('${p.id}', '${p.clubNombre}', '${p.clubWhatsapp}')" class="btn btn-red" style="font-size:11px;padding:8px 12px;font-weight:700;">
-                  ❌ RECHAZAR
+                <button onclick="window._rechazarPagoReportado('${p.id}', '${p.clubNombre}', '${p.clubWhatsapp}')" class="btn btn-red" style="font-size:11px;padding:9px 14px;font-weight:800;width:auto;">
+                  RECHAZAR
                 </button>
-                <button onclick="window._abrirModalConciliacionPago('${p.id}', '${p.referencia}', '${p.clubNombre}', '${p.monto}', '${p.moneda}', '${p.clubId || p.clubEmail}', '${p.clubWhatsapp}')" class="btn btn-gold" style="font-size:12px;padding:8px 16px;font-weight:900;">
-                  🔍 VERIFICAR Y CONCILIAR (4 DÍGITOS)
+                <button onclick="window._abrirModalConciliacionPago('${p.id}', '${p.referencia}', '${p.clubNombre}', '${p.monto}', '${p.moneda}', '${p.clubId || p.clubEmail}', '${p.clubWhatsapp}')" class="btn btn-gold" style="font-size:12px;padding:9px 18px;font-weight:900;width:auto;">
+                  VERIFICAR Y CONCILIAR (4 DÍGITOS)
                 </button>
               </div>
             ` : (p.estado === 'RECHAZADO' ? `
-              <span style="font-size:12px;color:var(--rojo);font-weight:800;margin-left:auto;">❌ Reporte Rechazado</span>
+              <span style="font-size:12px;color:var(--rojo);font-weight:800;margin-left:auto;">Reporte Rechazado</span>
             ` : `
-              <span style="font-size:12px;color:#2ecc71;font-weight:800;margin-left:auto;">✅ Conciliado el ${new Date(p.fechaConciliacion || p.updatedAt).toLocaleDateString()}</span>
+              <span style="font-size:12px;color:#2ecc71;font-weight:800;margin-left:auto;">Conciliado el ${new Date(p.fechaConciliacion || p.updatedAt).toLocaleDateString()}</span>
             `)}
           </div>
 
@@ -658,40 +668,40 @@ async function renderSubtabFinanzas(container) {
     <!-- CARDS DE RESUMEN FINANCIERO -->
     <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:14px;margin-bottom:20px;">
       
-      <div class="card" style="margin:0;border-left:4px solid var(--oro);text-align:center;">
-        <div style="font-size:11px;color:#aaa;text-transform:uppercase;">💵 Facturación Este Mes</div>
+      <div class="liquid-glass-card" style="margin:0;border-left:4px solid var(--oro);text-align:center;padding:18px;">
+        <div style="font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:1px;font-weight:700;">Facturación Este Mes</div>
         <div style="font-size:32px;font-weight:900;color:var(--oro);margin-top:4px;">$${totalMesUSD.toFixed(2)} USD</div>
-        <div style="font-size:11px;color:#666;">${conteoMes} suscripciones cobradas</div>
+        <div style="font-size:11px;color:#666;margin-top:4px;">${conteoMes} suscripciones cobradas</div>
       </div>
 
-      <div class="card" style="margin:0;border-left:4px solid #3498db;text-align:center;">
-        <div style="font-size:11px;color:#aaa;text-transform:uppercase;">🇻🇪 Pago Móvil</div>
+      <div class="liquid-glass-card" style="margin:0;border-left:4px solid #3498db;text-align:center;padding:18px;">
+        <div style="font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:1px;font-weight:700;">Pago Móvil</div>
         <div style="font-size:26px;font-weight:900;color:#3498db;margin-top:4px;">$${desglosePorMetodo.pagoMovil.toFixed(2)}</div>
-        <div style="font-size:11px;color:#666;">Cobros en moneda local</div>
+        <div style="font-size:11px;color:#666;margin-top:4px;">Cobros en moneda local</div>
       </div>
 
-      <div class="card" style="margin:0;border-left:4px solid #f39c12;text-align:center;">
-        <div style="font-size:11px;color:#aaa;text-transform:uppercase;">🟡 Binance Pay</div>
+      <div class="liquid-glass-card" style="margin:0;border-left:4px solid #f39c12;text-align:center;padding:18px;">
+        <div style="font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:1px;font-weight:700;">Binance Pay</div>
         <div style="font-size:26px;font-weight:900;color:#f39c12;margin-top:4px;">$${desglosePorMetodo.binance.toFixed(2)}</div>
-        <div style="font-size:11px;color:#666;">Cobros USDT sin comisión</div>
+        <div style="font-size:11px;color:#666;margin-top:4px;">Cobros USDT sin comisión</div>
       </div>
 
-      <div class="card" style="margin:0;border-left:4px solid #2ecc71;text-align:center;">
-        <div style="font-size:11px;color:#aaa;text-transform:uppercase;">🇺🇸 Zelle / Otras</div>
+      <div class="liquid-glass-card" style="margin:0;border-left:4px solid #2ecc71;text-align:center;padding:18px;">
+        <div style="font-size:11px;color:#aaa;text-transform:uppercase;letter-spacing:1px;font-weight:700;">Zelle / Otras</div>
         <div style="font-size:26px;font-weight:900;color:#2ecc71;margin-top:4px;">$${(desglosePorMetodo.zelle + desglosePorMetodo.airtm + desglosePorMetodo.zinli + desglosePorMetodo.paypal).toFixed(2)}</div>
-        <div style="font-size:11px;color:#666;">Zelle, Airtm, Zinli, PayPal</div>
+        <div style="font-size:11px;color:#666;margin-top:4px;">Zelle, Airtm, Zinli, PayPal</div>
       </div>
 
     </div>
 
     <!-- TABLA DE HISTORIAL CONTABLE -->
-    <div class="card">
-      <div class="card-title">📚 HISTORIAL DE INGRESOS Y TRANSACCIONES CONCILIADAS</div>
+    <div class="liquid-glass-card" style="padding:18px;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:var(--oro);letter-spacing:1px;margin-bottom:14px;">HISTORIAL DE INGRESOS Y TRANSACCIONES CONCILIADAS</div>
       
       <div style="overflow-x:auto;">
         <table style="width:100%;border-collapse:collapse;font-size:13px;">
           <thead>
-            <tr style="background:#141414;color:var(--oro);text-align:left;border-bottom:1px solid #333;">
+            <tr style="background:rgba(10,14,22,0.8);color:var(--oro);text-align:left;border-bottom:1px solid rgba(255,255,255,0.1);">
               <th style="padding:10px;">Fecha</th>
               <th style="padding:10px;">Club / Institución</th>
               <th style="padding:10px;">Pasarela</th>
@@ -702,7 +712,7 @@ async function renderSubtabFinanzas(container) {
           </thead>
           <tbody>
             ${finanzas.length ? finanzas.map(f => `
-              <tr style="border-bottom:1px solid #222;">
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
                 <td style="padding:10px;color:#aaa;">${new Date(f.fecha).toLocaleDateString()}</td>
                 <td style="padding:10px;font-weight:700;color:#fff;">${f.clubNombre}</td>
                 <td style="padding:10px;color:var(--oro);">${f.metodo}</td>
@@ -727,22 +737,22 @@ function renderSubtabCuentasCobro(container) {
   container.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
       <div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--oro);">
-          ⚙️ CONFIGURACIÓN DE PASARELAS Y CUENTAS BANCARIAS
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--oro);letter-spacing:1px;">
+          CONFIGURACIÓN DE PASARELAS Y CUENTAS BANCARIAS
         </div>
         <div style="font-size:12px;color:#aaa;">Activa o desactiva métodos de cobro y actualiza tus datos. Los clubes solo verán los métodos encendidos.</div>
       </div>
       <button onclick="window._guardarCuentasCobroForm()" class="btn btn-green" style="font-size:13px;padding:10px 18px;font-weight:900;">
-        💾 GUARDAR TODA LA CONFIGURACIÓN
+        GUARDAR TODA LA CONFIGURACIÓN
       </button>
     </div>
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:16px;">
       
       <!-- 1. PAGO MÓVIL -->
-      <div class="card" style="border:1px solid ${cfg.pagoMovil.activo ? 'var(--oro)' : '#333'};">
+      <div class="liquid-glass-card" style="padding:18px;border-color:${cfg.pagoMovil.activo ? 'var(--oro)' : 'rgba(255,255,255,0.1)'};">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-          <div style="font-weight:900;color:var(--oro);font-size:16px;">🇻🇪 PAGO MÓVIL</div>
+          <div style="font-weight:900;color:var(--oro);font-size:16px;letter-spacing:0.5px;">PAGO MÓVIL</div>
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
             <input type="checkbox" id="cfg-sw-pm" ${cfg.pagoMovil.activo ? 'checked' : ''}>
             <span style="font-size:12px;font-weight:800;color:${cfg.pagoMovil.activo ? '#2ecc71' : '#aaa'};">${cfg.pagoMovil.activo ? 'ACTIVO' : 'INACTIVO'}</span>
@@ -759,9 +769,9 @@ function renderSubtabCuentasCobro(container) {
       </div>
 
       <!-- 2. BINANCE PAY -->
-      <div class="card" style="border:1px solid ${cfg.binance.activo ? '#f39c12' : '#333'};">
+      <div class="liquid-glass-card" style="padding:18px;border-color:${cfg.binance.activo ? '#f39c12' : 'rgba(255,255,255,0.1)'};">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-          <div style="font-weight:900;color:#f39c12;font-size:16px;">🟡 BINANCE PAY (USDT)</div>
+          <div style="font-weight:900;color:#f39c12;font-size:16px;letter-spacing:0.5px;">BINANCE PAY (USDT)</div>
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
             <input type="checkbox" id="cfg-sw-binance" ${cfg.binance.activo ? 'checked' : ''}>
             <span style="font-size:12px;font-weight:800;color:${cfg.binance.activo ? '#2ecc71' : '#aaa'};">${cfg.binance.activo ? 'ACTIVO' : 'INACTIVO'}</span>
@@ -776,9 +786,9 @@ function renderSubtabCuentasCobro(container) {
       </div>
 
       <!-- 3. ZELLE -->
-      <div class="card" style="border:1px solid ${cfg.zelle.activo ? '#2ecc71' : '#333'};">
+      <div class="liquid-glass-card" style="padding:18px;border-color:${cfg.zelle.activo ? '#2ecc71' : 'rgba(255,255,255,0.1)'};">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-          <div style="font-weight:900;color:#2ecc71;font-size:16px;">🇺🇸 ZELLE (USA)</div>
+          <div style="font-weight:900;color:#2ecc71;font-size:16px;letter-spacing:0.5px;">ZELLE (USA)</div>
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
             <input type="checkbox" id="cfg-sw-zelle" ${cfg.zelle.activo ? 'checked' : ''}>
             <span style="font-size:12px;font-weight:800;color:${cfg.zelle.activo ? '#2ecc71' : '#aaa'};">${cfg.zelle.activo ? 'ACTIVO' : 'INACTIVO'}</span>
@@ -791,9 +801,9 @@ function renderSubtabCuentasCobro(container) {
       </div>
 
       <!-- 4. AIRTM -->
-      <div class="card" style="border:1px solid ${cfg.airtm.activo ? '#3498db' : '#333'};">
+      <div class="liquid-glass-card" style="padding:18px;border-color:${cfg.airtm.activo ? '#3498db' : 'rgba(255,255,255,0.1)'};">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-          <div style="font-weight:900;color:#3498db;font-size:16px;">🔵 AIRTM</div>
+          <div style="font-weight:900;color:#3498db;font-size:16px;letter-spacing:0.5px;">AIRTM</div>
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
             <input type="checkbox" id="cfg-sw-airtm" ${cfg.airtm.activo ? 'checked' : ''}>
             <span style="font-size:12px;font-weight:800;color:${cfg.airtm.activo ? '#2ecc71' : '#aaa'};">${cfg.airtm.activo ? 'ACTIVO' : 'INACTIVO'}</span>
@@ -806,9 +816,9 @@ function renderSubtabCuentasCobro(container) {
       </div>
 
       <!-- 5. ZINLI -->
-      <div class="card" style="border:1px solid ${cfg.zinli.activo ? '#9b59b6' : '#333'};">
+      <div class="liquid-glass-card" style="padding:18px;border-color:${cfg.zinli.activo ? '#9b59b6' : 'rgba(255,255,255,0.1)'};">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-          <div style="font-weight:900;color:#9b59b6;font-size:16px;">🟣 ZINLI</div>
+          <div style="font-weight:900;color:#9b59b6;font-size:16px;letter-spacing:0.5px;">ZINLI</div>
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
             <input type="checkbox" id="cfg-sw-zinli" ${cfg.zinli.activo ? 'checked' : ''}>
             <span style="font-size:12px;font-weight:800;color:${cfg.zinli.activo ? '#2ecc71' : '#aaa'};">${cfg.zinli.activo ? 'ACTIVO' : 'INACTIVO'}</span>
@@ -821,9 +831,9 @@ function renderSubtabCuentasCobro(container) {
       </div>
 
       <!-- 6. PAYPAL -->
-      <div class="card" style="border:1px solid ${cfg.paypal.activo ? '#0070ba' : '#333'};">
+      <div class="liquid-glass-card" style="padding:18px;border-color:${cfg.paypal.activo ? '#0070ba' : 'rgba(255,255,255,0.1)'};">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-          <div style="font-weight:900;color:#0070ba;font-size:16px;">🌐 PAYPAL</div>
+          <div style="font-weight:900;color:#0070ba;font-size:16px;letter-spacing:0.5px;">PAYPAL</div>
           <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
             <input type="checkbox" id="cfg-sw-paypal" ${cfg.paypal.activo ? 'checked' : ''}>
             <span style="font-size:12px;font-weight:800;color:${cfg.paypal.activo ? '#2ecc71' : '#aaa'};">${cfg.paypal.activo ? 'ACTIVO' : 'INACTIVO'}</span>
@@ -849,7 +859,7 @@ function renderSubtabCuentasCobro(container) {
 
     <div style="margin-top:20px;text-align:right;">
       <button onclick="window._guardarCuentasCobroForm()" class="btn btn-green" style="font-size:14px;padding:12px 24px;font-weight:900;">
-        💾 GUARDAR TODA LA CONFIGURACIÓN
+        GUARDAR TODA LA CONFIGURACIÓN
       </button>
     </div>
   `;
@@ -913,9 +923,11 @@ window._abrirModalConciliacionPago = (pagoId, refEsperada, clubNombre, monto, mo
   if (!modal || !modalContent) return;
 
   modalContent.innerHTML = `
-    <div class="modal-title">🔐 CONCILIACIÓN DE PAGO — ${clubNombre}</div>
+    <div class="modal-title" style="letter-spacing:1px;font-family:'Barlow Condensed',sans-serif;font-size:22px;color:var(--oro);">
+      CONCILIACIÓN DE PAGO — ${clubNombre}
+    </div>
     
-    <div class="card" style="margin-bottom:14px;background:#111;">
+    <div class="liquid-glass-subtle" style="margin-bottom:14px;padding:14px;border-radius:10px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <span style="font-size:12px;color:#aaa;">Monto a Conciliar:</span>
         <span style="font-size:18px;font-weight:900;color:#2ecc71;">${monto} ${moneda}</span>
@@ -936,7 +948,7 @@ window._abrirModalConciliacionPago = (pagoId, refEsperada, clubNombre, monto, mo
 
     <div style="display:flex;flex-direction:column;gap:8px;">
       <button id="sa-btn-confirm-conciliar" class="btn btn-green" disabled style="padding:12px;font-size:13px;font-weight:900;opacity:0.5;cursor:not-allowed;">
-        🟢 CONCILIAR Y ACTIVAR (+30 DÍAS)
+        CONCILIAR Y ACTIVAR (+30 DÍAS)
       </button>
       <button onclick="document.getElementById('modal').style.display='none'" class="btn btn-gray">CANCELAR</button>
     </div>
@@ -954,24 +966,24 @@ window._abrirModalConciliacionPago = (pagoId, refEsperada, clubNombre, monto, mo
     const val = e.target.value.trim();
     if (val.length === 4) {
       if (val === refEsperada) {
-        matchStatus.innerHTML = '<span style="color:#2ecc71;font-weight:900;">✅ ¡REFERENCIA COINCIDE EXACTAMENTE!</span>';
+        matchStatus.innerHTML = '<span style="color:#2ecc71;font-weight:900;">REFERENCIA COINCIDE EXACTAMENTE</span>';
         btnConfirm.disabled = false;
         btnConfirm.style.opacity = '1';
         btnConfirm.style.cursor = 'pointer';
-        btnConfirm.textContent = '🟢 CONCILIAR Y ACTIVAR (+30 DÍAS)';
+        btnConfirm.textContent = 'CONCILIAR Y ACTIVAR (+30 DÍAS)';
       } else {
-        matchStatus.innerHTML = `<span style="color:var(--rojo);font-weight:800;">⚠️ Discrepancia: El club declaró ...${refEsperada} y tú ingresaste ...${val}</span>`;
+        matchStatus.innerHTML = `<span style="color:var(--rojo);font-weight:800;">Discrepancia: El club declaró ...${refEsperada} y tú ingresaste ...${val}</span>`;
         btnConfirm.disabled = false;
         btnConfirm.style.opacity = '1';
         btnConfirm.style.cursor = 'pointer';
-        btnConfirm.textContent = '⚠️ FORZAR APROBACIÓN CON DISCREPANCIA';
+        btnConfirm.textContent = 'FORZAR APROBACIÓN CON DISCREPANCIA';
       }
     } else {
       matchStatus.textContent = 'Escribe los 4 dígitos para validar coincidencia';
       btnConfirm.disabled = true;
       btnConfirm.style.opacity = '0.5';
       btnConfirm.style.cursor = 'not-allowed';
-      btnConfirm.textContent = '🟢 CONCILIAR Y ACTIVAR (+30 DÍAS)';
+      btnConfirm.textContent = 'CONCILIAR Y ACTIVAR (+30 DÍAS)';
     }
   });
 
@@ -1056,8 +1068,10 @@ window._verComprobantePago = (url) => {
   if (!modal || !modalContent) return;
 
   modalContent.innerHTML = `
-    <div class="modal-title">🖼️ COMPROBANTE DE PAGO</div>
-    <div style="text-align:center;margin-bottom:14px;background:#050505;padding:10px;border-radius:10px;max-height:75vh;overflow:auto;">
+    <div class="modal-title" style="letter-spacing:1px;font-family:'Barlow Condensed',sans-serif;font-size:22px;color:var(--oro);">
+      COMPROBANTE DE PAGO
+    </div>
+    <div class="liquid-glass-subtle" style="text-align:center;margin-bottom:14px;padding:10px;border-radius:10px;max-height:75vh;overflow:auto;">
       <img src="${url}" style="max-width:100%;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.8);">
     </div>
     <button onclick="document.getElementById('modal').style.display='none'" class="btn btn-gold" style="width:100%;">CERRAR</button>

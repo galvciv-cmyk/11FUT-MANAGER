@@ -9,7 +9,7 @@ import { renderStats, guardarStatJugador, cerrarStatModal, renderRankings, rende
 import { renderHistorial, formatFecha } from "./modules/history.js";
 import { initPlantelUI, aplicarPlantelUI, guardarSquad, descargarPlantilla, importarCSV, exportarPDF, eliminarListadoPlantel } from "./modules/squad.js";
 import { buscarMaps, enviarWA, renderTorneosCitacionUI } from "./modules/citacion.js";
-import { abrirConfig, cerrarConfig, guardarNombres, guardarKits, guardarLogo, guardarFondo, cambiarPin, resetearStats, borrarHistorial, cerrarSesion, aplicarPerfil, copiarEnlacePublico, agregarNuevaCategoriaConfig, abrirSoporteWhatsApp, abrirOnboardingWizard, siguientePasoWizard, anteriorPasoWizard, finalizarOnboardingWizard, renderEsquemaPredeterminadoUI, guardarEsquemaPredeterminadoConfig, renderPerfilesPinsUI, guardarPinsConfig, limpiarHistorialNotificaciones } from "./modules/config.js";
+import { abrirConfig, cerrarConfig, guardarNombres, guardarKits, guardarLogo, guardarFondo, cambiarPin, resetearStats, borrarHistorial, cerrarSesion, aplicarPerfil, copiarEnlacePublico, agregarNuevaCategoriaConfig, abrirSoporteWhatsApp, abrirOnboardingWizard, siguientePasoWizard, anteriorPasoWizard, finalizarOnboardingWizard, renderEsquemaPredeterminadoUI, guardarEsquemaPredeterminadoConfig, renderPerfilesPinsUI, guardarPinsConfig, limpiarHistorialNotificaciones, mostrarNotificacionApp, mostrarToastRapido } from "./modules/config.js";
 
 
 import { renderProfileSelector } from "./modules/profileSelector.js";
@@ -382,14 +382,14 @@ const ROUTE_TABS = {
 };
 
 const TAB_LABELS = {
-  1: '📋 TÁCTICA',
-  2: '✉️ CITACIÓN',
-  3: '👥 PLANTEL',
-  4: '📊 STATS',
-  5: '📚 HISTORIAL',
-  6: '🏋️‍♂️ ENTRENAMIENTOS',
-  7: '👑 PANEL ADMIN',
-  8: '👑 SÚPER ADMIN'
+  1: 'TÁCTICA',
+  2: 'CITACIÓN',
+  3: 'PLANTEL',
+  4: 'STATS',
+  5: 'HISTORIAL',
+  6: 'ENTRENAMIENTOS',
+  7: 'PANEL ADMIN',
+  8: 'SÚPER ADMIN'
 };
 
 // ══════════════════════════════════════════
@@ -408,8 +408,9 @@ export function switchTab(n, updateHash = true) {
   // Contar cuántos perfiles DT existen activamente (sin contar el Admin)
   const dtActivos = (perfil.profiles || []).filter(p => p.rol === 'DT').length;
 
-  if (n === 8 && !(isMaster && esAdminRol)) {
-    // Tab 8 (Súper Admin) solo accesible si la cuenta es SuperAdmin Y el perfil activo es ADMIN
+  if (isMaster) {
+    n = 8;
+  } else if (n === 8) {
     n = esAdminRol ? 7 : 1;
   } else if (n === 7 && !esAdminRol) {
     n = 1;
@@ -445,9 +446,11 @@ export function switchTab(n, updateHash = true) {
   verificarMembresiaYLock();
 }
 
-
-
 export function restaurarPestanaDesdeURL() {
+  if (isSuperAdmin()) {
+    switchTab(8, false);
+    return;
+  }
   const hash = window.location.hash || '#tactica';
   const target = ROUTE_TABS[hash];
 
@@ -758,11 +761,11 @@ async function login() {
   const statusEl = document.getElementById('login-status');
 
   if (!emailInput || !pinInput) {
-    if (statusEl) statusEl.textContent = '❌ Ingresa tu correo y PIN';
+    if (statusEl) statusEl.textContent = 'Ingresa tu correo y PIN';
     return;
   }
 
-  if (statusEl) statusEl.textContent = '⏳ Autenticando...';
+  if (statusEl) statusEl.textContent = 'Autenticando...';
 
   try {
     const userCredential = await signInWithEmailAndPassword(auth, emailInput, pinInput);
@@ -780,7 +783,7 @@ async function login() {
       return;
     }
 
-    if (statusEl) statusEl.textContent = '☁️ Cargando datos...';
+    if (statusEl) statusEl.textContent = 'Cargando datos...';
     await cargarFirebase();
 
     const emailVerifScreen = document.getElementById('email-verification-screen');
@@ -792,6 +795,23 @@ async function login() {
     document.getElementById('main-app').style.display = 'none';
     aplicarPerfil();
 
+    // SÚPER ADMIN: Desacoplado 100% de clubes — acceso directo e inmediato al Backoffice
+    if (isMaster) {
+      _ocultarTodasLasPantallas();
+      const loginSc = document.getElementById('login-screen');
+      if (loginSc) loginSc.style.display = 'none';
+      const mainApp = document.getElementById('main-app');
+      if (mainApp) mainApp.style.display = 'block';
+
+      const masterProf = { id: 'admin', rol: 'ADMIN', nombre: 'Súper Admin Master' };
+      setCurrentProfile(masterProf);
+      localStorage.setItem('11fut_active_profile_id', 'admin');
+
+      switchTab(8, true);
+      actualizarVisibilidadPestanasRol();
+      return;
+    }
+
     // 1. Si aún no ha completado el Wizard de configuración de su Club
     if (!perfil.wizardCompletado) {
       const profScreen = document.getElementById('profile-selector-screen');
@@ -801,7 +821,7 @@ async function login() {
     }
 
     // 2. Si ya configuró su Club pero su cuenta está pendiente de aprobación por SuperAdmin
-    if (perfil.estadoCuenta === 'PENDIENTE' && !isMaster) {
+    if (perfil.estadoCuenta === 'PENDIENTE') {
       mostrarPantallaEsperaAprobacion();
       return;
     }
@@ -834,7 +854,7 @@ async function login() {
       }
     }
 
-    if (statusEl) statusEl.textContent = `❌ Error: ${e.message || 'Correo o contraseña incorrectos'}`;
+    if (statusEl) statusEl.textContent = `Error: ${e.message || 'Correo o contraseña incorrectos'}`;
   }
 }
 
@@ -926,15 +946,18 @@ async function ejecutarRegistroUsuario() {
   const pinConfirm = document.getElementById('reg-pin-confirm')?.value?.trim();
 
   if (!emailInput || !pinInput || pinInput.length < 6) {
-    return alert('❌ Por favor ingresa un correo válido y una contraseña de al menos 6 caracteres.');
+    mostrarNotificacionApp('Datos incompletos', 'Ingresa un correo válido y una contraseña de al menos 6 caracteres.', false);
+    return;
   }
 
   if (pinInput !== pinConfirm) {
-    return alert('❌ Las contraseñas ingresadas no coinciden.');
+    mostrarNotificacionApp('Contraseñas distintas', 'Las contraseñas ingresadas no coinciden.', false);
+    return;
   }
 
   if (esDominioDesechable(emailInput)) {
-    return alert('❌ No se permiten correos temporales o desechables. Por favor ingresa un correo real o institucional (Gmail, Outlook, Yahoo, corporativo, etc.).');
+    mostrarNotificacionApp('Correo no permitido', 'Por favor ingresa un correo institucional o comercial válido (Gmail, Outlook, Yahoo, etc.).', false);
+    return;
   }
 
   try {
@@ -1010,9 +1033,9 @@ async function ejecutarRegistroUsuario() {
 
   } catch (e) {
     if (e.code === 'auth/email-already-in-use' || e.message?.includes('email-already-in-use')) {
-      alert('❌ Este correo electrónico ya se encuentra registrado. Ingresa tu correo y contraseña en la pantalla de inicio de sesión o usa un correo distinto para registrar un nuevo club.');
+      mostrarNotificacionApp('Correo Ya Registrado', 'Este correo ya tiene cuenta. Inicia sesión o utiliza otro correo para registrar tu club.', false);
     } else {
-      alert('Error al registrar usuario: ' + e.message);
+      mostrarNotificacionApp('Error de Registro', e.message || 'No se pudo crear la cuenta.', false);
     }
   }
 }
@@ -1020,13 +1043,16 @@ async function ejecutarRegistroUsuario() {
 
 async function ejecutarRecuperarPin() {
   const emailInput = document.getElementById('forgot-email')?.value?.trim();
-  if (!emailInput) return alert('❌ Por favor ingresa tu correo electrónico registrado.');
+  if (!emailInput) {
+    mostrarNotificacionApp('Correo Requerido', 'Ingresa tu correo electrónico registrado.', false);
+    return;
+  }
   try {
     await sendPasswordResetEmail(auth, emailInput);
     cerrarModalForgotPin();
-    alert('📩 Se ha enviado un correo con instrucciones para restablecer tu contraseña de acceso.');
+    mostrarNotificacionApp('Correo Enviado', 'Se ha enviado un enlace para restablecer tu contraseña.', true);
   } catch (e) {
-    alert('Error: ' + e.message);
+    mostrarNotificacionApp('Error', e.message || 'No se pudo enviar el correo de recuperación.', false);
   }
 }
 
@@ -1048,26 +1074,37 @@ export function toggleTheme() {
 export async function ejecutarLoginBiometrico() {
   const statusEl = document.getElementById('login-status');
   if (!isBiometricSupported()) {
-    if (statusEl) statusEl.textContent = '❌ Este dispositivo no soporta biometría';
+    if (statusEl) statusEl.textContent = 'Este dispositivo no soporta biometría';
     return;
   }
-  if (statusEl) statusEl.textContent = '⏳ Verificando biometría...';
+  if (statusEl) statusEl.textContent = 'Verificando biometría...';
   try {
     const uid = auth.currentUser ? auth.currentUser.uid : null;
     const success = await loginBiometric(uid);
     if (success) {
-      if (statusEl) statusEl.textContent = '✅ Autenticación biométrica exitosa';
+      if (statusEl) statusEl.textContent = 'Autenticación biométrica exitosa';
       await cargarFirebase();
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('main-app').style.display = 'none';
       aplicarPerfil();
-      renderProfileSelector(handleProfileSelected);
+      if (isSuperAdmin()) {
+        _ocultarTodasLasPantallas();
+        const mainApp = document.getElementById('main-app');
+        if (mainApp) mainApp.style.display = 'block';
+        const masterProf = { id: 'admin', rol: 'ADMIN', nombre: 'Súper Admin Master' };
+        setCurrentProfile(masterProf);
+        localStorage.setItem('11fut_active_profile_id', 'admin');
+        switchTab(8, true);
+        actualizarVisibilidadPestanasRol();
+      } else {
+        renderProfileSelector(handleProfileSelected);
+      }
     } else {
-      if (statusEl) statusEl.textContent = '❌ No se pudo verificar la biometría';
+      if (statusEl) statusEl.textContent = 'No se pudo verificar la biometría';
     }
   } catch (e) {
     console.error('Error biometric login:', e);
-    if (statusEl) statusEl.textContent = '❌ ' + (e.message || 'Error en inicio biométrico');
+    if (statusEl) statusEl.textContent = e.message || 'Error en inicio biométrico';
   }
 }
 
@@ -1086,13 +1123,13 @@ export async function ejecutarRegistroBiometria() {
   try {
     const ok = await registerBiometric(uid);
     if (ok) {
-      alert('✅ Biometría registrada correctamente. La próxima vez podrás iniciar sesión usando tu huella o Face ID.');
+      mostrarNotificacionApp('Biometría Registrada', 'Podrás iniciar sesión usando tu huella o Face ID en este dispositivo.', true);
       if (modalBio) modalBio.style.display = 'none';
     } else {
-      alert('⚠️ No se pudo completar el registro biométrico.');
+      mostrarNotificacionApp('Biometría', 'No se pudo completar el registro biométrico.', false);
     }
   } catch (e) {
-    alert('❌ Error al registrar biometría: ' + e.message);
+    mostrarNotificacionApp('Error Biometría', e.message || 'Error al registrar biometría.', false);
   }
 }
 
@@ -1138,6 +1175,8 @@ export function actualizarVisibilidadPestanasRol() {
     if (selCat) selCat.style.display = 'none';
     const btnSwitchProf = document.getElementById('btn-switch-profile');
     if (btnSwitchProf) btnSwitchProf.style.display = 'none';
+    const btnCfg = document.getElementById('btn-config');
+    if (btnCfg) btnCfg.style.display = 'none';
     const bannerRenov = document.getElementById('banner-renovacion');
     if (bannerRenov) bannerRenov.style.display = 'none';
     return;
@@ -1217,25 +1256,27 @@ function handleProfileSelected(prof) {
   renderSelectorCategoria();
   refrescarTodaLaVista();
 
-  // Restaurar la pestaña exacta donde estaba el usuario según el URL Hash (#tactica, #stats, #superadmin, etc.)
-  const currentHash = window.location.hash || '';
-  const tabFromHash = ROUTE_TABS[currentHash];
-
-  if (typeof tabFromHash === 'number') {
-    switchTab(tabFromHash, true);
+  const isMaster = isSuperAdmin();
+  if (isMaster) {
+    switchTab(8, true);
   } else {
-    const isMaster = isSuperAdmin();
-    const maxContratado = isMaster ? 8 : (perfil.maxPerfiles || 1);
-    const esAdminRol = prof && prof.rol === 'ADMIN';
-    const dtActivos = (perfil.profiles || []).filter(p => p.rol === 'DT').length;
-    if (isMaster) {
-      switchTab(8, true);
-    } else if (esAdminRol && dtActivos > 0) {
-      switchTab(7, true);
-    } else if (esAdminRol && maxContratado === 1) {
-      switchTab(7, true);
+    // Restaurar la pestaña exacta donde estaba el usuario según el URL Hash (#tactica, #stats, etc.)
+    const currentHash = window.location.hash || '';
+    const tabFromHash = ROUTE_TABS[currentHash];
+
+    if (typeof tabFromHash === 'number') {
+      switchTab(tabFromHash, true);
     } else {
-      switchTab(1, true);
+      const maxContratado = perfil.maxPerfiles || 1;
+      const esAdminRol = prof && prof.rol === 'ADMIN';
+      const dtActivos = (perfil.profiles || []).filter(p => p.rol === 'DT').length;
+      if (esAdminRol && dtActivos > 0) {
+        switchTab(7, true);
+      } else if (esAdminRol && maxContratado === 1) {
+        switchTab(7, true);
+      } else {
+        switchTab(1, true);
+      }
     }
   }
 
@@ -1267,8 +1308,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   const localEmail = localStorage.getItem('11fut_user_email') || perfil?.email;
   const isMasterLocal = (localEmail || '').toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
 
-  if (localProfId || localEmail) {
-    if (perfil.estadoCuenta === 'PENDIENTE' && !isMasterLocal) {
+  if (isMasterLocal) {
+    _ocultarTodasLasPantallas();
+    const loginSc = document.getElementById('login-screen');
+    if (loginSc) loginSc.style.display = 'none';
+    const profScreen = document.getElementById('profile-selector-screen');
+    if (profScreen) profScreen.style.display = 'none';
+    const wizModal = document.getElementById('modal-onboarding-wizard');
+    if (wizModal) wizModal.style.display = 'none';
+
+    const mainApp = document.getElementById('main-app');
+    if (mainApp) mainApp.style.display = 'block';
+
+    const masterProf = { id: 'admin', rol: 'ADMIN', nombre: 'Súper Admin Master' };
+    setCurrentProfile(masterProf);
+    localStorage.setItem('11fut_active_profile_id', 'admin');
+
+    switchTab(8, false);
+    actualizarVisibilidadPestanasRol();
+  } else if (localProfId || localEmail) {
+    if (perfil.estadoCuenta === 'PENDIENTE') {
       mostrarPantallaEsperaAprobacion();
     } else if (!perfil.wizardCompletado) {
       abrirOnboardingWizard(true);
@@ -1308,6 +1367,31 @@ document.addEventListener('DOMContentLoaded', async () => {
       setUserEmail(user.email);
       await cargarFirebase();
       await limpiarDocumentosObsoletosFirebase();
+
+      if (isMaster) {
+        _ocultarTodasLasPantallas();
+        const emailVerifScreen = document.getElementById('email-verification-screen');
+        if (emailVerifScreen) emailVerifScreen.style.display = 'none';
+        const pendingScreen = document.getElementById('pending-approval-screen');
+        if (pendingScreen) pendingScreen.style.display = 'none';
+        const loginSc = document.getElementById('login-screen');
+        if (loginSc) loginSc.style.display = 'none';
+        const profScreen = document.getElementById('profile-selector-screen');
+        if (profScreen) profScreen.style.display = 'none';
+        const wizModal = document.getElementById('modal-onboarding-wizard');
+        if (wizModal) wizModal.style.display = 'none';
+
+        const mainApp = document.getElementById('main-app');
+        if (mainApp) mainApp.style.display = 'block';
+
+        const masterProf = { id: 'admin', rol: 'ADMIN', nombre: 'Súper Admin Master' };
+        setCurrentProfile(masterProf);
+        localStorage.setItem('11fut_active_profile_id', 'admin');
+
+        switchTab(8, true);
+        actualizarVisibilidadPestanasRol();
+        return;
+      }
 
       // 1. Si no ha completado el Wizard de su club
       const tieneConfiguracionPrevia = (perfil.categorias && perfil.categorias.length > 0) || (perfil.club && perfil.club !== '11FUT MANAGER' && perfil.club !== 'Nuevo Club');

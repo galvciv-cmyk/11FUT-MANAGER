@@ -368,25 +368,25 @@ export function renderPerfilesPinsUI() {
       <div style="background:#0d0d0d;border:1px solid ${esPredeterminado ? 'var(--oro)' : '#222'};padding:12px;border-radius:10px;margin-bottom:8px;display:flex;flex-direction:column;gap:8px;">
         <!-- Fila superior: rol + ícono PIN + botón eliminar -->
         <div style="display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-size:13px;font-weight:700;color:${p.rol === 'ADMIN' ? 'var(--oro)' : '#2ecc71'};">
-            ${p.rol === 'ADMIN' ? '👑' : '🧢'} ${p.rol} ${subLabel} ${esPredeterminado ? '<small style="color:var(--oro);font-weight:800;">(PREDETERMINADO)</small>' : ''}
-            <span style="font-size:16px;margin-left:6px;" title="${tienePIN ? 'PIN asignado' : 'Sin PIN — acceso libre'}">${pinIcon}</span>
+          <span style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;">
+            <span class="badge-gold">${p.rol}</span> ${subLabel} ${esPredeterminado ? '<small style="color:var(--oro);font-weight:800;">(PREDETERMINADO)</small>' : ''}
+            <span style="font-size:14px;margin-left:4px;" title="${tienePIN ? 'PIN asignado' : 'Sin PIN — acceso libre'}">${pinIcon}</span>
           </span>
-          ${!esPredeterminado ? `<button onclick="window._eliminarPerfilConfig('${p.id}')" style="background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);color:#e74c3c;padding:4px 8px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;" title="Eliminar este perfil DT">🗑️ ELIMINAR</button>` : `<span style="font-size:10px;color:var(--oro);font-weight:700;background:rgba(212,175,55,0.12);padding:2px 8px;border-radius:6px;">🔒 Protegido</span>`}
+          ${!esPredeterminado ? `<button onclick="window._eliminarPerfilConfig('${p.id}')" style="background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);color:#e74c3c;padding:4px 8px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;" title="Eliminar este perfil DT">ELIMINAR</button>` : `<span style="font-size:10px;color:var(--oro);font-weight:700;background:rgba(212,175,55,0.12);padding:2px 8px;border-radius:6px;">Protegido</span>`}
         </div>
         <!-- Nombre -->
         <input type="text" id="cfg-nombre-input-${p.id}" value="${p.nombre || ''}" placeholder="Nombre del Entrenador / Perfil" style="flex:1;font-size:13px;padding:8px;background:#181818;border:1px solid #333;color:#fff;border-radius:6px;">
         <!-- Equipos (máximo 3) -->
         <div style="display:flex;flex-direction:column;gap:2px;">
-          <label style="font-size:10px;color:#aaa;font-weight:700;">⚽ Equipos asignados a este perfil (máx 3, sep. por coma):</label>
+          <label style="font-size:10px;color:#aaa;font-weight:700;">Equipos asignados a este perfil (máx 3, sep. por coma):</label>
           <input type="text" id="cfg-equipos-input-${p.id}" value="${equiposTexto}" placeholder="Sin equipos. Escribe hasta 3 equipos (ej. Sub-16 A, Sub-16 B)" style="font-size:12px;padding:6px 8px;background:#181818;border:1px solid #333;color:#fff;border-radius:6px;">
         </div>
         <!-- PIN -->
         <div style="display:flex;align-items:center;gap:8px;">
           <label style="font-size:11px;color:#aaa;font-weight:700;white-space:nowrap;">PIN (4 dígitos — dejar vacío = sin PIN):</label>
           <div style="position:relative;display:flex;align-items:center;">
-            <input type="password" id="cfg-pin-input-${p.id}" value="${p.pin || ''}" maxlength="4" inputmode="numeric" placeholder="****" style="width:90px;text-align:center;font-size:14px;font-weight:900;letter-spacing:3px;padding:4px 24px 4px 4px;background:#181818;border:1px solid ${pinColor};color:#fff;border-radius:6px;">
-            <button type="button" onclick="window._togglePasswordVisibility('cfg-pin-input-${p.id}', this)" style="position:absolute;right:2px;background:none;border:none;color:#aaa;cursor:pointer;font-size:13px;padding:2px;" title="Mostrar / Ocultar PIN">👁️</button>
+            <input type="password" id="cfg-pin-input-${p.id}" value="${p.pin || ''}" maxlength="4" inputmode="numeric" placeholder="****" style="width:90px;text-align:center;font-size:14px;font-weight:900;letter-spacing:3px;padding:4px 28px 4px 4px;background:#181818;border:1px solid ${pinColor};color:#fff;border-radius:6px;">
+            <button type="button" onclick="window._togglePasswordVisibility('cfg-pin-input-${p.id}', this)" class="btn-toggle-eye" title="Mostrar / Ocultar PIN">${SVG_EYE}</button>
           </div>
         </div>
       </div>`;
@@ -395,17 +395,17 @@ export function renderPerfilesPinsUI() {
     <!-- AGREGAR NUEVO PERFIL O BANNER DE UPGRADE -->
     ${maxContratado === 1 && !isMaster ? `
       <div style="margin-top:10px;padding:14px;background:rgba(212,175,55,0.06);border:1px dashed var(--oro);border-radius:10px;text-align:center;">
-        <div style="font-size:13px;color:var(--oro);font-weight:900;margin-bottom:6px;">🚀 ¿TIENES MÁS ENTRENADORES O CATEGORÍAS?</div>
+        <div style="font-size:13px;color:var(--oro);font-weight:900;margin-bottom:6px;">¿TIENES MÁS ENTRENADORES O CATEGORÍAS?</div>
         <div style="font-size:11px;color:#ccc;margin-bottom:12px;line-height:1.5;">
           Pasa a un <strong>Plan Club o Academia</strong> para desbloquear el <strong>Panel de Director Deportivo (Supervisión Global)</strong> y asignar accesos independientes a cada entrenador.
         </div>
         <button class="btn btn-gold" onclick="mostrarModalUpgradePlan(1, 1)" style="font-size:11px;padding:8px 16px;font-weight:900;">
-          ⭐ AMPLIAR A PLAN CLUB / DIRECTOR DEPORTIVO
+          AMPLIAR A PLAN CLUB / DIRECTOR DEPORTIVO
         </button>
       </div>
     ` : `
       <div style="margin-top:10px;padding:12px;background:#080808;border:1px dashed var(--oro);border-radius:10px;">
-        <div style="font-size:12px;color:var(--oro);font-weight:700;margin-bottom:6px;">➕ AGREGAR NUEVO PERFIL DE ENTRENADOR (DT)</div>
+        <div style="font-size:12px;color:var(--oro);font-weight:700;margin-bottom:6px;">AGREGAR NUEVO PERFIL DE ENTRENADOR (DT)</div>
         <div style="font-size:10px;color:#666;margin-bottom:8px;">Tu plan actual permite <strong style="color:#aaa;">${maxContratado} perfil(es)</strong>. Tienes <strong style="color:#2ecc71;">${totalPerfiles}</strong> activos.</div>
         ${totalPerfiles < maxContratado ? `
           <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:4px;">
@@ -413,15 +413,15 @@ export function renderPerfilesPinsUI() {
             <div style="display:flex;gap:8px;">
               <input type="text" id="cfg-nueva-cat-perfil" placeholder="Equipos/Categorías (opcional, máx 3, ej: Sub-16 A, Sub-16 B)" style="flex:1;font-size:12px;padding:8px;background:#181818;border:1px solid #333;color:#fff;border-radius:6px;">
               <div style="position:relative;display:flex;align-items:center;">
-                <input type="password" id="cfg-nuevo-pin-perfil" placeholder="PIN (4 dig)" maxlength="4" inputmode="numeric" style="width:110px;text-align:center;font-size:12px;padding:8px 24px 8px 8px;background:#181818;border:1px solid #333;color:#fff;border-radius:6px;">
-                <button type="button" onclick="window._togglePasswordVisibility('cfg-nuevo-pin-perfil', this)" style="position:absolute;right:2px;background:none;border:none;color:#aaa;cursor:pointer;font-size:13px;padding:2px;" title="Mostrar / Ocultar PIN">👁️</button>
+                <input type="password" id="cfg-nuevo-pin-perfil" placeholder="PIN (4 dig)" maxlength="4" inputmode="numeric" style="width:110px;text-align:center;font-size:12px;padding:8px 28px 8px 8px;background:#181818;border:1px solid #333;color:#fff;border-radius:6px;">
+                <button type="button" onclick="window._togglePasswordVisibility('cfg-nuevo-pin-perfil', this)" class="btn-toggle-eye" title="Mostrar / Ocultar PIN">${SVG_EYE}</button>
               </div>
             </div>
-            <button class="btn btn-gold" onclick="window._agregarNuevoPerfilDT()" style="font-size:12px;padding:9px;width:100%;font-weight:700;">➕ CREAR Y GUARDAR NUEVO PERFIL DT</button>
+            <button class="btn btn-gold" onclick="window._agregarNuevoPerfilDT()" style="font-size:12px;padding:9px;width:100%;font-weight:700;">CREAR Y GUARDAR NUEVO PERFIL DT</button>
           </div>
         ` : `
           <div style="font-size:11px;color:#aaa;margin-bottom:6px;">Límite de perfiles alcanzado para tu plan (${totalPerfiles}/${maxContratado}).</div>
-          <button class="btn btn-green" onclick="mostrarModalUpgradePlan(${totalPerfiles}, ${maxContratado})" style="font-size:11px;padding:6px 12px;width:auto;">💬 AMPLIAR PLAN O PERFILES</button>
+          <button class="btn btn-green" onclick="mostrarModalUpgradePlan(${totalPerfiles}, ${maxContratado})" style="font-size:11px;padding:6px 12px;width:auto;">AMPLIAR PLAN O PERFILES</button>
         `}
       </div>
     `}
@@ -1093,13 +1093,16 @@ export function aplicarPerfil() {
   }
 }
 
+export const SVG_EYE = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+export const SVG_EYE_OFF = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+
 window._togglePasswordVisibility = (inputId, btnEl) => {
   const input = document.getElementById(inputId);
   if (!input) return;
   const isPassword = input.type === 'password';
   input.type = isPassword ? 'text' : 'password';
   if (btnEl) {
-    btnEl.textContent = isPassword ? '🙈' : '👁️';
+    btnEl.innerHTML = isPassword ? SVG_EYE_OFF : SVG_EYE;
     btnEl.title = isPassword ? 'Ocultar contraseña' : 'Mostrar contraseña';
   }
 };
@@ -1117,6 +1120,11 @@ window._reabrirWizardManualmente = () => {
 };
 
 export function abrirOnboardingWizard(force = false) {
+  if (isSuperAdmin()) {
+    const modalWiz = document.getElementById('modal-onboarding-wizard');
+    if (modalWiz) modalWiz.style.display = 'none';
+    return;
+  }
   const modalReg = document.getElementById('modal-register');
   if (!force && modalReg && modalReg.style.display !== 'none' && modalReg.style.display !== '') {
     return;
@@ -1190,7 +1198,7 @@ export function actualizarVistaWizard() {
     renderWizardTorneosUI();
   } else if (wizardStep === 4) {
     if (subtitle) subtitle.textContent = 'Paso 4 de 4: Kits y Uniformes';
-    if (btnNext) btnNext.textContent = '⚡ FINALIZAR Y ENTRAR';
+    if (btnNext) btnNext.textContent = 'FINALIZAR Y ENTRAR';
     renderWizardKitsUI();
   }
 }
@@ -1487,7 +1495,7 @@ export async function finalizarOnboardingWizard() {
 
     if (modal) modal.style.display = 'none';
 
-    mostrarNotificacionApp('¡Bienvenido a 11FUT!', `🏆 Configuración completada para ${perfil.club || 'tu Club'}.`);
+    mostrarNotificacionApp('¡Bienvenido a 11FUT!', `Configuración completada para ${perfil.club || 'tu Club'}.`);
 
     if (user && !user.emailVerified && !isMaster) {
       if (typeof window._mostrarPantallaVerificacionEmail === 'function') {

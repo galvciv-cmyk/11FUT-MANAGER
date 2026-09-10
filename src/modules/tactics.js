@@ -12,7 +12,7 @@ export function limpiarCanchaYBanco(eq = 'A') {
     renderSuplentes(eq);
     autoSaveLocal();
     guardarFirebase();
-    mostrarNotificacionApp('Cancha Limpia', '🧹 Todos los puestos han sido dejados LIBRES.');
+    mostrarNotificacionApp('Cancha Limpia', 'Todos los puestos han sido dejados LIBRES.');
   });
 }
 window._limpiarCanchaYBanco = (eq) => limpiarCanchaYBanco(eq);
@@ -304,7 +304,10 @@ window._confirmarGuardarEsquema = async (eq) => {
   const input = document.getElementById('custom-scheme-name-input');
   if (!input) return;
   const nombre = input.value.trim();
-  if (!nombre) return alert('Ingresa un nombre para el esquema');
+  if (!nombre) {
+    mostrarNotificacionApp('Nombre Requerido', 'Ingresa un nombre para el esquema.', false);
+    return;
+  }
 
   const modo = document.getElementById(`modo-${eq}`)?.value || '11';
   const customPos = (plantel[`pos_custom_${eq}`] || {});
@@ -1467,7 +1470,7 @@ function renderSelectorCapitanInCard(eq, titulares) {
 
   let html = `<option value="">-- Sin Capitán --</option>`;
   opciones.forEach((n, idx) => {
-    const label = oficialesCapitanes.length ? `👑 Capitán #${idx + 1}: ${n}` : `⭐ ${n}`;
+    const label = oficialesCapitanes.length ? `[C] Capitán #${idx + 1}: ${n}` : `${n}`;
     html += `<option value="${n}" ${n === capitanActual ? 'selected' : ''}>${label}</option>`;
   });
 

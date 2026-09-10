@@ -8,6 +8,23 @@ service cloud.firestore {
     match /publicos/{pubId} {
       allow read, write: if true;
     }
+
+    match /publico/{docId} {
+      allow read, write: if true;
+    }
+
+    match /configuraciones/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    match /pagos_reportados/{docId} {
+      allow read, write: if true;
+    }
+
+    match /finanzas_ingresos/{docId} {
+      allow read, write: if request.auth != null;
+    }
   }
 }
 

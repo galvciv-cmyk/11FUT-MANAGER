@@ -15,10 +15,22 @@ export function renderProfileSelector(onProfileSelected, forceShow = false) {
     document.body.appendChild(modalOverlay);
   }
 
-  const isMaster = isSuperAdmin();
-  const maxAllowed = isMaster ? 8 : (perfil.maxPerfiles || 1);
+  // SÚPER ADMIN NUNCA DEBE VER LA PANTALLA DE PERFILES
+  if (isSuperAdmin()) {
+    if (modalOverlay) modalOverlay.style.display = 'none';
+    if (typeof onProfileSelected === 'function') {
+      const masterProf = { id: 'admin', rol: 'ADMIN', nombre: 'Súper Admin Master' };
+      setCurrentProfile(masterProf);
+      localStorage.setItem('11fut_active_profile_id', 'admin');
+      onProfileSelected(masterProf);
+    }
+    return;
+  }
 
-  if (maxAllowed === 1 && !isMaster) {
+  const isMaster = false;
+  const maxAllowed = perfil.maxPerfiles || 1;
+
+  if (maxAllowed === 1) {
     let soloPerfil = (perfil.profiles || [])[0];
     if (!soloPerfil) {
       soloPerfil = {
@@ -39,7 +51,7 @@ export function renderProfileSelector(onProfileSelected, forceShow = false) {
         id: "admin",
         nombre: "Director Deportivo",
         rol: "ADMIN",
-        pin: isMaster ? "1901" : "1234",
+        pin: "1234",
         avatar: perfil.logo || "https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png"
       };
       perfil.profiles = [hasAdmin, ...(perfil.profiles || [])];
@@ -48,12 +60,6 @@ export function renderProfileSelector(onProfileSelected, forceShow = false) {
 
   let profilesList = perfil.profiles;
 
-
-  // SI SOLO HAY 1 PERFIL: En lugar de auto-login, mostrar la pantalla de selección
-  // para que el usuario siempre ingrese su PIN de seguridad, incluso en cuentas de 1 solo perfil.
-  // Nota: El auto-login SIN PIN queda deshabilitado por seguridad.
-
-
   // RENDERIZADO INTERFAZ STREAMING ("¿Quién está dirigiendo hoy?")
   window.location.hash = '#profiles';
   modalOverlay.style.display = 'flex';
@@ -61,12 +67,11 @@ export function renderProfileSelector(onProfileSelected, forceShow = false) {
     <!-- BOTÓN CERRAR SESIÓN — ESQUINA SUPERIOR DERECHA -->
     <div style="position:fixed;top:14px;right:16px;z-index:10000;">
       <button onclick="window._cerrarSesionCompleta()"
-        style="background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.35);color:#e74c3c;padding:5px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;display:flex;align-items:center;gap:5px;">
-        🚪 Cerrar Sesión
+        style="background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.35);color:#e74c3c;padding:6px 14px;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.5px;display:flex;align-items:center;gap:6px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Cerrar Sesión
       </button>
     </div>
-
-
 
     <div style="text-align:center;max-width:850px;width:100%;animation:fadeIn 0.4s ease;">
       
@@ -83,13 +88,13 @@ export function renderProfileSelector(onProfileSelected, forceShow = false) {
             ${(p.id === 'admin' || p.id === 'dt_principal' || profilesList.length <= 1) ? `
               <div title="Perfil Principal (No eliminable)" 
                 style="position:absolute;top:-6px;right:-6px;z-index:20;background:var(--oro);color:#000;border-radius:50%;width:24px;height:24px;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.5);">
-                👑
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
               </div>
             ` : `
               <button onclick="event.stopPropagation(); window._eliminarPerfilDT('${p.id}')" 
                 title="Eliminar este perfil de Entrenador" 
-                style="position:absolute;top:-6px;right:-6px;z-index:20;background:var(--rojo);border:2px solid #000;color:#fff;border-radius:50%;width:28px;height:28px;font-size:12px;font-weight:900;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;transition:transform 0.15s ease;">
-                🗑️
+                style="position:absolute;top:-6px;right:-6px;z-index:20;background:var(--rojo);border:2px solid #000;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;transition:transform 0.15s ease;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
               </button>
             `}
             <div class="profile-card-item" onclick="window._onSelectProfileCard('${p.id}')" style="display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:transform 0.2s ease;">
@@ -109,9 +114,9 @@ export function renderProfileSelector(onProfileSelected, forceShow = false) {
     </div>
 
     <!-- MODAL TECLADO PIN PAD 4 DÍGITOS -->
-    <div id="pin-pad-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:10000;align-items:center;justify-content:center;">
-      <div style="background:#111;border:1px solid var(--oro);padding:24px;border-radius:16px;width:300px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.8);">
-        <div style="font-size:12px;color:var(--oro);font-weight:700;margin-bottom:4px;">🔐 INGRESA PIN DE ACCESO</div>
+    <div id="pin-pad-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:10000;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
+      <div class="liquid-glass-card" style="padding:24px;border-radius:16px;width:300px;text-align:center;">
+        <div style="font-size:12px;color:var(--oro);font-weight:700;margin-bottom:4px;letter-spacing:1px;">INGRESA PIN DE ACCESO</div>
         <div id="pin-profile-title" style="font-family:'Barlow Condensed',sans-serif;font-size:20px;color:#fff;margin-bottom:14px;"></div>
         
         <div style="display:flex;justify-content:center;gap:12px;margin-bottom:20px;">
@@ -123,9 +128,9 @@ export function renderProfileSelector(onProfileSelected, forceShow = false) {
 
         <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:10px;margin-bottom:16px;">
           ${[1,2,3,4,5,6,7,8,9].map(n => `<button class="btn btn-gray" onclick="window._pressPinNum('${n}')" style="font-size:18px;font-weight:700;padding:12px;">${n}</button>`).join('')}
-          <button class="btn btn-red" onclick="window._pressPinClear()" style="font-size:12px;padding:12px;">❌</button>
+          <button class="btn btn-red" onclick="window._pressPinClear()" style="font-size:11px;font-weight:800;padding:12px;">BORRAR</button>
           <button class="btn btn-gray" onclick="window._pressPinNum('0')" style="font-size:18px;font-weight:700;padding:12px;">0</button>
-          <button class="btn btn-gold" onclick="window._pressPinCheck()" style="font-size:12px;padding:12px;">OK</button>
+          <button class="btn btn-gold" onclick="window._pressPinCheck()" style="font-size:12px;font-weight:900;padding:12px;">OK</button>
         </div>
 
         <button class="btn btn-gray" onclick="document.getElementById('pin-pad-modal').style.display='none'" style="width:100%;font-size:11px;">CANCELAR</button>
@@ -142,8 +147,8 @@ export function renderProfileSelector(onProfileSelected, forceShow = false) {
       return mostrarNotificacionApp('Perfil Protegido', 'El perfil principal es indispensable para acceder a la cuenta y no se puede eliminar.', false);
     }
 
-    const adminProfile = perfil.profiles.find(x => x.id === 'admin') || { pin: isSuperAdmin() ? '1901' : '1234' };
-    const adminPin = adminProfile.pin || (isSuperAdmin() ? '1901' : '1234');
+    const adminProfile = perfil.profiles.find(x => x.id === 'admin') || { pin: '1234' };
+    const adminPin = adminProfile.pin || '1234';
 
     // Autorización requerida: PIN del Director Deportivo (ADMIN)
     selectedProfilePending = { ...profTarget, action: 'delete', targetId: pId, requiredPin: adminPin };
@@ -151,7 +156,7 @@ export function renderProfileSelector(onProfileSelected, forceShow = false) {
     updatePinDots();
 
     const titleEl = document.getElementById('pin-profile-title');
-    if (titleEl) titleEl.textContent = `👑 PIN ADMIN para borrar ${profTarget.nombre}`;
+    if (titleEl) titleEl.textContent = `PIN ADMIN para borrar ${profTarget.nombre}`;
 
     const modalPad = document.getElementById('pin-pad-modal');
     if (modalPad) modalPad.style.display = 'flex';

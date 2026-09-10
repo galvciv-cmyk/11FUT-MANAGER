@@ -103,26 +103,26 @@ export function renderAdminDashboard(containerElement) {
   containerElement.innerHTML = `
     <div style="padding:16px;max-width:1200px;margin:0 auto;">
       
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px;background:rgba(20,20,20,0.8);padding:16px;border-radius:14px;border:1px solid rgba(255,215,0,0.3);backdrop-filter:blur(10px);">
+      <div class="liquid-glass-card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px;padding:18px;">
         <div>
-          <h2 style="margin:0;font-family:'Barlow Condensed',sans-serif;font-size:24px;color:var(--oro);display:flex;align-items:center;gap:8px;">
-            👑 PANEL EJECUTIVO ADMIN — ${perfil.club || '11FUT MANAGER'}
+          <h2 style="margin:0;font-family:'Barlow Condensed',sans-serif;font-size:24px;color:var(--oro);display:flex;align-items:center;gap:8px;letter-spacing:1px;">
+            PANEL EJECUTIVO ADMIN — ${perfil.club || '11FUT MANAGER'}
           </h2>
           <div style="font-size:12px;color:#aaa;">Consolidador General de Rendimiento y Gestión Institucional</div>
         </div>
 
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <button onclick="window._abrirPizarraFullscreenAdmin()" class="btn btn-gold" style="font-size:12px;padding:8px 14px;display:flex;align-items:center;gap:6px;font-weight:700;">
-            📺 PIZARRA TÁCTICA PANTALLA COMPLETA
+            PIZARRA TÁCTICA PANTALLA COMPLETA
           </button>
           
-          <div style="display:flex;flex-direction:column;gap:6px;background:#0d0d0d;padding:8px 12px;border-radius:10px;border:1px solid rgba(212,175,55,0.35);">
+          <div style="display:flex;flex-direction:column;gap:6px;background:rgba(10,14,22,0.8);padding:8px 12px;border-radius:10px;border:1px solid rgba(212,175,55,0.35);">
             <div style="display:flex;align-items:center;gap:8px;">
-              <label style="font-size:11px;color:var(--oro);font-weight:700;white-space:nowrap;">👤 Perfil:</label>
+              <label style="font-size:11px;color:var(--oro);font-weight:700;white-space:nowrap;">Perfil:</label>
               <select id="admin-profile-selector" style="background:#181818;color:#fff;border:1px solid #333;padding:5px 10px;border-radius:6px;font-size:12px;cursor:pointer;flex:1;">
-                <option value="GLOBAL">🌐 TODOS LOS PERFILES</option>
+                <option value="GLOBAL">TODOS LOS PERFILES</option>
                 ${(perfil.profiles || []).map(p => `
-                  <option value="${p.id}">${p.rol === 'ADMIN' ? '👑' : '🧢'} ${p.nombre}</option>
+                  <option value="${p.id}">[${p.rol}] ${p.nombre}</option>
                 `).join('')}
               </select>
             </div>

@@ -32,7 +32,7 @@ export function renderCapitanesUI() {
     if (sel) {
       const selectedVal = plantel.capitanes[num - 1] || '';
       sel.innerHTML = `<option value="">-- Seleccionar Capitán --</option>` +
-        allPlayers.map(p => `<option value="${p}" ${p === selectedVal ? 'selected' : ''}>👑 ${p}</option>`).join('');
+        allPlayers.map(p => `<option value="${p}" ${p === selectedVal ? 'selected' : ''}>[C] ${p}</option>`).join('');
 
       sel.onchange = (e) => {
         plantel.capitanes[num - 1] = e.target.value;
