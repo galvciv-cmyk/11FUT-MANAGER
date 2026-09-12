@@ -215,16 +215,22 @@ export function mostrarPantallaEsperaAprobacion() {
     panel.id = 'pending-approval-screen';
     document.body.appendChild(panel);
   }
+  const esEnRevision = perfil.estadoCuenta === 'EN_REVISION';
+  const tituloHeader = esEnRevision ? 'PAGO REPORTADO EN REVISIÓN' : 'CUENTA PENDIENTE DE ACTIVACIÓN';
+  const descHeader = esEnRevision 
+    ? `Tu reporte de pago fue recibido exitosamente ✅<br>El Administrador está conciliando los últimos 4 dígitos y activará tu cuenta en breve.`
+    : `Tu correo fue verificado exitosamente ✅<br>El equipo de <strong style="color:var(--oro)">11FUT MANAGER</strong> revisará tu solicitud.<br>Recibirás confirmación por <strong>WhatsApp</strong> cuando tu período de prueba sea activado.`;
+
   panel.style.cssText = 'position:fixed;inset:0;background:#050505;z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;';
   panel.innerHTML = `
     <div style="text-align:center;max-width:480px;width:100%;animation:fadeIn 0.5s ease;padding:20px 0;">
       <img src="${_DEFAULT_LOGO}" style="height:60px;margin-bottom:24px;filter:drop-shadow(0 0 14px rgba(212,175,55,0.45));" onerror="this.style.display='none'">
-      <div style="font-size:58px;margin-bottom:14px;">⏳</div>
-      <h1 style="font-family:'Barlow Condensed',sans-serif;font-size:24px;color:#fff;margin:0 0 12px;letter-spacing:1px;">CUENTA PENDIENTE DE ACTIVACIÓN</h1>
+      <div style="width:70px;height:70px;border-radius:50%;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.4);display:flex;align-items:center;justify-content:center;color:var(--oro);margin:0 auto 16px;box-shadow:0 0 20px rgba(212,175,55,0.2);">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <h1 style="font-family:'Barlow Condensed',sans-serif;font-size:24px;color:#fff;margin:0 0 12px;letter-spacing:1px;">${tituloHeader}</h1>
       <div style="font-size:13px;color:#aaa;margin-bottom:18px;line-height:1.7;">
-        Tu correo fue verificado exitosamente ✅<br>
-        El equipo de <strong style="color:var(--oro)">11FUT MANAGER</strong> revisará tu solicitud.<br>
-        Recibirás confirmación por <strong>WhatsApp</strong> cuando tu período de prueba sea activado.
+        ${descHeader}
       </div>
       <div style="background:#0d0d0d;border:1px solid rgba(212,175,55,0.22);border-radius:10px;padding:14px 16px;margin-bottom:22px;font-size:12px;color:#ccc;line-height:1.7;text-align:left;">
         ⚽ <strong style="color:var(--oro)">¿Por qué revisamos tu cuenta?</strong><br>
@@ -232,11 +238,13 @@ export function mostrarPantallaEsperaAprobacion() {
       </div>
       <div style="display:flex;flex-direction:column;gap:10px;">
         <button id="btn-actualizar-estado" style="background:linear-gradient(135deg,var(--oro),#b8960c);border:none;color:#000;padding:14px;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;cursor:pointer;">🔄 VERIFICAR ESTADO DE APROBACIÓN</button>
-        <button id="btn-reportar-pago-espera" onclick="window._abrirModalReportarPago && window._abrirModalReportarPago()" style="background:linear-gradient(135deg,#00e676,#00b0ff);border:none;color:#000;padding:13px;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;cursor:pointer;">💳 REPORTAR PAGO / ACTIVACIÓN DIRECTA</button>
+        ${!esEnRevision ? `<button id="btn-reportar-pago-espera" onclick="window._abrirModalReportarPago && window._abrirModalReportarPago()" style="background:linear-gradient(135deg,#00e676,#00b0ff);border:none;color:#000;padding:13px;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:900;cursor:pointer;">💳 REPORTAR PAGO / ACTIVACIÓN DIRECTA</button>` : ''}
         <button id="btn-wa-soporte-pendiente" style="background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.3);color:#25d366;padding:11px;border-radius:8px;font-size:13px;cursor:pointer;">💬 Contactar Soporte por WhatsApp</button>
         <button id="btn-logout-pendiente" style="background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);color:#e74c3c;padding:10px;border-radius:8px;font-size:12px;cursor:pointer;">🚪 Cerrar sesión</button>
       </div>
-      <div id="pending-status-msg" style="font-size:12px;color:#aaa;margin-top:14px;min-height:18px;"></div>
+      <div id="pending-status-msg" style="font-size:12px;color:#aaa;margin-top:14px;min-height:18px;">
+        ${esEnRevision ? '<span style="color:var(--oro);font-weight:bold;">⏳ Pago reportado recibido. El Administrador está conciliando tu transacción...</span>' : ''}
+      </div>
     </div>
   `;
 
@@ -247,7 +255,7 @@ export function mostrarPantallaEsperaAprobacion() {
 
     try {
       await cargarFirebase();
-      if (perfil.estadoCuenta && perfil.estadoCuenta !== 'PENDIENTE') {
+      if (perfil.estadoCuenta === 'ACTIVO' || perfil.estadoCuenta === 'PRUEBA') {
         if (_pendingPollTimer) clearInterval(_pendingPollTimer);
         if (msg) msg.innerHTML = '<span style="color:#2ecc71;font-weight:bold;">🎉 ¡Cuenta Aprobada! Iniciando tu club...</span>';
         setTimeout(() => {
@@ -259,6 +267,9 @@ export function mostrarPantallaEsperaAprobacion() {
             abrirOnboardingWizard(true);
           }
         }, 600);
+      } else if (perfil.estadoCuenta === 'EN_REVISION') {
+        if (btnAct) btnAct.textContent = '🔄 VERIFICAR ESTADO DE APROBACIÓN';
+        if (msg) msg.innerHTML = '<span style="color:var(--oro);font-weight:bold;">⏳ Pago reportado recibido. El Administrador está conciliando tu transacción...</span>';
       } else if (mostrarMensaje) {
         if (btnAct) btnAct.textContent = '🔄 VERIFICAR ESTADO DE APROBACIÓN';
         if (msg) msg.textContent = 'ℹ️ Tu cuenta aún está en revisión por el Administrador. Te notificaremos por WhatsApp.';
@@ -378,7 +389,8 @@ const ROUTE_TABS = {
   '#profiles': 'profiles',
   '#perfiles': 'profiles',
   '#verificar-email': 'verificar-email',
-  '#pendiente-aprobacion': 'pendiente-aprobacion'
+  '#pendiente-aprobacion': 'pendiente-aprobacion',
+  '#cuenta-cancelada': 'cuenta-cancelada'
 };
 
 const TAB_LABELS = {
@@ -469,9 +481,11 @@ export function restaurarPestanaDesdeURL() {
       mostrarPantallaVerificacionEmail(auth.currentUser);
     }
   } else if (target === 'pendiente-aprobacion') {
-    if (auth && auth.currentUser && perfil.estadoCuenta === 'PENDIENTE') {
+    if (auth && auth.currentUser && (perfil.estadoCuenta === 'PENDIENTE' || perfil.estadoCuenta === 'EN_REVISION')) {
       mostrarPantallaEsperaAprobacion();
     }
+  } else if (target === 'cuenta-cancelada') {
+    mostrarPantallaCuentaCancelada();
   }
 }
 
@@ -812,16 +826,22 @@ async function login() {
       return;
     }
 
+    // 0. Si la cuenta fue cancelada o suspendida por la administración
+    if (perfil.estadoCuenta === 'CANCELADA' || perfil.estadoCuenta === 'CANCELADO' || perfil.cancelada) {
+      mostrarPantallaCuentaCancelada();
+      return;
+    }
+
     // 1. Si aún no ha completado el Wizard de configuración de su Club
     if (!perfil.wizardCompletado) {
-      const profScreen = document.getElementById('profile-selector-screen');
+      const profScreen = document.getElementById('profile-selector-overlay') || document.getElementById('profile-selector-screen');
       if (profScreen) profScreen.style.display = 'none';
       abrirOnboardingWizard(true);
       return;
     }
 
-    // 2. Si ya configuró su Club pero su cuenta está pendiente de aprobación por SuperAdmin
-    if (perfil.estadoCuenta === 'PENDIENTE') {
+    // 2. Si ya configuró su Club pero su cuenta está pendiente o en revisión de aprobación por SuperAdmin
+    if (perfil.estadoCuenta === 'PENDIENTE' || perfil.estadoCuenta === 'EN_REVISION') {
       mostrarPantallaEsperaAprobacion();
       return;
     }
@@ -1025,7 +1045,7 @@ async function ejecutarRegistroUsuario() {
     cerrarModalRegistro();
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('main-app').style.display = 'none';
-    const profScreen = document.getElementById('profile-selector-screen');
+    const profScreen = document.getElementById('profile-selector-overlay') || document.getElementById('profile-selector-screen');
     if (profScreen) profScreen.style.display = 'none';
 
     aplicarPerfil();
@@ -1097,6 +1117,26 @@ export async function ejecutarLoginBiometrico() {
         switchTab(8, true);
         actualizarVisibilidadPestanasRol();
       } else {
+        // 0. Si la cuenta fue cancelada o suspendida por la administración
+        if (perfil.estadoCuenta === 'CANCELADA' || perfil.estadoCuenta === 'CANCELADO' || perfil.cancelada) {
+          mostrarPantallaCuentaCancelada();
+          return;
+        }
+
+        // 1. Si aún no ha completado el Wizard de configuración de su Club
+        if (!perfil.wizardCompletado) {
+          const profScreen = document.getElementById('profile-selector-overlay') || document.getElementById('profile-selector-screen');
+          if (profScreen) profScreen.style.display = 'none';
+          abrirOnboardingWizard(true);
+          return;
+        }
+
+        // 2. Si ya configuró su Club pero su cuenta está pendiente o en revisión de aprobación por SuperAdmin
+        if (perfil.estadoCuenta === 'PENDIENTE' || perfil.estadoCuenta === 'EN_REVISION') {
+          mostrarPantallaEsperaAprobacion();
+          return;
+        }
+
         renderProfileSelector(handleProfileSelected);
       }
     } else {
@@ -1244,7 +1284,7 @@ function handleProfileSelected(prof) {
   if (loginSc) loginSc.style.display = 'none';
   const mainApp = document.getElementById('main-app');
   if (mainApp) mainApp.style.display = 'block';
-  const profScreen = document.getElementById('profile-selector-screen');
+  const profScreen = document.getElementById('profile-selector-overlay') || document.getElementById('profile-selector-screen');
   if (profScreen) profScreen.style.display = 'none';
 
   verificarMembresiaYLock();
@@ -1312,7 +1352,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     _ocultarTodasLasPantallas();
     const loginSc = document.getElementById('login-screen');
     if (loginSc) loginSc.style.display = 'none';
-    const profScreen = document.getElementById('profile-selector-screen');
+    const profScreen = document.getElementById('profile-selector-overlay') || document.getElementById('profile-selector-screen');
     if (profScreen) profScreen.style.display = 'none';
     const wizModal = document.getElementById('modal-onboarding-wizard');
     if (wizModal) wizModal.style.display = 'none';
@@ -1327,7 +1367,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     switchTab(8, false);
     actualizarVisibilidadPestanasRol();
   } else if (localProfId || localEmail) {
-    if (perfil.estadoCuenta === 'PENDIENTE') {
+    if (perfil.estadoCuenta === 'CANCELADA' || perfil.estadoCuenta === 'CANCELADO' || perfil.cancelada) {
+      mostrarPantallaCuentaCancelada();
+    } else if (perfil.estadoCuenta === 'PENDIENTE' || perfil.estadoCuenta === 'EN_REVISION') {
       mostrarPantallaEsperaAprobacion();
     } else if (!perfil.wizardCompletado) {
       abrirOnboardingWizard(true);
@@ -1376,7 +1418,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (pendingScreen) pendingScreen.style.display = 'none';
         const loginSc = document.getElementById('login-screen');
         if (loginSc) loginSc.style.display = 'none';
-        const profScreen = document.getElementById('profile-selector-screen');
+        const profScreen = document.getElementById('profile-selector-overlay') || document.getElementById('profile-selector-screen');
         if (profScreen) profScreen.style.display = 'none';
         const wizModal = document.getElementById('modal-onboarding-wizard');
         if (wizModal) wizModal.style.display = 'none';
@@ -1413,8 +1455,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
-      // 3. Si está en estado PENDIENTE de aprobación por SuperAdmin
-      if (perfil.estadoCuenta === 'PENDIENTE' && !isMaster) {
+      // 2. Si la cuenta fue cancelada por la administración
+      if ((perfil.estadoCuenta === 'CANCELADA' || perfil.estadoCuenta === 'CANCELADO' || perfil.cancelada) && !isMaster) {
+        _ocultarTodasLasPantallas();
+        mostrarPantallaCuentaCancelada();
+        return;
+      }
+
+      // 3. Si está en estado PENDIENTE o EN_REVISION de aprobación por SuperAdmin
+      if ((perfil.estadoCuenta === 'PENDIENTE' || perfil.estadoCuenta === 'EN_REVISION') && !isMaster) {
         _ocultarTodasLasPantallas();
         mostrarPantallaEsperaAprobacion();
         return;
@@ -1443,7 +1492,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const foundProfile = (perfil.profiles || []).find(p => p.id === activeProfId) || (perfil.profiles && perfil.profiles[0]);
 
       if (foundProfile) {
-        const profScreen = document.getElementById('profile-selector-screen');
+        const profScreen = document.getElementById('profile-selector-overlay') || document.getElementById('profile-selector-screen');
         if (profScreen) profScreen.style.display = 'none';
         handleProfileSelected(foundProfile);
       } else {
@@ -1505,9 +1554,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             verificarMembresiaYLock();
             aplicarPerfil();
             
-            // Si estaba en pantalla de espera de aprobación y el estado ya no es PENDIENTE
+            // Si estaba en pantalla de espera de aprobación y el estado ya es ACTIVO o PRUEBA
             const pendingScreen = document.getElementById('pending-approval-screen');
-            if (pendingScreen && pendingScreen.style.display !== 'none' && perfil.estadoCuenta !== 'PENDIENTE') {
+            if (pendingScreen && pendingScreen.style.display !== 'none' && (perfil.estadoCuenta === 'ACTIVO' || perfil.estadoCuenta === 'PRUEBA')) {
               pendingScreen.style.display = 'none';
               const mainApp = document.getElementById('main-app');
               if (mainApp) mainApp.style.display = 'block';
@@ -1776,18 +1825,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-copy-public-link')?.addEventListener('click', copiarEnlacePublico);
   document.getElementById('btn-soporte-wa-kit')?.addEventListener('click', abrirSoporteWhatsApp);
   document.getElementById('btn-cfg-add-cat')?.addEventListener('click', agregarNuevaCategoriaConfig);
-  document.getElementById('btn-cfg-nombres')?.addEventListener('click', guardarNombres);
   document.getElementById('btn-switch-profile')?.addEventListener('click', () => {
     renderProfileSelector((prof) => {
       handleProfileSelected(prof);
     }, true);
   });
 
-  document.getElementById('btn-cfg-guardar-pins')?.addEventListener('click', guardarPinsConfig);
   document.getElementById('cfg-modo-predeterminado')?.addEventListener('change', renderEsquemaPredeterminadoUI);
-  document.getElementById('btn-cfg-guardar-esquema-pred')?.addEventListener('click', guardarEsquemaPredeterminadoConfig);
-  document.getElementById('btn-cfg-kits')?.addEventListener('click', guardarKits);
-
   document.getElementById('uz-cfg-logo')?.addEventListener('click', () => document.getElementById('up-cfg-logo')?.click());
   document.getElementById('btn-cfg-subir-logo')?.addEventListener('click', guardarLogo);
 

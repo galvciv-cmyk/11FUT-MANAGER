@@ -147,9 +147,10 @@ export function mostrarConfirmacionApp(titulo, mensaje, onConfirm) {
 
 let _autoSaveTimer = null;
 
-function _dispararAutoGuardado() {
+function _dispararAutoGuardado(inmediato = false) {
   clearTimeout(_autoSaveTimer);
-  _autoSaveTimer = setTimeout(() => {
+  _autoSaveTimer = null;
+  const ejecutar = () => {
     // Capturar valores de los campos del modal antes de guardar
     const cfgClubInput = document.getElementById('cfg-club');
     if (cfgClubInput && cfgClubInput.value.trim()) {
@@ -181,7 +182,13 @@ function _dispararAutoGuardado() {
       ind.style.opacity = '1';
       setTimeout(() => { ind.style.opacity = '0'; }, 2000);
     }
-  }, 800);
+  };
+
+  if (inmediato) {
+    ejecutar();
+  } else {
+    _autoSaveTimer = setTimeout(ejecutar, 800);
+  }
 }
 
 export function abrirConfig() {
@@ -780,6 +787,9 @@ window._eliminarCategoriaConfig = (c) => eliminarCategoriaConfig(c);
 export function cerrarConfig() {
   const modal = document.getElementById('config-modal');
   if (modal) modal.style.display = 'none';
+  if (_autoSaveTimer) {
+    _dispararAutoGuardado(true);
+  }
 }
 
 export function copiarEnlacePublico() {

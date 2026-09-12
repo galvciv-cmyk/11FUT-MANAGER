@@ -40,9 +40,11 @@ export const DEFAULT_PERFIL = {
   esquemasCustom: []
 };
 
+export const DIAS_PRUEBA_DEFECTO = 3;
+
 /** Genera la fecha de vencimiento para un nuevo usuario (3 días desde ahora) */
 export function generarFechaVencimientoPrueba() {
-  return new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
+  return new Date(Date.now() + DIAS_PRUEBA_DEFECTO * 24 * 60 * 60 * 1000).toISOString();
 }
 
 export function isSuperAdmin() {

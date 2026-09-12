@@ -1820,3 +1820,117 @@ body.body-fullscreen-active {
   padding: 2px 8px;
   border-radius: 6px;
 }
+
+/* ── LIQUID GLASS SUPER ADMIN FILTER CHIPS & BUTTONS ── */
+.sa-filter-chip {
+  background: rgba(16, 22, 34, 0.72) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #ccc;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+
+.sa-filter-chip:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  filter: brightness(1.15);
+}
+
+.sa-filter-chip:active {
+  transform: translateY(0);
+}
+
+.sa-filter-chip.chip-todos {
+  color: #e0e0e0;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+.sa-filter-chip.chip-todos.active {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.8) !important;
+  color: #fff !important;
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+}
+
+.sa-filter-chip.chip-pendientes {
+  color: #3498db;
+  border-color: rgba(52, 152, 219, 0.45) !important;
+  background: rgba(52, 152, 219, 0.1) !important;
+}
+.sa-filter-chip.chip-pendientes.active {
+  background: rgba(52, 152, 219, 0.28) !important;
+  border-color: #3498db !important;
+  color: #fff !important;
+  box-shadow: 0 0 20px rgba(52, 152, 219, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+}
+
+.sa-filter-chip.chip-prueba {
+  color: var(--oro);
+  border-color: rgba(212, 175, 55, 0.45) !important;
+  background: rgba(212, 175, 55, 0.1) !important;
+}
+.sa-filter-chip.chip-prueba.active {
+  background: rgba(212, 175, 55, 0.28) !important;
+  border-color: var(--oro) !important;
+  color: #fff !important;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+}
+
+.sa-filter-chip.chip-activos,
+.sa-filter-chip.chip-aprobadas {
+  color: #2ecc71;
+  border-color: rgba(46, 204, 113, 0.45) !important;
+  background: rgba(46, 204, 113, 0.1) !important;
+}
+.sa-filter-chip.chip-activos.active,
+.sa-filter-chip.chip-aprobadas.active {
+  background: rgba(46, 204, 113, 0.28) !important;
+  border-color: #2ecc71 !important;
+  color: #fff !important;
+  box-shadow: 0 0 20px rgba(46, 204, 113, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+}
+
+.sa-filter-chip.chip-vencidos,
+.sa-filter-chip.chip-rechazadas {
+  color: #e74c3c;
+  border-color: rgba(231, 76, 60, 0.45) !important;
+  background: rgba(231, 76, 60, 0.1) !important;
+}
+.sa-filter-chip.chip-vencidos.active,
+.sa-filter-chip.chip-rechazadas.active {
+  background: rgba(231, 76, 60, 0.28) !important;
+  border-color: #e74c3c !important;
+  color: #fff !important;
+  box-shadow: 0 0 20px rgba(231, 76, 60, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+}
+
+/* Sub-pestañas liquid glass del Backoffice */
+.sa-tab-btn {
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+.sa-tab-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+.sa-tab-btn.active {
+  background: rgba(212, 175, 55, 0.22) !important;
+  border: 1px solid var(--oro) !important;
+  color: var(--oro) !important;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3) !important;
+}
+
