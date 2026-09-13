@@ -1,13 +1,12 @@
-import { perfil, setPinHash, setCategoriaActiva, autoSaveLocal, updateStats, updateHistorial, categoriasData, plantel, currentProfile, isSuperAdmin, DEFAULT_PLANTEL, DEFAULT_PERFIL } from "./state.js";
+import { perfil, setPinHash, setCategoriaActiva, autoSaveLocal, updateStats, updateHistorial, categoriasData, plantel, currentProfile, isSuperAdmin, DEFAULT_PLANTEL, DEFAULT_PERFIL, esAdminOEntrenadorUnico } from "./state.js";
 import { guardarFirebase, hashPin, getPublicId, auth, db } from "../services/firebase.js";
 import { doc, setDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { obtenerConfiguracionPasarelas } from "./superAdmin.js";
-import { subirImagenCloudinary, subirKitCloudinary, resizarImagenPNG } from "../services/cloudinary.js";
+import { subirImagenCloudinary, subirKitCloudinary, resizarImagenPNG, resizarImagen } from "../services/cloudinary.js";
 import { renderStats } from "./stats.js";
 import { renderHistorial } from "./history.js";
 import { actualizarTactica, FORMACIONES } from "./tactics.js";
-import { enviarNotificacionTelegram } from "../services/telegram.js";
 
 const DEFAULT_LOGO = "https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png";
 
@@ -112,11 +111,6 @@ export function mostrarToastRapido(titulo, mensaje, esExito = true) {
 
 export function mostrarNotificacionApp(titulo, mensaje, esExito = true) {
   mostrarToastRapido(titulo, mensaje, esExito);
-  
-  // Enviar a Telegram si está configurado y habilitado
-  if (perfil.telegramEnabled && perfil.telegramBotToken && perfil.telegramChatId) {
-    enviarNotificacionTelegram(perfil.telegramBotToken, perfil.telegramChatId, titulo, mensaje);
-  }
 }
 
 export function mostrarConfirmacionApp(titulo, mensaje, onConfirm) {
@@ -213,18 +207,32 @@ export function abrirConfig() {
     const cfgPersonalWA = document.getElementById('cfg-personal-wa');
     if (cfgPersonalWA) cfgPersonalWA.value = perfil.whatsapp || perfil.telefono || '';
 
+    const planStatusEl = document.getElementById('cfg-plan-status');
+    if (planStatusEl) {
+      const st = perfil.estadoCuenta || 'PRUEBA';
+      planStatusEl.textContent = st;
+      planStatusEl.className = st === 'ACTIVO' ? 'badge-verde' : (st === 'EN_REVISION' ? 'badge-blue' : 'badge-gold');
+    }
+
+    const planVencEl = document.getElementById('cfg-plan-vencimiento');
+    if (planVencEl) {
+      if (isSuperAdmin()) {
+        planVencEl.textContent = 'ACCESO VITALICIO';
+      } else if (perfil.fechaVencimiento) {
+        try {
+          planVencEl.textContent = 'Vence: ' + new Date(perfil.fechaVencimiento).toLocaleDateString();
+        } catch (e) {
+          planVencEl.textContent = 'Vence: ' + perfil.fechaVencimiento;
+        }
+      } else {
+        planVencEl.textContent = '';
+      }
+    }
+
     renderCategoriasConfigUI();
     renderKitGallery('A');
     renderEsquemaPredeterminadoUI();
     renderPerfilesPinsUI();
-
-    const cfgTelegramToken = document.getElementById('cfg-telegram-token');
-    const cfgTelegramChatId = document.getElementById('cfg-telegram-chatid');
-    const cfgTelegramEnabled = document.getElementById('cfg-telegram-enabled');
-    
-    if (cfgTelegramToken) cfgTelegramToken.value = perfil.telegramBotToken || '';
-    if (cfgTelegramChatId) cfgTelegramChatId.value = perfil.telegramChatId || '';
-    if (cfgTelegramEnabled) cfgTelegramEnabled.checked = perfil.telegramEnabled || false;
 
     const imgPrev = document.getElementById('img-prev-cfg-logo');
     const divPrev = document.getElementById('prev-cfg-logo');
@@ -300,7 +308,7 @@ export function renderPerfilesPinsUI() {
 
   const isMaster = isSuperAdmin();
   const maxContratado = isMaster ? 8 : (perfil.maxPerfiles || 1);
-  const esAdmin = currentProfile && currentProfile.rol === 'ADMIN';
+  const esAdmin = esAdminOEntrenadorUnico(currentProfile);
   const puedeGestionarPins = esAdmin || maxContratado === 1 || isMaster;
 
   if (!puedeGestionarPins) {
@@ -544,7 +552,7 @@ export function renderCategoriasConfigUI() {
   const cont = document.getElementById('cfg-lista-categorias');
   if (!cont) return;
 
-  const esAdmin = currentProfile && currentProfile.rol === 'ADMIN';
+  const esAdmin = esAdminOEntrenadorUnico(currentProfile);
   let cats = Array.isArray(perfil.categorias) ? perfil.categorias : [];
 
   // Los DT solo ven sus equipos asignados en la configuración de torneos
@@ -757,9 +765,9 @@ export async function agregarNuevaCategoriaConfig() {
 }
 
 export function eliminarCategoriaConfig(catNombre) {
-  const esAdmin = currentProfile && currentProfile.rol === 'ADMIN';
+  const esAdmin = esAdminOEntrenadorUnico(currentProfile);
   if (!esAdmin) {
-    return mostrarNotificacionApp('Acceso Restringido', '🔒 Solo el Director Deportivo (ADMIN) puede eliminar categorías institucionales.', false);
+    return mostrarNotificacionApp('Acceso Restringido', '🔒 Se requieren permisos de Director Deportivo o Entrenador de la cuenta para eliminar categorías.', false);
   }
 
   mostrarConfirmacionApp('Eliminar Categoría', `¿Estás seguro de eliminar la categoría ${catNombre}?`, async () => {
@@ -845,9 +853,9 @@ export function renderCustomKitsPreviews() {
 }
 
 window._subirCustomKit = async (fileInput, tipo) => {
-  const esAdmin = currentProfile && currentProfile.rol === 'ADMIN';
+  const esAdmin = esAdminOEntrenadorUnico(currentProfile);
   if (!esAdmin) {
-    return mostrarNotificacionApp('Acceso Restringido', '🔒 La configuración de uniformes está reservada exclusivamente para el Director Deportivo (ADMIN).', false);
+    return mostrarNotificacionApp('Acceso Restringido', '🔒 La configuración de uniformes está reservada para el Director Deportivo o Entrenador de la cuenta.', false);
   }
 
   if (!fileInput || !fileInput.files.length) return;
@@ -872,9 +880,9 @@ window._subirCustomKit = async (fileInput, tipo) => {
 };
 
 window._limpiarCustomKits = async () => {
-  const esAdmin = currentProfile && currentProfile.rol === 'ADMIN';
+  const esAdmin = esAdminOEntrenadorUnico(currentProfile);
   if (!esAdmin) {
-    return mostrarNotificacionApp('Acceso Restringido', '🔒 La configuración de uniformes está reservada exclusivamente para el Director Deportivo (ADMIN).', false);
+    return mostrarNotificacionApp('Acceso Restringido', '🔒 La configuración de uniformes está reservada para el Director Deportivo o Entrenador de la cuenta.', false);
   }
 
   delete perfil.customKits;
@@ -885,51 +893,14 @@ window._limpiarCustomKits = async () => {
   mostrarToastRapido('Kits Restaurados', 'Se restauraron los kits oficiales prediseñados.', true);
 };
 
-export async function guardarTelegramConfig() {
-  const tokenInput = document.getElementById('cfg-telegram-token');
-  const chatIdInput = document.getElementById('cfg-telegram-chatid');
-  const enabledInput = document.getElementById('cfg-telegram-enabled');
-
-  if (tokenInput) perfil.telegramBotToken = tokenInput.value.trim();
-  if (chatIdInput) perfil.telegramChatId = chatIdInput.value.trim();
-  if (enabledInput) perfil.telegramEnabled = enabledInput.checked;
-
-  autoSaveLocal();
-  await guardarFirebase();
-  mostrarNotificacionApp('Configuración Guardada', 'La configuración de Telegram se ha guardado correctamente.');
-}
-window._guardarTelegramConfig = guardarTelegramConfig;
-
-export async function testTelegramConfig() {
-  const tokenInput = document.getElementById('cfg-telegram-token');
-  const chatIdInput = document.getElementById('cfg-telegram-chatid');
-
-  const botToken = tokenInput ? tokenInput.value.trim() : '';
-  const chatId = chatIdInput ? chatIdInput.value.trim() : '';
-
-  if (!botToken || !chatId) {
-    return mostrarNotificacionApp('Faltan Datos', 'Por favor, ingresa el Token del Bot y el Chat ID para probar.', false);
-  }
-
-  mostrarToastRapido('Prueba Telegram', 'Enviando mensaje de prueba...', true);
-  const exito = await enviarNotificacionTelegram(botToken, chatId, 'Notificación de Prueba', '¡Hola! La conexión entre 11FUT MANAGER y Telegram funciona correctamente. ✅');
-  
-  if (exito) {
-    mostrarNotificacionApp('Éxito', 'Mensaje de prueba enviado a Telegram.');
-  } else {
-    mostrarNotificacionApp('Error', 'No se pudo enviar el mensaje a Telegram. Verifica el Token y el Chat ID.', false);
-  }
-}
-window._testTelegramConfig = testTelegramConfig;
-
 export function renderKitGallery(eq) {
   const containerKits = document.getElementById('cfg-sec-kits');
-  const esAdmin = currentProfile && currentProfile.rol === 'ADMIN';
+  const esAdmin = esAdminOEntrenadorUnico(currentProfile);
 
   if (!esAdmin && containerKits) {
     containerKits.innerHTML = `
       <div style="font-size:12px;color:#aaa;padding:16px;text-align:center;background:#0d0d0d;border-radius:10px;border:1px dashed #444;margin:8px;">
-        🔒 La configuración de uniformes y kits oficiales está reservada exclusivamente para el <strong>Director Deportivo (ADMIN)</strong>.
+        🔒 La configuración de uniformes y kits oficiales está reservada para el <strong>Director Deportivo o Entrenador</strong> de la cuenta.
       </div>
     `;
     return;
@@ -969,6 +940,10 @@ export async function guardarKits() {
 }
 
 export async function guardarLogo() {
+  const esAdmin = esAdminOEntrenadorUnico(currentProfile);
+  if (!esAdmin) {
+    return mostrarNotificacionApp('Acceso Restringido', '🔒 Se requieren permisos de Director Deportivo o Entrenador para modificar el logo del club.', false);
+  }
   const fileInput = document.getElementById('up-cfg-logo');
   if (!fileInput || !fileInput.files.length) {
     perfil.logo = perfil.logo || DEFAULT_LOGO;
@@ -1023,9 +998,9 @@ export async function guardarFondo() {
 }
 
 export async function cambiarPin() {
-  const esAdmin = currentProfile && currentProfile.rol === 'ADMIN';
+  const esAdmin = esAdminOEntrenadorUnico(currentProfile);
   if (!esAdmin) {
-    return mostrarNotificacionApp('Acceso Restringido', '🔒 Se requiere estar en el perfil Director Deportivo (ADMIN) para modificar la contraseña de la cuenta.', false);
+    return mostrarNotificacionApp('Acceso Restringido', '🔒 Se requiere permisos de Director Deportivo o Entrenador para modificar la contraseña.', false);
   }
 
   const nuevo = document.getElementById('cfg-pin-nuevo')?.value.trim();
@@ -1612,11 +1587,19 @@ window._guardarDatosPersonalesConfig = guardarDatosPersonalesConfig;
 // ════════════════════════════════════════════════════════════════
 // MODAL REACTIVO DE REPORTE DE PAGO (LADO DEL CLUB)
 // ════════════════════════════════════════════════════════════════
-export async function abrirModalReportarPago() {
+window._abrirPagoDesdeWizard = () => {
+  const selectNum = document.getElementById('wiz-num-profiles');
+  const numProfiles = parseInt(selectNum ? selectNum.value : '1', 10) || 1;
+  const price = (numProfiles * 15).toFixed(2);
+  abrirModalReportarPago(price);
+};
+
+export async function abrirModalReportarPago(montoSugerido = '') {
   const modal = document.getElementById('modal');
   const modalContent = document.getElementById('modal-content');
   if (!modal || !modalContent) return;
 
+  modal.style.zIndex = '10005';
   modalContent.innerHTML = `
     <div style="text-align:center;padding:24px;color:var(--oro);">
       ⏳ Consultando pasarelas y métodos de pago disponibles...
@@ -1695,6 +1678,7 @@ export async function abrirModalReportarPago() {
     }
 
     // Campos dinámicos
+    const defMonto = montoSugerido || '15.00';
     let camposDinamicosHTML = '';
     if (metodoSeleccionado === 'pagoMovil') {
       camposDinamicosHTML = `
@@ -1702,36 +1686,36 @@ export async function abrirModalReportarPago() {
         <input type="text" id="rep-banco-emisor" placeholder="ej. Banesco, Mercantil, Venezuela">
         <label style="font-size:11px;color:#888;">Teléfono desde el que pagaste:</label>
         <input type="text" id="rep-telefono-emisor" placeholder="ej. 0414-1234567">
-        <label style="font-size:11px;color:#888;">Monto pagado en Bolívares (Bs):</label>
-        <input type="text" id="rep-monto" placeholder="ej. 1.850 Bs">
+        <label style="font-size:11px;color:#888;">Monto pagado en Bolívares (Bs) o USD:</label>
+        <input type="text" id="rep-monto" value="${montoSugerido ? montoSugerido + ' USD' : ''}" placeholder="ej. 1.850 Bs o 15 USD">
       `;
     } else if (metodoSeleccionado === 'binance') {
       camposDinamicosHTML = `
         <label style="font-size:11px;color:#888;">Tu Nickname / Pay ID o Correo Binance:</label>
         <input type="text" id="rep-binance-id" placeholder="ej. MiUsuario / 12345678">
         <label style="font-size:11px;color:#888;">Monto enviado en USDT:</label>
-        <input type="number" id="rep-monto" placeholder="ej. 20.00" step="0.01">
+        <input type="number" id="rep-monto" value="${defMonto}" placeholder="ej. 15.00" step="0.01">
       `;
     } else if (metodoSeleccionado === 'zelle') {
       camposDinamicosHTML = `
         <label style="font-size:11px;color:#888;">Nombre del Titular de la Cuenta Zelle Emisora:</label>
         <input type="text" id="rep-zelle-titular" placeholder="ej. Carlos Pérez">
         <label style="font-size:11px;color:#888;">Monto enviado en USD:</label>
-        <input type="number" id="rep-monto" placeholder="ej. 20.00" step="0.01">
+        <input type="number" id="rep-monto" value="${defMonto}" placeholder="ej. 15.00" step="0.01">
       `;
     } else if (metodoSeleccionado === 'airtm' || metodoSeleccionado === 'zinli') {
       camposDinamicosHTML = `
         <label style="font-size:11px;color:#888;">Tu Correo de ${configMetodo.nombre}:</label>
         <input type="text" id="rep-email-emisor" placeholder="ej. mi-correo@gmail.com">
         <label style="font-size:11px;color:#888;">Monto enviado en USD:</label>
-        <input type="number" id="rep-monto" placeholder="ej. 20.00" step="0.01">
+        <input type="number" id="rep-monto" value="${defMonto}" placeholder="ej. 15.00" step="0.01">
       `;
     } else if (metodoSeleccionado === 'paypal') {
       camposDinamicosHTML = `
         <label style="font-size:11px;color:#888;">Tu Correo PayPal:</label>
         <input type="text" id="rep-paypal-email" placeholder="ej. mi-paypal@gmail.com">
         <label style="font-size:11px;color:#888;">Monto Neto Enviado en USD:</label>
-        <input type="number" id="rep-monto" placeholder="ej. 20.00" step="0.01" oninput="window._calcularComisionPayPal(this.value)">
+        <input type="number" id="rep-monto" value="${defMonto}" placeholder="ej. 15.00" step="0.01" oninput="window._calcularComisionPayPal(this.value)">
         <div id="rep-paypal-calc-info" style="font-size:11px;color:var(--oro);margin:4px 0 8px;"></div>
       `;
     }
@@ -1810,16 +1794,27 @@ export async function abrirModalReportarPago() {
       }
     });
 
-    document.getElementById('rep-comprobante-file')?.addEventListener('change', (e) => {
+    document.getElementById('rep-comprobante-file')?.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (file) {
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          screenshotBase64 = ev.target.result;
-          const label = document.getElementById('rep-comprobante-label');
-          if (label) label.innerHTML = `✅ <span style="color:#2ecc71;font-weight:bold;">${file.name}</span> adjunto exitosamente`;
-        };
-        reader.readAsDataURL(file);
+        const label = document.getElementById('rep-comprobante-label');
+        if (label) label.innerHTML = `⏳ Comprimiendo comprobante...`;
+        try {
+          const resized = await resizarImagen(file, 800);
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            screenshotBase64 = ev.target.result;
+            if (label) label.innerHTML = `✅ <span style="color:#2ecc71;font-weight:bold;">${file.name}</span> adjunto exitosamente`;
+          };
+          reader.readAsDataURL(resized);
+        } catch (err) {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            screenshotBase64 = ev.target.result;
+            if (label) label.innerHTML = `✅ <span style="color:#2ecc71;font-weight:bold;">${file.name}</span> adjunto exitosamente`;
+          };
+          reader.readAsDataURL(file);
+        }
       }
     });
 

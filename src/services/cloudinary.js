@@ -57,6 +57,11 @@ export async function cargarKits() {
 
 export function resizarImagen(file, maxSize = 600) {
   return new Promise((resolve) => {
+    const isPng = file.type === 'image/png' || file.name.toLowerCase().endsWith('.png') || file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg');
+    const isWebp = file.type === 'image/webp' || file.name.toLowerCase().endsWith('.webp');
+    const outputType = isPng ? 'image/png' : (isWebp ? 'image/webp' : 'image/jpeg');
+    const quality = (isPng) ? undefined : 0.88;
+
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
@@ -66,10 +71,20 @@ export function resizarImagen(file, maxSize = 600) {
         if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
         else { w = Math.round(w * maxSize / h); h = maxSize; }
       }
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      canvas.width = Math.max(1, w); 
+      canvas.height = Math.max(1, h);
+      const ctx = canvas.getContext('2d');
+      // Limpiar con transparencia pura para evitar que el canvas aplique fondo negro
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       URL.revokeObjectURL(url);
-      canvas.toBlob(blob => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', 0.85);
+      canvas.toBlob(blob => {
+        if (blob) {
+          resolve(new File([blob], file.name, { type: outputType }));
+        } else {
+          resolve(file);
+        }
+      }, outputType, quality);
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);

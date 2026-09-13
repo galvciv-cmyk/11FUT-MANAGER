@@ -15,7 +15,7 @@ import { abrirConfig, cerrarConfig, guardarNombres, guardarKits, guardarLogo, gu
 import { renderProfileSelector } from "./modules/profileSelector.js";
 import { renderAdminDashboard } from "./modules/adminDashboard.js";
 import { renderSuperAdminDashboard } from "./modules/superAdmin.js";
-import { currentProfile, setCurrentProfile, getCurrentProfile } from "./modules/state.js";
+import { currentProfile, setCurrentProfile, getCurrentProfile, esAdminOEntrenadorUnico } from "./modules/state.js";
 import { initEntrenamientosUI, renderBibliotecaEjercicios, renderPlannerUI, renderAsistenciaUI, renderLesionesUI } from "./modules/training.js";
 import { subirImagenCloudinary } from "./services/cloudinary.js";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, sendEmailVerification } from "firebase/auth";
@@ -414,8 +414,8 @@ export function switchTab(n, updateHash = true) {
   if (profActivo && !currentProfile) {
     setCurrentProfile(profActivo);
   }
-  // esAdminRol: basado SOLO en el rol del perfil seleccionado (no en isMaster)
-  const esAdminRol = profActivo && profActivo.rol === 'ADMIN';
+  // esAdminRol: basado en rol ADMIN o cuenta con 1 solo DT
+  const esAdminRol = esAdminOEntrenadorUnico(profActivo);
 
   // Contar cuántos perfiles DT existen activamente (sin contar el Admin)
   const dtActivos = (perfil.profiles || []).filter(p => p.rol === 'DT').length;
@@ -1184,8 +1184,8 @@ export function actualizarVisibilidadPestanasRol() {
   if (profActivo && !currentProfile) {
     setCurrentProfile(profActivo);
   }
-  // esAdminRol: basado SOLO en el rol del perfil seleccionado actualmente
-  const esAdminRol = profActivo && profActivo.rol === 'ADMIN';
+  // esAdminRol: basado en rol ADMIN o cuenta con 1 solo DT
+  const esAdminRol = esAdminOEntrenadorUnico(profActivo);
   const maxContratado = isMaster ? 8 : (perfil.maxPerfiles || 1);
 
   const tab1 = document.getElementById('tab-1'); // Táctica
@@ -1308,11 +1308,9 @@ function handleProfileSelected(prof) {
       switchTab(tabFromHash, true);
     } else {
       const maxContratado = perfil.maxPerfiles || 1;
-      const esAdminRol = prof && prof.rol === 'ADMIN';
+      const esAdminRol = esAdminOEntrenadorUnico(prof);
       const dtActivos = (perfil.profiles || []).filter(p => p.rol === 'DT').length;
-      if (esAdminRol && dtActivos > 0) {
-        switchTab(7, true);
-      } else if (esAdminRol && maxContratado === 1) {
+      if (prof && prof.rol === 'ADMIN' && dtActivos > 0) {
         switchTab(7, true);
       } else {
         switchTab(1, true);

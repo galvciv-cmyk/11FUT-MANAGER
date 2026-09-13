@@ -54,6 +54,26 @@ export function isSuperAdmin() {
   return finalEmail === SUPER_ADMIN_EMAIL.toLowerCase();
 }
 
+/**
+ * Determina si el perfil actual tiene permisos administrativos completos:
+ * - Es SuperAdmin
+ * - Tiene rol 'ADMIN'
+ * - O pertenece a una cuenta de 1 solo Entrenador DT (Plan DT Individual), 
+ *   en cuyo caso el DT tiene acceso total de edición y configuración como si fuera ADMIN.
+ */
+export function esAdminOEntrenadorUnico(prof = currentProfile) {
+  if (isSuperAdmin()) return true;
+  if (!prof) return false;
+  if (prof.rol === 'ADMIN') return true;
+
+  const numPerfiles = (perfil.profiles && Array.isArray(perfil.profiles)) ? perfil.profiles.length : (perfil.maxPerfiles || 1);
+  if (numPerfiles <= 1 || perfil.maxPerfiles === 1) {
+    return true;
+  }
+  return false;
+}
+
+
 
 
 
