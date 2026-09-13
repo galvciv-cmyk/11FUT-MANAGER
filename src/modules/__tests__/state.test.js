@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { 
   perfil, 
   DEFAULT_PERFIL, 
@@ -6,7 +6,8 @@ import {
   updatePerfil, 
   isSuperAdmin,
   SUPER_ADMIN_EMAIL,
-  categoriasData
+  categoriasData,
+  autoSaveLocal
 } from '../state.js';
 
 describe('Módulo de Estado (state.js)', () => {
@@ -41,5 +42,30 @@ describe('Módulo de Estado (state.js)', () => {
 
     updatePerfil({ email: 'usuario@ejemplo.com' });
     expect(isSuperAdmin()).toBe(false);
+  });
+
+  it('debe recuperarse de QuotaExceededError en autoSaveLocal guardando perfil de rescate', () => {
+    updatePerfil({ club: 'Club Rescate', wizardCompletado: true, customKits: { local: 'data:image/png;base64,' + 'A'.repeat(60000) } });
+
+    // Simular QuotaExceededError con spyOn en Storage.prototype
+    const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function(key, val) {
+      if (key === '11fut_perfil' && val.length > 50000) {
+        const err = new Error('Quota exceeded');
+        err.name = 'QuotaExceededError';
+        throw err;
+      }
+      // Llamada real de almacenamiento simulado
+      this[key] = val;
+    });
+
+    autoSaveLocal();
+
+    spy.mockRestore();
+
+    const saved = JSON.parse(localStorage.getItem('11fut_perfil') || '{}');
+    expect(saved.club).toBe('Club Rescate');
+    expect(saved.wizardCompletado).toBe(true);
+    // El kit masivo debe haber sido purgado para rescatar el almacenamiento
+    expect(saved.customKits?.local).toBeUndefined();
   });
 });

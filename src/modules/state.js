@@ -208,16 +208,46 @@ export function setPublicViewActive(val) {
 
 export function autoSaveLocal() {
   if (isPublicViewActive) return;
+
+  // 1. Guardar perfil con recuperación automática ante QuotaExceededError
   try {
     localStorage.setItem("11fut_perfil", JSON.stringify(perfil));
+  } catch (e) {
+    console.warn("⚠️ QuotaExceededError al guardar 11fut_perfil. Activando modo rescate ligero:", e);
+    try {
+      const perfilRescate = { ...perfil };
+      if (perfilRescate.customKits) {
+        perfilRescate.customKits = { ...perfilRescate.customKits };
+        // Si hay kits con Base64 masivo (>40KB), retirarlos del cache local para salvar datos del club
+        Object.keys(perfilRescate.customKits).forEach(k => {
+          const v = perfilRescate.customKits[k];
+          if (typeof v === 'string' && v.length > 40000) {
+            delete perfilRescate.customKits[k];
+          }
+        });
+      }
+      localStorage.setItem("11fut_perfil", JSON.stringify(perfilRescate));
+    } catch (e2) {
+      console.error("Error crítico guardando perfil de rescate:", e2);
+    }
+  }
+
+  // 2. Guardar categorías de forma independiente
+  try {
     localStorage.setItem("11fut_categorias_data", JSON.stringify(categoriasData));
+  } catch (e) {
+    console.warn("Aviso guardando categoriasData localmente:", e);
+  }
+
+  // 3. Guardar credenciales y perfil activo
+  try {
     if (perfil.email) localStorage.setItem("11fut_user_email", perfil.email);
     if (currentProfile && currentProfile.id) {
       localStorage.setItem("11fut_active_profile_id", currentProfile.id);
       localStorage.setItem("11fut_current_profile_id", currentProfile.id);
     }
   } catch (e) {
-    console.error("Error guardando localStorage:", e);
+    console.warn("Aviso guardando claves de sesión:", e);
   }
 }
 

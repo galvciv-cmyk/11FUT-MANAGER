@@ -3,8 +3,7 @@ import { guardarFirebase, hashPin, getPublicId, auth, db } from "../services/fir
 import { doc, setDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { obtenerConfiguracionPasarelas } from "./superAdmin.js";
-import { KITS } from "./state.js";
-import { subirImagenCloudinary } from "../services/cloudinary.js";
+import { subirImagenCloudinary, subirKitCloudinary, resizarImagenPNG } from "../services/cloudinary.js";
 import { renderStats } from "./stats.js";
 import { renderHistorial } from "./history.js";
 import { actualizarTactica, FORMACIONES } from "./tactics.js";
@@ -845,7 +844,7 @@ export function renderCustomKitsPreviews() {
   });
 }
 
-window._subirCustomKit = (fileInput, tipo) => {
+window._subirCustomKit = async (fileInput, tipo) => {
   const esAdmin = currentProfile && currentProfile.rol === 'ADMIN';
   if (!esAdmin) {
     return mostrarNotificacionApp('Acceso Restringido', '🔒 La configuración de uniformes está reservada exclusivamente para el Director Deportivo (ADMIN).', false);
@@ -853,20 +852,23 @@ window._subirCustomKit = (fileInput, tipo) => {
 
   if (!fileInput || !fileInput.files.length) return;
   const file = fileInput.files[0];
-  const reader = new FileReader();
 
-  reader.onload = async (e) => {
-    const dataUrl = e.target.result;
+  mostrarToastRapido('Uniforme', 'Optimizando camiseta...', true);
+
+  try {
+    const optimizedUrl = await subirKitCloudinary(file, tipo, perfil.club);
     if (!perfil.customKits) perfil.customKits = {};
-    perfil.customKits[tipo] = dataUrl;
+    perfil.customKits[tipo] = optimizedUrl;
 
     autoSaveLocal();
-    await guardarFirebase();
+    guardarFirebase().catch(() => {});
     renderCustomKitsPreviews();
     if (typeof actualizarTactica === 'function') actualizarTactica('A');
     mostrarToastRapido('Uniforme Actualizado', `Kit ${tipo.replace('_', ' ').toUpperCase()} aplicado a la cancha.`, true);
-  };
-  reader.readAsDataURL(file);
+  } catch (err) {
+    console.error('Error subiendo kit personalizado:', err);
+    mostrarToastRapido('Aviso', 'No se pudo procesar la imagen del uniforme.', false);
+  }
 };
 
 window._limpiarCustomKits = async () => {
@@ -1338,25 +1340,33 @@ window._guardarTorneoWiz = (cat, val) => {
   wizardTempTorneos[cat] = val.trim() || 'Liga Oficial';
 };
 
-window._subirCustomKitWiz = (fileInput, tipo) => {
+window._subirCustomKitWiz = async (fileInput, tipo) => {
   if (!fileInput || !fileInput.files.length) return;
   const file = fileInput.files[0];
-  const reader = new FileReader();
 
-  reader.onload = async (e) => {
-    const dataUrl = e.target.result;
+  const prev = document.getElementById(`prev-wiz-kit-${tipo}`);
+  if (prev) {
+    prev.innerHTML = `<span style="font-size:12px;color:var(--oro);font-weight:bold;">⏳ Optimizando...</span>`;
+  }
+  mostrarToastRapido('Uniforme', 'Optimizando camiseta...', true);
+
+  try {
+    const optimizedUrl = await subirKitCloudinary(file, tipo, perfil.club);
     if (!perfil.customKits) perfil.customKits = {};
-    perfil.customKits[tipo] = dataUrl;
+    perfil.customKits[tipo] = optimizedUrl;
 
-    const prev = document.getElementById(`prev-wiz-kit-${tipo}`);
     if (prev) {
-      prev.innerHTML = `<img src="${dataUrl}" style="height:35px;object-fit:contain;">`;
+      prev.innerHTML = `<img src="${optimizedUrl}" style="height:35px;object-fit:contain;">`;
     }
     autoSaveLocal();
-    await guardarFirebase();
+    guardarFirebase().catch(() => {});
     mostrarToastRapido('Uniforme Subido', `Kit ${tipo.replace('_', ' ').toUpperCase()} cargado.`, true);
-  };
-  reader.readAsDataURL(file);
+  } catch (err) {
+    console.error('Error procesando kit en wizard:', err);
+    if (prev) {
+      prev.innerHTML = `<span style="font-size:11px;color:#e74c3c;">⚠️ Error</span>`;
+    }
+  }
 };
 
 function renderWizardKitsUI() {
@@ -1475,6 +1485,16 @@ export async function finalizarOnboardingWizard() {
       }
     });
 
+    // Sanitizar kits personalizados si existían en memoria antes de la compresión
+    if (perfil.customKits) {
+      for (const t of Object.keys(perfil.customKits)) {
+        const val = perfil.customKits[t];
+        if (typeof val === 'string' && val.length > 50000) {
+          perfil.customKits[t] = await resizarImagenPNG(val, 180);
+        }
+      }
+    }
+
     perfil.wizardCompletado = true;
     aplicarPerfil();
     autoSaveLocal();
@@ -1484,40 +1504,12 @@ export async function finalizarOnboardingWizard() {
     const emailUser = (perfil.email || (user ? user.email : '') || '').trim();
     const uid = user ? user.uid : null;
 
-    // Sincronizar inmediatamente en Firestore 'publicos' y 'usuarios'
-    try {
-      const pubPayload = {
-        club: perfil.club || 'Nuevo Club',
-        email: emailUser,
-        uid: uid || '',
-        whatsapp: perfil.whatsapp || '',
-        logo: perfil.logo || '',
-        estadoCuenta: isMaster ? 'ACTIVO' : (perfil.estadoCuenta || 'PENDIENTE'),
-        fechaVencimiento: perfil.fechaVencimiento || '',
-        maxPerfiles: perfil.maxPerfiles || 1,
-        wizardCompletado: true,
-        perfil,
-        updatedAt: new Date().toISOString()
-      };
-
-      if (uid) {
-        setDoc(doc(db, 'publicos', `usr_${uid}`), pubPayload, { merge: true }).catch(() => {});
-        setDoc(doc(db, 'usuarios', uid), { perfil, categoriasData, updatedAt: new Date().toISOString() }, { merge: true }).catch(() => {});
-      }
-      if (emailUser) {
-        const emailDocId = emailUser.toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
-        setDoc(doc(db, 'publicos', emailDocId), pubPayload, { merge: true }).catch(() => {});
-      }
-    } catch (syncErr) {
-      console.warn('Aviso sincronizando wizard a Firestore:', syncErr);
-    }
-
-    await guardarFirebase();
-
+    // CERRAR MODAL INMEDIATAMENTE: La UI nunca debe quedar colgada esperando la red
     if (modal) modal.style.display = 'none';
 
     mostrarNotificacionApp('¡Bienvenido a 11FUT!', `Configuración completada para ${perfil.club || 'tu Club'}.`);
 
+    // Redirigir según el estado del usuario de inmediato
     if (user && !user.emailVerified && !isMaster) {
       if (typeof window._mostrarPantallaVerificacionEmail === 'function') {
         window._mostrarPantallaVerificacionEmail(user);
@@ -1531,6 +1523,15 @@ export async function finalizarOnboardingWizard() {
         window._mostrarProfileSelectorSetup();
       }
     }
+
+    // Sincronizar en segundo plano (asíncrono sin bloquear la navegación)
+    (async () => {
+      try {
+        await guardarFirebase();
+      } catch (syncErr) {
+        console.warn('Aviso sincronizando wizard a Firestore en segundo plano:', syncErr);
+      }
+    })();
   } catch (err) {
     console.error('Error al finalizar Wizard:', err);
     perfil.wizardCompletado = true;

@@ -115,3 +115,125 @@ export async function subirImagenCloudinary(file, publicId) {
   // Respaldo Base64 ultraconfiable para que la subida NUNCA falle
   return await fileToBase64(resizedFile);
 }
+
+/**
+ * Redimensiona una imagen preservando canal alfa (transparencia PNG) para uniformes y camisetas.
+ * Reduce el tamaño de megabytes a solo ~15KB-25KB, previniendo QuotaExceededError en localStorage.
+ */
+export function resizarImagenPNG(input, maxDim = 180) {
+  return new Promise((resolve) => {
+    if (!input) return resolve('');
+    if (typeof input === 'string' && (input.startsWith('http://') || input.startsWith('https://'))) {
+      return resolve(input);
+    }
+
+    const img = new Image();
+    let isObjectUrl = false;
+    let srcUrl = '';
+
+    if (typeof input === 'string') {
+      srcUrl = input;
+    } else if (input instanceof Blob || input instanceof File) {
+      srcUrl = URL.createObjectURL(input);
+      isObjectUrl = true;
+    } else {
+      return resolve('');
+    }
+
+    img.onload = () => {
+      if (isObjectUrl) URL.revokeObjectURL(srcUrl);
+      try {
+        const canvas = document.createElement('canvas');
+        let w = img.width || maxDim;
+        let h = img.height || maxDim;
+
+        if (w > maxDim || h > maxDim) {
+          if (w > h) {
+            h = Math.round((h * maxDim) / w);
+            w = maxDim;
+          } else {
+            w = Math.round((w * maxDim) / h);
+            h = maxDim;
+          }
+        }
+
+        canvas.width = Math.max(1, w);
+        canvas.height = Math.max(1, h);
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const dataUrl = canvas.toDataURL('image/png');
+          return resolve(dataUrl);
+        }
+      } catch (err) {
+        console.warn('Error en canvas resizarImagenPNG:', err);
+      }
+      resolve(typeof input === 'string' ? input : '');
+    };
+
+    img.onerror = () => {
+      if (isObjectUrl) URL.revokeObjectURL(srcUrl);
+      if (input instanceof File || input instanceof Blob) {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result || '');
+        reader.onerror = () => resolve('');
+        reader.readAsDataURL(input);
+      } else {
+        resolve(typeof input === 'string' ? input : '');
+      }
+    };
+
+    img.src = srcUrl;
+  });
+}
+
+/**
+ * Optimiza y sube uniformes a Cloudinary o genera un PNG Base64 ultra comprimido (~15KB)
+ * garantizando que nunca sature la cuota de localStorage (5MB) ni la de Firestore (1MB).
+ */
+export async function subirKitCloudinary(input, tipo = 'kit', clubNombre = 'club') {
+  if (!input) return '';
+
+  // 1. Redimensionar de inmediato en el cliente a max 180px con fondo transparente (~15KB)
+  const compressedPng = await resizarImagenPNG(input, 180);
+  if (!compressedPng) return '';
+
+  // Si ya es una URL remota de Cloudinary / CDN, retornar directamente
+  if (compressedPng.startsWith('http://') || compressedPng.startsWith('https://')) {
+    return compressedPng;
+  }
+
+  // 2. Intentar subir el PNG ligero a Cloudinary para obtener una URL limpia de ~80 bytes
+  try {
+    const safeClub = String(clubNombre || 'club').toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
+    const safeTipo = String(tipo || 'kit').toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
+    const publicId = `kit_${safeClub}_${safeTipo}_${Date.now()}`;
+
+    const resBlob = await fetch(compressedPng);
+    const blob = await resBlob.blob();
+
+    const form = new FormData();
+    form.append('file', blob, `${publicId}.png`);
+    form.append('upload_preset', CLOUDINARY_PRESET);
+    form.append('public_id', publicId);
+
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, {
+      method: 'POST',
+      body: form
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.secure_url) {
+        return data.secure_url;
+      }
+    }
+  } catch (e) {
+    console.warn('⚠️ Cloudinary no respondió para kit personalizado, usando Base64 comprimido:', e);
+  }
+
+  // 3. Respaldo: retornar el PNG base64 optimizado (~15KB)
+  return compressedPng;
+}
+

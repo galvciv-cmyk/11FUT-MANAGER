@@ -96,8 +96,36 @@ if (typeof window !== 'undefined') {
   });
 }
 
+/**
+ * Sanitiza profundamente objetos para Firestore:
+ * - Elimina valores undefined y funciones que rechaza el SDK
+ * - Previene que strings masivos (>250KB) rompan el límite de 1MB y generen "Property perfil contains an invalid nested entity"
+ * - Convierte estructuras a objetos puros compatibles con Firestore
+ */
+export function sanitizarParaFirestore(obj) {
+  if (obj === null || obj === undefined) return null;
+  if (typeof obj !== 'object') return obj;
+
+  if (Array.isArray(obj)) {
+    return obj
+      .filter(item => item !== undefined && typeof item !== 'function')
+      .map(item => sanitizarParaFirestore(item));
+  }
+
+  const limpio = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value === undefined || typeof value === 'function') continue;
+    if (typeof value === 'string' && value.length > 250000 && !value.startsWith('http')) {
+      console.warn(`⚠️ Propiedad "${key}" excluida de Firestore por superar 250KB.`);
+      continue;
+    }
+    limpio[key] = sanitizarParaFirestore(value);
+  }
+  return limpio;
+}
+
 export async function guardarFirebase() {
-  if (!db) return;
+  if (!db) return false;
   
   // Guardado local instantáneo para respuesta de UI inmediata (<1ms)
   autoSaveLocal();
@@ -116,7 +144,11 @@ export async function guardarFirebase() {
         }
 
         const fullPayload = {
-          perfil, plantel, stats, historial, categoriasData,
+          perfil: sanitizarParaFirestore(perfil),
+          plantel: sanitizarParaFirestore(plantel),
+          stats: sanitizarParaFirestore(stats),
+          historial: sanitizarParaFirestore(historial),
+          categoriasData: sanitizarParaFirestore(categoriasData),
           updatedAt: new Date().toISOString()
         };
 
@@ -128,8 +160,7 @@ export async function guardarFirebase() {
           estadoCuenta: isMaster ? 'ACTIVO' : (perfil.estadoCuenta || 'PRUEBA'),
           fechaVencimiento: isMaster ? '2099-01-01T00:00:00.000Z' : (perfil.fechaVencimiento || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()),
           maxPerfiles: isMaster ? 8 : (perfil.maxPerfiles || 1),
-          perfil,
-          categoriasData,
+          wizardCompletado: !!perfil.wizardCompletado,
           updatedAt: new Date().toISOString()
         };
 
@@ -147,7 +178,11 @@ export async function guardarFirebase() {
         }
 
         if (writes.length > 0) {
-          await Promise.all(writes);
+          // Timeout de 4s para que nunca bloquee la navegación de la app
+          await Promise.race([
+            Promise.all(writes),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Firebase timeout')), 4000))
+          ]).catch(err => console.warn('Aviso guardado en segundo plano Firebase:', err));
         }
 
         setSyncStatus('saved', '☁️ Sincronizado en la nube');
