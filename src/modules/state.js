@@ -42,6 +42,26 @@ export const DEFAULT_PERFIL = {
 
 export const DIAS_PRUEBA_DEFECTO = 3;
 
+/**
+ * MATRIZ OFICIAL DE PLANES Y TARIFAS SAAS (11FUT MANAGER)
+ * Define DTs Activos, Panel Admin, Tarifas Mensual y Anual (2 meses gratis), y costo real por DT/mes.
+ */
+export const TABLA_PLANES_SAAS = [
+  { dts: 1, admin: false, mensual: 5, anual: 50, costoRealDtMes: 5.00, nombre: 'Plan DT Individual', desc: 'Diseñado para entrenadores independientes o equipo único con gestión deportiva total.' },
+  { dts: 2, admin: true, mensual: 10, anual: 100, costoRealDtMes: 5.00, nombre: 'Plan Club 2 DTs', desc: 'Ideal para academias en crecimiento. Incluye Panel Director Deportivo de supervisión.' },
+  { dts: 3, admin: true, mensual: 14, anual: 140, costoRealDtMes: 4.66, nombre: 'Plan Club 3 DTs', desc: 'Coordinación completa de 3 categorías con panel administrativo centralizado.' },
+  { dts: 4, admin: true, mensual: 17, anual: 170, costoRealDtMes: 4.25, nombre: 'Plan Academia 4 DTs', desc: 'Gestión multiequipo profesional con acceso para 4 directores técnicos.' },
+  { dts: 5, admin: true, mensual: 20, anual: 200, costoRealDtMes: 4.00, nombre: 'Plan Academia 5 DTs', desc: 'Estructura integral para academias formativas medianas.' },
+  { dts: 6, admin: true, mensual: 23, anual: 230, costoRealDtMes: 3.83, nombre: 'Plan Club Elite 6 DTs', desc: 'Alto rendimiento multidepartamental con 6 categorías activas.' },
+  { dts: 7, admin: true, mensual: 26, anual: 260, costoRealDtMes: 3.71, nombre: 'Plan Club Elite 7 DTs', desc: 'Ecosistema integral para clubes de gran escala.' },
+  { dts: 8, admin: true, mensual: 28, anual: 280, costoRealDtMes: 3.50, nombre: 'Plan Institución Máxima 8 DTs', desc: 'Capacidad máxima institucional con la tarifa por entrenador más económica.' },
+];
+
+export function obtenerPlanPorDTs(dts) {
+  const count = parseInt(dts, 10) || 1;
+  return TABLA_PLANES_SAAS.find(p => p.dts === count) || TABLA_PLANES_SAAS[0];
+}
+
 /** Genera la fecha de vencimiento para un nuevo usuario (3 días desde ahora) */
 export function generarFechaVencimientoPrueba() {
   return new Date(Date.now() + DIAS_PRUEBA_DEFECTO * 24 * 60 * 60 * 1000).toISOString();

@@ -1,4 +1,4 @@
-import { perfil, setPinHash, setCategoriaActiva, autoSaveLocal, updateStats, updateHistorial, categoriasData, plantel, currentProfile, isSuperAdmin, DEFAULT_PLANTEL, DEFAULT_PERFIL, esAdminOEntrenadorUnico } from "./state.js";
+import { perfil, setPinHash, setCategoriaActiva, autoSaveLocal, updateStats, updateHistorial, categoriasData, plantel, currentProfile, isSuperAdmin, DEFAULT_PLANTEL, DEFAULT_PERFIL, esAdminOEntrenadorUnico, TABLA_PLANES_SAAS, obtenerPlanPorDTs } from "./state.js";
 import { guardarFirebase, hashPin, getPublicId, auth, db } from "../services/firebase.js";
 import { doc, setDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
@@ -1201,35 +1201,160 @@ export function actualizarVistaWizard() {
   }
 }
 
-export function actualizarDetallesPlanWizard(numProfiles) {
+let wizardBillingCycle = 'mensual'; // 'mensual' | 'anual'
+
+window._cambiarCicloWizard = (ciclo) => {
+  wizardBillingCycle = ciclo;
+  const selectNum = document.getElementById('wiz-num-profiles');
+  const dts = parseInt(selectNum ? selectNum.value : '1', 10) || 1;
+  actualizarDetallesPlanWizard(dts);
+};
+
+window._toggleTablaPlanesWiz = () => {
+  const container = document.getElementById('wiz-tabla-planes-container');
+  if (!container) return;
+  if (container.style.display === 'none' || !container.style.display) {
+    container.innerHTML = generarHTMLTablaPlanes();
+    container.style.display = 'block';
+  } else {
+    container.style.display = 'none';
+  }
+};
+
+export function generarHTMLTablaPlanes() {
+  return `
+    <div style="overflow-x:auto;margin:8px 0;border-radius:8px;border:1px solid rgba(212,175,55,0.3);background:#0c0c0c;">
+      <table style="width:100%;border-collapse:collapse;font-size:11px;text-align:center;color:#eee;min-width:440px;">
+        <thead>
+          <tr style="background:rgba(212,175,55,0.18);color:var(--oro);border-bottom:1px solid rgba(212,175,55,0.3);">
+            <th style="padding:7px 5px;font-weight:900;">DTs Activos</th>
+            <th style="padding:7px 5px;font-weight:900;">Panel Admin</th>
+            <th style="padding:7px 5px;font-weight:900;">Mensual</th>
+            <th style="padding:7px 5px;font-weight:900;">Anual (2 meses gratis)</th>
+            <th style="padding:7px 5px;font-weight:900;">Costo real por DT/mes</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${TABLA_PLANES_SAAS.map(p => `
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+              <td style="padding:6px 5px;font-weight:800;color:#fff;">${p.dts} ${p.dts === 1 ? 'DT' : 'DTs'}</td>
+              <td style="padding:6px 5px;">${p.admin ? '<span style="color:#2ecc71;font-weight:800;">✅ Incluido</span>' : '<span style="color:#e74c3c;font-weight:800;">❌ No</span>'}</td>
+              <td style="padding:6px 5px;font-weight:800;color:#fff;">$${p.mensual}</td>
+              <td style="padding:6px 5px;font-weight:800;color:var(--oro);">$${p.anual}</td>
+              <td style="padding:6px 5px;font-weight:900;color:#2ecc71;">$${p.costoRealDtMes.toFixed(2)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+window._mostrarModalTablaPlanes = () => {
+  const modal = document.getElementById('modal');
+  const modalContent = document.getElementById('modal-content');
+  if (!modal || !modalContent) return;
+
+  modal.style.zIndex = '10005';
+  modalContent.innerHTML = `
+    <div class="modal-title" style="color:var(--oro);display:flex;align-items:center;justify-content:center;gap:8px;">
+      📊 TABLA OFICIAL DE PLANES Y TARIFAS
+    </div>
+    <div style="font-size:12px;color:#aaa;text-align:center;margin-bottom:12px;">
+      Estructura de precios por cantidad de Entrenadores (DTs) activos:
+    </div>
+
+    ${generarHTMLTablaPlanes()}
+
+    <div style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.2);padding:10px;border-radius:8px;font-size:11px;color:#ccc;margin-top:10px;line-height:1.4;">
+      💡 <b>Ventajas clave de nuestros planes:</b><br>
+      • <b>Facturación Anual:</b> Recibes <b>2 meses completamente GRATIS</b> (pagas 10 meses y disfrutas de 12 meses de servicio).<br>
+      • <b>Panel Director Deportivo:</b> A partir de 2 DTs, el perfil de Director Deportivo (Admin) está <b>100% incluido sin costo adicional</b> para coordinar y supervisar todas las áreas del club.
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button class="btn btn-gold" onclick="abrirModalReportarPago()" style="flex:1;font-size:12px;font-weight:900;padding:10px;">
+        💳 REPORTAR / RENOVAR PAGO
+      </button>
+      <button class="btn btn-gray" onclick="document.getElementById('modal').style.display='none'" style="flex:1;font-size:12px;padding:10px;">
+        Cerrar
+      </button>
+    </div>
+  `;
+  modal.style.display = 'flex';
+};
+
+export function actualizarDetallesPlanWizard(dtsCount) {
+  const selectNum = document.getElementById('wiz-num-profiles');
+  const dts = parseInt(dtsCount || (selectNum ? selectNum.value : '1'), 10) || 1;
+  const plan = obtenerPlanPorDTs(dts);
+
   const titleEl = document.getElementById('wiz-plan-title');
   const descEl = document.getElementById('wiz-plan-description');
   const priceEl = document.getElementById('wiz-plan-price');
+  const costUnitEl = document.getElementById('wiz-plan-unit-cost');
+  const btnPago = document.getElementById('btn-wiz-reportar-pago');
 
-  const names = {
-    1: 'Plan DT Individual (1 Entrenador)',
-    2: 'Plan Club Dúo (1 Director Deportivo + 1 DT)',
-    3: 'Plan Club Trío (1 Director Deportivo + 2 DTs)',
-    4: 'Plan Academia Pro (1 Director Deportivo + 3 DTs)',
-    5: 'Plan Academia Pro (1 Director Deportivo + 4 DTs)',
-    6: 'Plan Club Elite (1 Director Deportivo + 5 DTs)',
-    7: 'Plan Club Elite (1 Director Deportivo + 6 DTs)',
-    8: 'Plan Institución Máxima (1 Director Deportivo + 7 DTs)',
-    9: 'Plan Institución Máxima Pro (1 Director Deportivo + 8 DTs)'
-  };
-
-  const name = names[numProfiles] || `Plan Institucional (${numProfiles} Perfiles)`;
-  const price = (numProfiles * 15).toFixed(2);
-
-  if (titleEl) titleEl.textContent = name;
-  if (descEl) {
-    if (numProfiles === 1) {
-      descEl.textContent = `Diseñado para el entrenador independiente o equipo único. Incluye pizarra táctica, gestión de plantel, convocatorias, estadísticas por jugador, calendario de partidos en vivo y biblioteca de entrenamientos.`;
+  const btnMensual = document.getElementById('wiz-ciclo-mensual');
+  const btnAnual = document.getElementById('wiz-ciclo-anual');
+  if (btnMensual && btnAnual) {
+    if (wizardBillingCycle === 'mensual') {
+      btnMensual.style.background = 'var(--oro)';
+      btnMensual.style.color = '#000';
+      btnAnual.style.background = 'transparent';
+      btnAnual.style.color = '#bbb';
     } else {
-      descEl.textContent = `Incluye 1 Perfil de Director Deportivo (ADMIN) con Panel de Supervisión global del club + ${numProfiles - 1} Perfil(es) de Entrenador (DT) independientes para plantilla, tácticas, citaciones y estadísticas por categoría.`;
+      btnAnual.style.background = 'var(--oro)';
+      btnAnual.style.color = '#000';
+      btnMensual.style.background = 'transparent';
+      btnMensual.style.color = '#bbb';
     }
   }
-  if (priceEl) priceEl.textContent = `$${price} USD / mes`;
+
+  const esAnual = (wizardBillingCycle === 'anual');
+  const precio = esAnual ? plan.anual : plan.mensual;
+
+  if (titleEl) {
+    titleEl.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+        <span>${plan.nombre} (${plan.dts} ${plan.dts === 1 ? 'DT' : 'DTs'})</span>
+        <span style="font-size:10px;padding:2px 8px;border-radius:10px;font-weight:900;background:${plan.admin ? 'rgba(46,204,113,0.2)' : 'rgba(255,255,255,0.1)'};color:${plan.admin ? '#2ecc71' : '#aaa'};border:1px solid ${plan.admin ? '#2ecc71' : '#555'};">
+          ${plan.admin ? '✅ Panel Admin Incluido' : '❌ Sin Panel Admin'}
+        </span>
+      </div>
+    `;
+  }
+
+  if (descEl) {
+    descEl.innerHTML = `
+      <div style="color:#ddd;margin-bottom:4px;">${plan.desc}</div>
+      <div style="color:#888;font-size:11px;">
+        👥 ${plan.dts} categoría(s) con acceso independiente para cada entrenador.
+        ${plan.admin ? ' Incluye Panel Director Deportivo (Admin) para supervisar todas las áreas sin coste extra.' : ' Gestión deportiva directa.'}
+      </div>
+    `;
+  }
+
+  if (priceEl) {
+    if (esAnual) {
+      priceEl.innerHTML = `
+        <div style="font-size:16px;font-weight:900;color:#2ecc71;">$${plan.anual} USD / año</div>
+        <div style="font-size:11px;color:var(--oro);font-weight:800;margin-top:2px;">🎁 ¡2 MESES GRATIS! (Pagas $${plan.anual} en vez de $${plan.mensual * 12})</div>
+      `;
+    } else {
+      priceEl.innerHTML = `
+        <div style="font-size:16px;font-weight:900;color:#2ecc71;">$${plan.mensual} USD / mes</div>
+      `;
+    }
+  }
+
+  if (costUnitEl) {
+    costUnitEl.innerHTML = `⚡ Costo real por DT: <b style="color:#fff;">$${plan.costoRealDtMes.toFixed(2)} USD / mes</b>`;
+  }
+
+  if (btnPago) {
+    btnPago.innerHTML = `💳 REGISTRAR / REPORTAR PAGO ($${precio} USD ${esAnual ? 'ANUAL' : 'MENSUAL'})`;
+  }
 }
 
 export function siguientePasoWizard() {
@@ -1240,11 +1365,11 @@ export function siguientePasoWizard() {
     actualizarVistaWizard();
   } else if (wizardStep === 2) {
     const selectNum = document.getElementById('wiz-num-profiles');
-    const numProfiles = parseInt(selectNum ? selectNum.value : '1', 10) || 1;
-    const numCats = numProfiles === 1 ? 1 : (numProfiles - 1);
+    const dtsCount = parseInt(selectNum ? selectNum.value : '1', 10) || 1;
+    const numCats = dtsCount;
     wizardTempCats = [];
     for (let i = 0; i < numCats; i++) {
-      const val = document.getElementById(`wiz-cat-input-${i}`)?.value?.trim() || `Categoría ${i + 1}`;
+      const val = document.getElementById(`wiz-cat-input-${i}`)?.value?.trim() || (dtsCount === 1 ? 'Principal' : `Categoría ${i + 1}`);
       wizardTempCats.push(val);
       if (!wizardTempTorneos[val]) wizardTempTorneos[val] = 'Liga Oficial';
     }
@@ -1270,8 +1395,8 @@ function renderWizardCategoriasUI() {
   const selectNum = document.getElementById('wiz-num-profiles');
   if (!container) return;
 
-  const numProfiles = parseInt(selectNum ? selectNum.value : '1', 10) || 1;
-  actualizarDetallesPlanWizard(numProfiles);
+  const dtsCount = parseInt(selectNum ? selectNum.value : '1', 10) || 1;
+  actualizarDetallesPlanWizard(dtsCount);
 
   if (selectNum && !selectNum._bound) {
     selectNum._bound = true;
@@ -1280,12 +1405,12 @@ function renderWizardCategoriasUI() {
     });
   }
 
-  const numCats = numProfiles === 1 ? 1 : (numProfiles - 1);
+  const numCats = dtsCount;
 
   let html = '';
   for (let i = 0; i < numCats; i++) {
-    const defaultVal = wizardTempCats[i] || (i === 0 ? 'Sub-14' : `Categoría ${i + 1}`);
-    const label = numProfiles === 1 
+    const defaultVal = wizardTempCats[i] || (i === 0 ? 'Sub-14' : (i === 1 ? 'Sub-16' : (i === 2 ? 'Sub-18' : `Categoría ${i + 1}`)));
+    const label = dtsCount === 1 
       ? `🧢 Nombre de la Categoría Principal del Club:` 
       : `🧢 Nombre de la Categoría #${i + 1} (Asignada a DT #${i + 1}):`;
 
@@ -1382,16 +1507,17 @@ export async function finalizarOnboardingWizard() {
     }
 
     const selectNum = document.getElementById('wiz-num-profiles');
-    const numProfiles = parseInt(selectNum ? selectNum.value : '1', 10) || 1;
-    perfil.maxPerfiles = numProfiles;
+    const dtsCount = parseInt(selectNum ? selectNum.value : '1', 10) || 1;
+    const plan = obtenerPlanPorDTs(dtsCount);
+    perfil.maxPerfiles = plan.admin ? (dtsCount + 1) : 1;
 
     const pinAdminInput = document.getElementById('wiz-pin-admin')?.value?.trim() || (isSuperAdmin() ? '1901' : '1234');
 
-    const numCats = numProfiles === 1 ? 1 : (numProfiles - 1);
+    const numCats = dtsCount;
 
     wizardTempCats = [];
     for (let i = 0; i < numCats; i++) {
-      const val = document.getElementById(`wiz-cat-input-${i}`)?.value?.trim() || `Categoría ${i + 1}`;
+      const val = document.getElementById(`wiz-cat-input-${i}`)?.value?.trim() || (dtsCount === 1 ? 'Principal' : `Categoría ${i + 1}`);
       wizardTempCats.push(val);
     }
 
@@ -1400,7 +1526,7 @@ export async function finalizarOnboardingWizard() {
     perfil.kitA = wizardTempKit;
 
     // Generar perfiles según el plan elegido
-    if (numProfiles === 1) {
+    if (!plan.admin) {
       perfil.profiles = [
         {
           id: "dt_principal",
@@ -1413,7 +1539,7 @@ export async function finalizarOnboardingWizard() {
         }
       ];
     } else {
-      // Planes Club / Academia: 1 Director Deportivo (ADMIN) + (N-1) DTs
+      // Planes Club / Academia: 1 Director Deportivo (ADMIN) + N DTs
       perfil.profiles = [
         {
           id: "admin",
@@ -1589,8 +1715,10 @@ window._guardarDatosPersonalesConfig = guardarDatosPersonalesConfig;
 // ════════════════════════════════════════════════════════════════
 window._abrirPagoDesdeWizard = () => {
   const selectNum = document.getElementById('wiz-num-profiles');
-  const numProfiles = parseInt(selectNum ? selectNum.value : '1', 10) || 1;
-  const price = (numProfiles * 15).toFixed(2);
+  const dts = parseInt(selectNum ? selectNum.value : '1', 10) || 1;
+  const plan = obtenerPlanPorDTs(dts);
+  const esAnual = (wizardBillingCycle === 'anual');
+  const price = (esAnual ? plan.anual : plan.mensual).toFixed(2);
   abrirModalReportarPago(price);
 };
 
@@ -1678,7 +1806,11 @@ export async function abrirModalReportarPago(montoSugerido = '') {
     }
 
     // Campos dinámicos
-    const defMonto = montoSugerido || '15.00';
+    const dtsActuales = (perfil.profiles && Array.isArray(perfil.profiles))
+      ? Math.max(1, perfil.profiles.filter(p => p.rol === 'DT').length)
+      : 1;
+    const planActual = obtenerPlanPorDTs(dtsActuales);
+    const defMonto = montoSugerido || `${planActual.mensual}.00`;
     let camposDinamicosHTML = '';
     if (metodoSeleccionado === 'pagoMovil') {
       camposDinamicosHTML = `
@@ -1722,6 +1854,21 @@ export async function abrirModalReportarPago(montoSugerido = '') {
 
     modalContent.innerHTML = `
       <div class="modal-title">💳 REPORTAR PAGO DE MEMBRESÍA</div>
+
+      <!-- RESUMEN DEL PLAN -->
+      <div style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.25);border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <span style="color:var(--oro);font-weight:800;">🏆 Tu Plan: ${planActual.nombre} (${planActual.dts} DT${planActual.dts > 1 ? 's' : ''})</span>
+          <button type="button" onclick="window._mostrarModalTablaPlanes && window._mostrarModalTablaPlanes()" style="background:none;border:none;color:var(--oro);text-decoration:underline;cursor:pointer;font-size:10px;font-weight:700;">
+            📊 Ver Tabla de Tarifas
+          </button>
+        </div>
+        <div style="color:#aaa;display:flex;gap:12px;flex-wrap:wrap;margin-top:2px;">
+          <span>📅 Mensual: <b style="color:#fff;">$${planActual.mensual} USD</b></span>
+          <span>⭐ Anual (2 meses gratis): <b style="color:#2ecc71;">$${planActual.anual} USD</b></span>
+          <span>⚡ Costo por DT: <b style="color:#fff;">$${planActual.costoRealDtMes.toFixed(2)}/mes</b></span>
+        </div>
+      </div>
 
       <!-- SELECTOR DE PASARELA -->
       <div style="margin-bottom:14px;">

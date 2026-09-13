@@ -1,6 +1,6 @@
 import { db } from "../services/firebase.js";
 import { collection, getDocs, doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
-import { isSuperAdmin, perfil, autoSaveLocal, SUPER_ADMIN_EMAIL, DIAS_PRUEBA_DEFECTO } from "./state.js";
+import { isSuperAdmin, perfil, autoSaveLocal, SUPER_ADMIN_EMAIL, DIAS_PRUEBA_DEFECTO, obtenerPlanPorDTs } from "./state.js";
 import { mostrarConfirmacionApp, mostrarToastRapido, mostrarPromptModal, mostrarNotificacionApp, cerrarSesion } from "./config.js";
 
 window._cerrarSesionCompleta = () => {
@@ -527,7 +527,7 @@ function renderTarjetaClubHTML(c) {
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;background:rgba(8,12,18,0.5);padding:10px 14px;border-radius:10px;font-size:11px;color:#ccc;border:1px solid rgba(255,255,255,0.06);">
         <div>WhatsApp: <span style="color:#fff;font-weight:700;">${wa}</span></div>
         <div style="display:flex;gap:14px;align-items:center;">
-          <span style="color:var(--oro);font-weight:800;background:rgba(212,175,55,0.12);padding:2px 8px;border-radius:6px;">${maxP} Perfil(es) DT</span>
+          <span style="color:var(--oro);font-weight:800;background:rgba(212,175,55,0.12);padding:2px 8px;border-radius:6px;" title="${obtenerPlanPorDTs(maxP <= 1 ? 1 : maxP - 1).nombre}">${obtenerPlanPorDTs(maxP <= 1 ? 1 : maxP - 1).nombre} ($${obtenerPlanPorDTs(maxP <= 1 ? 1 : maxP - 1).mensual}/m)</span>
           <span>Vence: ${esMaster ? 'Vitalicio (Infinito)' : (isNaN(fechaExp.getTime()) ? 'Pendiente' : fechaExp.toLocaleDateString())}</span>
         </div>
       </div>

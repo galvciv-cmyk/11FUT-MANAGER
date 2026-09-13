@@ -1084,18 +1084,27 @@
         <!-- PASO 2: CATEGORÍAS Y PLAN -->
         <div id="wizard-step-2" style="display:none;">
           <div class="card" style="margin:0;padding:16px;background:#141414;border:1px solid #282828;">
-            <label style="font-size:12px;color:var(--oro);font-weight:800;display:block;margin-bottom:4px;">👤 Cantidad de Accesos / Perfiles Contratados:</label>
+            <label style="font-size:12px;color:var(--oro);font-weight:800;display:block;margin-bottom:6px;">👤 Cantidad de Entrenadores (DTs Activos):</label>
             <select id="wiz-num-profiles" style="margin-bottom:12px;padding:10px;font-size:13px;background:#0a0a0a;color:#fff;border:1px solid #333;border-radius:8px;width:100%;">
-              <option value="1">Plan DT Individual (1 Entrenador DT)</option>
-              <option value="2">2 Perfiles (1 Director Deportivo + 1 DT)</option>
-              <option value="3">3 Perfiles (1 Director Deportivo + 2 DTs)</option>
-              <option value="4">4 Perfiles (1 Director Deportivo + 3 DTs)</option>
-              <option value="5">5 Perfiles (1 Director Deportivo + 4 DTs)</option>
-              <option value="6">6 Perfiles (1 Director Deportivo + 5 DTs)</option>
-              <option value="7">7 Perfiles (1 Director Deportivo + 6 DTs)</option>
-              <option value="8">8 Perfiles (1 Director Deportivo + 7 DTs)</option>
-              <option value="9">9 Perfiles (1 Director Deportivo + 8 DTs Máximo)</option>
+              <option value="1">1 DT — Plan Individual (❌ Sin Panel Admin)</option>
+              <option value="2">2 DTs — Plan Club (✅ Panel Admin Incluido)</option>
+              <option value="3">3 DTs — Plan Club (✅ Panel Admin Incluido)</option>
+              <option value="4">4 DTs — Plan Academia (✅ Panel Admin Incluido)</option>
+              <option value="5">5 DTs — Plan Academia (✅ Panel Admin Incluido)</option>
+              <option value="6">6 DTs — Plan Club Elite (✅ Panel Admin Incluido)</option>
+              <option value="7">7 DTs — Plan Club Elite (✅ Panel Admin Incluido)</option>
+              <option value="8">8 DTs — Plan Institución Máxima (✅ Panel Admin Incluido)</option>
             </select>
+
+            <!-- SELECTOR DE CICLO DE FACTURACIÓN -->
+            <div style="display:flex;gap:8px;margin-bottom:12px;background:#0a0a0a;padding:4px;border-radius:10px;border:1px solid #282828;">
+              <button type="button" id="wiz-ciclo-mensual" onclick="window._cambiarCicloWizard('mensual')" style="flex:1;background:var(--oro);color:#000;border:none;padding:8px;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer;transition:all 0.2s;">
+                📅 Facturación Mensual
+              </button>
+              <button type="button" id="wiz-ciclo-anual" onclick="window._cambiarCicloWizard('anual')" style="flex:1;background:transparent;color:#bbb;border:none;padding:8px;border-radius:6px;font-size:12px;font-weight:800;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:4px;">
+                ⭐ Anual <span style="background:#2ecc71;color:#000;font-size:10px;padding:2px 6px;border-radius:10px;font-weight:900;">2 MESES GRATIS</span>
+              </button>
+            </div>
 
             <div id="wiz-lista-cats-inputs" style="display:flex;flex-direction:column;gap:8px;"></div>
 
@@ -1103,6 +1112,12 @@
               <div id="wiz-plan-title" style="color:var(--oro);font-weight:800;margin-bottom:2px;font-size:13px;"></div>
               <div id="wiz-plan-description" style="margin-bottom:6px;line-height:1.3;"></div>
               <div id="wiz-plan-price" style="font-weight:900;color:#2ecc71;font-size:14px;"></div>
+              <div id="wiz-plan-unit-cost" style="font-size:11px;color:#aaa;margin-top:4px;"></div>
+
+              <button type="button" onclick="window._toggleTablaPlanesWiz()" style="background:none;border:none;color:var(--oro);cursor:pointer;font-size:11px;font-weight:700;text-decoration:underline;margin:8px 0 4px;padding:0;display:inline-block;">
+                📊 Ver Tabla Comparativa de Todos los Planes
+              </button>
+              <div id="wiz-tabla-planes-container" style="display:none;margin-top:8px;"></div>
               
               <button type="button" class="btn btn-green" id="btn-wiz-reportar-pago" onclick="window._abrirPagoDesdeWizard && window._abrirPagoDesdeWizard()" style="margin-top:10px;font-size:13px;font-weight:900;padding:12px;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 15px rgba(46,204,113,0.3);">
                 💳 REGISTRAR / REPORTAR PAGO DE ESTE PLAN
@@ -1253,6 +1268,9 @@
                   <label style="font-size:11px;color:var(--oro);font-weight:700;margin-bottom:4px;display:block;">💳 Membresía y Pagos:</label>
                   <button type="button" class="btn btn-gold" onclick="window._abrirModalReportarPago && window._abrirModalReportarPago()" style="font-size:12px;font-weight:900;padding:10px;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;">
                     💳 REPORTAR PAGO / RENOVAR PLAN
+                  </button>
+                  <button type="button" class="btn" onclick="window._mostrarModalTablaPlanes && window._mostrarModalTablaPlanes()" style="margin-top:8px;font-size:11px;padding:8px;width:100%;background:rgba(212,175,55,0.15);color:var(--oro);border:1px solid var(--oro);font-weight:800;">
+                    📊 VER TABLA OFICIAL DE PLANES Y TARIFAS
                   </button>
                   <button type="button" class="btn btn-blue" id="btn-copy-public-link" style="margin-top:8px;font-size:11px;padding:8px;width:100%;">
                     🔗 COPIAR ENLACE PERFIL PÚBLICO
