@@ -14,7 +14,7 @@ import { abrirConfig, cerrarConfig, guardarNombres, guardarKits, guardarLogo, gu
 
 import { renderProfileSelector } from "./modules/profileSelector.js";
 import { renderAdminDashboard } from "./modules/adminDashboard.js";
-import { renderSuperAdminDashboard } from "./modules/superAdmin.js";
+import { renderSuperAdminDashboard, renderMarquesinasDinamicas } from "./modules/superAdmin.js";
 import { currentProfile, setCurrentProfile, getCurrentProfile, esAdminOEntrenadorUnico } from "./modules/state.js";
 import { initEntrenamientosUI, renderBibliotecaEjercicios, renderPlannerUI, renderAsistenciaUI, renderLesionesUI } from "./modules/training.js";
 import { subirImagenCloudinary } from "./services/cloudinary.js";
@@ -598,23 +598,31 @@ async function cargarPerfilPublico(publicId, profId = null, catReq = null) {
     }
   }
 
-  // 1. Renderizar selector de categorías públicas
-  renderSelectorCategoria(true);
+  // 1. Resolver categoría solicitada (tolerante a mayúsculas/minúsculas y espacios/guiones)
+  const decodedCat = catReq ? decodeURIComponent(catReq).trim() : null;
+  let catMatch = null;
+  if (decodedCat && Array.isArray(perfil.categorias)) {
+    catMatch = perfil.categorias.find(c => c.toLowerCase() === decodedCat.toLowerCase())
+      || perfil.categorias.find(c => c.toLowerCase().replace(/[\s\-_]+/g, '') === decodedCat.toLowerCase().replace(/[\s\-_]+/g, ''));
+  }
 
-  // 2. Establecer categoría activa oficial
-  const selectPub = document.getElementById('pub-selector-categoria');
-  const catActiva = (catReq && perfil.categorias.includes(catReq))
-    ? catReq
-    : ((perfil.categoriaActiva && perfil.categorias.includes(perfil.categoriaActiva))
+  const catActiva = catMatch
+    || ((perfil.categoriaActiva && perfil.categorias.includes(perfil.categoriaActiva))
       ? perfil.categoriaActiva
-      : (perfil.categorias[0] || 'Sub-14'));
+      : (perfil.categorias && perfil.categorias.length ? perfil.categorias[0] : 'Sub-14'));
 
   setCategoriaActiva(catActiva);
 
+  // 2. Renderizar selector de categorías públicas
+  renderSelectorCategoria(true);
+
+  // 3. Establecer categoría activa oficial en el select
+  const selectPub = document.getElementById('pub-selector-categoria');
   if (selectPub) {
     selectPub.value = catActiva;
     selectPub.onchange = (e) => {
       setCategoriaActiva(e.target.value);
+      renderDashboardColectivo('pub-dashboard-colectivo-container');
       renderRankingsPublico();
       renderSquadPublico();
       renderStatsPublico();
@@ -1330,6 +1338,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   autoLoadLocal();
   aplicarTema(localStorage.getItem('11fut_theme') || 'dark');
   cargarKits().catch(console.error);
+  renderMarquesinasDinamicas().catch(console.error);
 
   // Detect Public Profile Mode
   const urlParams = new URLSearchParams(window.location.search);

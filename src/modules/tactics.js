@@ -377,7 +377,7 @@ export function getImg(eq, tipo) {
   if (tipo === 'ct') {
     if (custom.ct) return custom.ct;
   }
-  if (tipo === 'local' || tipo === 'titular') {
+  if (tipo === 'local' || tipo === 'titular' || tipo === 'campo') {
     if (custom.local) return custom.local;
   }
 

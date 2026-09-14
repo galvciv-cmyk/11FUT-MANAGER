@@ -146,10 +146,10 @@ export function setCategoriaActiva(catNombre) {
     perfil.categorias.push(catNombre);
   }
 
-  // Purga de categorías huérfanas en categoriasData que no estén en perfil.categorias
-  Object.keys(categoriasData).forEach(key => {
-    if (!perfil.categorias.includes(key)) {
-      delete categoriasData[key];
+  // Asegurar que las categorías existentes en categoriasData no se pierdan
+  Object.keys(categoriasData).forEach(k => {
+    if (!perfil.categorias.includes(k)) {
+      perfil.categorias.push(k);
     }
   });
 
@@ -173,17 +173,16 @@ export function updateCategoriasData(newData) {
   if (newData && typeof newData === 'object') {
     categoriasData = newData;
 
-    // Purga de llaves no pertenecientes a perfil.categorias
-    const catsActuales = Array.isArray(perfil.categorias) ? perfil.categorias : [];
+    if (!Array.isArray(perfil.categorias)) perfil.categorias = [];
     Object.keys(categoriasData).forEach(key => {
-      if (!catsActuales.includes(key)) {
-        delete categoriasData[key];
+      if (!perfil.categorias.includes(key)) {
+        perfil.categorias.push(key);
       }
     });
 
     const catActual = (perfil.categoriaActiva && categoriasData[perfil.categoriaActiva]) 
       ? perfil.categoriaActiva 
-      : (catsActuales.length > 0 ? catsActuales[0] : '');
+      : (perfil.categorias.length > 0 ? perfil.categorias[0] : '');
     
     setCategoriaActiva(catActual);
   }

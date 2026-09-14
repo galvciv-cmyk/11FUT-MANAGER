@@ -3,9 +3,114 @@ import { collection, getDocs, doc, setDoc, getDoc, deleteDoc } from "firebase/fi
 import { isSuperAdmin, perfil, autoSaveLocal, SUPER_ADMIN_EMAIL, DIAS_PRUEBA_DEFECTO, obtenerPlanPorDTs } from "./state.js";
 import { mostrarConfirmacionApp, mostrarToastRapido, mostrarPromptModal, mostrarNotificacionApp, cerrarSesion } from "./config.js";
 
+import { subirImagenCloudinary } from "../services/cloudinary.js";
+
 window._cerrarSesionCompleta = () => {
   cerrarSesion();
 };
+
+// ════════════════════════════════════════════════════════════════
+// CONFIGURACIÓN PREDETERMINADA DE MARQUESINAS & PATROCINANTES
+// ════════════════════════════════════════════════════════════════
+export const DEFAULT_MARQUESINA_SPONSORS = [
+  {
+    id: 'sp_gk_nova',
+    nombre: 'G&K NOVA • SPORT TECH',
+    logo: 'https://res.cloudinary.com/djhpfdklk/image/upload/v1785381403/gk_nova_logo_spdofl.png',
+    activo: true
+  },
+  {
+    id: 'sp_11fut',
+    nombre: '11FUT MANAGER • TÁCTICA & CLUB',
+    logo: 'https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png',
+    activo: true
+  },
+  {
+    id: 'sp_valla_oficial',
+    nombre: '🏟️ VALLA OFICIAL DE ESTADIO',
+    logo: '',
+    activo: true
+  }
+];
+
+let currentMarquesinaSponsors = null;
+
+export async function obtenerConfiguracionMarquesina() {
+  if (currentMarquesinaSponsors && Array.isArray(currentMarquesinaSponsors) && currentMarquesinaSponsors.length > 0) {
+    return currentMarquesinaSponsors;
+  }
+  try {
+    const docRef = doc(db, 'configuraciones', 'marquesinas');
+    const snap = await getDoc(docRef);
+    if (snap.exists()) {
+      const data = snap.data();
+      if (Array.isArray(data.sponsors) && data.sponsors.length > 0) {
+        currentMarquesinaSponsors = data.sponsors;
+        return currentMarquesinaSponsors;
+      }
+    }
+  } catch (e) {
+    console.warn('Aviso leyendo configuracion de marquesinas:', e);
+  }
+  currentMarquesinaSponsors = JSON.parse(JSON.stringify(DEFAULT_MARQUESINA_SPONSORS));
+  return currentMarquesinaSponsors;
+}
+
+export async function guardarConfiguracionMarquesina(sponsors) {
+  try {
+    currentMarquesinaSponsors = sponsors;
+    await setDoc(doc(db, 'configuraciones', 'marquesinas'), {
+      sponsors,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+    mostrarToastRapido('Marquesina Guardada', '✅ Vallas y patrocinantes actualizados en la nube.', true);
+    await renderMarquesinasDinamicas();
+    return true;
+  } catch (e) {
+    mostrarNotificacionApp('Error al Guardar', 'No se pudo guardar la marquesina: ' + e.message, false);
+    return false;
+  }
+}
+
+export async function renderMarquesinasDinamicas() {
+  const sponsors = await obtenerConfiguracionMarquesina();
+  const activos = (sponsors && sponsors.length ? sponsors : DEFAULT_MARQUESINA_SPONSORS).filter(s => s.activo !== false);
+  const itemsLista = activos.length ? activos : DEFAULT_MARQUESINA_SPONSORS;
+
+  // 1. Dugout horizontal tracks (.dugout-marquee-track)
+  const dugoutHTML = itemsLista.map(s => {
+    const logoImg = s.logo ? `<img src="${s.logo}" alt="${s.nombre}" style="height:20px;filter:drop-shadow(0 0 6px rgba(212,175,55,0.4));margin-right:6px;vertical-align:middle;">` : '';
+    return `<span class="dugout-marquee-item">${logoImg}${s.nombre}</span><span class="dugout-marquee-sep">⚡</span>`;
+  }).join('');
+
+  document.querySelectorAll('.dugout-marquee-track').forEach(track => {
+    track.innerHTML = `
+      <div class="dugout-marquee-group">
+        ${dugoutHTML}
+      </div>
+      <div class="dugout-marquee-group" aria-hidden="true">
+        ${dugoutHTML}
+      </div>
+    `;
+  });
+
+  // 2. Pitch lateral vertical tracks (.cancha-lateral-track)
+  const lateralHTML = itemsLista.map(s => {
+    const logoImg = s.logo ? `<img src="${s.logo}" alt="${s.nombre}">` : '';
+    return `<span class="cancha-lateral-item">${logoImg}${s.nombre}</span><span class="cancha-lateral-sep">⚡</span>`;
+  }).join('');
+
+  document.querySelectorAll('.cancha-lateral-track').forEach(track => {
+    track.innerHTML = `
+      <div class="cancha-lateral-group">
+        ${lateralHTML}
+      </div>
+      <div class="cancha-lateral-group" aria-hidden="true">
+        ${lateralHTML}
+      </div>
+    `;
+  });
+}
 
 // ════════════════════════════════════════════════════════════════
 // CONFIGURACIÓN PREDETERMINADA DE PASARELAS DE COBRO DIGITALES
@@ -142,6 +247,7 @@ const SVG_WALLET = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" 
 const SVG_SETTINGS = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`;
 const SVG_LOGOUT = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>`;
 const SVG_SEARCH = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--oro)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`;
+const SVG_MEGAPHONE = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>`;
 
 // ════════════════════════════════════════════════════════════════
 // RENDER PRINCIPAL DEL BACKOFFICE SAAS (SÚPER ADMIN)
@@ -193,6 +299,9 @@ export async function renderSuperAdminDashboard() {
           <button class="sa-tab-btn ${currentBackofficeTab === 'cuentas' ? 'active' : ''}" onclick="window._switchBackofficeTab('cuentas')" style="background:${currentBackofficeTab === 'cuentas' ? 'var(--oro)' : 'rgba(26,32,44,0.7)'};color:${currentBackofficeTab === 'cuentas' ? '#000' : '#ccc'};border:1px solid ${currentBackofficeTab === 'cuentas' ? 'var(--oro)' : 'rgba(255,255,255,0.12)'};padding:9px 16px;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all 0.2s ease;">
             ${SVG_SETTINGS} Cuentas de Cobro
           </button>
+          <button class="sa-tab-btn ${currentBackofficeTab === 'marquesinas' ? 'active' : ''}" onclick="window._switchBackofficeTab('marquesinas')" style="background:${currentBackofficeTab === 'marquesinas' ? 'var(--oro)' : 'rgba(26,32,44,0.7)'};color:${currentBackofficeTab === 'marquesinas' ? '#000' : '#ccc'};border:1px solid ${currentBackofficeTab === 'marquesinas' ? 'var(--oro)' : 'rgba(255,255,255,0.12)'};padding:9px 16px;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all 0.2s ease;">
+            ${SVG_MEGAPHONE} Marquesinas & Vallas
+          </button>
           <button onclick="window._cerrarSesionCompleta()" style="background:rgba(231,76,60,0.15);color:#e74c3c;border:1px solid rgba(231,76,60,0.35);padding:9px 16px;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all 0.2s ease;">
             ${SVG_LOGOUT} Cerrar Sesión
           </button>
@@ -222,6 +331,8 @@ export async function renderSuperAdminDashboard() {
     await renderSubtabFinanzas(activeContainer);
   } else if (currentBackofficeTab === 'cuentas') {
     renderSubtabCuentasCobro(activeContainer);
+  } else if (currentBackofficeTab === 'marquesinas') {
+    await renderSubtabMarquesinas(activeContainer);
   }
 
   // Actualizar contador de badge de pagos en segundo plano
@@ -1324,6 +1435,173 @@ window._eliminarClubDirecto = (pubDocId, clubNombre, uid, email) => {
     await Promise.all(proms);
 
     mostrarToastRapido('Club Eliminado', `El club "${clubNombre}" fue purgado.`, true);
+    renderSuperAdminDashboard();
+  });
+};
+
+// ════════════════════════════════════════════════════════════════
+// SUB-PESTAÑA 5: GESTIÓN DE MARQUESINAS LED Y PATROCINANTES
+// ════════════════════════════════════════════════════════════════
+export async function renderSubtabMarquesinas(container) {
+  const sponsors = await obtenerConfiguracionMarquesina();
+
+  container.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--oro);letter-spacing:1px;display:flex;align-items:center;gap:8px;">
+          ${SVG_MEGAPHONE} GESTIÓN DE MARQUESINAS LED & PATROCINANTES
+        </div>
+        <div style="font-size:12px;color:#aaa;">Personaliza las marcas y anuncios oficiales que se despliegan en las vallas laterales de la cancha y en el banquillo de suplentes (en vista normal y en pantalla completa).</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="window._restaurarMarquesinasDefecto()" class="btn btn-gray" style="font-size:12px;padding:8px 14px;font-weight:800;">
+          🔄 Restaurar Predeterminados
+        </button>
+      </div>
+    </div>
+
+    <!-- FORMULARIO DE AGREGAR PATROCINANTE -->
+    <div class="liquid-glass-card" style="padding:18px;margin-bottom:20px;border-color:rgba(212,175,55,0.3);">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;color:var(--oro);margin-bottom:12px;letter-spacing:0.5px;">
+        ➕ AÑADIR NUEVO PATROCINANTE O ANUNCIO
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:14px;align-items:end;">
+        <div>
+          <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Texto / Nombre del Patrocinante:</label>
+          <input type="text" id="sa-sp-nombre" placeholder="ej. PEPSI • PATROCINADOR OFICIAL" style="margin:0;">
+        </div>
+        <div>
+          <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Logo (URL o Archivo PNG/SVG):</label>
+          <div style="display:flex;gap:6px;">
+            <input type="text" id="sa-sp-logo-url" placeholder="https://... o sube una imagen" style="margin:0;flex:1;">
+            <button class="btn btn-blue" onclick="document.getElementById('sa-sp-file-input').click()" style="padding:0 12px;font-size:12px;white-space:nowrap;">Subir</button>
+            <input type="file" id="sa-sp-file-input" accept="image/*" style="display:none;">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <button onclick="window._agregarNuevoPatrocinante()" class="btn btn-gold" style="font-size:12px;padding:10px 18px;font-weight:900;flex:1;">
+            💾 AGREGAR A LA MARQUESINA
+          </button>
+        </div>
+      </div>
+      <div id="sa-sp-preview-box" style="display:none;margin-top:10px;align-items:center;gap:10px;padding:6px 12px;background:rgba(0,0,0,0.4);border-radius:8px;">
+        <span style="font-size:11px;color:#aaa;">Vista previa de logo:</span>
+        <img id="sa-sp-preview-img" src="" alt="preview" style="height:24px;max-width:100px;object-fit:contain;">
+      </div>
+    </div>
+
+    <!-- LISTADO DE PATROCINANTES ACTIVOS / INACTIVOS -->
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:900;color:#fff;margin-bottom:10px;letter-spacing:0.5px;">
+      LISTA DE PATROCINANTES REGISTRADOS (${sponsors.length})
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      ${sponsors.map((sp, idx) => `
+        <div class="liquid-glass-card" style="padding:14px 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;border-color:${sp.activo ? 'rgba(212,175,55,0.3)' : 'rgba(255,255,255,0.08)'};opacity:${sp.activo ? '1' : '0.6'};">
+          <div style="display:flex;align-items:center;gap:14px;flex:1;min-width:240px;">
+            <div style="width:40px;height:40px;border-radius:8px;background:#090909;border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
+              ${sp.logo ? `<img src="${sp.logo}" alt="${sp.nombre}" style="max-height:30px;max-width:34px;object-fit:contain;">` : `<span style="font-size:18px;">📢</span>`}
+            </div>
+            <div>
+              <div style="font-weight:800;font-size:14px;color:${sp.activo ? '#fff' : '#888'};">
+                ${sp.nombre}
+              </div>
+              <div style="font-size:10px;color:#777;margin-top:2px;">
+                ${sp.logo ? `Logo: <a href="${sp.logo}" target="_blank" style="color:var(--oro);text-decoration:underline;">Ver enlace</a>` : 'Sin logo gráfico (Solo texto)'}
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button onclick="window._togglePatrocinanteActivo(${idx})" class="btn" style="font-size:11px;padding:6px 12px;font-weight:800;background:${sp.activo ? 'rgba(46,204,113,0.15)' : 'rgba(255,255,255,0.08)'};color:${sp.activo ? '#2ecc71' : '#aaa'};border:1px solid ${sp.activo ? 'rgba(46,204,113,0.4)' : 'rgba(255,255,255,0.2)'};">
+              ${sp.activo ? '✅ EN ROTACIÓN' : '⏸️ EN PAUSA'}
+            </button>
+            <button onclick="window._editarPatrocinante(${idx})" class="btn btn-blue" style="font-size:11px;padding:6px 12px;font-weight:800;">
+              ✏️ Editar
+            </button>
+            <button onclick="window._eliminarPatrocinante(${idx})" class="btn btn-red" style="font-size:11px;padding:6px 12px;font-weight:800;">
+              🗑️ Eliminar
+            </button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  // Listener para subida de archivo
+  const fileInput = document.getElementById('sa-sp-file-input');
+  if (fileInput) {
+    fileInput.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      mostrarToastRapido('Subiendo Logo', '⏳ Procesando imagen...', true);
+      const url = await subirImagenCloudinary(file);
+      if (url) {
+        document.getElementById('sa-sp-logo-url').value = url;
+        const prevBox = document.getElementById('sa-sp-preview-box');
+        const prevImg = document.getElementById('sa-sp-preview-img');
+        if (prevBox && prevImg) {
+          prevImg.src = url;
+          prevBox.style.display = 'flex';
+        }
+        mostrarToastRapido('Logo Listo', '✅ Imagen cargada correctamente.', true);
+      }
+    };
+  }
+}
+
+window._agregarNuevoPatrocinante = async () => {
+  const nombre = document.getElementById('sa-sp-nombre')?.value.trim();
+  const logo = document.getElementById('sa-sp-logo-url')?.value.trim();
+  if (!nombre) {
+    return mostrarNotificacionApp('Campo Requerido', 'Ingresa el nombre o texto del patrocinante.', false);
+  }
+  const sponsors = await obtenerConfiguracionMarquesina();
+  sponsors.push({
+    id: 'sp_' + Date.now(),
+    nombre,
+    logo: logo || '',
+    activo: true
+  });
+  await guardarConfiguracionMarquesina(sponsors);
+  renderSuperAdminDashboard();
+};
+
+window._togglePatrocinanteActivo = async (idx) => {
+  const sponsors = await obtenerConfiguracionMarquesina();
+  if (sponsors[idx]) {
+    sponsors[idx].activo = !sponsors[idx].activo;
+    await guardarConfiguracionMarquesina(sponsors);
+    renderSuperAdminDashboard();
+  }
+};
+
+window._editarPatrocinante = async (idx) => {
+  const sponsors = await obtenerConfiguracionMarquesina();
+  const sp = sponsors[idx];
+  if (!sp) return;
+  mostrarPromptModal('Editar Patrocinante', 'Ingresa el nuevo nombre o texto publicitario:', async (nuevoNombre) => {
+    if (!nuevoNombre || !nuevoNombre.trim()) return;
+    sp.nombre = nuevoNombre.trim();
+    await guardarConfiguracionMarquesina(sponsors);
+    renderSuperAdminDashboard();
+  }, sp.nombre);
+};
+
+window._eliminarPatrocinante = async (idx) => {
+  const sponsors = await obtenerConfiguracionMarquesina();
+  const sp = sponsors[idx];
+  if (!sp) return;
+  mostrarConfirmacionApp('Eliminar Patrocinante', `¿Deseas eliminar "${sp.nombre}" de la marquesina?`, async () => {
+    sponsors.splice(idx, 1);
+    await guardarConfiguracionMarquesina(sponsors);
+    renderSuperAdminDashboard();
+  });
+};
+
+window._restaurarMarquesinasDefecto = async () => {
+  mostrarConfirmacionApp('Restaurar Marquesinas', '¿Deseas restaurar la lista de marcas y patrocinantes predeterminados?', async () => {
+    const defaultCopy = JSON.parse(JSON.stringify(DEFAULT_MARQUESINA_SPONSORS));
+    await guardarConfiguracionMarquesina(defaultCopy);
     renderSuperAdminDashboard();
   });
 };

@@ -2129,9 +2129,9 @@ body.body-fullscreen-active {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 22px;
-  z-index: 10;
-  background: rgba(4, 8, 14, 0.94);
+  width: 36px;
+  z-index: 100000 !important;
+  background: rgba(4, 8, 14, 0.95);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2142,18 +2142,24 @@ body.body-fullscreen-active {
 
 .cancha-led-lateral.left {
   left: 0;
-  border-right: 1.5px solid rgba(212, 175, 55, 0.6);
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.75);
-  mask-image: linear-gradient(to bottom, transparent, black 8%, black 92%, transparent);
-  -webkit-mask-image: linear-gradient(to bottom, transparent, black 8%, black 92%, transparent);
+  border-right: 1.5px solid rgba(212, 175, 55, 0.65);
+  box-shadow: 2px 0 14px rgba(0, 0, 0, 0.85);
+  mask-image: linear-gradient(to bottom, transparent, black 6%, black 94%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 6%, black 94%, transparent);
 }
 
 .cancha-led-lateral.right {
   right: 0;
-  border-left: 1.5px solid rgba(212, 175, 55, 0.6);
-  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.75);
-  mask-image: linear-gradient(to bottom, transparent, black 8%, black 92%, transparent);
-  -webkit-mask-image: linear-gradient(to bottom, transparent, black 8%, black 92%, transparent);
+  border-left: 1.5px solid rgba(212, 175, 55, 0.65);
+  box-shadow: -2px 0 14px rgba(0, 0, 0, 0.85);
+  mask-image: linear-gradient(to bottom, transparent, black 6%, black 94%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 6%, black 94%, transparent);
+}
+
+.campo-layout.fullscreen .cancha-led-lateral {
+  z-index: 100000 !important;
+  display: flex !important;
+  visibility: visible !important;
 }
 
 .cancha-lateral-track {
@@ -2178,8 +2184,8 @@ body.body-fullscreen-active {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
-  padding-bottom: 16px;
+  gap: 18px;
+  padding-bottom: 18px;
 }
 
 .cancha-lateral-item {
@@ -2187,28 +2193,29 @@ body.body-fullscreen-active {
   text-orientation: mixed;
   transform: rotate(180deg);
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.8px;
-  color: #eee;
+  font-size: 11.5px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #fff;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   white-space: nowrap;
+  text-shadow: 0 0 8px rgba(212, 175, 55, 0.35);
 }
 
 .cancha-lateral-item img {
-  width: 13px;
-  height: 13px;
+  width: 18px;
+  height: 18px;
   object-fit: contain;
   transform: rotate(-90deg);
-  filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.4));
+  filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.5));
 }
 
 .cancha-lateral-sep {
   color: var(--oro);
-  font-size: 9px;
-  text-shadow: 0 0 6px rgba(212, 175, 55, 0.6);
+  font-size: 11px;
+  text-shadow: 0 0 8px rgba(212, 175, 55, 0.7);
 }
 
 /* ══════════════════════════════════════════════════════════════════
