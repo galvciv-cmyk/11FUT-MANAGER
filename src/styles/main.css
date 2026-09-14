@@ -409,7 +409,7 @@ body.theme-light .juego-programado-item {
 .seccion { display: none; padding: 12px; }
 .seccion.active { display: block; }
 
-/* ── ESTRUCTURA DESKTOP CON COLUMNA CENTRAL EQUILIBRADA Y BANQUILLO AJUSTADO A SU CONTENIDO ── */
+/* ── ESTRUCTURA DESKTOP CON COLUMNA CENTRAL EQUILIBRADA (1fr 1.35fr 1fr) ── */
 .tactica-desktop-grid {
   display: flex;
   flex-direction: column;
@@ -419,15 +419,17 @@ body.theme-light .juego-programado-item {
 @media (min-width: 900px) {
   .tactica-desktop-grid {
     display: grid;
-    grid-template-columns: minmax(240px, 290px) minmax(360px, 1fr) auto;
-    gap: 16px;
+    grid-template-columns: 1fr 1.35fr 1fr;
+    gap: 20px;
     align-items: start;
     width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
     padding: 0 10px;
   }
 }
 
-.col-panel-izq {
+.col-panel-izq, .col-cancha-centro, .col-banca-der {
   width: 100%;
   min-width: 0;
   display: flex;
@@ -436,46 +438,32 @@ body.theme-light .juego-programado-item {
 }
 
 .col-cancha-centro {
-  width: 100%;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
   align-items: center;
 }
 
 .col-banca-der {
-  width: fit-content !important;
-  max-width: 440px !important;
-  min-width: 0 !important;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  justify-self: start;
+  max-width: 440px;
 }
 
 .col-banca-der .banca-side {
-  width: fit-content !important;
-  max-width: 440px !important;
-  box-sizing: border-box !important;
+  max-width: 440px;
+  box-sizing: border-box;
 }
 
 .col-banca-der .tactica-accordion-header {
-  width: 100% !important;
-  max-width: 440px !important;
-  box-sizing: border-box !important;
+  max-width: 440px;
+  box-sizing: border-box;
 }
 
 #sec-banca-content {
-  width: fit-content !important;
-  max-width: 440px !important;
-  box-sizing: border-box !important;
+  max-width: 440px;
+  box-sizing: border-box;
 }
 
 .col-banca-der .dugout-ad-wall {
-  width: 100% !important;
-  max-width: 416px !important;
-  box-sizing: border-box !important;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 /* ── PIZARRA Y CANCHA NORMAL (PROPORCIÓN RECTANGULAR 2/3 SIN BARRAS NEGRAS) ── */
@@ -486,9 +474,11 @@ body.theme-light .juego-programado-item {
   overflow: hidden;
   border: 1px solid #222;
   width: 100%;
+  max-width: 520px;
   display: flex;
   justify-content: center;
   padding: 0;
+  margin: 0 auto;
 }
 
 .cancha-wrapper {
@@ -2133,42 +2123,92 @@ body.body-fullscreen-active {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   VALLA PUBLICITARIA LED DE CANCHA (MARQUESINA PERIMETRAL EN CÉSPED)
+   VALLAS PUBLICITARIAS LED LATERALES EN EL CÉSPED DE LA CANCHA (BANDAS)
    ══════════════════════════════════════════════════════════════════ */
-.cancha-led-wall {
+.cancha-led-lateral {
   position: absolute;
+  top: 0;
   bottom: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
+  width: 22px;
   z-index: 10;
-  background: rgba(5, 10, 16, 0.92);
-  border-top: 1.5px solid rgba(212, 175, 55, 0.6);
-  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(212, 175, 55, 0.25);
-  padding: 4px 0;
+  background: rgba(4, 8, 14, 0.94);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   overflow: hidden;
   user-select: none;
   pointer-events: auto;
-  mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
-  -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
 }
 
-.cancha-led-wall:hover .dugout-marquee-track {
+.cancha-led-lateral.left {
+  left: 0;
+  border-right: 1.5px solid rgba(212, 175, 55, 0.6);
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.75);
+  mask-image: linear-gradient(to bottom, transparent, black 8%, black 92%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 8%, black 92%, transparent);
+}
+
+.cancha-led-lateral.right {
+  right: 0;
+  border-left: 1.5px solid rgba(212, 175, 55, 0.6);
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.75);
+  mask-image: linear-gradient(to bottom, transparent, black 8%, black 92%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 8%, black 92%, transparent);
+}
+
+.cancha-lateral-track {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: max-content;
+  pointer-events: none;
+  animation: lateralMarqueeLoop 24s linear infinite;
+}
+
+.cancha-led-lateral:hover .cancha-lateral-track {
   animation-play-state: paused !important;
 }
 
-.cancha-led-wall .dugout-marquee-track {
-  pointer-events: none;
+@keyframes lateralMarqueeLoop {
+  0% { transform: translateY(0%); }
+  100% { transform: translateY(-50%); }
 }
 
-.cancha-led-wall .dugout-marquee-group {
-  font-size: 11px;
+.cancha-lateral-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 16px;
-  padding-right: 16px;
+  padding-bottom: 16px;
 }
 
-.cancha-led-wall .dugout-marquee-item img {
-  height: 16px;
+.cancha-lateral-item {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: #eee;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.cancha-lateral-item img {
+  width: 13px;
+  height: 13px;
+  object-fit: contain;
+  transform: rotate(-90deg);
+  filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.4));
+}
+
+.cancha-lateral-sep {
+  color: var(--oro);
+  font-size: 9px;
+  text-shadow: 0 0 6px rgba(212, 175, 55, 0.6);
 }
 
 /* ══════════════════════════════════════════════════════════════════
