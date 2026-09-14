@@ -56,6 +56,7 @@ export const TABLA_PLANES_SAAS = [
   { dts: 7, admin: true, mensual: 26, anual: 260, costoRealDtMes: 3.71, nombre: 'Plan Club Elite 7 DTs', desc: 'Ecosistema integral para clubes de gran escala.' },
   { dts: 8, admin: true, mensual: 28, anual: 280, costoRealDtMes: 3.50, nombre: 'Plan Institución Máxima 8 DTs', desc: 'Capacidad máxima institucional con la tarifa por entrenador más económica.' },
 ];
+export const TABLA_SAAS_PLANES = TABLA_PLANES_SAAS;
 
 export function obtenerPlanPorDTs(dts) {
   const count = parseInt(dts, 10) || 1;

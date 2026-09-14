@@ -1,4 +1,4 @@
-import { perfil, setPinHash, setCategoriaActiva, autoSaveLocal, updateStats, updateHistorial, categoriasData, plantel, currentProfile, isSuperAdmin, DEFAULT_PLANTEL, DEFAULT_PERFIL, esAdminOEntrenadorUnico, TABLA_PLANES_SAAS, obtenerPlanPorDTs } from "./state.js";
+import { perfil, setPinHash, setCategoriaActiva, autoSaveLocal, updateStats, updateHistorial, categoriasData, plantel, currentProfile, isSuperAdmin, DEFAULT_PLANTEL, DEFAULT_PERFIL, esAdminOEntrenadorUnico, TABLA_PLANES_SAAS, TABLA_SAAS_PLANES, obtenerPlanPorDTs, KITS } from "./state.js";
 import { guardarFirebase, hashPin, getPublicId, auth, db } from "../services/firebase.js";
 import { doc, setDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
@@ -467,34 +467,73 @@ export function renderPerfilesPinsUI() {
   `;
 }
 
-export function guardarPinsConfig() {
+export async function guardarPinsConfig() {
   if (!perfil.profiles) return;
 
-  perfil.profiles.forEach(p => {
+  const btn = document.getElementById('btn-cfg-guardar-pins');
+  let hasError = false;
+
+  // Validación previa de PINs
+  for (const p of perfil.profiles) {
     const inputPin = document.getElementById(`cfg-pin-input-${p.id}`);
-    const inputNombre = document.getElementById(`cfg-nombre-input-${p.id}`);
-    const inputEquipos = document.getElementById(`cfg-equipos-input-${p.id}`);
+    if (inputPin) {
+      const pinVal = inputPin.value.trim();
+      inputPin.classList.remove('input-invalid', 'input-valid');
+      if (pinVal && (!/^\d{4}$/.test(pinVal))) {
+        inputPin.classList.add('input-invalid');
+        mostrarNotificacionApp('PIN Inválido', `El PIN para ${p.nombre || 'el perfil'} debe tener exactamente 4 dígitos numéricos (ej. 1234).`, false);
+        hasError = true;
+        break;
+      } else if (pinVal) {
+        inputPin.classList.add('input-valid');
+      }
+    }
+  }
 
-    if (inputPin !== null) {
-      p.pin = inputPin.value.trim();
-    }
-    if (inputNombre && inputNombre.value) {
-      p.nombre = inputNombre.value.trim();
-    }
-    if (inputEquipos !== null) {
-      const eqList = inputEquipos.value ? inputEquipos.value.split(',').map(s => s.trim()).filter(Boolean).slice(0, 3) : [];
-      p.equipos = eqList;
-      p.categoria = eqList.length > 0 ? eqList[0] : '';
-    }
-    if (!p.avatar || p.avatar === DEFAULT_LOGO) {
-      p.avatar = perfil.logo || DEFAULT_LOGO;
-    }
-  });
+  if (hasError) return;
 
-  autoSaveLocal();
-  guardarFirebase();
-  mostrarNotificacionApp('Perfiles Guardados', '🔑 Nombres, Equipos y PINs actualizados.');
-  renderPerfilesPinsUI();
+  if (btn) {
+    btn.disabled = true;
+    btn.classList.add('btn-loading');
+    btn.innerHTML = '⏳ Guardando perfiles y PINs...';
+  }
+
+  try {
+    perfil.profiles.forEach(p => {
+      const inputPin = document.getElementById(`cfg-pin-input-${p.id}`);
+      const inputNombre = document.getElementById(`cfg-nombre-input-${p.id}`);
+      const inputEquipos = document.getElementById(`cfg-equipos-input-${p.id}`);
+
+      if (inputPin !== null) {
+        p.pin = inputPin.value.trim();
+      }
+      if (inputNombre && inputNombre.value) {
+        p.nombre = inputNombre.value.trim();
+      }
+      if (inputEquipos !== null) {
+        const eqList = inputEquipos.value ? inputEquipos.value.split(',').map(s => s.trim()).filter(Boolean).slice(0, 3) : [];
+        p.equipos = eqList;
+        p.categoria = eqList.length > 0 ? eqList[0] : '';
+      }
+      if (!p.avatar || p.avatar === DEFAULT_LOGO) {
+        p.avatar = perfil.logo || DEFAULT_LOGO;
+      }
+    });
+
+    autoSaveLocal();
+    await guardarFirebase();
+    mostrarNotificacionApp('Perfiles Guardados', '🔑 Nombres, Equipos y PINs actualizados correctamente.');
+    renderPerfilesPinsUI();
+  } catch (err) {
+    console.error('Error guardando pins:', err);
+    mostrarNotificacionApp('Error', 'No se pudieron guardar los perfiles: ' + err.message, false);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.classList.remove('btn-loading');
+      btn.innerHTML = '💾 GUARDAR CAMBIOS DE PERFILES Y PINS';
+    }
+  }
 }
 
 window._abrirConfig = abrirConfig;
@@ -1355,6 +1394,7 @@ window._mostrarModalTablaPlanes = (cicloInicial = 'mensual') => {
   const modalContent = document.getElementById('modal-content');
   if (!modal || !modalContent) return;
 
+  modalContent.className = 'modal-body modal-wide';
   modal.style.zIndex = '10005';
   modalContent.innerHTML = `
     <div class="modal-title" style="color:var(--oro);display:flex;align-items:center;justify-content:center;gap:8px;">
@@ -1375,7 +1415,7 @@ window._mostrarModalTablaPlanes = (cicloInicial = 'mensual') => {
     </div>
 
     <div style="display:flex;gap:10px;margin-top:16px;">
-      <button class="btn btn-gray" onclick="document.getElementById('modal').style.display='none'" style="flex:1;font-size:12px;padding:10px;">
+      <button class="btn btn-gray" onclick="document.getElementById('modal').style.display='none';document.getElementById('modal-content').className='modal-body';" style="flex:1;font-size:12px;padding:10px;">
         Cerrar
       </button>
     </div>
@@ -1789,31 +1829,61 @@ window._toggleConfigSection = (secId) => {
 };
 
 export async function guardarDatosPersonalesConfig() {
-  const emailInput = document.getElementById('cfg-personal-email')?.value?.trim();
-  const waInput = document.getElementById('cfg-personal-wa')?.value?.trim();
+  const emailEl = document.getElementById('cfg-personal-email');
+  const waEl = document.getElementById('cfg-personal-wa');
+  const btn = document.getElementById('btn-save-personal-data');
 
-  if (!emailInput || !emailInput.includes('@')) {
-    return mostrarNotificacionApp('Datos Personales', 'Por favor ingresa un correo electrónico válido.', false);
+  const emailInput = emailEl?.value?.trim() || '';
+  const waInput = waEl?.value?.trim() || '';
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailInput || !emailRegex.test(emailInput)) {
+    if (emailEl) {
+      emailEl.classList.add('input-invalid');
+      emailEl.classList.remove('input-valid');
+      emailEl.focus();
+    }
+    return mostrarNotificacionApp('Correo Inválido', 'Por favor ingresa un correo electrónico válido (ejemplo: usuario@gmail.com).', false);
+  } else if (emailEl) {
+    emailEl.classList.add('input-valid');
+    emailEl.classList.remove('input-invalid');
   }
 
-  perfil.email = emailInput;
-  perfil.whatsapp = waInput || perfil.whatsapp || '';
+  if (btn) {
+    btn.disabled = true;
+    btn.classList.add('btn-loading');
+    btn.innerHTML = '⏳ Guardando datos...';
+  }
 
-  const emailDisplay = document.getElementById('cfg-email-display');
-  if (emailDisplay) emailDisplay.textContent = perfil.email;
+  try {
+    perfil.email = emailInput;
+    perfil.whatsapp = waInput || perfil.whatsapp || '';
 
-  autoSaveLocal();
-  await guardarFirebase();
+    const emailDisplay = document.getElementById('cfg-email-display');
+    if (emailDisplay) emailDisplay.textContent = perfil.email;
 
-  const pubDocId = perfil.email.toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
-  setDoc(doc(db, 'publicos', pubDocId), {
-    email: perfil.email,
-    whatsapp: perfil.whatsapp,
-    club: perfil.club || '11FUT MANAGER',
-    updatedAt: new Date().toISOString()
-  }, { merge: true }).catch(() => {});
+    autoSaveLocal();
+    await guardarFirebase();
 
-  mostrarNotificacionApp('Datos Actualizados', '✅ Correo y teléfono de contacto guardados correctamente.');
+    const pubDocId = perfil.email.toLowerCase().replace(/[^a-zA-Z0-9_-]/g, '_');
+    setDoc(doc(db, 'publicos', pubDocId), {
+      email: perfil.email,
+      whatsapp: perfil.whatsapp,
+      club: perfil.club || '11FUT MANAGER',
+      updatedAt: new Date().toISOString()
+    }, { merge: true }).catch(() => {});
+
+    mostrarNotificacionApp('Datos Actualizados', '✅ Correo y teléfono de contacto guardados correctamente.');
+  } catch (err) {
+    console.error('Error guardando datos de contacto:', err);
+    mostrarNotificacionApp('Error', 'No se pudieron guardar los datos: ' + err.message, false);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.classList.remove('btn-loading');
+      btn.innerHTML = '💾 GUARDAR DATOS DE CONTACTO';
+    }
+  }
 }
 
 window._guardarDatosPersonalesConfig = guardarDatosPersonalesConfig;
@@ -1835,6 +1905,7 @@ export async function abrirModalReportarPago(montoSugerido = '', planDtsSugerido
   const modalContent = document.getElementById('modal-content');
   if (!modal || !modalContent) return;
 
+  modalContent.className = 'modal-body modal-medium';
   modal.style.zIndex = '10005';
   modalContent.innerHTML = `
     <div style="text-align:center;padding:24px;color:var(--oro);">
@@ -1843,24 +1914,25 @@ export async function abrirModalReportarPago(montoSugerido = '', planDtsSugerido
   `;
   modal.style.display = 'flex';
 
-  const pasarelas = await obtenerConfiguracionPasarelas();
-  const pasarelasActivas = Object.entries(pasarelas).filter(([k, v]) => v && v.activo);
+  try {
+    const pasarelas = await obtenerConfiguracionPasarelas();
+    const pasarelasActivas = Object.entries(pasarelas).filter(([k, v]) => v && v.activo);
 
-  if (pasarelasActivas.length === 0) {
-    modalContent.innerHTML = `
-      <div class="modal-title">💳 MÉTODOS DE PAGO</div>
-      <div class="card" style="text-align:center;padding:24px;">
-        <div style="font-size:32px;margin-bottom:8px;">⚠️</div>
-        <div style="font-size:14px;color:#fff;font-weight:700;">No hay pasarelas activadas en este momento.</div>
-        <div style="font-size:12px;color:#aaa;margin:10px 0 16px;">Comunícate directamente con la administración general por WhatsApp para acordar tu método de pago.</div>
-        <button onclick="window.open('https://wa.me/584141401560?text=${encodeURIComponent('Hola, deseo renovar mi membresía en 11FUT MANAGER.')}', '_blank')" class="btn btn-green" style="width:100%;">
-          💬 Contactar por WhatsApp
-        </button>
-        <button onclick="document.getElementById('modal').style.display='none'" class="btn btn-gray" style="width:100%;margin-top:8px;">Cerrar</button>
-      </div>
-    `;
-    return;
-  }
+    if (pasarelasActivas.length === 0) {
+      modalContent.innerHTML = `
+        <div class="modal-title">💳 MÉTODOS DE PAGO</div>
+        <div class="card" style="text-align:center;padding:24px;">
+          <div style="font-size:32px;margin-bottom:8px;">⚠️</div>
+          <div style="font-size:14px;color:#fff;font-weight:700;">No hay pasarelas activadas en este momento.</div>
+          <div style="font-size:12px;color:#aaa;margin:10px 0 16px;">Comunícate directamente con la administración general por WhatsApp para acordar tu método de pago.</div>
+          <button onclick="window.open('https://wa.me/584141401560?text=${encodeURIComponent('Hola, deseo renovar mi membresía en 11FUT MANAGER.')}', '_blank')" class="btn btn-green" style="width:100%;">
+            💬 Contactar por WhatsApp
+          </button>
+          <button onclick="document.getElementById('modal').style.display='none';document.getElementById('modal-content').className='modal-body';" class="btn btn-gray" style="width:100%;margin-top:8px;">Cerrar</button>
+        </div>
+      `;
+      return;
+    }
 
   let metodoSeleccionado = pasarelasActivas[0][0];
   let screenshotBase64 = '';
@@ -2053,7 +2125,7 @@ export async function abrirModalReportarPago(montoSugerido = '', planDtsSugerido
         <button id="btn-enviar-reporte-pago" class="btn btn-green" style="padding:12px;font-size:14px;font-weight:900;">
           🚀 ENVIAR REPORTE DE PAGO ($${precioPlan} USD)
         </button>
-        <button onclick="document.getElementById('modal').style.display='none'" class="btn btn-gray" style="padding:8px;">
+        <button onclick="document.getElementById('modal').style.display='none';document.getElementById('modal-content').className='modal-body';" class="btn btn-gray" style="padding:8px;">
           Cancelar
         </button>
       </div>
@@ -2201,7 +2273,19 @@ export async function abrirModalReportarPago(montoSugerido = '', planDtsSugerido
     calcInfo.innerHTML = `💡 Para recibir <b>$${net.toFixed(2)} netos</b>, debes transferir <b>$${bruto.toFixed(2)} USD</b> brutos por PayPal.`;
   };
 
-  renderFormularioPago();
+    renderFormularioPago();
+  } catch (err) {
+    console.error('Error al abrir modal de pago:', err);
+    modalContent.innerHTML = `
+      <div class="modal-title">💳 MÉTODOS DE PAGO</div>
+      <div class="card" style="text-align:center;padding:24px;">
+        <div style="font-size:32px;margin-bottom:8px;">⚠️</div>
+        <div style="font-size:14px;color:#fff;font-weight:700;">No se pudieron consultar las pasarelas</div>
+        <div style="font-size:12px;color:#aaa;margin:10px 0 16px;">${err.message || 'Error de conexión'}</div>
+        <button onclick="document.getElementById('modal').style.display='none';document.getElementById('modal-content').className='modal-body';" class="btn btn-gray" style="width:100%;">Cerrar</button>
+      </div>
+    `;
+  }
 }
 
 window._abrirModalReportarPago = abrirModalReportarPago;

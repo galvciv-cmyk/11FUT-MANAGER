@@ -642,6 +642,39 @@ function acumularStatsPartido(p) {
   updateStats(stats);
 }
 
+let filtroTextoHistorial = '';
+let filtroResultadoHistorial = 'TODOS';
+
+window._onBuscarHistorial = (texto) => {
+  filtroTextoHistorial = (texto || '').toLowerCase().trim();
+  renderHistorial();
+};
+
+window._filtrarResultadoHistorial = (res, btn) => {
+  filtroResultadoHistorial = res;
+  const chipRow = document.getElementById('historial-res-chips');
+  if (chipRow) {
+    chipRow.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  }
+  if (btn) btn.classList.add('active');
+  renderHistorial();
+};
+
+window._limpiarFiltrosHistorial = () => {
+  filtroTextoHistorial = '';
+  filtroResultadoHistorial = 'TODOS';
+  const inp = document.getElementById('input-buscar-historial');
+  if (inp) inp.value = '';
+  const chipRow = document.getElementById('historial-res-chips');
+  if (chipRow) {
+    chipRow.querySelectorAll('.filter-chip').forEach((c, idx) => {
+      if (idx === 0) c.classList.add('active');
+      else c.classList.remove('active');
+    });
+  }
+  renderHistorial();
+};
+
 export function renderHistorial() {
   const contProg = document.getElementById('juegos-programados-list');
   const contHist = document.getElementById('historial-list');
@@ -672,7 +705,28 @@ export function renderHistorial() {
       return;
     }
 
-    contHist.innerHTML = historial.map((h) => {
+    const partidosFiltrados = historial.filter((h) => {
+      const matchTxt = !filtroTextoHistorial ||
+        (h.rival && h.rival.toLowerCase().includes(filtroTextoHistorial)) ||
+        (h.torneo && h.torneo.toLowerCase().includes(filtroTextoHistorial)) ||
+        (h.fecha && h.fecha.toLowerCase().includes(filtroTextoHistorial));
+      const matchRes = filtroResultadoHistorial === 'TODOS' || h.res === filtroResultadoHistorial;
+      return matchTxt && matchRes;
+    });
+
+    if (!partidosFiltrados.length) {
+      contHist.innerHTML = `
+        <div style="text-align:center;padding:24px 12px;color:#888;font-size:12px;background:#111;border-radius:10px;border:1px dashed #333;margin-top:10px;">
+          <div style="font-size:24px;margin-bottom:6px;">🔍</div>
+          <div style="font-weight:700;color:#ccc;margin-bottom:4px;">No se encontraron partidos</div>
+          <div style="color:#777;font-size:11px;margin-bottom:10px;">No hay encuentros que coincidan con los filtros aplicados.</div>
+          <button type="button" class="btn btn-gray" style="width:auto;padding:6px 14px;font-size:11px;margin:0 auto;" onclick="window._limpiarFiltrosHistorial()">Mostrar todos</button>
+        </div>
+      `;
+      return;
+    }
+
+    contHist.innerHTML = partidosFiltrados.map((h) => {
       const eqNombre = perfil.club || perfil.eqA || 'EQUIPO';
       const resClass = `resultado-${h.res}`;
 

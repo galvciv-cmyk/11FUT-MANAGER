@@ -3,15 +3,109 @@ import { guardarFirebase } from "../services/firebase.js";
 import { renderStats } from "./stats.js";
 import { mostrarNotificacionApp, mostrarConfirmacionApp } from "./config.js";
 
+let filtroTextoPlantel = '';
+let filtroPosPlantel = 'TODOS';
+
+export function aplicarFiltrosPlantel() {
+  const cont = document.getElementById('lista-inputs');
+  if (!cont) return;
+
+  const cats = cont.querySelectorAll('.plantel-cat');
+  let totalVisibles = 0;
+
+  cats.forEach(catEl => {
+    const pos = catEl.getAttribute('data-pos');
+    const matchPos = filtroPosPlantel === 'TODOS' || filtroPosPlantel === pos;
+
+    if (!matchPos) {
+      catEl.style.display = 'none';
+      return;
+    }
+
+    const wraps = catEl.querySelectorAll('.jugador-wrap');
+    let wrapsVisibles = 0;
+
+    wraps.forEach(wrap => {
+      const input = wrap.querySelector('input');
+      const val = (input?.value || '').toLowerCase().trim();
+      const placeholder = (input?.placeholder || '').toLowerCase().trim();
+      const matchText = !filtroTextoPlantel || val.includes(filtroTextoPlantel) || placeholder.includes(filtroTextoPlantel);
+
+      if (matchText) {
+        wrap.style.display = 'flex';
+        wrapsVisibles++;
+      } else {
+        wrap.style.display = 'none';
+      }
+    });
+
+    if (wrapsVisibles > 0) {
+      catEl.style.display = 'block';
+      totalVisibles += wrapsVisibles;
+    } else {
+      catEl.style.display = 'none';
+    }
+  });
+
+  let emptyEl = document.getElementById('plantel-empty-search');
+  if (totalVisibles === 0) {
+    if (!emptyEl) {
+      emptyEl = document.createElement('div');
+      emptyEl.id = 'plantel-empty-search';
+      emptyEl.style.cssText = 'text-align:center;padding:24px 12px;color:#888;font-size:12px;background:#111;border-radius:10px;border:1px dashed #333;margin-top:10px;';
+      cont.appendChild(emptyEl);
+    }
+    emptyEl.innerHTML = `
+      <div style="font-size:24px;margin-bottom:6px;">🔍</div>
+      <div style="font-weight:700;color:#ccc;margin-bottom:4px;">No se encontraron jugadores</div>
+      <div style="color:#777;font-size:11px;margin-bottom:10px;">Ningún jugador coincide con los filtros aplicados.</div>
+      <button type="button" class="btn btn-gray" style="width:auto;padding:6px 14px;font-size:11px;margin:0 auto;" onclick="window._limpiarFiltrosPlantel()">Mostrar todos</button>
+    `;
+    emptyEl.style.display = 'block';
+  } else if (emptyEl) {
+    emptyEl.style.display = 'none';
+  }
+}
+
+window._filtrarPlantel = (texto) => {
+  filtroTextoPlantel = (texto || '').toLowerCase().trim();
+  aplicarFiltrosPlantel();
+};
+
+window._filtrarPosicionPlantel = (pos, btn) => {
+  filtroPosPlantel = pos;
+  const chipRow = document.getElementById('squad-pos-chips');
+  if (chipRow) {
+    chipRow.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  }
+  if (btn) btn.classList.add('active');
+  aplicarFiltrosPlantel();
+};
+
+window._limpiarFiltrosPlantel = () => {
+  filtroTextoPlantel = '';
+  filtroPosPlantel = 'TODOS';
+  const inp = document.getElementById('input-buscar-jugador');
+  if (inp) inp.value = '';
+  const chipRow = document.getElementById('squad-pos-chips');
+  if (chipRow) {
+    chipRow.querySelectorAll('.filter-chip').forEach((c, idx) => {
+      if (idx === 0) c.classList.add('active');
+      else c.classList.remove('active');
+    });
+  }
+  aplicarFiltrosPlantel();
+};
+
 export function initPlantelUI() {
   const cont = document.getElementById('lista-inputs');
   if (!cont) return;
   cont.innerHTML = '';
   for (let cat in cupos) {
-    let h = `<div class="plantel-cat" style="margin-bottom:12px;"><div class="card-title">${catNombres[cat]}</div><div class="plantel-inputs">`;
+    let h = `<div class="plantel-cat" data-pos="${cat}" style="margin-bottom:12px;"><div class="card-title">${catNombres[cat]}</div><div class="plantel-inputs">`;
     for (let i = 0; i < cupos[cat]; i++) {
       h += `
-        <div class="jugador-wrap" style="display:flex;gap:6px;margin-bottom:6px;">
+        <div class="jugador-wrap" data-pos="${cat}" style="display:flex;gap:6px;margin-bottom:6px;">
           <input type="text" id="p-${cat}-${i}" placeholder="${catNombres[cat].slice(0, -1)} ${i + 1}" oninput="window._autoSaveLocal()">
           <button class="btn btn-gray" style="width:auto;padding:8px 12px;" onclick="window._abrirStatModal(document.getElementById('p-${cat}-${i}').value)">📊</button>
         </div>
@@ -19,6 +113,7 @@ export function initPlantelUI() {
     }
     cont.innerHTML += h + `</div></div>`;
   }
+  aplicarFiltrosPlantel();
 }
 
 export function renderCapitanesUI() {
@@ -65,6 +160,7 @@ export function aplicarPlantelUI() {
   if (medEl) medEl.value = ct.med || '';
 
   renderCapitanesUI();
+  aplicarFiltrosPlantel();
 }
 
 export function syncPlantelFromUI() {

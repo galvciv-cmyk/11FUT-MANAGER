@@ -113,30 +113,229 @@ export function renderProfileSelector(onProfileSelected, forceShow = false) {
 
     </div>
 
-    <!-- MODAL TECLADO PIN PAD 4 DÍGITOS -->
-    <div id="pin-pad-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:10000;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
-      <div class="liquid-glass-card" style="padding:24px;border-radius:16px;width:300px;text-align:center;">
-        <div style="font-size:12px;color:var(--oro);font-weight:700;margin-bottom:4px;letter-spacing:1px;">INGRESA PIN DE ACCESO</div>
-        <div id="pin-profile-title" style="font-family:'Barlow Condensed',sans-serif;font-size:20px;color:#fff;margin-bottom:14px;"></div>
+    <!-- MODAL PIN ESTILO OTP (TECLADO NATIVO DEL DISPOSITIVO) -->
+    <div id="pin-pad-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:10000;align-items:center;justify-content:center;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);padding:16px;">
+      <div class="liquid-glass-card" style="padding:28px 22px;border-radius:24px;width:340px;max-width:92%;text-align:center;position:relative;box-shadow:0 24px 60px rgba(0,0,0,0.85), 0 0 24px rgba(212,175,55,0.18);">
         
-        <div style="display:flex;justify-content:center;gap:12px;margin-bottom:20px;">
-          <span class="pin-dot" id="pdot-0" style="width:14px;height:14px;border-radius:50%;border:2px solid var(--oro);background:transparent;"></span>
-          <span class="pin-dot" id="pdot-1" style="width:14px;height:14px;border-radius:50%;border:2px solid var(--oro);background:transparent;"></span>
-          <span class="pin-dot" id="pdot-2" style="width:14px;height:14px;border-radius:50%;border:2px solid var(--oro);background:transparent;"></span>
-          <span class="pin-dot" id="pdot-3" style="width:14px;height:14px;border-radius:50%;border:2px solid var(--oro);background:transparent;"></span>
+        <!-- HEADER DEL PERFIL -->
+        <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:16px;">
+          <div style="width:72px;height:72px;border-radius:50%;border:2.5px solid var(--oro);padding:3px;background:#111;margin-bottom:10px;box-shadow:0 8px 20px rgba(0,0,0,0.7);">
+            <img id="pin-profile-avatar-img" src="${perfil.logo || 'https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">
+          </div>
+          <div style="font-size:11px;color:var(--oro);font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2px;">CLAVE DE ACCESO</div>
+          <div id="pin-profile-title" style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:#fff;letter-spacing:0.5px;"></div>
+          <div id="pin-profile-subtitle" style="font-size:11px;color:#888;margin-top:2px;">Ingresa tu PIN de 4 números</div>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:10px;margin-bottom:16px;">
-          ${[1,2,3,4,5,6,7,8,9].map(n => `<button class="btn btn-gray" onclick="window._pressPinNum('${n}')" style="font-size:18px;font-weight:700;padding:12px;">${n}</button>`).join('')}
-          <button class="btn btn-red" onclick="window._pressPinClear()" style="font-size:11px;font-weight:800;padding:12px;">BORRAR</button>
-          <button class="btn btn-gray" onclick="window._pressPinNum('0')" style="font-size:18px;font-weight:700;padding:12px;">0</button>
-          <button class="btn btn-gold" onclick="window._pressPinCheck()" style="font-size:12px;font-weight:900;padding:12px;">OK</button>
+        <!-- FILA OTP DE 4 CASILLAS (TECLADO NUMÉRICO NATIVO) -->
+        <div id="otp-slots-row" class="otp-row" data-status="idle">
+          <div class="otp-slot-box">
+            <input class="otp-slot-input" id="otp-input-0" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="one-time-code" aria-label="Dígito 1 de 4">
+          </div>
+          <div class="otp-slot-box">
+            <input class="otp-slot-input" id="otp-input-1" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="Dígito 2 de 4">
+          </div>
+          <div class="otp-slot-box">
+            <input class="otp-slot-input" id="otp-input-2" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="Dígito 3 de 4">
+          </div>
+          <div class="otp-slot-box">
+            <input class="otp-slot-input" id="otp-input-3" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="off" aria-label="Dígito 4 de 4">
+          </div>
         </div>
 
-        <button class="btn btn-gray" onclick="document.getElementById('pin-pad-modal').style.display='none'" style="width:100%;font-size:11px;">CANCELAR</button>
+        <!-- MENSAJE DINÁMICO DE FEEDBACK -->
+        <div id="otp-feedback-msg" style="min-height:20px;font-size:12px;margin:8px 0 10px;font-weight:700;color:#888;"></div>
+
+        <!-- TOGGLE MÁSCARA (MOSTRAR / OCULTAR PIN) -->
+        <div style="display:flex;justify-content:center;margin-bottom:14px;">
+          <button type="button" id="btn-toggle-otp-mask" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:11px;font-weight:800;display:flex;align-items:center;gap:6px;">
+            <span id="otp-mask-icon">👁️</span> <span id="otp-mask-text">Mostrar PIN</span>
+          </button>
+        </div>
+
+        <button class="btn btn-gray" onclick="window._cerrarModalPinOtp()" style="width:100%;font-size:11px;padding:9px;border-radius:10px;">
+          CANCELAR
+        </button>
       </div>
     </div>
   `;
+
+  let otpMaskActive = true;
+  const otpInputs = [
+    document.getElementById('otp-input-0'),
+    document.getElementById('otp-input-1'),
+    document.getElementById('otp-input-2'),
+    document.getElementById('otp-input-3')
+  ];
+
+  window._toggleMaskOtpPin = () => {
+    otpMaskActive = !otpMaskActive;
+    const type = otpMaskActive ? 'password' : 'text';
+    otpInputs.forEach(inp => { if (inp) inp.type = type; });
+    const txt = document.getElementById('otp-mask-text');
+    const ico = document.getElementById('otp-mask-icon');
+    if (txt) txt.textContent = otpMaskActive ? 'Mostrar PIN' : 'Ocultar PIN';
+    if (ico) ico.textContent = otpMaskActive ? '👁️' : '🙈';
+  };
+
+  window._cerrarModalPinOtp = () => {
+    const modalPad = document.getElementById('pin-pad-modal');
+    if (modalPad) modalPad.style.display = 'none';
+    selectedProfilePending = null;
+    resetOtpSlots();
+  };
+
+  function resetOtpSlots(status = 'idle', msg = '') {
+    const row = document.getElementById('otp-slots-row');
+    if (row) {
+      row.setAttribute('data-status', status);
+      row.classList.remove('otp-shake');
+    }
+    const msgEl = document.getElementById('otp-feedback-msg');
+    if (msgEl) {
+      msgEl.textContent = msg;
+      msgEl.style.color = status === 'error' ? '#FF3B30' : (status === 'success' ? '#34C759' : '#888');
+    }
+    otpInputs.forEach(inp => { if (inp) inp.value = ''; });
+  }
+
+  function checkOtpPin() {
+    const code = otpInputs.map(inp => inp?.value || '').join('');
+    if (code.length < 4 || !selectedProfilePending) return;
+
+    const row = document.getElementById('otp-slots-row');
+    const msgEl = document.getElementById('otp-feedback-msg');
+
+    // ACCIÓN: ELIMINAR PERFIL
+    if (selectedProfilePending.action === 'delete') {
+      const pinValido = selectedProfilePending.requiredPin;
+      if (code === pinValido) {
+        if (row) row.setAttribute('data-status', 'success');
+        if (msgEl) {
+          msgEl.textContent = '✅ Autorización correcta...';
+          msgEl.style.color = '#34C759';
+        }
+        setTimeout(() => {
+          const targetId = selectedProfilePending.targetId;
+          const targetName = selectedProfilePending.nombre;
+          window._cerrarModalPinOtp();
+          perfil.profiles = perfil.profiles.filter(x => x.id !== targetId);
+          autoSaveLocal();
+          guardarFirebase();
+          mostrarToastRapido('Perfil Eliminado', `El perfil "${targetName}" fue eliminado por el Administrador.`, true);
+          renderProfileSelector(onProfileSelected);
+        }, 300);
+      } else {
+        triggerOtpError('⛔ PIN de Administrador incorrecto');
+      }
+      return;
+    }
+
+    // ACCIÓN: LOGIN EN PERFIL
+    const pinValido = selectedProfilePending.pin || "";
+    if (code === pinValido) {
+      if (row) row.setAttribute('data-status', 'success');
+      if (msgEl) {
+        msgEl.textContent = '✅ ¡Acceso autorizado!';
+        msgEl.style.color = '#34C759';
+      }
+      setTimeout(() => {
+        const prof = selectedProfilePending;
+        window._cerrarModalPinOtp();
+        modalOverlay.style.display = 'none';
+        setCurrentProfile(prof);
+        if (prof.categoria) {
+          setCategoriaActiva(prof.categoria);
+        }
+        if (typeof onProfileSelected === 'function') {
+          onProfileSelected(prof);
+        }
+      }, 250);
+    } else {
+      triggerOtpError('⛔ PIN incorrecto. Inténtalo de nuevo.');
+    }
+  }
+
+  function triggerOtpError(msg) {
+    const row = document.getElementById('otp-slots-row');
+    const msgEl = document.getElementById('otp-feedback-msg');
+    if (row) {
+      row.setAttribute('data-status', 'error');
+      row.classList.remove('otp-shake');
+      void row.offsetWidth;
+      row.classList.add('otp-shake');
+    }
+    if (msgEl) {
+      msgEl.textContent = msg;
+      msgEl.style.color = '#FF3B30';
+    }
+    setTimeout(() => {
+      resetOtpSlots('idle', '');
+      if (otpInputs[0]) otpInputs[0].focus();
+    }, 850);
+  }
+
+  // Configurar eventos en los 4 slots OTP
+  otpInputs.forEach((inp, idx) => {
+    if (!inp) return;
+
+    inp.addEventListener('input', (e) => {
+      const val = e.target.value.replace(/\D/g, '');
+      e.target.value = val ? val[val.length - 1] : '';
+
+      if (e.target.value) {
+        if (idx < 3) {
+          otpInputs[idx + 1].focus();
+          otpInputs[idx + 1].select();
+        } else {
+          checkOtpPin();
+        }
+      }
+    });
+
+    inp.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace') {
+        if (!e.target.value && idx > 0) {
+          e.preventDefault();
+          otpInputs[idx - 1].value = '';
+          otpInputs[idx - 1].focus();
+        }
+      } else if (e.key === 'ArrowLeft' && idx > 0) {
+        e.preventDefault();
+        otpInputs[idx - 1].focus();
+      } else if (e.key === 'ArrowRight' && idx < 3) {
+        e.preventDefault();
+        otpInputs[idx + 1].focus();
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        checkOtpPin();
+      } else if (e.key === 'Escape') {
+        window._cerrarModalPinOtp();
+      }
+    });
+
+    inp.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const pasted = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 4);
+      if (!pasted) return;
+
+      pasted.split('').forEach((digit, i) => {
+        if (otpInputs[i]) otpInputs[i].value = digit;
+      });
+
+      if (pasted.length === 4) {
+        checkOtpPin();
+      } else if (otpInputs[pasted.length]) {
+        otpInputs[pasted.length].focus();
+      }
+    });
+
+    inp.addEventListener('focus', () => {
+      inp.select();
+    });
+  });
+
+  document.getElementById('btn-toggle-otp-mask')?.addEventListener('click', window._toggleMaskOtpPin);
 
   // Global Handlers
   window._eliminarPerfilDT = (pId) => {
@@ -150,16 +349,21 @@ export function renderProfileSelector(onProfileSelected, forceShow = false) {
     const adminProfile = perfil.profiles.find(x => x.id === 'admin') || { pin: '1234' };
     const adminPin = adminProfile.pin || '1234';
 
-    // Autorización requerida: PIN del Director Deportivo (ADMIN)
     selectedProfilePending = { ...profTarget, action: 'delete', targetId: pId, requiredPin: adminPin };
-    currentPinEntered = "";
-    updatePinDots();
+    resetOtpSlots('idle', '');
 
     const titleEl = document.getElementById('pin-profile-title');
     if (titleEl) titleEl.textContent = `PIN ADMIN para borrar ${profTarget.nombre}`;
+    const subEl = document.getElementById('pin-profile-subtitle');
+    if (subEl) subEl.textContent = 'Se requiere autorización del Director Deportivo';
+    const imgEl = document.getElementById('pin-profile-avatar-img');
+    if (imgEl) imgEl.src = profTarget.avatar || perfil.logo;
 
     const modalPad = document.getElementById('pin-pad-modal');
-    if (modalPad) modalPad.style.display = 'flex';
+    if (modalPad) {
+      modalPad.style.display = 'flex';
+      setTimeout(() => { if (otpInputs[0]) otpInputs[0].focus(); }, 80);
+    }
   };
 
   window._onSelectProfileCard = (pId) => {
@@ -175,118 +379,24 @@ export function renderProfileSelector(onProfileSelected, forceShow = false) {
     }
 
     selectedProfilePending = { ...prof, action: 'login' };
-    currentPinEntered = "";
-    updatePinDots();
+    resetOtpSlots('idle', '');
 
     const titleEl = document.getElementById('pin-profile-title');
     if (titleEl) titleEl.textContent = prof.nombre;
+    const subEl = document.getElementById('pin-profile-subtitle');
+    if (subEl) subEl.textContent = prof.rol === 'ADMIN' ? 'Perfil Director Deportivo (ADMIN)' : 'Perfil Entrenador (DT)';
+    const imgEl = document.getElementById('pin-profile-avatar-img');
+    if (imgEl) imgEl.src = prof.avatar || perfil.logo;
 
     const modalPad = document.getElementById('pin-pad-modal');
-    if (modalPad) modalPad.style.display = 'flex';
-  };
-
-  window._pressPinNum = (num) => {
-    if (currentPinEntered.length < 4) {
-      currentPinEntered += num;
-      updatePinDots();
-      if (currentPinEntered.length === 4) {
-        setTimeout(() => window._pressPinCheck(), 150);
-      }
+    if (modalPad) {
+      modalPad.style.display = 'flex';
+      setTimeout(() => { if (otpInputs[0]) otpInputs[0].focus(); }, 80);
     }
   };
-
-  window._pressPinClear = () => {
-    currentPinEntered = "";
-    updatePinDots();
-  };
-
-  window._pressPinCheck = () => {
-    if (!selectedProfilePending) return;
-
-    // SI LA ACCIÓN ES ELIMINAR PERFIL: Verificar PIN de ADMIN
-    if (selectedProfilePending.action === 'delete') {
-      const pinValido = selectedProfilePending.requiredPin;
-      if (currentPinEntered === pinValido) {
-        const targetId = selectedProfilePending.targetId;
-        const targetName = selectedProfilePending.nombre;
-
-        const modalPad = document.getElementById('pin-pad-modal');
-        if (modalPad) modalPad.style.display = 'none';
-
-        perfil.profiles = perfil.profiles.filter(x => x.id !== targetId);
-        autoSaveLocal();
-        guardarFirebase();
-        mostrarToastRapido('Perfil Eliminado', `El perfil "${targetName}" ha sido eliminado por el Administrador.`, true);
-        renderProfileSelector(onProfileSelected);
-      } else {
-        mostrarNotificacionApp('Autorización Denegada', '⛔ Se requiere el PIN del Director Deportivo (ADMIN) para autorizar la eliminación de perfiles.', false);
-        currentPinEntered = "";
-        updatePinDots();
-      }
-      return;
-    }
-
-    // SI LA ACCIÓN ES INICIAR SESIÓN EN PERFIL
-    const pinValido = selectedProfilePending.pin || "";
-
-    if (currentPinEntered === pinValido) {
-      const modalPad = document.getElementById('pin-pad-modal');
-      if (modalPad) modalPad.style.display = 'none';
-      modalOverlay.style.display = 'none';
-
-      setCurrentProfile(selectedProfilePending);
-      if (selectedProfilePending.categoria) {
-        setCategoriaActiva(selectedProfilePending.categoria);
-      }
-
-      if (typeof onProfileSelected === 'function') {
-        onProfileSelected(selectedProfilePending);
-      }
-    } else {
-      mostrarNotificacionApp('PIN Incorrecto', '⚠️ El PIN ingresado no es válido. Inténtalo de nuevo.', false);
-      currentPinEntered = "";
-      updatePinDots();
-    }
-  };
-
 
   window._cerrarSesionCompleta = () => {
     cerrarSesion();
   };
-
-  function updatePinDots() {
-    for (let i = 0; i < 4; i++) {
-      const dot = document.getElementById(`pdot-${i}`);
-      if (dot) {
-        dot.style.background = i < currentPinEntered.length ? 'var(--oro)' : 'transparent';
-      }
-    }
-  }
-
-  // Soporte de Teclado Físico (PC / Laptop) para el Modal de PIN
-  const handlePinKeydown = (e) => {
-    const modalPad = document.getElementById('pin-pad-modal');
-    if (!modalPad || modalPad.style.display === 'none') return;
-
-    if (e.key >= '0' && e.key <= '9') {
-      e.preventDefault();
-      window._pressPinNum(e.key);
-    } else if (e.key === 'Backspace' || e.key === 'Delete') {
-      e.preventDefault();
-      window._pressPinClear();
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      window._pressPinCheck();
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      modalPad.style.display = 'none';
-    }
-  };
-
-  if (window._pinKeydownHandler) {
-    window.removeEventListener('keydown', window._pinKeydownHandler);
-  }
-  window._pinKeydownHandler = handlePinKeydown;
-  window.addEventListener('keydown', window._pinKeydownHandler);
 }
 
