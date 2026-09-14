@@ -1934,3 +1934,20 @@ body.body-fullscreen-active {
   box-shadow: 0 0 20px rgba(212, 175, 55, 0.3) !important;
 }
 
+/* ── TABLA OFICIAL DE PLANES RESPONSIVE ── */
+.tabla-planes-desktop {
+  display: block;
+}
+.tabla-planes-mobile {
+  display: none;
+}
+@media (max-width: 680px) {
+  .tabla-planes-desktop {
+    display: none !important;
+  }
+  .tabla-planes-mobile {
+    display: flex !important;
+  }
+}
+
+

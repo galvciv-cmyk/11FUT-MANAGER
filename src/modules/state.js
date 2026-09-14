@@ -83,7 +83,14 @@ export function isSuperAdmin() {
  */
 export function esAdminOEntrenadorUnico(prof = currentProfile) {
   if (isSuperAdmin()) return true;
-  if (!prof) return false;
+  if (!prof) {
+    const activeId = typeof localStorage !== 'undefined' ? localStorage.getItem('11fut_active_profile_id') : null;
+    prof = (perfil.profiles || []).find(p => p.id === activeId) || (perfil.profiles && perfil.profiles[0]);
+  }
+  if (!prof) {
+    const numPerfiles = (perfil.profiles && Array.isArray(perfil.profiles)) ? perfil.profiles.length : (perfil.maxPerfiles || 1);
+    return numPerfiles <= 1 || perfil.maxPerfiles === 1;
+  }
   if (prof.rol === 'ADMIN') return true;
 
   const numPerfiles = (perfil.profiles && Array.isArray(perfil.profiles)) ? perfil.profiles.length : (perfil.maxPerfiles || 1);

@@ -303,7 +303,6 @@ window._guardarEsquemaPredeterminadoConfig = guardarEsquemaPredeterminadoConfig;
 
 export function renderPerfilesPinsUI() {
   const cont = document.getElementById('cfg-lista-perfiles-pins');
-  const btnSavePins = document.getElementById('btn-cfg-guardar-pins');
   if (!cont) return;
 
   const isMaster = isSuperAdmin();
@@ -317,13 +316,20 @@ export function renderPerfilesPinsUI() {
         🔒 La gestión de PINs y perfiles está reservada para el <strong>Director Deportivo (ADMIN)</strong> del club.
       </div>
     `;
-    if (btnSavePins) btnSavePins.style.display = 'none';
     return;
   }
 
-  if (btnSavePins) btnSavePins.style.display = 'block';
-
-  if (!perfil.profiles) perfil.profiles = [];
+  if (!perfil.profiles || !Array.isArray(perfil.profiles) || perfil.profiles.length === 0) {
+    perfil.profiles = [{
+      id: "dt_principal",
+      nombre: perfil.club ? `Entrenador ${perfil.club}` : "Entrenador Principal",
+      rol: maxContratado === 1 ? "DT" : "ADMIN",
+      categoria: perfil.categoriaActiva || "Principal",
+      equipos: [perfil.categoriaActiva || "Principal"],
+      pin: "1234",
+      avatar: perfil.logo || DEFAULT_LOGO
+    }];
+  }
 
   if (maxContratado === 1 && !isMaster) {
     // Cuenta de 1 solo perfil (Plan DT Individual)
@@ -334,6 +340,7 @@ export function renderPerfilesPinsUI() {
         nombre: "Entrenador Principal",
         rol: "DT",
         categoria: perfil.categoriaActiva || "Principal",
+        equipos: [perfil.categoriaActiva || "Principal"],
         pin: "1234",
         avatar: perfil.logo || DEFAULT_LOGO
       };
@@ -369,6 +376,17 @@ export function renderPerfilesPinsUI() {
   const totalPerfiles = perfil.profiles.length;
 
   cont.innerHTML = `
+    ${maxContratado === 1 && !isMaster ? `
+      <div style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.3);border-radius:10px;padding:12px;margin-bottom:12px;font-size:12px;">
+        <div style="display:flex;align-items:center;gap:6px;font-weight:900;color:var(--oro);margin-bottom:4px;">
+          <span>🧢 PERFIL DE ENTRENADOR ACTIVO (PLAN INDIVIDUAL 1 DT)</span>
+        </div>
+        <div style="color:#ccc;font-size:11px;line-height:1.4;">
+          Tu cuenta dispone de <strong>1 DT activo</strong> con permisos completos de administración. Aquí puedes personalizar tu nombre, equipos a cargo y tu PIN numérico de acceso:
+        </div>
+      </div>
+    ` : ''}
+
     <!-- LISTA DE PERFILES -->
     ${perfil.profiles.map(p => {
       const tienePIN = p.pin && p.pin.trim() !== '';
@@ -378,15 +396,17 @@ export function renderPerfilesPinsUI() {
       const tieneEquipos = p.equipos && p.equipos.length > 0;
       const equiposTexto = tieneEquipos ? p.equipos.join(', ') : '';
       const subLabel = tieneEquipos ? `(${equiposTexto})` : '<small style="color:#888;">(Sin equipos asignados)</small>';
+      const rolDisplay = (maxContratado === 1 && !isMaster) ? 'DT (ADMIN)' : p.rol;
+
       return `
       <div style="background:#0d0d0d;border:1px solid ${esPredeterminado ? 'var(--oro)' : '#222'};padding:12px;border-radius:10px;margin-bottom:8px;display:flex;flex-direction:column;gap:8px;">
         <!-- Fila superior: rol + ícono PIN + botón eliminar -->
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <span style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;">
-            <span class="badge-gold">${p.rol}</span> ${subLabel} ${esPredeterminado ? '<small style="color:var(--oro);font-weight:800;">(PREDETERMINADO)</small>' : ''}
+            <span class="badge-gold">${rolDisplay}</span> ${subLabel} ${esPredeterminado ? '<small style="color:var(--oro);font-weight:800;">(PREDETERMINADO)</small>' : ''}
             <span style="font-size:14px;margin-left:4px;" title="${tienePIN ? 'PIN asignado' : 'Sin PIN — acceso libre'}">${pinIcon}</span>
           </span>
-          ${!esPredeterminado ? `<button onclick="window._eliminarPerfilConfig('${p.id}')" style="background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);color:#e74c3c;padding:4px 8px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;" title="Eliminar este perfil DT">ELIMINAR</button>` : `<span style="font-size:10px;color:var(--oro);font-weight:700;background:rgba(212,175,55,0.12);padding:2px 8px;border-radius:6px;">Protegido</span>`}
+          ${!esPredeterminado ? `<button type="button" onclick="window._eliminarPerfilConfig('${p.id}')" style="background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);color:#e74c3c;padding:4px 8px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;" title="Eliminar este perfil DT">ELIMINAR</button>` : `<span style="font-size:10px;color:var(--oro);font-weight:700;background:rgba(212,175,55,0.12);padding:2px 8px;border-radius:6px;">Protegido</span>`}
         </div>
         <!-- Nombre -->
         <input type="text" id="cfg-nombre-input-${p.id}" value="${p.nombre || ''}" placeholder="Nombre del Entrenador / Perfil" style="flex:1;font-size:13px;padding:8px;background:#181818;border:1px solid #333;color:#fff;border-radius:6px;">
@@ -406,15 +426,20 @@ export function renderPerfilesPinsUI() {
       </div>`;
     }).join('')}
 
+    <!-- BOTÓN DE GUARDAR PERFILES Y PINS -->
+    <button type="button" class="btn btn-gold" id="btn-cfg-guardar-pins" onclick="window._guardarPinsConfig()" style="font-size:12px;font-weight:900;padding:12px;width:100%;margin-top:10px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 15px rgba(212,175,55,0.25);">
+      💾 GUARDAR CAMBIOS DE PERFILES Y PINS
+    </button>
+
     <!-- AGREGAR NUEVO PERFIL O BANNER DE UPGRADE -->
     ${maxContratado === 1 && !isMaster ? `
       <div style="margin-top:10px;padding:14px;background:rgba(212,175,55,0.06);border:1px dashed var(--oro);border-radius:10px;text-align:center;">
-        <div style="font-size:13px;color:var(--oro);font-weight:900;margin-bottom:6px;">¿TIENES MÁS ENTRENADORES O CATEGORÍAS?</div>
+        <div style="font-size:13px;color:var(--oro);font-weight:900;margin-bottom:6px;">¿DESEAS AGREGAR MÁS ENTRENADORES O CATEGORÍAS?</div>
         <div style="font-size:11px;color:#ccc;margin-bottom:12px;line-height:1.5;">
           Pasa a un <strong>Plan Club o Academia</strong> para desbloquear el <strong>Panel de Director Deportivo (Supervisión Global)</strong> y asignar accesos independientes a cada entrenador.
         </div>
-        <button class="btn btn-gold" onclick="mostrarModalUpgradePlan(1, 1)" style="font-size:11px;padding:8px 16px;font-weight:900;">
-          AMPLIAR A PLAN CLUB / DIRECTOR DEPORTIVO
+        <button type="button" class="btn btn-gold" onclick="window._mostrarModalTablaPlanes && window._mostrarModalTablaPlanes()" style="font-size:11px;padding:9px 16px;font-weight:900;">
+          📊 VER TABLA DE PLANES Y TARIFAS
         </button>
       </div>
     ` : `
@@ -431,11 +456,11 @@ export function renderPerfilesPinsUI() {
                 <button type="button" onclick="window._togglePasswordVisibility('cfg-nuevo-pin-perfil', this)" class="btn-toggle-eye" title="Mostrar / Ocultar PIN">${SVG_EYE}</button>
               </div>
             </div>
-            <button class="btn btn-gold" onclick="window._agregarNuevoPerfilDT()" style="font-size:12px;padding:9px;width:100%;font-weight:700;">CREAR Y GUARDAR NUEVO PERFIL DT</button>
+            <button type="button" class="btn btn-gold" onclick="window._agregarNuevoPerfilDT()" style="font-size:12px;padding:9px;width:100%;font-weight:700;">CREAR Y GUARDAR NUEVO PERFIL DT</button>
           </div>
         ` : `
           <div style="font-size:11px;color:#aaa;margin-bottom:6px;">Límite de perfiles alcanzado para tu plan (${totalPerfiles}/${maxContratado}).</div>
-          <button class="btn btn-green" onclick="mostrarModalUpgradePlan(${totalPerfiles}, ${maxContratado})" style="font-size:11px;padding:6px 12px;width:auto;">AMPLIAR PLAN O PERFILES</button>
+          <button type="button" class="btn btn-green" onclick="window._mostrarModalTablaPlanes && window._mostrarModalTablaPlanes()" style="font-size:11px;padding:6px 12px;width:auto;">AMPLIAR PLAN O PERFILES</button>
         `}
       </div>
     `}
@@ -473,6 +498,7 @@ export function guardarPinsConfig() {
 }
 
 window._abrirConfig = abrirConfig;
+window._guardarPinsConfig = guardarPinsConfig;
 
 window._eliminarPerfilConfig = (profId) => {
   if (!perfil.profiles) return;
@@ -1221,36 +1247,110 @@ window._toggleTablaPlanesWiz = () => {
   }
 };
 
-export function generarHTMLTablaPlanes() {
+export function generarHTMLTablaPlanes(ciclo = 'mensual') {
+  const esAnual = (ciclo === 'anual');
   return `
-    <div style="overflow-x:auto;margin:8px 0;border-radius:8px;border:1px solid rgba(212,175,55,0.3);background:#0c0c0c;">
-      <table style="width:100%;border-collapse:collapse;font-size:11px;text-align:center;color:#eee;min-width:440px;">
+    <div style="margin-bottom:12px;display:flex;justify-content:center;gap:8px;">
+      <button type="button" onclick="window._cambiarCicloModalTabla('mensual')" style="background:${!esAnual ? 'var(--oro)' : 'rgba(255,255,255,0.06)'};color:${!esAnual ? '#000' : '#ccc'};border:1px solid ${!esAnual ? 'var(--oro)' : '#333'};padding:8px 16px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;transition:all 0.2s;">
+        📅 Facturación Mensual
+      </button>
+      <button type="button" onclick="window._cambiarCicloModalTabla('anual')" style="background:${esAnual ? 'var(--oro)' : 'rgba(255,255,255,0.06)'};color:${esAnual ? '#000' : '#ccc'};border:1px solid ${esAnual ? 'var(--oro)' : '#333'};padding:8px 16px;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:6px;">
+        ⭐ Facturación Anual <span style="background:${esAnual ? '#000' : '#2ecc71'};color:${esAnual ? '#fff' : '#000'};font-size:10px;padding:2px 6px;border-radius:10px;font-weight:900;">2 MESES GRATIS</span>
+      </button>
+    </div>
+
+    <!-- VISTA EN TABLA (DESKTOP) -->
+    <div class="tabla-planes-desktop" style="overflow-x:auto;margin:8px 0;border-radius:10px;border:1px solid rgba(212,175,55,0.3);background:#0d0d0d;">
+      <table style="width:100%;border-collapse:collapse;font-size:12px;text-align:center;color:#eee;">
         <thead>
           <tr style="background:rgba(212,175,55,0.18);color:var(--oro);border-bottom:1px solid rgba(212,175,55,0.3);">
-            <th style="padding:7px 5px;font-weight:900;">DTs Activos</th>
-            <th style="padding:7px 5px;font-weight:900;">Panel Admin</th>
-            <th style="padding:7px 5px;font-weight:900;">Mensual</th>
-            <th style="padding:7px 5px;font-weight:900;">Anual (2 meses gratis)</th>
-            <th style="padding:7px 5px;font-weight:900;">Costo real por DT/mes</th>
+            <th style="padding:10px 8px;font-weight:900;">DTs Activos</th>
+            <th style="padding:10px 8px;font-weight:900;">Panel Admin</th>
+            <th style="padding:10px 8px;font-weight:900;">Tarifa ${esAnual ? 'Anual' : 'Mensual'}</th>
+            <th style="padding:10px 8px;font-weight:900;">Costo real DT/mes</th>
+            <th style="padding:10px 8px;font-weight:900;">Acción</th>
           </tr>
         </thead>
         <tbody>
-          ${TABLA_PLANES_SAAS.map(p => `
-            <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
-              <td style="padding:6px 5px;font-weight:800;color:#fff;">${p.dts} ${p.dts === 1 ? 'DT' : 'DTs'}</td>
-              <td style="padding:6px 5px;">${p.admin ? '<span style="color:#2ecc71;font-weight:800;">✅ Incluido</span>' : '<span style="color:#e74c3c;font-weight:800;">❌ No</span>'}</td>
-              <td style="padding:6px 5px;font-weight:800;color:#fff;">$${p.mensual}</td>
-              <td style="padding:6px 5px;font-weight:800;color:var(--oro);">$${p.anual}</td>
-              <td style="padding:6px 5px;font-weight:900;color:#2ecc71;">$${p.costoRealDtMes.toFixed(2)}</td>
+          ${TABLA_PLANES_SAAS.map(p => {
+            const precioDisplay = esAnual ? `$${p.anual} USD / año` : `$${p.mensual} USD / mes`;
+            return `
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.06);transition:background 0.2s;" onmouseover="this.style.background='rgba(212,175,55,0.08)'" onmouseout="this.style.background='transparent'">
+              <td style="padding:9px 8px;font-weight:800;color:#fff;">
+                ${p.dts} ${p.dts === 1 ? 'DT' : 'DTs'}
+                <div style="font-size:10px;color:#888;">${p.nombre}</div>
+              </td>
+              <td style="padding:9px 8px;">
+                ${p.admin ? '<span style="color:#2ecc71;font-weight:800;font-size:11px;background:rgba(46,204,113,0.12);padding:3px 8px;border-radius:12px;border:1px solid rgba(46,204,113,0.3);">✅ Incluido</span>' : '<span style="color:#e74c3c;font-weight:800;font-size:11px;">❌ No</span>'}
+              </td>
+              <td style="padding:9px 8px;font-weight:900;color:${esAnual ? 'var(--oro)' : '#fff'};font-size:13px;">
+                ${precioDisplay}
+                ${esAnual ? `<div style="font-size:10px;color:#2ecc71;font-weight:800;">Ahorras $${p.mensual * 2}</div>` : ''}
+              </td>
+              <td style="padding:9px 8px;font-weight:900;color:#2ecc71;">
+                $${p.costoRealDtMes.toFixed(2)}
+              </td>
+              <td style="padding:9px 8px;">
+                <button type="button" class="btn btn-green" onclick="window._seleccionarPlanDesdeTabla(${p.dts}, '${ciclo}')" style="font-size:11px;font-weight:900;padding:7px 16px;border-radius:6px;cursor:pointer;box-shadow:0 2px 8px rgba(46,204,113,0.3);">
+                  SELECCIONAR
+                </button>
+              </td>
             </tr>
-          `).join('')}
+            `;
+          }).join('')}
         </tbody>
       </table>
+    </div>
+
+    <!-- VISTA EN TARJETAS RESPONSIVE (MÓVIL) -->
+    <div class="tabla-planes-mobile" style="flex-direction:column;gap:10px;margin:8px 0;">
+      ${TABLA_PLANES_SAAS.map(p => {
+        const precio = esAnual ? p.anual : p.mensual;
+        return `
+        <div style="background:#111;border:1px solid ${p.admin ? 'rgba(212,175,55,0.3)' : '#282828'};border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:900;color:#fff;">
+              ${p.dts} ${p.dts === 1 ? 'DT Activo' : 'DTs Activos'} <span style="font-size:11px;color:var(--oro);font-weight:700;">(${p.nombre})</span>
+            </div>
+            ${p.admin ? '<span style="color:#2ecc71;font-weight:800;font-size:10px;background:rgba(46,204,113,0.12);padding:2px 8px;border-radius:10px;border:1px solid rgba(46,204,113,0.3);">✅ Admin Incluido</span>' : '<span style="color:#888;font-size:10px;">❌ Sin Panel Admin</span>'}
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;background:#080808;padding:8px 10px;border-radius:8px;">
+            <div>
+              <div style="font-size:15px;font-weight:900;color:${esAnual ? 'var(--oro)' : '#2ecc71'};">$${precio} USD ${esAnual ? '/ año' : '/ mes'}</div>
+              ${esAnual ? `<div style="font-size:10px;color:#2ecc71;font-weight:800;">🎁 ¡2 MESES GRATIS! (Ahorras $${p.mensual * 2})</div>` : ''}
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:10px;color:#888;">Costo por DT:</div>
+              <div style="font-size:13px;font-weight:900;color:#fff;">$${p.costoRealDtMes.toFixed(2)} / mes</div>
+            </div>
+          </div>
+          <button type="button" class="btn btn-green" onclick="window._seleccionarPlanDesdeTabla(${p.dts}, '${ciclo}')" style="font-size:12px;font-weight:900;padding:10px;border-radius:8px;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 4px 12px rgba(46,204,113,0.3);">
+            SELECCIONAR
+          </button>
+        </div>
+        `;
+      }).join('')}
     </div>
   `;
 }
 
-window._mostrarModalTablaPlanes = () => {
+let modalTablaCiclo = 'mensual';
+window._cambiarCicloModalTabla = (ciclo) => {
+  modalTablaCiclo = ciclo;
+  const container = document.getElementById('contenedor-modal-tabla-planes');
+  if (container) {
+    container.innerHTML = generarHTMLTablaPlanes(ciclo);
+  }
+};
+
+window._seleccionarPlanDesdeTabla = (dts, ciclo = 'mensual') => {
+  const plan = obtenerPlanPorDTs(dts);
+  const precio = (ciclo === 'anual' ? plan.anual : plan.mensual).toFixed(2);
+  abrirModalReportarPago(precio, plan.dts, ciclo);
+};
+
+window._mostrarModalTablaPlanes = (cicloInicial = 'mensual') => {
+  modalTablaCiclo = cicloInicial || 'mensual';
   const modal = document.getElementById('modal');
   const modalContent = document.getElementById('modal-content');
   if (!modal || !modalContent) return;
@@ -1261,10 +1361,12 @@ window._mostrarModalTablaPlanes = () => {
       📊 TABLA OFICIAL DE PLANES Y TARIFAS
     </div>
     <div style="font-size:12px;color:#aaa;text-align:center;margin-bottom:12px;">
-      Estructura de precios por cantidad de Entrenadores (DTs) activos:
+      Selecciona tu escala de entrenadores y haz clic en <strong>SELECCIONAR</strong> para reportar tu membresía:
     </div>
 
-    ${generarHTMLTablaPlanes()}
+    <div id="contenedor-modal-tabla-planes">
+      ${generarHTMLTablaPlanes(modalTablaCiclo)}
+    </div>
 
     <div style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.2);padding:10px;border-radius:8px;font-size:11px;color:#ccc;margin-top:10px;line-height:1.4;">
       💡 <b>Ventajas clave de nuestros planes:</b><br>
@@ -1273,9 +1375,6 @@ window._mostrarModalTablaPlanes = () => {
     </div>
 
     <div style="display:flex;gap:10px;margin-top:16px;">
-      <button class="btn btn-gold" onclick="abrirModalReportarPago()" style="flex:1;font-size:12px;font-weight:900;padding:10px;">
-        💳 REPORTAR / RENOVAR PAGO
-      </button>
       <button class="btn btn-gray" onclick="document.getElementById('modal').style.display='none'" style="flex:1;font-size:12px;padding:10px;">
         Cerrar
       </button>
@@ -1677,6 +1776,15 @@ window._toggleConfigSection = (secId) => {
       const arrow = btn.querySelector('.cfg-arrow');
       if (arrow) arrow.textContent = '▼';
     }
+    if (secId === 'cfg-sec-perfiles') {
+      renderPerfilesPinsUI();
+    } else if (secId === 'cfg-sec-categorias') {
+      renderCategoriasConfigUI();
+    } else if (secId === 'cfg-sec-tactica') {
+      renderEsquemaPredeterminadoUI();
+    } else if (secId === 'cfg-sec-kits') {
+      renderKitGallery('A');
+    }
   }
 };
 
@@ -1719,10 +1827,10 @@ window._abrirPagoDesdeWizard = () => {
   const plan = obtenerPlanPorDTs(dts);
   const esAnual = (wizardBillingCycle === 'anual');
   const price = (esAnual ? plan.anual : plan.mensual).toFixed(2);
-  abrirModalReportarPago(price);
+  abrirModalReportarPago(price, plan.dts, wizardBillingCycle);
 };
 
-export async function abrirModalReportarPago(montoSugerido = '') {
+export async function abrirModalReportarPago(montoSugerido = '', planDtsSugerido = null, cicloSugerido = 'mensual') {
   const modal = document.getElementById('modal');
   const modalContent = document.getElementById('modal-content');
   if (!modal || !modalContent) return;
@@ -1757,8 +1865,17 @@ export async function abrirModalReportarPago(montoSugerido = '') {
   let metodoSeleccionado = pasarelasActivas[0][0];
   let screenshotBase64 = '';
 
+  // Determinar plan inicial y ciclo interactivo
+  let planDtsSeleccionado = planDtsSugerido || ((perfil.profiles && Array.isArray(perfil.profiles))
+    ? Math.max(1, perfil.profiles.filter(p => p.rol === 'DT').length)
+    : (perfil.maxPerfiles || 1));
+  let cicloSeleccionado = (cicloSugerido === 'anual') ? 'anual' : 'mensual';
+
   function renderFormularioPago() {
     const configMetodo = pasarelas[metodoSeleccionado] || {};
+    const planActual = obtenerPlanPorDTs(planDtsSeleccionado);
+    const precioPlan = cicloSeleccionado === 'anual' ? planActual.anual.toFixed(2) : planActual.mensual.toFixed(2);
+    const defMonto = montoSugerido || precioPlan;
 
     let textoCopiar = '';
     let datosHTML = '';
@@ -1805,12 +1922,6 @@ export async function abrirModalReportarPago(montoSugerido = '') {
       `;
     }
 
-    // Campos dinámicos
-    const dtsActuales = (perfil.profiles && Array.isArray(perfil.profiles))
-      ? Math.max(1, perfil.profiles.filter(p => p.rol === 'DT').length)
-      : 1;
-    const planActual = obtenerPlanPorDTs(dtsActuales);
-    const defMonto = montoSugerido || `${planActual.mensual}.00`;
     let camposDinamicosHTML = '';
     if (metodoSeleccionado === 'pagoMovil') {
       camposDinamicosHTML = `
@@ -1818,8 +1929,8 @@ export async function abrirModalReportarPago(montoSugerido = '') {
         <input type="text" id="rep-banco-emisor" placeholder="ej. Banesco, Mercantil, Venezuela">
         <label style="font-size:11px;color:#888;">Teléfono desde el que pagaste:</label>
         <input type="text" id="rep-telefono-emisor" placeholder="ej. 0414-1234567">
-        <label style="font-size:11px;color:#888;">Monto pagado en Bolívares (Bs) o USD:</label>
-        <input type="text" id="rep-monto" value="${montoSugerido ? montoSugerido + ' USD' : ''}" placeholder="ej. 1.850 Bs o 15 USD">
+        <label style="font-size:11px;color:#888;">Monto pagado en Bolívares (Bs) o equivalente USD:</label>
+        <input type="text" id="rep-monto" value="${defMonto} USD" placeholder="ej. 1.850 Bs o 15 USD">
       `;
     } else if (metodoSeleccionado === 'binance') {
       camposDinamicosHTML = `
@@ -1837,7 +1948,7 @@ export async function abrirModalReportarPago(montoSugerido = '') {
       `;
     } else if (metodoSeleccionado === 'airtm' || metodoSeleccionado === 'zinli') {
       camposDinamicosHTML = `
-        <label style="font-size:11px;color:#888;">Tu Correo de ${configMetodo.nombre}:</label>
+        <label style="font-size:11px;color:#888;">Tu Correo de ${configMetodo.nombre || metodoSeleccionado}:</label>
         <input type="text" id="rep-email-emisor" placeholder="ej. mi-correo@gmail.com">
         <label style="font-size:11px;color:#888;">Monto enviado en USD:</label>
         <input type="number" id="rep-monto" value="${defMonto}" placeholder="ej. 15.00" step="0.01">
@@ -1855,25 +1966,46 @@ export async function abrirModalReportarPago(montoSugerido = '') {
     modalContent.innerHTML = `
       <div class="modal-title">💳 REPORTAR PAGO DE MEMBRESÍA</div>
 
-      <!-- RESUMEN DEL PLAN -->
-      <div style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.25);border-radius:8px;padding:10px;margin-bottom:12px;font-size:11px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-          <span style="color:var(--oro);font-weight:800;">🏆 Tu Plan: ${planActual.nombre} (${planActual.dts} DT${planActual.dts > 1 ? 's' : ''})</span>
-          <button type="button" onclick="window._mostrarModalTablaPlanes && window._mostrarModalTablaPlanes()" style="background:none;border:none;color:var(--oro);text-decoration:underline;cursor:pointer;font-size:10px;font-weight:700;">
-            📊 Ver Tabla de Tarifas
+      <!-- SELECTOR INTERACTIVO DE PLAN Y CICLO -->
+      <div style="background:rgba(212,175,55,0.08);border:1.5px solid var(--oro);border-radius:10px;padding:12px;margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
+          <label style="font-size:12px;color:var(--oro);font-weight:900;text-transform:uppercase;letter-spacing:0.5px;">
+            📋 1. SELECCIONA EL PLAN QUE DESEAS PAGAR:
+          </label>
+          <button type="button" onclick="window._mostrarModalTablaPlanes && window._mostrarModalTablaPlanes('${cicloSeleccionado}')" style="background:none;border:none;color:var(--oro);text-decoration:underline;cursor:pointer;font-size:11px;font-weight:700;">
+            📊 Ver Tabla de Tarifas Completa
           </button>
         </div>
-        <div style="color:#aaa;display:flex;gap:12px;flex-wrap:wrap;margin-top:2px;">
-          <span>📅 Mensual: <b style="color:#fff;">$${planActual.mensual} USD</b></span>
-          <span>⭐ Anual (2 meses gratis): <b style="color:#2ecc71;">$${planActual.anual} USD</b></span>
+
+        <select id="rep-select-plan-dts" style="width:100%;padding:10px;background:#181818;border:1px solid #444;color:#fff;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:10px;">
+          ${TABLA_SAAS_PLANES.map(p => `
+            <option value="${p.dts}" ${p.dts === planDtsSeleccionado ? 'selected' : ''}>
+              ${p.dts} DT${p.dts > 1 ? 's' : ''} — ${p.nombre} (${cicloSeleccionado === 'anual' ? '$' + p.anual + ' USD/año' : '$' + p.mensual + ' USD/mes'})
+            </option>
+          `).join('')}
+        </select>
+
+        <!-- FRECUENCIA DE FACTURACIÓN -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <button type="button" id="rep-btn-mensual" style="padding:8px 10px;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;border:1.5px solid ${cicloSeleccionado === 'mensual' ? 'var(--oro)' : '#333'};background:${cicloSeleccionado === 'mensual' ? 'rgba(212,175,55,0.22)' : '#1a1a1a'};color:${cicloSeleccionado === 'mensual' ? 'var(--oro)' : '#aaa'};transition:all 0.2s;">
+            📅 Mensual<br><span style="font-size:14px;color:#fff;font-weight:900;">$${planActual.mensual} USD</span>
+          </button>
+          <button type="button" id="rep-btn-anual" style="padding:8px 10px;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;border:1.5px solid ${cicloSeleccionado === 'anual' ? '#2ecc71' : '#333'};background:${cicloSeleccionado === 'anual' ? 'rgba(46,204,113,0.22)' : '#1a1a1a'};color:${cicloSeleccionado === 'anual' ? '#2ecc71' : '#aaa'};transition:all 0.2s;">
+            ⭐ Anual (2 meses gratis)<br><span style="font-size:14px;color:#2ecc71;font-weight:900;">$${planActual.anual} USD</span>
+          </button>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:8px;border-top:1px dashed rgba(255,255,255,0.1);font-size:11px;color:#aaa;flex-wrap:wrap;gap:6px;">
           <span>⚡ Costo por DT: <b style="color:#fff;">$${planActual.costoRealDtMes.toFixed(2)}/mes</b></span>
+          <span>🛡️ Panel Admin: <b style="color:${planActual.panelAdmin ? '#2ecc71' : '#e74c3c'};">${planActual.panelAdmin ? '✅ Incluido' : '❌ No'}</b></span>
+          <span style="color:var(--oro);font-weight:800;">Total a reportar: $${precioPlan} USD</span>
         </div>
       </div>
 
       <!-- SELECTOR DE PASARELA -->
       <div style="margin-bottom:14px;">
         <label style="font-size:12px;color:var(--oro);font-weight:800;display:block;margin-bottom:6px;">
-          Selecciona tu Método de Pago:
+          💳 2. Selecciona tu Método de Pago:
         </label>
         <select id="rep-select-metodo" style="width:100%;padding:10px;background:#181818;border:1px solid var(--oro);color:#fff;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">
           ${pasarelasActivas.map(([key, val]) => `
@@ -1919,7 +2051,7 @@ export async function abrirModalReportarPago(montoSugerido = '') {
       <!-- BOTONES DE ACCIÓN -->
       <div style="display:flex;flex-direction:column;gap:8px;">
         <button id="btn-enviar-reporte-pago" class="btn btn-green" style="padding:12px;font-size:14px;font-weight:900;">
-          🚀 ENVIAR REPORTE DE PAGO
+          🚀 ENVIAR REPORTE DE PAGO ($${precioPlan} USD)
         </button>
         <button onclick="document.getElementById('modal').style.display='none'" class="btn btn-gray" style="padding:8px;">
           Cancelar
@@ -1927,7 +2059,29 @@ export async function abrirModalReportarPago(montoSugerido = '') {
       </div>
     `;
 
-    // Eventos
+    // Eventos selector de plan interactivo
+    document.getElementById('rep-select-plan-dts')?.addEventListener('change', (e) => {
+      planDtsSeleccionado = parseInt(e.target.value, 10) || 1;
+      const p = obtenerPlanPorDTs(planDtsSeleccionado);
+      montoSugerido = (cicloSeleccionado === 'anual' ? p.anual : p.mensual).toFixed(2);
+      renderFormularioPago();
+    });
+
+    document.getElementById('rep-btn-mensual')?.addEventListener('click', () => {
+      cicloSeleccionado = 'mensual';
+      const p = obtenerPlanPorDTs(planDtsSeleccionado);
+      montoSugerido = p.mensual.toFixed(2);
+      renderFormularioPago();
+    });
+
+    document.getElementById('rep-btn-anual')?.addEventListener('click', () => {
+      cicloSeleccionado = 'anual';
+      const p = obtenerPlanPorDTs(planDtsSeleccionado);
+      montoSugerido = p.anual.toFixed(2);
+      renderFormularioPago();
+    });
+
+    // Eventos pasarela
     document.getElementById('rep-select-metodo')?.addEventListener('change', (e) => {
       metodoSeleccionado = e.target.value;
       renderFormularioPago();
@@ -1982,6 +2136,8 @@ export async function abrirModalReportarPago(montoSugerido = '') {
       try {
         const userUid = (auth && auth.currentUser && auth.currentUser.uid) ? auth.currentUser.uid : (perfil.email || 'club');
         const pagoId = `pago_${Date.now()}`;
+        const planFinal = obtenerPlanPorDTs(planDtsSeleccionado);
+        const montoFinal = montoVal || precioPlan;
 
         const payloadPago = {
           id: pagoId,
@@ -1989,8 +2145,11 @@ export async function abrirModalReportarPago(montoSugerido = '') {
           clubNombre: perfil.club || 'Club Registrado',
           clubEmail: perfil.email || '',
           clubWhatsapp: perfil.whatsapp || '',
+          plan: planFinal.nombre,
+          dts: planFinal.dts,
+          ciclo: cicloSeleccionado.toUpperCase(),
           metodo: configMetodo.nombre || metodoSeleccionado,
-          monto: montoVal || '20.00',
+          monto: montoFinal,
           moneda: configMetodo.moneda || 'USD',
           referencia: refVal,
           comprobanteUrl: screenshotBase64 || '',
@@ -2010,9 +2169,9 @@ export async function abrirModalReportarPago(montoSugerido = '') {
 
         mostrarConfirmacionApp(
           '¡Reporte Enviado!',
-          `Tu pago con referencia final ...${refVal} ha sido reportado exitosamente. En breve el Administrador verificará tu transacción y activará tus 30 días de membresía. ¿Deseas notificarlo por WhatsApp ahora?`,
+          `Tu pago para el ${planFinal.nombre} (${planFinal.dts} DT${planFinal.dts > 1 ? 's' : ''} - Ciclo ${cicloSeleccionado.toUpperCase()}) por un monto de $${montoFinal} USD con referencia final ...${refVal} ha sido reportado exitosamente. En breve el Administrador verificará tu transacción y activará tu membresía. ¿Deseas notificarlo por WhatsApp ahora?`,
           () => {
-            const msg = encodeURIComponent(`Hola, acabo de reportar mi pago en 11FUT MANAGER (${payloadPago.metodo}, Monto: ${payloadPago.monto}, Ref: ...${refVal}). Mi club es ${perfil.club}.`);
+            const msg = encodeURIComponent(`Hola, acabo de reportar mi pago en 11FUT MANAGER (${payloadPago.metodo}, Monto: ${payloadPago.monto}, Plan: ${planFinal.nombre} ${cicloSeleccionado.toUpperCase()}, Ref: ...${refVal}). Mi club es ${perfil.club}.`);
             window.open(`https://wa.me/584141401560?text=${msg}`, '_blank');
           }
         );
@@ -2022,7 +2181,7 @@ export async function abrirModalReportarPago(montoSugerido = '') {
         mostrarNotificacionApp('Error', 'No se pudo enviar el reporte de pago: ' + err.message, false);
         if (btnSubmit) {
           btnSubmit.disabled = false;
-          btnSubmit.textContent = '🚀 ENVIAR REPORTE DE PAGO';
+          btnSubmit.textContent = `🚀 ENVIAR REPORTE DE PAGO ($${precioPlan} USD)`;
         }
       }
     });
