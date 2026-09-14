@@ -409,7 +409,7 @@ body.theme-light .juego-programado-item {
 .seccion { display: none; padding: 12px; }
 .seccion.active { display: block; }
 
-/* ── ESTRUCTURA DESKTOP CON COLUMNA CENTRAL EQUILIBRADA (1fr 1.35fr 1fr) ── */
+/* ── ESTRUCTURA DESKTOP CON COLUMNA CENTRAL EQUILIBRADA Y BANQUILLO AJUSTADO A SU CONTENIDO ── */
 .tactica-desktop-grid {
   display: flex;
   flex-direction: column;
@@ -419,19 +419,63 @@ body.theme-light .juego-programado-item {
 @media (min-width: 900px) {
   .tactica-desktop-grid {
     display: grid;
-    grid-template-columns: 1fr 1.35fr 1fr;
-    gap: 20px;
+    grid-template-columns: minmax(240px, 290px) minmax(360px, 1fr) auto;
+    gap: 16px;
     align-items: start;
     width: 100%;
     padding: 0 10px;
   }
 }
 
-.col-panel-izq, .col-cancha-centro, .col-banca-der {
+.col-panel-izq {
   width: 100%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.col-cancha-centro {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+.col-banca-der {
+  width: fit-content !important;
+  max-width: 440px !important;
+  min-width: 0 !important;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  justify-self: start;
+}
+
+.col-banca-der .banca-side {
+  width: fit-content !important;
+  max-width: 440px !important;
+  box-sizing: border-box !important;
+}
+
+.col-banca-der .tactica-accordion-header {
+  width: 100% !important;
+  max-width: 440px !important;
+  box-sizing: border-box !important;
+}
+
+#sec-banca-content {
+  width: fit-content !important;
+  max-width: 440px !important;
+  box-sizing: border-box !important;
+}
+
+.col-banca-der .dugout-ad-wall {
+  width: 100% !important;
+  max-width: 416px !important;
+  box-sizing: border-box !important;
 }
 
 /* ── PIZARRA Y CANCHA NORMAL (PROPORCIÓN RECTANGULAR 2/3 SIN BARRAS NEGRAS) ── */
@@ -2086,6 +2130,45 @@ body.body-fullscreen-active {
   color: var(--oro);
   font-size: 11px;
   opacity: 0.8;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   VALLA PUBLICITARIA LED DE CANCHA (MARQUESINA PERIMETRAL EN CÉSPED)
+   ══════════════════════════════════════════════════════════════════ */
+.cancha-led-wall {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 10;
+  background: rgba(5, 10, 16, 0.92);
+  border-top: 1.5px solid rgba(212, 175, 55, 0.6);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(212, 175, 55, 0.25);
+  padding: 4px 0;
+  overflow: hidden;
+  user-select: none;
+  pointer-events: auto;
+  mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+}
+
+.cancha-led-wall:hover .dugout-marquee-track {
+  animation-play-state: paused !important;
+}
+
+.cancha-led-wall .dugout-marquee-track {
+  pointer-events: none;
+}
+
+.cancha-led-wall .dugout-marquee-group {
+  font-size: 11px;
+  gap: 16px;
+  padding-right: 16px;
+}
+
+.cancha-led-wall .dugout-marquee-item img {
+  height: 16px;
 }
 
 /* ══════════════════════════════════════════════════════════════════
