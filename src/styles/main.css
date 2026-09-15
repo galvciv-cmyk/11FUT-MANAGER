@@ -2383,6 +2383,7 @@ body.body-fullscreen-active {
   padding: 0 !important;
   margin: 0 !important;
   -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 .input-dorsal::-webkit-outer-spin-button,
