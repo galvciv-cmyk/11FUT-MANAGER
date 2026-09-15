@@ -1,31 +1,73 @@
 rules_version = "2";
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /usuarios/{userId} {
-      allow read, write: if request.auth != null;
+
+    // Helper: Verifica si el usuario autenticado es el SuperAdmin oficial
+    function isSuperAdmin() {
+      return request.auth != null && 
+             request.auth.token.email != null && 
+             request.auth.token.email.lower() == "gyknova@gmail.com";
     }
 
+    // 1. Datos privados de cada club/usuario
+    // Solo el dueño del documento o el SuperAdmin pueden leer y escribir
+    match /usuarios/{userId} {
+      allow read, write: if request.auth != null && (request.auth.uid == userId || isSuperAdmin());
+    }
+
+    // 2. Documentos públicos de los clubes (enlaces públicos, alineaciones compartidas)
+    // Lectura pública permitida para visualización externa (padres, hinchas, rivales)
+    // Creación/Edición/Eliminación: estrictamente restringido al dueño o SuperAdmin
     match /publicos/{pubId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create: if request.auth != null && (
+        (request.resource.data.uid != null && request.resource.data.uid == request.auth.uid) ||
+        pubId == ("usr_" + request.auth.uid) ||
+        isSuperAdmin()
+      );
+      allow update, delete: if request.auth != null && (
+        (resource.data.uid != null && resource.data.uid == request.auth.uid) ||
+        pubId == ("usr_" + request.auth.uid) ||
+        isSuperAdmin()
+      );
     }
 
     match /publico/{docId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create, update, delete: if request.auth != null && (
+        (request.resource.data.uid != null && request.resource.data.uid == request.auth.uid) ||
+        docId == ("usr_" + request.auth.uid) ||
+        isSuperAdmin()
+      );
     }
 
+    // 3. Configuraciones maestras globales del sistema
+    // Lectura pública, pero escritura restringida exclusivamente al SuperAdmin
     match /configuraciones/{docId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isSuperAdmin();
     }
 
+    // 4. Reportes de pago de los clubes hacia la plataforma SaaS
+    // Creación: usuarios autenticados reportando su propio pago
+    // Lectura: solo el club que pagó o el SuperAdmin
+    // Modificación / Aprobación / Borrado: estrictamente el SuperAdmin
     match /pagos_reportados/{docId} {
-      allow read, write: if true;
+      allow create: if request.auth != null && 
+                       request.resource.data.clubId != null && 
+                       request.resource.data.clubId == request.auth.uid;
+      allow read: if isSuperAdmin() || (
+        request.auth != null && 
+        resource.data.clubId != null && 
+        resource.data.clubId == request.auth.uid
+      );
+      allow update, delete: if isSuperAdmin();
     }
 
+    // 5. Finanzas e ingresos de la plataforma
+    // Acceso y edición exclusivos del SuperAdmin
     match /finanzas_ingresos/{docId} {
-      allow read, write: if request.auth != null;
+      allow read, write: if isSuperAdmin();
     }
   }
 }
-
-

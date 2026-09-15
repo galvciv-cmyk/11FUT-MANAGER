@@ -136,7 +136,7 @@ export async function guardarFirebase() {
     _guardarFirebaseTimer = setTimeout(async () => {
       _hayGuardadoPendiente = false;
       try {
-        const isMaster = isSuperAdmin() || ((perfil.email || (auth && auth.currentUser && auth.currentUser.email) || '').toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase());
+        const isMaster = isSuperAdmin() || (Boolean(auth && auth.currentUser && auth.currentUser.email) && auth.currentUser.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase());
         if (isMaster) {
           perfil.estadoCuenta = 'ACTIVO';
           perfil.fechaVencimiento = '2099-01-01T00:00:00.000Z';

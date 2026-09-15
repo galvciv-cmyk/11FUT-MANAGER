@@ -72,10 +72,11 @@ export function generarFechaVencimientoPrueba() {
 }
 
 export function isSuperAdmin() {
-  const emailAuth = (window.firebaseAuth && window.firebaseAuth.currentUser && window.firebaseAuth.currentUser.email) ? window.firebaseAuth.currentUser.email : "";
-  const emailState = (perfil && perfil.email) || userEmail || localStorage.getItem('11fut_user_email') || "";
-  const finalEmail = (emailAuth || emailState || "").trim().toLowerCase();
-  return finalEmail === SUPER_ADMIN_EMAIL.toLowerCase();
+  // Verificación estricta: ÚNICAMENTE contra la sesión autenticada activa en Firebase
+  const emailAuth = (typeof window !== 'undefined' && window.firebaseAuth && window.firebaseAuth.currentUser && window.firebaseAuth.currentUser.email) 
+    ? window.firebaseAuth.currentUser.email 
+    : "";
+  return Boolean(emailAuth) && emailAuth.trim().toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
 }
 
 /**

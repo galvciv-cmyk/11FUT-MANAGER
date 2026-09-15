@@ -1350,10 +1350,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // Restauración instantánea desde localStorage para que F5 no parpadee al login screen
+  // Restauración instantánea para que F5 no parpadee al login screen
   const localProfId = localStorage.getItem('11fut_active_profile_id');
-  const localEmail = localStorage.getItem('11fut_user_email') || perfil?.email;
-  const isMasterLocal = (localEmail || '').toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+  const isMasterLocal = isSuperAdmin();
 
   if (isMasterLocal) {
     _ocultarTodasLasPantallas();

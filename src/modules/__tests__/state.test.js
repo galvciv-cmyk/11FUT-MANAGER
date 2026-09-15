@@ -16,6 +16,7 @@ import {
 describe('Módulo de Estado (state.js)', () => {
   beforeEach(() => {
     localStorage.clear();
+    if (typeof window !== 'undefined') window.firebaseAuth = null;
     updatePerfil({ ...DEFAULT_PERFIL });
   });
 
@@ -39,12 +40,20 @@ describe('Módulo de Estado (state.js)', () => {
     expect(categoriasData['Sub-17'].plantel).toBeDefined();
   });
 
-  it('debe identificar correctamente al SuperAdmin por email', () => {
+  it('debe identificar correctamente al SuperAdmin exclusivamente con sesión autenticada en Firebase', () => {
+    // 1. Sin sesión autenticada en window.firebaseAuth, no debe ser SuperAdmin aunque se manipule localStorage o perfil
+    localStorage.setItem('11fut_user_email', SUPER_ADMIN_EMAIL);
     updatePerfil({ email: SUPER_ADMIN_EMAIL });
-    expect(isSuperAdmin()).toBe(true);
-
-    updatePerfil({ email: 'usuario@ejemplo.com' });
+    window.firebaseAuth = null;
     expect(isSuperAdmin()).toBe(false);
+
+    // 2. Con sesión autenticada de usuario normal
+    window.firebaseAuth = { currentUser: { email: 'usuario@ejemplo.com' } };
+    expect(isSuperAdmin()).toBe(false);
+
+    // 3. Con sesión autenticada oficial del SuperAdmin
+    window.firebaseAuth = { currentUser: { email: SUPER_ADMIN_EMAIL } };
+    expect(isSuperAdmin()).toBe(true);
   });
 
   it('debe recuperarse de QuotaExceededError en autoSaveLocal guardando perfil de rescate', () => {
