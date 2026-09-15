@@ -648,9 +648,50 @@ export function importarPlantelArchivo(input) {
   const reader = new FileReader();
 
   reader.onload = function () {
-    const text = reader.result || '';
-    if (!text || !text.trim()) {
-      return mostrarNotificacionApp('Archivo Vacío', 'El archivo seleccionado está vacío.', false);
+    const arrayBuffer = reader.result;
+    let rowsData = [];
+
+    // 1. Lectura binaria con SheetJS (soporta .xlsx, .xls binario, .xls HTML, .csv)
+    if (window.XLSX) {
+      try {
+        const data = new Uint8Array(arrayBuffer);
+        const workbook = window.XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        rowsData = window.XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+      } catch (errXlsx) {
+        console.warn('Lectura XLSX falló, intentando fallback de texto:', errXlsx);
+      }
+    }
+
+    // 2. Fallback de texto si SheetJS no está o falló
+    if (!rowsData || rowsData.length === 0) {
+      try {
+        const decoder = new TextDecoder('utf-8');
+        const text = decoder.decode(arrayBuffer);
+        if (text.includes('<table') || text.includes('<tr')) {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(text, 'text/html');
+          const trs = doc.querySelectorAll('tr');
+          trs.forEach(tr => {
+            const cells = Array.from(tr.querySelectorAll('td, th')).map(c => c.textContent.trim());
+            if (cells.length > 0) rowsData.push(cells);
+          });
+        } else {
+          const rawLines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+          rawLines.forEach(l => {
+            const parts = l.includes(';') ? l.split(';') : l.split(',');
+            rowsData.push(parts.map(p => p.trim().replace(/^["']|["']$/g, '')));
+          });
+        }
+      } catch (errText) {
+        console.error('Error en fallback de texto:', errText);
+      }
+    }
+
+    if (!rowsData || rowsData.length === 0) {
+      input.value = '';
+      return mostrarNotificacionApp('Archivo Vacío', 'No se pudieron leer datos en el archivo seleccionado.', false);
     }
 
     if (!plantel.cuerpoTecnico) plantel.cuerpoTecnico = {};
@@ -665,121 +706,134 @@ export function importarPlantelArchivo(input) {
     let cap1 = '', cap2 = '', cap3 = '';
     let dt = '', at = '', pf = '', med = '';
 
-    // 1. Si es archivo HTML/XLS (generado por nuestra app o Excel):
-    if (text.includes('<table') || text.includes('<tr') || text.includes('<td')) {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(text, 'text/html');
-      const rows = doc.querySelectorAll('tr');
+    rowsData.forEach(cells => {
+      if (!cells || cells.length === 0) return;
+      const cleanCells = cells.map(c => String(c || '').trim());
+      const rowText = cleanCells.join(' ').toLowerCase();
+      if (!rowText) return;
 
-      rows.forEach(tr => {
-        const cells = Array.from(tr.querySelectorAll('td, th')).map(c => c.textContent.trim());
-        if (cells.length === 0) return;
+      // Ignorar títulos globales, notas institucionales y encabezados
+      if (rowText.includes('11fut manager') || 
+          rowText.includes('plantilla institucional') || 
+          rowText.includes('reporte oficial') ||
+          rowText.includes('importante:') || 
+          rowText.includes('instrucciones') ||
+          rowText.includes('desarrollado por') ||
+          rowText.includes('todos los derechos')) {
+        return;
+      }
 
-        const rowText = cells.join(' ').toLowerCase();
+      if ((rowText.includes('dorsal') && rowText.includes('nombre')) || 
+          (rowText.includes('cargo') && rowText.includes('nombre')) ||
+          (rowText.includes('orden') && rowText.includes('nombre'))) {
+        return;
+      }
 
-        // Cuerpo Técnico
-        if (rowText.includes('director t') || rowText.includes('(dt)')) {
-          if (cells[1] && !cells[1].toLowerCase().includes('nombre')) dt = cells[1];
-        } else if (rowText.includes('asistente') || rowText.includes('(at)')) {
-          if (cells[1] && !cells[1].toLowerCase().includes('nombre')) at = cells[1];
-        } else if (rowText.includes('preparador') || rowText.includes('(pf)')) {
-          if (cells[1] && !cells[1].toLowerCase().includes('nombre')) pf = cells[1];
-        } else if (rowText.includes('médico') || rowText.includes('medico') || rowText.includes('kinesio') || rowText.includes('fisio')) {
-          if (cells[1] && !cells[1].toLowerCase().includes('nombre')) med = cells[1];
+      // Cuerpo técnico
+      if (rowText.includes('director t') || rowText.includes('(dt)')) {
+        const val = cleanCells.find((c, i) => i > 0 && c && !c.toLowerCase().includes('director') && !c.toLowerCase().includes('(dt)') && !c.toLowerCase().includes('activo'));
+        if (val) dt = val;
+        return;
+      }
+      if (rowText.includes('asistente') || rowText.includes('(at)')) {
+        const val = cleanCells.find((c, i) => i > 0 && c && !c.toLowerCase().includes('asistente') && !c.toLowerCase().includes('(at)') && !c.toLowerCase().includes('activo'));
+        if (val) at = val;
+        return;
+      }
+      if (rowText.includes('preparador') || rowText.includes('(pf)')) {
+        const val = cleanCells.find((c, i) => i > 0 && c && !c.toLowerCase().includes('preparador') && !c.toLowerCase().includes('(pf)') && !c.toLowerCase().includes('activo'));
+        if (val) pf = val;
+        return;
+      }
+      if (rowText.includes('médico') || rowText.includes('medico') || rowText.includes('kinesio') || rowText.includes('fisio')) {
+        const val = cleanCells.find((c, i) => i > 0 && c && !c.toLowerCase().includes('médico') && !c.toLowerCase().includes('medico') && !c.toLowerCase().includes('activo'));
+        if (val) med = val;
+        return;
+      }
+
+      // Capitanes
+      if (rowText.includes('1er cap') || rowText.includes('primer cap')) {
+        const val = cleanCells.find((c, i) => i > 0 && c && !c.toLowerCase().includes('capit') && !c.toLowerCase().includes('titular') && !/^\d+$/.test(c));
+        if (val) cap1 = val;
+        return;
+      }
+      if (rowText.includes('2do cap') || rowText.includes('segundo cap') || rowText.includes('subcap')) {
+        const val = cleanCells.find((c, i) => i > 0 && c && !c.toLowerCase().includes('capit') && !c.toLowerCase().includes('subcap') && !/^\d+$/.test(c));
+        if (val) cap2 = val;
+        return;
+      }
+      if (rowText.includes('3er cap') || rowText.includes('tercer cap')) {
+        const val = cleanCells.find((c, i) => i > 0 && c && !c.toLowerCase().includes('capit') && !c.toLowerCase().includes('alterno') && !/^\d+$/.test(c));
+        if (val) cap3 = val;
+        return;
+      }
+
+      if (rowText.includes('cuerpo técnico') || rowText.includes('cuerpo tecnico') || rowText.includes('capitanes del equipo') || rowText.includes('lista oficial de jugadores') || rowText.includes('listado oficial')) {
+        return;
+      }
+
+      // Detección de Jugador
+      let dorsal = '';
+      let nombre = '';
+      let posicion = '';
+
+      const validCells = cleanCells.filter(Boolean);
+      if (validCells.length === 0) return;
+
+      // 1. Buscar dorsal numérico
+      for (let c of cleanCells) {
+        if (/^\d{1,2}$/.test(c) && !dorsal) {
+          dorsal = c;
+          break;
         }
+      }
 
-        // Capitanes
-        else if (rowText.includes('1er capitán') || rowText.includes('1er capitan')) {
-          if (cells[1] && !cells[1].toLowerCase().includes('nombre')) cap1 = cells[1];
-        } else if (rowText.includes('2do capitán') || rowText.includes('2do capitan') || rowText.includes('subcapit')) {
-          if (cells[1] && !cells[1].toLowerCase().includes('nombre')) cap2 = cells[1];
-        } else if (rowText.includes('3er capitán') || rowText.includes('3er capitan')) {
-          if (cells[1] && !cells[1].toLowerCase().includes('nombre')) cap3 = cells[1];
+      // 2. Buscar posición
+      for (let c of cleanCells) {
+        const low = c.toLowerCase();
+        if (/^(por|portero|arquero|gk|goalkeeper)$/i.test(low)) { posicion = 'por'; break; }
+        if (/^(def|defensa|zaguero|lateral|central|df|cb|lb|rb)$/i.test(low)) { posicion = 'def'; break; }
+        if (/^(med|medio|mediocampista|volante|pivote|mf|cm|cdm|cam)$/i.test(low)) { posicion = 'med'; break; }
+        if (/^(del|delantero|atacante|punta|extremo|fw|st|rw|lw)$/i.test(low)) { posicion = 'del'; break; }
+      }
+
+      if (!posicion) {
+        for (let c of cleanCells) {
+          const low = c.toLowerCase();
+          if (low.includes('por') || low.includes('arquero') || low.includes('portero')) { posicion = 'por'; break; }
+          if (low.includes('def') || low.includes('zaguero') || low.includes('lateral') || low.includes('central')) { posicion = 'def'; break; }
+          if (low.includes('med') || low.includes('volante') || low.includes('pivote') || low.includes('medio')) { posicion = 'med'; break; }
+          if (low.includes('del') || low.includes('atacante') || low.includes('punta') || low.includes('extremo')) { posicion = 'del'; break; }
         }
+      }
 
-        // Jugadores (Dorsal, Nombre, Posición)
-        else if (cells.length >= 2) {
-          const col0 = cells[0];
-          const col1 = cells[1];
-          const col2 = cells[2] || '';
-
-          if (/^(#|dorsal|nombre|posici|rol|cargo|orden)/i.test(col0) || /^(nombre|posici)/i.test(col1)) return;
-
-          let dorsal = '';
-          let nombre = '';
-          let posicion = '';
-
-          if (/^\d+$/.test(col0)) {
-            dorsal = col0;
-            nombre = col1;
-            posicion = (col2 || '').toLowerCase();
-          } else if (/^\d+$/.test(col2)) {
-            posicion = col0.toLowerCase();
-            nombre = col1;
-            dorsal = col2;
-          } else if (col1) {
-            nombre = col1;
-            posicion = (col2 || '').toLowerCase();
-          } else {
-            nombre = col0;
-            posicion = (col2 || '').toLowerCase();
-          }
-
-          nombre = (nombre || '').trim();
-          if (nombre && !/^(portero|defensa|mediocampista|delantero)\s+\d+$/i.test(nombre)) {
-            if (dorsal) dorsalesMap[nombre] = dorsal;
-
-            if (posicion.includes('por') || posicion.includes('arquero') || posicion.includes('portero') || posicion.includes('gk')) {
-              if (!porList.includes(nombre)) porList.push(nombre);
-            } else if (posicion.includes('def') || posicion.includes('zaguero') || posicion.includes('lateral') || posicion.includes('central') || posicion.includes('df')) {
-              if (!defList.includes(nombre)) defList.push(nombre);
-            } else if (posicion.includes('del') || posicion.includes('atacante') || posicion.includes('punta') || posicion.includes('extremo') || posicion.includes('fw')) {
-              if (!delList.includes(nombre)) delList.push(nombre);
-            } else {
-              // Por defecto a mediocampista si no se especifica o es med
-              if (!medList.includes(nombre)) medList.push(nombre);
-            }
-          }
+      // 3. Buscar nombre
+      for (let c of cleanCells) {
+        const low = c.toLowerCase();
+        if (c === dorsal) continue;
+        if (c.toLowerCase() === posicion.toLowerCase()) continue;
+        if (/^(diestro|zurdo|ambidiestro|derecho|izquierdo)$/i.test(low)) continue;
+        if (/^\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}$/.test(c)) continue;
+        if (/^\+?\d{6,}$/.test(c.replace(/[\s\-]/g, ''))) continue;
+        if (c.length >= 2) {
+          nombre = c;
+          break;
         }
-      });
-    } else {
-      // 2. Si es archivo CSV plano tradicional
-      const rawLines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-      rawLines.forEach(line => {
-        if (/^(rol|posicion|nombre|categoria|dorsal|#)/i.test(line)) return;
-        let parts = line.includes(';') ? line.split(';') : line.split(',');
-        parts = parts.map(p => p.trim().replace(/^["']|["']$/g, ''));
+      }
 
-        if (parts.length >= 3 && /^\d+$/.test(parts[0])) {
-          const dorsal = parts[0];
-          const nombre = parts[1];
-          const pos = (parts[2] || '').toLowerCase();
-          if (nombre) {
-            dorsalesMap[nombre] = dorsal;
-            if (pos.includes('por') || pos.includes('arquero')) porList.push(nombre);
-            else if (pos.includes('def')) defList.push(nombre);
-            else if (pos.includes('med')) medList.push(nombre);
-            else if (pos.includes('del')) delList.push(nombre);
-          }
-        } else if (parts.length >= 2) {
-          const rol = parts[0].toLowerCase();
-          const nombre = parts[1].trim();
-          if (!nombre) return;
-
-          if (rol.includes('dt') || rol.includes('director tecnico')) dt = nombre;
-          else if (rol.includes('at') || rol.includes('asistente')) at = nombre;
-          else if (rol.includes('pf') || rol.includes('preparador')) pf = nombre;
-          else if (rol.includes('medico') || rol.includes('kinesio') || rol.includes('fisio')) med = nombre;
-          else if (rol.includes('1') && rol.includes('capitan')) cap1 = nombre;
-          else if (rol.includes('2') && rol.includes('capitan')) cap2 = nombre;
-          else if (rol.includes('3') && rol.includes('capitan')) cap3 = nombre;
-          else if (rol.includes('por') || rol.includes('arquero')) porList.push(nombre);
-          else if (rol.includes('def')) defList.push(nombre);
-          else if (rol.includes('med')) medList.push(nombre);
-          else if (rol.includes('del')) delList.push(nombre);
+      if (nombre && !/^(portero|defensa|mediocampista|delantero)\s+\d+$/i.test(nombre)) {
+        if (dorsal) dorsalesMap[nombre] = dorsal;
+        if (posicion.includes('por') || posicion.includes('arquero') || posicion.includes('gk')) {
+          if (!porList.includes(nombre)) porList.push(nombre);
+        } else if (posicion.includes('def') || posicion.includes('zaguero') || posicion.includes('lateral') || posicion.includes('central') || posicion.includes('df')) {
+          if (!defList.includes(nombre)) defList.push(nombre);
+        } else if (posicion.includes('del') || posicion.includes('atacante') || posicion.includes('punta') || posicion.includes('extremo') || posicion.includes('fw')) {
+          if (!delList.includes(nombre)) delList.push(nombre);
+        } else {
+          if (!medList.includes(nombre)) medList.push(nombre);
         }
-      });
-    }
+      }
+    });
 
     if (porList.length) plantel.por = porList;
     if (defList.length) plantel.def = defList;
@@ -803,11 +857,15 @@ export function importarPlantelArchivo(input) {
     guardarFirebase();
 
     const total = (plantel.por?.length || 0) + (plantel.def?.length || 0) + (plantel.med?.length || 0) + (plantel.del?.length || 0);
-    mostrarNotificacionApp('Plantel Importado', `📥 Se importaron exitosamente ${total} jugadores, dorsales y cuerpo técnico.`);
+    if (total === 0) {
+      mostrarNotificacionApp('Atención', 'No se encontraron nombres de jugadores en el archivo. Asegúrate de haber escrito los nombres en la columna correspondiente.', false);
+    } else {
+      mostrarNotificacionApp('Plantel Importado', `📥 Se importaron exitosamente ${total} jugadores, dorsales y cuerpo técnico.`);
+    }
     input.value = '';
   };
 
-  reader.readAsText(file, 'UTF-8');
+  reader.readAsArrayBuffer(file);
 }
 
 export function importarCSV(input) {
