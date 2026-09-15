@@ -100,10 +100,10 @@ window._limpiarFiltrosPlantel = () => {
 };
 
 export const POS_CONFIG = {
-  por: { title: '🧤 PORTEROS', singular: 'Portero', badge: 'POR', class: 'badge-por', defaultSlots: 3, defaultDorsals: [1, 12, 22] },
-  def: { title: '🛡️ DEFENSAS', singular: 'Defensa', badge: 'DEF', class: 'badge-def', defaultSlots: 8, defaultDorsals: [2, 3, 4, 5, 13, 14, 23, 24] },
-  med: { title: '⚙️ MEDIOCAMPISTAS', singular: 'Mediocampista', badge: 'MED', class: 'badge-med', defaultSlots: 8, defaultDorsals: [6, 8, 10, 11, 15, 16, 20, 21] },
-  del: { title: '⚡ DELANTEROS', singular: 'Delantero', badge: 'DEL', class: 'badge-del', defaultSlots: 6, defaultDorsals: [7, 9, 17, 18, 19, 25] }
+  por: { title: '🧤 PORTEROS', singular: 'Portero', badge: 'POR', class: 'badge-por' },
+  def: { title: '🛡️ DEFENSAS', singular: 'Defensa', badge: 'DEF', class: 'badge-def' },
+  med: { title: '⚙️ MEDIOCAMPISTAS', singular: 'Mediocampista', badge: 'MED', class: 'badge-med' },
+  del: { title: '⚡ DELANTEROS', singular: 'Delantero', badge: 'DEL', class: 'badge-del' }
 };
 
 export function initPlantelUI() {
@@ -116,7 +116,7 @@ export function initPlantelUI() {
   for (let cat in POS_CONFIG) {
     const cfg = POS_CONFIG[cat];
     const jugadores = Array.isArray(plantel[cat]) ? plantel[cat] : [];
-    const count = Math.max(jugadores.length, cfg.defaultSlots);
+    const count = jugadores.length;
 
     let h = `
       <div class="plantel-cat" data-pos="${cat}" style="margin-bottom:16px;">
@@ -129,10 +129,18 @@ export function initPlantelUI() {
         <div class="plantel-cards-container" id="cards-pos-${cat}">
     `;
 
-    for (let i = 0; i < count; i++) {
-      const nombreVal = jugadores[i] || '';
-      const dorsalVal = (nombreVal && plantel.dorsales[nombreVal]) || cfg.defaultDorsals[i] || '';
-      h += renderJugadorRowHTML(cat, i, nombreVal, dorsalVal, cfg);
+    if (count === 0) {
+      h += `
+        <div class="empty-pos-hint" style="padding:10px 14px;text-align:center;color:#64748b;font-size:11px;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.1);border-radius:8px;margin-bottom:8px;">
+          Sin ${cfg.title.toLowerCase()} registrados aún. Haz clic en "➕ Añadir ${cfg.singular}" para registrar.
+        </div>
+      `;
+    } else {
+      for (let i = 0; i < count; i++) {
+        const nombreVal = jugadores[i] || '';
+        const dorsalVal = (nombreVal && plantel.dorsales[nombreVal]) || '';
+        h += renderJugadorRowHTML(cat, i, nombreVal, dorsalVal, cfg);
+      }
     }
 
     h += `
@@ -157,7 +165,7 @@ function renderJugadorRowHTML(cat, idx, nombre, dorsal, cfg) {
         <input type="number" class="input-dorsal" id="dorsal-${cat}-${idx}" value="${dorsal}" placeholder="--" min="1" max="99" oninput="window._cambiarDorsal('${cat}', ${idx}, this.value)">
       </div>
       <div class="jugador-nombre-wrap">
-        <input type="text" class="input-nombre-jugador" id="p-${cat}-${idx}" value="${nombre}" placeholder="${cfg.singular} ${idx + 1}" oninput="window._onPlayerNameInput('${cat}', ${idx}, this.value)">
+        <input type="text" class="input-nombre-jugador" id="p-${cat}-${idx}" value="${nombre}" placeholder="Nombre del jugador" oninput="window._onPlayerNameInput('${cat}', ${idx}, this.value)">
       </div>
       <span class="pos-badge ${cfg.class}">${cfg.badge}</span>
       <div class="jugador-actions">
@@ -360,34 +368,65 @@ export function generarHTMLPlantillaExcel(esExportacion = false) {
 
   let filasJugadores = '';
 
-  const categorias = [
-    { key: 'por', label: 'PORTERO', minCount: 3, defDorsals: [1, 12, 22] },
-    { key: 'def', label: 'DEFENSA', minCount: 8, defDorsals: [2, 3, 4, 5, 13, 14, 23, 24] },
-    { key: 'med', label: 'MEDIOCAMPISTA', minCount: 8, defDorsals: [6, 8, 10, 11, 15, 16, 20, 21] },
-    { key: 'del', label: 'DELANTERO', minCount: 6, defDorsals: [7, 9, 17, 18, 19, 25] }
-  ];
+  if (esExportacion) {
+    // EXPORTACIÓN: Listar exactamente los jugadores registrados sin forzar mínimos ni límites
+    const todos = [];
+    const ordenPos = [
+      { key: 'por', label: 'PORTERO' },
+      { key: 'def', label: 'DEFENSA' },
+      { key: 'med', label: 'MEDIOCAMPISTA' },
+      { key: 'del', label: 'DELANTERO' }
+    ];
 
-  categorias.forEach(cat => {
-    const list = (plantel && Array.isArray(plantel[cat.key])) ? plantel[cat.key].filter(Boolean) : [];
-    const count = esExportacion ? list.length : Math.max(list.length, cat.minCount);
+    ordenPos.forEach(p => {
+      const list = (plantel && Array.isArray(plantel[p.key])) ? plantel[p.key].filter(Boolean) : [];
+      list.forEach(nombre => {
+        const dorsal = (plantel.dorsales && plantel.dorsales[nombre]) || '';
+        todos.push({ dorsal, nombre, pos: p.label });
+      });
+    });
 
-    for (let i = 0; i < count; i++) {
-      const nombre = list[i] || (esExportacion ? '' : `${cat.label.charAt(0) + cat.label.slice(1).toLowerCase()} ${i + 1}`);
-      const dorsal = (list[i] && dorsales[list[i]]) || cat.defDorsals[i] || (i + 1);
-      const pierna = (i % 2 === 0) ? 'Diestro' : (i % 3 === 0 ? 'Ambidiestro' : 'Zurdo');
-
+    if (todos.length === 0) {
+      filasJugadores = `
+        <tr>
+          <td style="text-align:center;font-weight:bold;font-size:11pt;border:1px solid #c7a740;">--</td>
+          <td style="border:1px solid #c7a740;padding:6px 10px;color:#94a3b8;font-style:italic;">(Sin jugadores registrados en esta categoría)</td>
+          <td style="text-align:center;border:1px solid #c7a740;">--</td>
+          <td style="text-align:center;border:1px solid #c7a740;">--</td>
+          <td style="text-align:center;border:1px solid #c7a740;">--</td>
+          <td style="text-align:center;border:1px solid #c7a740;">--</td>
+        </tr>
+      `;
+    } else {
+      todos.forEach(j => {
+        filasJugadores += `
+          <tr>
+            <td style="text-align:center;font-weight:bold;font-size:12pt;background:#ffffff;border:1px solid #c7a740;">${j.dorsal}</td>
+            <td style="font-weight:bold;border:1px solid #c7a740;padding:6px 10px;">${j.nombre}</td>
+            <td style="text-align:center;font-weight:bold;color:#1e3a8a;border:1px solid #c7a740;">${j.pos}</td>
+            <td style="text-align:center;border:1px solid #c7a740;"></td>
+            <td style="text-align:center;border:1px solid #c7a740;"></td>
+            <td style="text-align:center;border:1px solid #c7a740;"></td>
+          </tr>
+        `;
+      });
+    }
+  } else {
+    // PLANTILLA DESCARGABLE EN BLANCO:
+    // NO TIENE MÍNIMO NI MÁXIMO POR POSICIÓN: Se entregan filas limpias para que el usuario registre libremente
+    for (let i = 1; i <= 30; i++) {
       filasJugadores += `
         <tr>
-          <td style="text-align:center;font-weight:bold;font-size:12pt;background:#ffffff;border:1px solid #c7a740;">${dorsal}</td>
-          <td style="font-weight:bold;border:1px solid #c7a740;padding:6px 10px;">${nombre}</td>
-          <td style="text-align:center;font-weight:bold;color:#1e3a8a;border:1px solid #c7a740;">${cat.label}</td>
-          <td style="text-align:center;border:1px solid #c7a740;">${esExportacion ? '' : pierna}</td>
-          <td style="text-align:center;border:1px solid #c7a740;"></td>
-          <td style="text-align:center;border:1px solid #c7a740;"></td>
+          <td style="text-align:center;font-weight:bold;font-size:11pt;background:#ffffff;border:1px solid #cbd5e1;"></td>
+          <td style="border:1px solid #cbd5e1;padding:6px 10px;"></td>
+          <td style="text-align:center;color:#64748b;border:1px solid #cbd5e1;font-size:9pt;"></td>
+          <td style="text-align:center;border:1px solid #cbd5e1;"></td>
+          <td style="text-align:center;border:1px solid #cbd5e1;"></td>
+          <td style="text-align:center;border:1px solid #cbd5e1;"></td>
         </tr>
       `;
     }
-  });
+  }
 
   return `
     <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
@@ -423,7 +462,7 @@ export function generarHTMLPlantillaExcel(esExportacion = false) {
           </td>
           <td colspan="4" align="center" style="background:#070d18;border:2px solid #d4af37;padding:10px;">
             <div style="font-size:16pt;font-weight:900;color:#d4af37;letter-spacing:1px;margin-bottom:4px;">11FUT MANAGER • GESTIÓN DEPORTIVA & TÁCTICA</div>
-            <div style="font-size:12pt;font-weight:bold;color:#ffffff;margin-bottom:4px;">PLANTILLA INSTITUCIONAL OFICIAL DE PLANTEL</div>
+            <div style="font-size:12pt;font-weight:bold;color:#ffffff;margin-bottom:4px;">${esExportacion ? 'REPORTE OFICIAL DE PLANTEL REGISTRADO' : 'PLANTILLA INSTITUCIONAL OFICIAL DE PLANTEL'}</div>
             <div style="font-size:10pt;color:#94a3b8;">
               INSTITUCIÓN / CLUB: <b style="color:#d4af37;">${clubNombre}</b> | CATEGORÍA: <b style="color:#38bdf8;">${catNombre}</b> | FECHA: <b>${fechaHoy}</b>
             </div>
@@ -433,6 +472,21 @@ export function generarHTMLPlantillaExcel(esExportacion = false) {
           </td>
         </tr>
       </table>
+
+      ${!esExportacion ? `
+      <!-- NOTA DE LLENADO LIBRE: SIN MÍNIMO NI MÁXIMO POR POSICIÓN -->
+      <table>
+        <tr>
+          <td colspan="6" style="background:#eff6ff;border:1.5px solid #3b82f6;padding:10px 14px;color:#1e40af;font-size:9.5pt;">
+            ℹ️ <b>IMPORTANTE:</b> Esta plantilla <b>NO tiene mínimo ni límite máximo por posición</b>. Puede registrar la cantidad de jugadores que disponga su club.
+            <br>
+            • En la columna <b>POSICIÓN PRINCIPAL</b> escriba cualquiera de las opciones: <b>Portero</b>, <b>Defensa</b>, <b>Mediocampista</b> o <b>Delantero</b>.
+            <br>
+            • Si necesita registrar más jugadores, simplemente continúe agregando filas hacia abajo en este archivo.
+          </td>
+        </tr>
+      </table>
+      ` : ''}
 
       <!-- CUERPO TÉCNICO -->
       <table>
@@ -449,25 +503,25 @@ export function generarHTMLPlantillaExcel(esExportacion = false) {
         </tr>
         <tr>
           <td style="font-weight:bold;background:#f8fafc;">🧢 Director Técnico (DT)</td>
-          <td style="font-weight:bold;">${ct.dt || (esExportacion ? '' : 'Nombre del DT')}</td>
+          <td style="font-weight:bold;">${ct.dt || ''}</td>
           <td></td>
           <td style="text-align:center;color:#16a34a;font-weight:bold;">Activo</td>
         </tr>
         <tr>
           <td style="font-weight:bold;background:#f8fafc;">📋 Asistente Técnico (AT)</td>
-          <td style="font-weight:bold;">${ct.at || (esExportacion ? '' : 'Nombre del AT')}</td>
+          <td style="font-weight:bold;">${ct.at || ''}</td>
           <td></td>
           <td style="text-align:center;color:#16a34a;font-weight:bold;">Activo</td>
         </tr>
         <tr>
           <td style="font-weight:bold;background:#f8fafc;">🏃‍♂️ Preparador Físico (PF)</td>
-          <td style="font-weight:bold;">${ct.pf || (esExportacion ? '' : 'Nombre del PF')}</td>
+          <td style="font-weight:bold;">${ct.pf || ''}</td>
           <td></td>
           <td style="text-align:center;color:#16a34a;font-weight:bold;">Activo</td>
         </tr>
         <tr>
           <td style="font-weight:bold;background:#f8fafc;">🏥 Médico / Fisioterapeuta</td>
-          <td style="font-weight:bold;">${ct.med || (esExportacion ? '' : 'Nombre del Médico')}</td>
+          <td style="font-weight:bold;">${ct.med || ''}</td>
           <td></td>
           <td style="text-align:center;color:#16a34a;font-weight:bold;">Activo</td>
         </tr>
@@ -488,19 +542,19 @@ export function generarHTMLPlantillaExcel(esExportacion = false) {
         </tr>
         <tr>
           <td style="font-weight:bold;background:#fefce8;">🥇 1er Capitán</td>
-          <td style="font-weight:bold;">${caps[0] || (esExportacion ? '' : (plantel.por && plantel.por[0]) || 'Capitán 1')}</td>
+          <td style="font-weight:bold;">${caps[0] || ''}</td>
           <td style="text-align:center;font-weight:bold;">${(caps[0] && dorsales[caps[0]]) || ''}</td>
           <td style="text-align:center;font-weight:bold;color:#ca8a04;">Titular</td>
         </tr>
         <tr>
           <td style="font-weight:bold;background:#fefce8;">🥈 2do Capitán (Subcapitán)</td>
-          <td style="font-weight:bold;">${caps[1] || (esExportacion ? '' : (plantel.def && plantel.def[0]) || 'Capitán 2')}</td>
+          <td style="font-weight:bold;">${caps[1] || ''}</td>
           <td style="text-align:center;font-weight:bold;">${(caps[1] && dorsales[caps[1]]) || ''}</td>
           <td style="text-align:center;font-weight:bold;color:#ca8a04;">Subcapitán</td>
         </tr>
         <tr>
           <td style="font-weight:bold;background:#fefce8;">🥉 3er Capitán (Tercero)</td>
-          <td style="font-weight:bold;">${caps[2] || (esExportacion ? '' : (plantel.med && plantel.med[0]) || 'Capitán 3')}</td>
+          <td style="font-weight:bold;">${caps[2] || ''}</td>
           <td style="text-align:center;font-weight:bold;">${(caps[2] && dorsales[caps[2]]) || ''}</td>
           <td style="text-align:center;font-weight:bold;color:#ca8a04;">Alterno</td>
         </tr>
@@ -510,7 +564,7 @@ export function generarHTMLPlantillaExcel(esExportacion = false) {
       <table>
         <tr>
           <th colspan="6" class="sec-hdr" style="background:#0f172a;color:#d4af37;border:1.5px solid #d4af37;">
-            ⚽ LISTADO OFICIAL DE JUGADORES REGISTRADOS
+            ⚽ ${esExportacion ? 'LISTADO OFICIAL DE JUGADORES REGISTRADOS' : 'LISTA OFICIAL DE JUGADORES (SIN MÍNIMO NI MÁXIMO POR POSICIÓN)'}
           </th>
         </tr>
         <tr class="tbl-hdr">
@@ -659,23 +713,31 @@ export function importarPlantelArchivo(input) {
             dorsal = col0;
             nombre = col1;
             posicion = (col2 || '').toLowerCase();
-          } else {
+          } else if (/^\d+$/.test(col2)) {
             posicion = col0.toLowerCase();
             nombre = col1;
-            dorsal = (/^\d+$/.test(col2)) ? col2 : '';
+            dorsal = col2;
+          } else if (col1) {
+            nombre = col1;
+            posicion = (col2 || '').toLowerCase();
+          } else {
+            nombre = col0;
+            posicion = (col2 || '').toLowerCase();
           }
 
-          if (nombre && !nombre.toLowerCase().includes('portero ') && !nombre.toLowerCase().includes('defensa ') && !nombre.toLowerCase().includes('mediocampista ') && !nombre.toLowerCase().includes('delantero ')) {
+          nombre = (nombre || '').trim();
+          if (nombre && !/^(portero|defensa|mediocampista|delantero)\s+\d+$/i.test(nombre)) {
             if (dorsal) dorsalesMap[nombre] = dorsal;
 
-            if (posicion.includes('por') || posicion.includes('arquero') || posicion.includes('portero')) {
+            if (posicion.includes('por') || posicion.includes('arquero') || posicion.includes('portero') || posicion.includes('gk')) {
               if (!porList.includes(nombre)) porList.push(nombre);
-            } else if (posicion.includes('def') || posicion.includes('zaguero') || posicion.includes('lateral') || posicion.includes('central')) {
+            } else if (posicion.includes('def') || posicion.includes('zaguero') || posicion.includes('lateral') || posicion.includes('central') || posicion.includes('df')) {
               if (!defList.includes(nombre)) defList.push(nombre);
-            } else if (posicion.includes('med') || posicion.includes('volante') || posicion.includes('pivote') || posicion.includes('medio')) {
-              if (!medList.includes(nombre)) medList.push(nombre);
-            } else if (posicion.includes('del') || posicion.includes('atacante') || posicion.includes('punta') || posicion.includes('extremo')) {
+            } else if (posicion.includes('del') || posicion.includes('atacante') || posicion.includes('punta') || posicion.includes('extremo') || posicion.includes('fw')) {
               if (!delList.includes(nombre)) delList.push(nombre);
+            } else {
+              // Por defecto a mediocampista si no se especifica o es med
+              if (!medList.includes(nombre)) medList.push(nombre);
             }
           }
         }

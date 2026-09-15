@@ -2382,6 +2382,7 @@ body.body-fullscreen-active {
   text-align: center !important;
   padding: 0 !important;
   margin: 0 !important;
+  -webkit-appearance: textfield;
   -moz-appearance: textfield;
   appearance: textfield;
 }
@@ -2389,6 +2390,7 @@ body.body-fullscreen-active {
 .input-dorsal::-webkit-outer-spin-button,
 .input-dorsal::-webkit-inner-spin-button {
   -webkit-appearance: none;
+  appearance: none;
   margin: 0;
 }
 
