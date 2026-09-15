@@ -2329,4 +2329,166 @@ body.body-fullscreen-active {
   pointer-events: none;
 }
 
+/* ══════════════════════════════════════════════════════════════════
+   FICHAS Y TARJETAS MODERNAS DEL PLANTEL (DORSAL Y POSICIÓN)
+   ══════════════════════════════════════════════════════════════════ */
+.jugador-card-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(18, 24, 35, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  transition: all 0.2s ease;
+}
+
+.jugador-card-row:hover {
+  background: rgba(24, 32, 48, 0.9);
+  border-color: rgba(212, 175, 55, 0.35);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dorsal-badge-wrap {
+  display: flex;
+  align-items: center;
+  background: #0d121c;
+  border: 1px solid var(--oro);
+  border-radius: 8px;
+  padding: 2px 6px;
+  min-width: 52px;
+  max-width: 58px;
+  height: 36px;
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.8);
+  flex-shrink: 0;
+}
+
+.dorsal-hash {
+  color: var(--oro);
+  font-size: 11px;
+  font-weight: 900;
+  margin-right: 2px;
+}
+
+.input-dorsal {
+  width: 100% !important;
+  background: transparent !important;
+  border: none !important;
+  color: #ffffff !important;
+  font-family: 'Barlow Condensed', sans-serif !important;
+  font-size: 15px !important;
+  font-weight: 900 !important;
+  text-align: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  -moz-appearance: textfield;
+}
+
+.input-dorsal::-webkit-outer-spin-button,
+.input-dorsal::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.jugador-nombre-wrap {
+  flex: 1;
+  min-width: 100px;
+}
+
+.input-nombre-jugador {
+  width: 100% !important;
+  background: rgba(8, 12, 18, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 8px !important;
+  color: #fff !important;
+  padding: 8px 12px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  margin: 0 !important;
+  transition: all 0.2s;
+}
+
+.input-nombre-jugador:focus {
+  border-color: var(--oro) !important;
+  background: #0d121c !important;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.25) !important;
+}
+
+.pos-badge {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.badge-por { background: rgba(39, 174, 96, 0.2); color: #2ecc71; border: 1px solid rgba(39, 174, 96, 0.4); }
+.badge-def { background: rgba(41, 128, 185, 0.2); color: #3498db; border: 1px solid rgba(41, 128, 185, 0.4); }
+.badge-med { background: rgba(212, 175, 55, 0.2); color: var(--oro); border: 1px solid rgba(212, 175, 55, 0.4); }
+.badge-del { background: rgba(231, 76, 60, 0.2); color: #e74c3c; border: 1px solid rgba(231, 76, 60, 0.4); }
+
+.jugador-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.btn-squad-action {
+  background: #1e2430;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ccc;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.btn-squad-action:hover {
+  background: var(--oro);
+  color: #000;
+  border-color: var(--oro);
+  transform: scale(1.05);
+}
+
+.btn-squad-action.btn-delete-player:hover {
+  background: var(--rojo);
+  color: #fff;
+  border-color: var(--rojo);
+}
+
+.btn-add-player-row {
+  width: 100%;
+  padding: 8px;
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px dashed rgba(212, 175, 55, 0.4);
+  color: var(--oro);
+  border-radius: 8px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-add-player-row:hover {
+  background: rgba(212, 175, 55, 0.18);
+  border-color: var(--oro);
+  transform: translateY(-1px);
+}
+
 

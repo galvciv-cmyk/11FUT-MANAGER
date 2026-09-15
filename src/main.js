@@ -7,7 +7,7 @@ import { cargarKits } from "./services/cloudinary.js";
 import { actualizarTactica, exportarPNG, setDrawingMode, setDrawingColor, setLineWidth, setLineDash, agregarMarcador, clearCanvas, toggleFullscreen, salirFullscreenTotal, guardarEsquemaCustom, limpiarCanchaYBanco, setVistaCancha, setModoPizarra, agregarFichaLibre, limpiarFichasLibres, abrirModalSustitucion, ejecutarSustitucion, undoCanvas, grabarPasoAnimacion, reproducirAnimacion, detenerAnimacion } from "./modules/tactics.js";
 import { renderStats, guardarStatJugador, cerrarStatModal, renderRankings, renderDashboardColectivo } from "./modules/stats.js";
 import { renderHistorial, formatFecha } from "./modules/history.js";
-import { initPlantelUI, aplicarPlantelUI, guardarSquad, descargarPlantilla, importarCSV, exportarPDF, eliminarListadoPlantel } from "./modules/squad.js";
+import { initPlantelUI, aplicarPlantelUI, guardarSquad, descargarPlantilla, descargarPlantillaExcel, exportarPlantelExcel, importarPlantelArchivo, importarCSV, exportarPDF, eliminarListadoPlantel } from "./modules/squad.js";
 import { buscarMaps, enviarWA, renderTorneosCitacionUI } from "./modules/citacion.js";
 import { abrirConfig, cerrarConfig, guardarNombres, guardarKits, guardarLogo, guardarFondo, cambiarPin, resetearStats, borrarHistorial, cerrarSesion, aplicarPerfil, copiarEnlacePublico, agregarNuevaCategoriaConfig, abrirSoporteWhatsApp, abrirOnboardingWizard, siguientePasoWizard, anteriorPasoWizard, finalizarOnboardingWizard, renderEsquemaPredeterminadoUI, guardarEsquemaPredeterminadoConfig, renderPerfilesPinsUI, guardarPinsConfig, limpiarHistorialNotificaciones, mostrarNotificacionApp, mostrarToastRapido } from "./modules/config.js";
 
@@ -1817,9 +1817,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Bind Squad
   document.getElementById('btn-guardar-squad')?.addEventListener('click', guardarSquad);
   document.getElementById('btn-export-pdf')?.addEventListener('click', exportarPDF);
-  document.getElementById('btn-descargar-csv')?.addEventListener('click', descargarPlantilla);
+  document.getElementById('btn-descargar-plantilla-excel')?.addEventListener('click', descargarPlantillaExcel);
+  document.getElementById('btn-exportar-plantel-excel')?.addEventListener('click', exportarPlantelExcel);
+  document.getElementById('btn-descargar-csv')?.addEventListener('click', descargarPlantillaExcel);
   document.getElementById('btn-eliminar-plantel')?.addEventListener('click', eliminarListadoPlantel);
-  document.getElementById('input-csv')?.addEventListener('change', (e) => importarCSV(e.target));
+  document.getElementById('input-csv')?.addEventListener('change', (e) => importarPlantelArchivo(e.target));
 
   // Bind Stats
   document.getElementById('stat-search')?.addEventListener('input', renderStats);

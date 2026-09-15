@@ -690,20 +690,23 @@
 
             <!-- BOTONES Y ACCIONES DE PLANTEL -->
             <div class="card" style="margin:0;">
-              <div class="card-title">⚙️ ACCIONES Y GESTIÓN</div>
+              <div class="card-title">⚙️ ACCIONES Y GESTIÓN DE PLANTEL</div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
                 <button class="btn btn-gold" id="btn-guardar-squad" style="font-size:12px;padding:10px;font-weight:900;">💾 GUARDAR PLANTEL</button>
                 <button class="btn btn-blue" id="btn-export-pdf" style="font-size:12px;padding:10px;font-weight:900;">📄 EXPORTAR PDF</button>
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
-                <button class="btn btn-gray" id="btn-descargar-csv" onclick="window._descargarPlantilla()" style="font-size:11px;">📥 PLANTILLA CSV</button>
-                <label class="btn btn-gray" style="font-size:11px;margin:0;text-align:center;cursor:pointer;">
-                  📤 IMPORTAR CSV
-                  <input type="file" id="input-csv" accept=".csv" style="display:none;">
+                <button class="btn btn-gray" id="btn-descargar-plantilla-excel" onclick="window._descargarPlantillaExcel()" style="font-size:11px;border-color:var(--oro);color:var(--oro);" title="Descargar archivo Excel con membrete oficial 11FUT MANAGER y G&K NOVA">📥 PLANTILLA EXCEL</button>
+                <button class="btn btn-gray" id="btn-exportar-plantel-excel" onclick="window._exportarPlantelExcel()" style="font-size:11px;" title="Exportar el plantel actual a hoja de cálculo Excel membretada">📊 EXPORTAR EXCEL</button>
+              </div>
+              <div style="margin-top:8px;">
+                <label class="btn btn-gray" style="font-size:11px;margin:0;width:100%;text-align:center;cursor:pointer;background:#151c28;border-color:rgba(212,175,55,0.35);justify-content:center;" title="Importar lista desde archivo Excel (.xls, .xlsx) o CSV">
+                  📤 IMPORTAR PLANTEL (EXCEL / CSV)
+                  <input type="file" id="input-csv" accept=".xls,.xlsx,.csv,.txt" style="display:none;" onchange="window._importarPlantelArchivo(this)">
                 </label>
               </div>
               <button class="btn btn-red" id="btn-eliminar-plantel" onclick="window._eliminarListadoPlantel()" style="font-size:11px;padding:9px;margin-top:8px;width:100%;font-weight:800;justify-content:center;">
-                🗑️ ELIMINAR LISTADO
+                🗑️ VACIAR PLANTEL DE CATEGORÍA
               </button>
             </div>
 

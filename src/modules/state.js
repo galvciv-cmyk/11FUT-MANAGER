@@ -6,6 +6,9 @@ export const DEFAULT_PLANTEL = {
   def: [],
   med: [],
   del: [],
+  dorsales: {},
+  cuerpoTecnico: { dt: '', at: '', pf: '', med: '' },
+  capitanes: ['', '', ''],
   tit_A: [], sup_A: [], ct_A: [], pos_custom_A: {}, maxSup_A: 7
 };
 
