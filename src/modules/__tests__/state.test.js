@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { 
-  perfil, 
-  DEFAULT_PERFIL, 
-  setCategoriaActiva, 
-  updatePerfil, 
+import {
+  perfil,
+  DEFAULT_PERFIL,
+  setCategoriaActiva,
+  updatePerfil,
   isSuperAdmin,
   SUPER_ADMIN_EMAIL,
   categoriasData,
@@ -60,7 +60,7 @@ describe('Módulo de Estado (state.js)', () => {
     updatePerfil({ club: 'Club Rescate', wizardCompletado: true, customKits: { local: 'data:image/png;base64,' + 'A'.repeat(60000) } });
 
     // Simular QuotaExceededError con spyOn en Storage.prototype
-    const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function(key, val) {
+    const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (key, val) {
       if (key === '11fut_perfil' && val.length > 50000) {
         const err = new Error('Quota exceeded');
         err.name = 'QuotaExceededError';
