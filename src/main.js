@@ -5,7 +5,7 @@ import { auth, hashPin, cargarFirebase, guardarFirebase, cargarFirebasePublico, 
 import { setDoc, doc, onSnapshot } from "firebase/firestore";
 import { cargarKits } from "./services/cloudinary.js";
 import { actualizarTactica, exportarPNG, setDrawingMode, setDrawingColor, setLineWidth, setLineDash, agregarMarcador, clearCanvas, toggleFullscreen, salirFullscreenTotal, guardarEsquemaCustom, limpiarCanchaYBanco, setVistaCancha, setModoPizarra, agregarFichaLibre, limpiarFichasLibres, abrirModalSustitucion, ejecutarSustitucion, undoCanvas, grabarPasoAnimacion, reproducirAnimacion, detenerAnimacion } from "./modules/tactics.js";
-import { renderStats, guardarStatJugador, cerrarStatModal, renderRankings, renderDashboardColectivo } from "./modules/stats.js";
+import { renderStats, guardarStatJugador, cerrarStatModal, renderRankings, renderDashboardColectivo, exportarEstadisticasExcel } from "./modules/stats.js";
 import { renderHistorial, formatFecha } from "./modules/history.js";
 import { initPlantelUI, aplicarPlantelUI, guardarSquad, descargarPlantilla, descargarPlantillaExcel, exportarPlantelExcel, importarPlantelArchivo, importarCSV, exportarPDF, eliminarListadoPlantel } from "./modules/squad.js";
 import { buscarMaps, enviarWA, renderTorneosCitacionUI } from "./modules/citacion.js";
@@ -1825,6 +1825,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Bind Stats
   document.getElementById('stat-search')?.addEventListener('input', renderStats);
+  document.getElementById('btn-export-stats-excel')?.addEventListener('click', exportarEstadisticasExcel);
+  document.getElementById('btn-export-stats-csv')?.addEventListener('click', exportarEstadisticasExcel);
   document.getElementById('btn-guardar-sm')?.addEventListener('click', guardarStatJugador);
   document.getElementById('btn-cerrar-sm')?.addEventListener('click', cerrarStatModal);
 

@@ -1709,7 +1709,7 @@ export function renderAsistenciaUI() {
           <span style="font-size:11px;color:${esHoy ? 'var(--verde-campo)' : 'var(--oro)'};font-weight:800;">
             📅 ${selectedAttendanceDate} ${esHoy ? '(HOY)' : '(FECHA SELECCIONADA)'}
           </span>
-          <button onclick="window._exportarAsistenciaCSV()" style="background:#092113;border:1px solid var(--verde-campo);color:var(--verde-campo);padding:4px 8px;border-radius:6px;font-size:10px;font-weight:800;cursor:pointer;">📊 Exportar CSV</button>
+          <button onclick="window._exportarAsistenciaExcel()" style="background:#092113;border:1px solid var(--verde-campo);color:var(--verde-campo);padding:4px 8px;border-radius:6px;font-size:10px;font-weight:800;cursor:pointer;" title="Exportar reporte de asistencia a hoja de cálculo Excel membretada">📊 Exportar Excel</button>
         </div>
       </div>
 
@@ -1958,12 +1958,210 @@ export function borrarAsistencia() {
 window._borrarAsistencia = () => borrarAsistencia();
 
 // ══════════════════════════════════════════════════════════════════════════
-// EXPORTACIÓN DE ASISTENCIA Y RENDIMIENTO A EXCEL / CSV
+// EXPORTACIÓN DE ASISTENCIA Y RENDIMIENTO A EXCEL MEMBRETADO OFICIAL
 // ══════════════════════════════════════════════════════════════════════════
-export function exportarAsistenciaCSV() {
+export function generarHTMLAsistenciaExcel() {
   const catObj = getEntrenamientosData();
   const asistenciaData = catObj.asistencia || {};
   const lesionesData = catObj.lesiones || {};
+  const activePlantel = catObj.plantel || plantel || {};
+  const dorsalesMap = (activePlantel && activePlantel.dorsales) || (plantel && plantel.dorsales) || {};
+
+  let listaJugadores = [];
+  ['por', 'def', 'med', 'del'].forEach(rol => {
+    if (activePlantel[rol] && Array.isArray(activePlantel[rol])) {
+      activePlantel[rol].forEach(j => {
+        const nombre = typeof j === 'object' ? j.nombre : j;
+        const dorsal = (typeof j === 'object' && j.dorsal) ? j.dorsal : (dorsalesMap[nombre] || '');
+        if (nombre && !listaJugadores.some(x => x.nombre === nombre)) {
+          listaJugadores.push({ nombre, rol, dorsal });
+        }
+      });
+    }
+  });
+
+  const logo11fut = "https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png";
+  const logoGK = "https://res.cloudinary.com/djhpfdklk/image/upload/v1785381403/gk_nova_logo_spdofl.png";
+  const clubNombre = (perfil.club || 'MI CLUB DE FÚTBOL').toUpperCase();
+  const catNombre = (perfil.categoriaActiva || 'CATEGORÍA PRINCIPAL').toUpperCase();
+  const fechaHoy = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+  let totalSesiones = Object.keys(asistenciaData).length;
+  let totalPresentesGlobal = 0;
+  let totalAusentesGlobal = 0;
+  let totalJustificadasGlobal = 0;
+  let totalLesionadosCount = 0;
+
+  const filasCalculadas = listaJugadores.map((j, idx) => {
+    let totalFechas = 0;
+    let asistencias = 0;
+    let inasistencias = 0;
+    let justificadas = 0;
+
+    Object.keys(asistenciaData).forEach(f => {
+      if (asistenciaData[f] && asistenciaData[f][j.nombre]) {
+        totalFechas++;
+        const st = asistenciaData[f][j.nombre];
+        if (st === 'presente') asistencias++;
+        if (st === 'ausente') inasistencias++;
+        if (st === 'justificada') justificadas++;
+      }
+    });
+
+    totalPresentesGlobal += asistencias;
+    totalAusentesGlobal += inasistencias;
+    totalJustificadasGlobal += justificadas;
+
+    const esLesionado = !!lesionesData[j.nombre];
+    if (esLesionado) totalLesionadosCount++;
+
+    const pct = totalFechas > 0 ? Math.round((asistencias / totalFechas) * 100) : 100;
+    const posTexto = j.rol === 'por' ? 'Portero' : j.rol === 'def' ? 'Defensa' : j.rol === 'med' ? 'Mediocampista' : 'Delantero';
+
+    let estadoTexto = 'Excelente';
+    let estadoColor = '#16a34a';
+    if (pct < 60) {
+      estadoTexto = 'Alerta Faltas';
+      estadoColor = '#dc2626';
+    } else if (pct < 80) {
+      estadoTexto = 'Regular';
+      estadoColor = '#ca8a04';
+    }
+
+    return {
+      dorsal: j.dorsal || (idx + 1),
+      nombre: j.nombre,
+      posTexto,
+      asistencias,
+      inasistencias,
+      justificadas,
+      totalFechas,
+      esLesionado,
+      pct,
+      estadoTexto,
+      estadoColor
+    };
+  });
+
+  const totalEvaluaciones = totalPresentesGlobal + totalAusentesGlobal + totalJustificadasGlobal;
+  const pctAsistenciaGlobal = totalEvaluaciones > 0 ? Math.round((totalPresentesGlobal / totalEvaluaciones) * 100) : 100;
+
+  const filasJugadoresHTML = filasCalculadas.map(f => `
+    <tr>
+      <td style="text-align:center;font-weight:bold;font-size:11pt;background:#ffffff;border:1px solid #c7a740;">${f.dorsal}</td>
+      <td style="font-weight:bold;border:1px solid #c7a740;padding:6px 10px;">${f.nombre}</td>
+      <td style="text-align:center;font-weight:bold;color:#1e3a8a;border:1px solid #c7a740;">${f.posTexto}</td>
+      <td style="text-align:center;font-weight:bold;color:#16a34a;background:#f0fdf4;border:1px solid #c7a740;">${f.asistencias}</td>
+      <td style="text-align:center;font-weight:bold;color:#dc2626;background:#fef2f2;border:1px solid #c7a740;">${f.inasistencias}</td>
+      <td style="text-align:center;font-weight:bold;color:#ca8a04;background:#fefce8;border:1px solid #c7a740;">${f.justificadas}</td>
+      <td style="text-align:center;font-weight:bold;color:${f.esLesionado ? '#dc2626' : '#16a34a'};border:1px solid #c7a740;">
+        ${f.esLesionado ? '🏥 En Rehabilitación' : '🟢 Apto'}
+      </td>
+      <td style="text-align:center;font-weight:900;color:${f.estadoColor};background:#ffffff;border:1px solid #c7a740;">${f.pct}%</td>
+      <td style="text-align:center;font-weight:bold;color:${f.estadoColor};border:1px solid #c7a740;">${f.estadoTexto}</td>
+    </tr>
+  `).join('');
+
+  return `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+    <head>
+      <meta charset="utf-8">
+      <!--[if gte mso 9]>
+      <xml>
+        <x:ExcelWorkbook>
+          <x:ExcelWorksheets>
+            <x:ExcelWorksheet>
+              <x:Name>Reporte de Asistencia</x:Name>
+              <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
+            </x:ExcelWorksheet>
+          </x:ExcelWorksheets>
+        </x:ExcelWorkbook>
+      </xml>
+      <![endif]-->
+      <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background:#ffffff; color:#0f172a; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid #cbd5e1; padding: 6px 10px; font-size: 10pt; }
+        .sec-hdr { background: #0f172a; color: #ffffff; font-weight: bold; font-size: 11pt; border: 1px solid #d4af37; padding: 8px; }
+        .tbl-hdr { background: #1e293b; color: #d4af37; font-weight: bold; text-align: center; border: 1px solid #d4af37; }
+      </style>
+    </head>
+    <body>
+      <!-- MEMBRETE CORPORATIVO INSTITUCIONAL -->
+      <table>
+        <tr>
+          <td width="90" align="center" style="background:#070d18;border:2px solid #d4af37;padding:10px;">
+            <img src="${logo11fut}" width="70" height="70" alt="11FUT MANAGER">
+          </td>
+          <td colspan="7" align="center" style="background:#070d18;border:2px solid #d4af37;padding:10px;">
+            <div style="font-size:16pt;font-weight:900;color:#d4af37;letter-spacing:1px;margin-bottom:4px;">11FUT MANAGER • GESTIÓN DEPORTIVA & TÁCTICA</div>
+            <div style="font-size:12pt;font-weight:bold;color:#ffffff;margin-bottom:4px;">REPORTE OFICIAL DE ASISTENCIA Y RENDIMIENTO FÍSICO</div>
+            <div style="font-size:10pt;color:#94a3b8;">
+              INSTITUCIÓN / CLUB: <b style="color:#d4af37;">${clubNombre}</b> | CATEGORÍA: <b style="color:#38bdf8;">${catNombre}</b> | SESIONES REGISTRADAS: <b>${totalSesiones}</b> | FECHA: <b>${fechaHoy}</b>
+            </div>
+          </td>
+          <td width="90" align="center" style="background:#070d18;border:2px solid #d4af37;padding:10px;">
+            <img src="${logoGK}" width="70" height="70" alt="G&K NOVA">
+          </td>
+        </tr>
+      </table>
+
+      <!-- BALANCE GLOBAL / KPIs -->
+      <table>
+        <tr>
+          <th colspan="6" class="sec-hdr" style="background:#062313;color:#2ecc71;border:1.5px solid #2ecc71;">
+            📈 BALANCE GLOBAL Y RENDIMIENTO COLECTIVO
+          </th>
+        </tr>
+        <tr class="tbl-hdr">
+          <th width="16%">PLANTEL REGISTRADO</th>
+          <th width="16%">% ASISTENCIA GLOBAL</th>
+          <th width="16%">TOTAL PRESENTES</th>
+          <th width="16%">TOTAL FALTAS</th>
+          <th width="16%">TOTAL JUSTIFICADAS</th>
+          <th width="20%">EN REHABILITACIÓN</th>
+        </tr>
+        <tr>
+          <td style="text-align:center;font-weight:bold;font-size:11pt;background:#f8fafc;">${listaJugadores.length} Jugadores</td>
+          <td style="text-align:center;font-weight:900;font-size:12pt;color:#16a34a;background:#f0fdf4;">${pctAsistenciaGlobal}%</td>
+          <td style="text-align:center;font-weight:bold;color:#16a34a;background:#f0fdf4;">${totalPresentesGlobal}</td>
+          <td style="text-align:center;font-weight:bold;color:#dc2626;background:#fef2f2;">${totalAusentesGlobal}</td>
+          <td style="text-align:center;font-weight:bold;color:#ca8a04;background:#fefce8;">${totalJustificadasGlobal}</td>
+          <td style="text-align:center;font-weight:bold;color:${totalLesionadosCount > 0 ? '#dc2626' : '#16a34a'};">${totalLesionadosCount} ${totalLesionadosCount === 1 ? 'Jugador' : 'Jugadores'}</td>
+        </tr>
+      </table>
+
+      <!-- LISTADO DETALLADO POR JUGADOR -->
+      <table>
+        <tr>
+          <th colspan="9" class="sec-hdr" style="background:#0f172a;color:#d4af37;border:1.5px solid #d4af37;">
+            📋 REGISTRO INDIVIDUAL DE ASISTENCIA Y DISCIPLINA
+          </th>
+        </tr>
+        <tr class="tbl-hdr">
+          <th width="6%">#</th>
+          <th width="30%">JUGADOR (NOMBRE COMPLETO)</th>
+          <th width="15%">POSICIÓN</th>
+          <th width="8%">PRESENTES</th>
+          <th width="8%">FALTAS</th>
+          <th width="8%">JUSTIF.</th>
+          <th width="11%">ESTADO MÉDICO</th>
+          <th width="7%">% ASIST.</th>
+          <th width="7%">STATUS</th>
+        </tr>
+        ${filasJugadoresHTML}
+      </table>
+
+      <div style="font-size:8pt;color:#64748b;text-align:center;margin-top:10px;">
+        11FUT MANAGER • Desarrollado por G&K NOVA • Software de Alto Rendimiento Deportivo. Todos los derechos reservados.
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+export function exportarAsistenciaExcel() {
+  const catObj = getEntrenamientosData();
   const activePlantel = catObj.plantel || plantel || {};
 
   let listaJugadores = [];
@@ -1979,46 +2177,47 @@ export function exportarAsistenciaCSV() {
   });
 
   if (listaJugadores.length === 0) {
-    return mostrarNotificacionApp('Sin Datos', 'No hay jugadores registrados en el plantel para exportar.', false);
+    return mostrarNotificacionApp('Sin Datos', 'No hay jugadores registrados en el plantel para exportar asistencia.', false);
   }
 
-  let csvRows = ['Jugador,Posicion,Asistencias,Inasistencias,Justificadas,Lesionado,PorcentajeAsistencia%'];
+  const clubSafe = (perfil.club || 'club').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_');
+  const catSafe = (perfil.categoriaActiva || 'categoria').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_');
+  const fechaIso = new Date().toISOString().split('T')[0];
+  const fileName = `asistencia_${clubSafe}_${catSafe}_${fechaIso}.xls`;
 
-  listaJugadores.forEach(j => {
-    let totalFechas = 0;
-    let asistencias = 0;
-    let inasistencias = 0;
-    let justificadas = 0;
+  const html = generarHTMLAsistenciaExcel();
 
-    Object.keys(asistenciaData).forEach(f => {
-      if (asistenciaData[f][j.nombre]) {
-        totalFechas++;
-        if (asistenciaData[f][j.nombre] === 'presente') asistencias++;
-        if (asistenciaData[f][j.nombre] === 'ausente') inasistencias++;
-        if (asistenciaData[f][j.nombre] === 'justificada') justificadas++;
-      }
-    });
+  try {
+    const blob = new Blob(["\uFEFF" + html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      try {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (e) {}
+    }, 400);
+  } catch (err) {
+    const a = document.createElement('a');
+    a.href = 'data:application/vnd.ms-excel;charset=utf-8,\uFEFF' + encodeURIComponent(html);
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      try { document.body.removeChild(a); } catch (e) {}
+    }, 400);
+  }
 
-    const pct = totalFechas > 0 ? Math.round((asistencias / totalFechas) * 100) : 100;
-    const esLesionado = lesionesData[j.nombre] ? 'SI' : 'NO';
-    const posTexto = j.rol === 'por' ? 'Portero' : j.rol === 'def' ? 'Defensa' : j.rol === 'med' ? 'Mediocampista' : 'Delantero';
-
-    csvRows.push(`"${j.nombre}","${posTexto}",${asistencias},${inasistencias},${justificadas},"${esLesionado}",${pct}%`);
-  });
-
-  const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + csvRows.join('\n');
-  const encodedUri = encodeURI(csvContent);
-  const link = document.createElement('a');
-  link.setAttribute('href', encodedUri);
-  link.setAttribute('download', `Asistencia_${perfil.categoriaActiva || 'Equipo'}_${new Date().toISOString().split('T')[0]}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-
-  mostrarNotificacionApp('Reporte Exportado', `Reporte de Asistencia de ${perfil.categoriaActiva} descargado exitosamente.`);
+  mostrarNotificacionApp('Reporte Exportado', `📊 Reporte de Asistencia Excel de ${perfil.categoriaActiva || 'Equipo'} descargado exitosamente.`);
 }
 
-window._exportarAsistenciaCSV = exportarAsistenciaCSV;
+export const exportarAsistenciaCSV = exportarAsistenciaExcel;
+window._exportarAsistenciaExcel = exportarAsistenciaExcel;
+window._exportarAsistenciaCSV = exportarAsistenciaExcel;
 
 // INICIALIZACIÓN
 export function initEntrenamientosUI() {
