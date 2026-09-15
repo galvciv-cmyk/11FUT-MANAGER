@@ -1821,7 +1821,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-exportar-plantel-excel')?.addEventListener('click', exportarPlantelExcel);
   document.getElementById('btn-descargar-csv')?.addEventListener('click', descargarPlantillaExcel);
   document.getElementById('btn-eliminar-plantel')?.addEventListener('click', eliminarListadoPlantel);
-  document.getElementById('input-csv')?.addEventListener('change', (e) => importarPlantelArchivo(e.target));
 
   // Bind Stats
   document.getElementById('stat-search')?.addEventListener('input', renderStats);

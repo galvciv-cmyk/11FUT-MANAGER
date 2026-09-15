@@ -412,9 +412,51 @@ export function generarHTMLPlantillaExcel(esExportacion = false) {
       });
     }
   } else {
-    // PLANTILLA DESCARGABLE EN BLANCO:
-    // NO TIENE MÍNIMO NI MÁXIMO POR POSICIÓN: Se entregan filas limpias para que el usuario registre libremente
-    for (let i = 1; i <= 30; i++) {
+    // PLANTILLA DESCARGABLE:
+    // NO TIENE MÍNIMO NI MÁXIMO POR POSICIÓN: Se entregan ejemplos orientativos + filas limpias para registro libre
+    if (todos.length > 0) {
+      todos.forEach(j => {
+        filasJugadores += `
+          <tr>
+            <td style="text-align:center;font-weight:bold;font-size:12pt;background:#ffffff;border:1px solid #c7a740;">${j.dorsal}</td>
+            <td style="font-weight:bold;border:1px solid #c7a740;padding:6px 10px;">${j.nombre}</td>
+            <td style="text-align:center;font-weight:bold;color:#1e3a8a;border:1px solid #c7a740;">${j.pos}</td>
+            <td style="text-align:center;border:1px solid #c7a740;"></td>
+            <td style="text-align:center;border:1px solid #c7a740;"></td>
+            <td style="text-align:center;border:1px solid #c7a740;"></td>
+          </tr>
+        `;
+      });
+    } else {
+      const ejemplos = [
+        { dorsal: '1', nombre: 'Portero 1', pos: 'PORTERO', pierna: 'Diestro' },
+        { dorsal: '12', nombre: 'Portero 2', pos: 'PORTERO', pierna: 'Diestro' },
+        { dorsal: '2', nombre: 'Defensa 1', pos: 'DEFENSA', pierna: 'Diestro' },
+        { dorsal: '3', nombre: 'Defensa 2', pos: 'DEFENSA', pierna: 'Zurdo' },
+        { dorsal: '4', nombre: 'Defensa 3', pos: 'DEFENSA', pierna: 'Diestro' },
+        { dorsal: '5', nombre: 'Defensa 4', pos: 'DEFENSA', pierna: 'Diestro' },
+        { dorsal: '6', nombre: 'Mediocampista 1', pos: 'MEDIOCAMPISTA', pierna: 'Diestro' },
+        { dorsal: '8', nombre: 'Mediocampista 2', pos: 'MEDIOCAMPISTA', pierna: 'Diestro' },
+        { dorsal: '10', nombre: 'Mediocampista 3', pos: 'MEDIOCAMPISTA', pierna: 'Zurdo' },
+        { dorsal: '7', nombre: 'Delantero 1', pos: 'DELANTERO', pierna: 'Diestro' },
+        { dorsal: '9', nombre: 'Delantero 2', pos: 'DELANTERO', pierna: 'Diestro' },
+        { dorsal: '11', nombre: 'Delantero 3', pos: 'DELANTERO', pierna: 'Zurdo' }
+      ];
+      ejemplos.forEach(j => {
+        filasJugadores += `
+          <tr>
+            <td style="text-align:center;font-weight:bold;font-size:12pt;background:#ffffff;border:1px solid #c7a740;">${j.dorsal}</td>
+            <td style="font-weight:bold;border:1px solid #c7a740;padding:6px 10px;">${j.nombre}</td>
+            <td style="text-align:center;font-weight:bold;color:#1e3a8a;border:1px solid #c7a740;">${j.pos}</td>
+            <td style="text-align:center;border:1px solid #c7a740;">${j.pierna}</td>
+            <td style="text-align:center;border:1px solid #c7a740;"></td>
+            <td style="text-align:center;border:1px solid #c7a740;"></td>
+          </tr>
+        `;
+      });
+    }
+
+    for (let i = 1; i <= 15; i++) {
       filasJugadores += `
         <tr>
           <td style="text-align:center;font-weight:bold;font-size:11pt;background:#ffffff;border:1px solid #cbd5e1;"></td>
@@ -615,15 +657,146 @@ function descargarArchivoExcel(contenidoHTML, nombreArchivo) {
 export function descargarPlantillaExcel() {
   const clubSafe = (perfil.club || 'plantel').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_');
   const catSafe = (perfil.categoriaActiva || 'oficial').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_');
+  const clubNombre = (perfil.club || '11FUT MANAGER').toUpperCase();
+  const catNombre = (perfil.categoriaActiva || 'SUB-14').toUpperCase();
+  const fechaHoy = new Date().toLocaleDateString('es-ES');
+  const ct = plantel.cuerpoTecnico || {};
+  const caps = plantel.capitanes || ['', '', ''];
+
+  if (window.XLSX) {
+    const wb = window.XLSX.utils.book_new();
+    const data = [
+      ['11FUT MANAGER • GESTIÓN DEPORTIVA & TÁCTICA'],
+      ['PLANTILLA OFICIAL INSTITUCIONAL DE PLANTEL'],
+      ['INSTITUCIÓN / CLUB:', clubNombre, 'CATEGORÍA:', catNombre, 'FECHA:', fechaHoy],
+      [''],
+      ['ℹ️ INSTRUCCIÓN: Esta plantilla NO tiene mínimo ni límite máximo por posición. Registre los jugadores que requiera.'],
+      [''],
+      ['🧥 CUERPO TÉCNICO OFICIAL'],
+      ['CARGO TÉCNICO', 'NOMBRE Y APELLIDOS', 'TELÉFONO / WHATSAPP', 'ESTADO'],
+      ['Director Técnico (DT)', ct.dt || '', '', 'Activo'],
+      ['Asistente Técnico (AT)', ct.at || '', '', 'Activo'],
+      ['Preparador Físico (PF)', ct.pf || '', '', 'Activo'],
+      ['Médico / Fisioterapeuta', ct.med || '', '', 'Activo'],
+      [''],
+      ['⭐ CAPITANES DEL EQUIPO'],
+      ['ORDEN', 'NOMBRE DEL CAPITÁN', 'DORSAL (#)', 'ROL'],
+      ['1er Capitán', caps[0] || '', (caps[0] && plantel.dorsales && plantel.dorsales[caps[0]]) || '', 'Titular'],
+      ['2do Capitán', caps[1] || '', (caps[1] && plantel.dorsales && plantel.dorsales[caps[1]]) || '', 'Subcapitán'],
+      ['3er Capitán', caps[2] || '', (caps[2] && plantel.dorsales && plantel.dorsales[caps[2]]) || '', 'Alterno'],
+      [''],
+      ['⚽ LISTA DE JUGADORES (SIN MÍNIMO NI MÁXIMO POR POSICIÓN)'],
+      ['# DORSAL', 'NOMBRE Y APELLIDOS DEL JUGADOR', 'POSICIÓN PRINCIPAL (POR / DEF / MED / DEL)', 'PIERNA HÁBIL', 'FECHA NAC. / EDAD', 'CONTACTO / TELÉFONO']
+    ];
+
+    const ordenPos = [
+      { key: 'por', label: 'PORTERO' },
+      { key: 'def', label: 'DEFENSA' },
+      { key: 'med', label: 'MEDIOCAMPISTA' },
+      { key: 'del', label: 'DELANTERO' }
+    ];
+    let tieneJugadores = false;
+    ordenPos.forEach(p => {
+      const list = (plantel && Array.isArray(plantel[p.key])) ? plantel[p.key].filter(Boolean) : [];
+      if (list.length > 0) tieneJugadores = true;
+      list.forEach(nombre => {
+        const dorsal = (plantel.dorsales && plantel.dorsales[nombre]) || '';
+        data.push([dorsal, nombre, p.label, '', '', '']);
+      });
+    });
+
+    if (!tieneJugadores) {
+      const ejemplos = [
+        ['1', 'Portero 1', 'PORTERO', 'Diestro', '', ''],
+        ['12', 'Portero 2', 'PORTERO', 'Diestro', '', ''],
+        ['2', 'Defensa 1', 'DEFENSA', 'Diestro', '', ''],
+        ['3', 'Defensa 2', 'DEFENSA', 'Zurdo', '', ''],
+        ['4', 'Defensa 3', 'DEFENSA', 'Diestro', '', ''],
+        ['5', 'Defensa 4', 'DEFENSA', 'Diestro', '', ''],
+        ['6', 'Mediocampista 1', 'MEDIOCAMPISTA', 'Diestro', '', ''],
+        ['8', 'Mediocampista 2', 'MEDIOCAMPISTA', 'Diestro', '', ''],
+        ['10', 'Mediocampista 3', 'MEDIOCAMPISTA', 'Zurdo', '', ''],
+        ['7', 'Delantero 1', 'DELANTERO', 'Diestro', '', ''],
+        ['9', 'Delantero 2', 'DELANTERO', 'Diestro', '', ''],
+        ['11', 'Delantero 3', 'DELANTERO', 'Zurdo', '', '']
+      ];
+      ejemplos.forEach(ej => data.push(ej));
+    }
+
+    for (let i = 1; i <= 15; i++) {
+      data.push(['', '', '', '', '', '']);
+    }
+
+    const ws = window.XLSX.utils.aoa_to_sheet(data);
+    ws['!cols'] = [{ wch: 12 }, { wch: 35 }, { wch: 25 }, { wch: 15 }, { wch: 18 }, { wch: 22 }];
+    window.XLSX.utils.book_append_sheet(wb, ws, 'Plantel Oficial');
+    window.XLSX.writeFile(wb, `plantilla_oficial_${clubSafe}_${catSafe}.xlsx`);
+    mostrarNotificacionApp('Plantilla Descargada', '📥 Plantilla Excel (.xlsx) oficial lista para rellenar.');
+    return;
+  }
+
   const fileName = `plantilla_oficial_${clubSafe}_${catSafe}.xls`;
   const html = generarHTMLPlantillaExcel(false);
   descargarArchivoExcel(html, fileName);
-  mostrarNotificacionApp('Plantilla Descargada', '📥 Plantilla Excel membretada con logos de 11FUT MANAGER y G&K NOVA lista para rellenar.');
+  mostrarNotificacionApp('Plantilla Descargada', '📥 Plantilla Excel membretada lista para rellenar.');
 }
 
 export function exportarPlantelExcel() {
   const clubSafe = (perfil.club || 'plantel').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_');
   const catSafe = (perfil.categoriaActiva || 'oficial').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_');
+  const clubNombre = (perfil.club || '11FUT MANAGER').toUpperCase();
+  const catNombre = (perfil.categoriaActiva || 'SUB-14').toUpperCase();
+  const fechaHoy = new Date().toLocaleDateString('es-ES');
+  const ct = plantel.cuerpoTecnico || {};
+  const caps = plantel.capitanes || ['', '', ''];
+
+  if (window.XLSX) {
+    const wb = window.XLSX.utils.book_new();
+    const data = [
+      ['11FUT MANAGER • GESTIÓN DEPORTIVA & TÁCTICA'],
+      ['REPORTE OFICIAL DE PLANTEL REGISTRADO'],
+      ['INSTITUCIÓN / CLUB:', clubNombre, 'CATEGORÍA:', catNombre, 'FECHA:', fechaHoy],
+      [''],
+      ['🧥 CUERPO TÉCNICO OFICIAL'],
+      ['CARGO TÉCNICO', 'NOMBRE Y APELLIDOS', 'TELÉFONO / WHATSAPP', 'ESTADO'],
+      ['Director Técnico (DT)', ct.dt || '', '', 'Activo'],
+      ['Asistente Técnico (AT)', ct.at || '', '', 'Activo'],
+      ['Preparador Físico (PF)', ct.pf || '', '', 'Activo'],
+      ['Médico / Fisioterapeuta', ct.med || '', '', 'Activo'],
+      [''],
+      ['⭐ CAPITANES DEL EQUIPO'],
+      ['ORDEN', 'NOMBRE DEL CAPITÁN', 'DORSAL (#)', 'ROL'],
+      ['1er Capitán', caps[0] || '', (caps[0] && plantel.dorsales && plantel.dorsales[caps[0]]) || '', 'Titular'],
+      ['2do Capitán', caps[1] || '', (caps[1] && plantel.dorsales && plantel.dorsales[caps[1]]) || '', 'Subcapitán'],
+      ['3er Capitán', caps[2] || '', (caps[2] && plantel.dorsales && plantel.dorsales[caps[2]]) || '', 'Alterno'],
+      [''],
+      ['⚽ LISTA DE JUGADORES REGISTRADOS'],
+      ['# DORSAL', 'NOMBRE Y APELLIDOS DEL JUGADOR', 'POSICIÓN PRINCIPAL', 'PIERNA HÁBIL', 'FECHA NAC. / EDAD', 'CONTACTO / TELÉFONO']
+    ];
+
+    const ordenPos = [
+      { key: 'por', label: 'PORTERO' },
+      { key: 'def', label: 'DEFENSA' },
+      { key: 'med', label: 'MEDIOCAMPISTA' },
+      { key: 'del', label: 'DELANTERO' }
+    ];
+
+    ordenPos.forEach(p => {
+      const list = (plantel && Array.isArray(plantel[p.key])) ? plantel[p.key].filter(Boolean) : [];
+      list.forEach(nombre => {
+        const dorsal = (plantel.dorsales && plantel.dorsales[nombre]) || '';
+        data.push([dorsal, nombre, p.label, '', '', '']);
+      });
+    });
+
+    const ws = window.XLSX.utils.aoa_to_sheet(data);
+    ws['!cols'] = [{ wch: 12 }, { wch: 35 }, { wch: 25 }, { wch: 15 }, { wch: 18 }, { wch: 22 }];
+    window.XLSX.utils.book_append_sheet(wb, ws, 'Plantel Oficial');
+    window.XLSX.writeFile(wb, `plantel_registrado_${clubSafe}_${catSafe}.xlsx`);
+    mostrarNotificacionApp('Plantel Exportado', '📊 Hoja de cálculo Excel (.xlsx) oficial descargada con éxito.');
+    return;
+  }
+
   const fileName = `plantel_registrado_${clubSafe}_${catSafe}.xls`;
   const html = generarHTMLPlantillaExcel(true);
   descargarArchivoExcel(html, fileName);
@@ -640,7 +813,7 @@ window._descargarPlantillaExcel = () => descargarPlantillaExcel();
 window._exportarPlantelExcel = () => exportarPlantelExcel();
 
 // ════════════════════════════════════════════════════════════════
-// IMPORTADOR INTELIGENTE DE PLANTEL (EXCEL .XLS / .CSV / TEXTO)
+// IMPORTADOR INTELIGENTE DE PLANTEL (EXCEL .XLSX / .XLS / .CSV)
 // ════════════════════════════════════════════════════════════════
 export function importarPlantelArchivo(input) {
   if (!input.files || !input.files[0]) return;
@@ -651,41 +824,72 @@ export function importarPlantelArchivo(input) {
     const arrayBuffer = reader.result;
     let rowsData = [];
 
-    // 1. Lectura binaria con SheetJS (soporta .xlsx, .xls binario, .xls HTML, .csv)
-    if (window.XLSX) {
+    const uint8 = new Uint8Array(arrayBuffer);
+
+    // Detección de firmas binarias reales de Excel
+    // .xlsx = ZIP magic bytes PK\x03\x04
+    const isZipXlsx = uint8.length > 4 && uint8[0] === 0x50 && uint8[1] === 0x4B && uint8[2] === 0x03 && uint8[3] === 0x04;
+    // .xls binario = OLE2 Compound File Binary (D0 CF 11 E0)
+    const isBiffXls = uint8.length > 4 && uint8[0] === 0xD0 && uint8[1] === 0xCF && uint8[2] === 0x11 && uint8[3] === 0xE0;
+
+    let textContent = '';
+    if (!isZipXlsx && !isBiffXls) {
       try {
-        const data = new Uint8Array(arrayBuffer);
-        const workbook = window.XLSX.read(data, { type: 'array' });
+        if (uint8[0] === 0xFF && uint8[1] === 0xFE) {
+          textContent = new TextDecoder('utf-16le').decode(uint8);
+        } else if (uint8[0] === 0xFE && uint8[1] === 0xFF) {
+          textContent = new TextDecoder('utf-16be').decode(uint8);
+        } else {
+          textContent = new TextDecoder('utf-8').decode(uint8);
+        }
+      } catch (e) {
+        textContent = '';
+      }
+    }
+
+    // A. Si el archivo es HTML (como la plantilla original descargada con membrete)
+    const isHtml = textContent && (
+      textContent.toLowerCase().includes('<table') || 
+      textContent.toLowerCase().includes('<html') || 
+      textContent.toLowerCase().includes('<tr')
+    );
+
+    if (isHtml) {
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(textContent, 'text/html');
+        const trs = doc.querySelectorAll('tr');
+        trs.forEach(tr => {
+          const cells = Array.from(tr.querySelectorAll('td, th')).map(c => (c.textContent || '').trim().replace(/\u00a0/g, ' '));
+          if (cells.some(c => c.length > 0)) rowsData.push(cells);
+        });
+      } catch (errHtml) {
+        console.warn('Error en DOMParser HTML:', errHtml);
+      }
+    }
+
+    // B. Si es archivo binario (.xlsx / .xls binario) o si el parser HTML no extrajo filas
+    if ((!rowsData || rowsData.length === 0) && window.XLSX) {
+      try {
+        const workbook = window.XLSX.read(uint8, { type: 'array' });
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
         rowsData = window.XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
       } catch (errXlsx) {
-        console.warn('Lectura XLSX falló, intentando fallback de texto:', errXlsx);
+        console.warn('Lectura XLSX falló:', errXlsx);
       }
     }
 
-    // 2. Fallback de texto si SheetJS no está o falló
+    // C. Fallback a CSV / texto delimitado
     if (!rowsData || rowsData.length === 0) {
       try {
-        const decoder = new TextDecoder('utf-8');
-        const text = decoder.decode(arrayBuffer);
-        if (text.includes('<table') || text.includes('<tr')) {
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(text, 'text/html');
-          const trs = doc.querySelectorAll('tr');
-          trs.forEach(tr => {
-            const cells = Array.from(tr.querySelectorAll('td, th')).map(c => c.textContent.trim());
-            if (cells.length > 0) rowsData.push(cells);
-          });
-        } else {
-          const rawLines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-          rawLines.forEach(l => {
-            const parts = l.includes(';') ? l.split(';') : l.split(',');
-            rowsData.push(parts.map(p => p.trim().replace(/^["']|["']$/g, '')));
-          });
-        }
-      } catch (errText) {
-        console.error('Error en fallback de texto:', errText);
+        const rawLines = (textContent || new TextDecoder('utf-8').decode(uint8)).split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        rawLines.forEach(l => {
+          const parts = l.includes(';') ? l.split(';') : l.split(',');
+          rowsData.push(parts.map(p => p.trim().replace(/^["']|["']$/g, '').replace(/\u00a0/g, ' ')));
+        });
+      } catch (errCsv) {
+        console.error('Error en fallback CSV:', errCsv);
       }
     }
 
@@ -704,134 +908,152 @@ export function importarPlantelArchivo(input) {
     const delList = [];
     const dorsalesMap = { ...plantel.dorsales };
     let cap1 = '', cap2 = '', cap3 = '';
-    let dt = '', at = '', pf = '', med = '';
+    let dt = '', at = '', pf = '', staffMed = '';
+
+    const esPosicion = (s) => {
+      const low = s.toLowerCase().trim();
+      if (/\d/.test(low)) return false; // Nombres con número (ej: Portero 1) son jugadores
+      return /^(por|portero|arquero|gk|goalkeeper|def|defensa|zaguero|lateral|central|df|cb|lb|rb|med|medio|mediocampista|volante|pivote|mf|cm|cdm|cam|centrocampista|del|delantero|atacante|punta|extremo|fw|st|rw|lw)/i.test(low);
+    };
+
+    const normalizarPos = (s) => {
+      const low = s.toLowerCase().trim();
+      if (low.includes('por') || low.includes('arquero') || low.includes('gk')) return 'por';
+      if (low.includes('def') || low.includes('zaguero') || low.includes('lateral') || low.includes('central') || low.includes('df')) return 'def';
+      if (low.includes('del') || low.includes('atacante') || low.includes('punta') || low.includes('extremo') || low.includes('fw')) return 'del';
+      return 'med';
+    };
 
     rowsData.forEach(cells => {
       if (!cells || cells.length === 0) return;
-      const cleanCells = cells.map(c => String(c || '').trim());
+      const cleanCells = cells.map(c => String(c ?? '').trim().replace(/\u00a0/g, ' '));
       const rowText = cleanCells.join(' ').toLowerCase();
       if (!rowText) return;
 
-      // Ignorar títulos globales, notas institucionales y encabezados
+      // Ignorar encabezados institucionales
       if (rowText.includes('11fut manager') || 
           rowText.includes('plantilla institucional') || 
+          rowText.includes('plantilla oficial') || 
           rowText.includes('reporte oficial') ||
+          rowText.includes('gestión deportiva') ||
+          rowText.includes('gestion deportiva') ||
           rowText.includes('importante:') || 
           rowText.includes('instrucciones') ||
+          rowText.includes('instrucción:') ||
           rowText.includes('desarrollado por') ||
-          rowText.includes('todos los derechos')) {
+          rowText.includes('todos los derechos') ||
+          rowText.includes('institución / club') ||
+          rowText.includes('institucion / club')) {
         return;
       }
 
+      // Ignorar encabezados de columnas
       if ((rowText.includes('dorsal') && rowText.includes('nombre')) || 
           (rowText.includes('cargo') && rowText.includes('nombre')) ||
-          (rowText.includes('orden') && rowText.includes('nombre'))) {
+          (rowText.includes('orden') && rowText.includes('nombre')) ||
+          (rowText.includes('rol') && rowText.includes('nombre')) ||
+          (rowText.includes('posicion') && rowText.includes('nombre')) ||
+          (rowText.includes('posición') && rowText.includes('nombre'))) {
+        return;
+      }
+
+      // Ignorar títulos de sección
+      if (rowText.includes('cuerpo técnico') || 
+          rowText.includes('cuerpo tecnico') || 
+          rowText.includes('capitanes del equipo') || 
+          rowText.includes('lista oficial de jugadores') || 
+          rowText.includes('lista de jugadores') ||
+          rowText.includes('listado oficial')) {
         return;
       }
 
       // Cuerpo técnico
       if (rowText.includes('director t') || rowText.includes('(dt)')) {
-        const val = cleanCells.find((c, i) => i > 0 && c && !c.toLowerCase().includes('director') && !c.toLowerCase().includes('(dt)') && !c.toLowerCase().includes('activo'));
+        const val = cleanCells.find((c, i) => i > 0 && c && !c.toLowerCase().includes('director') && !c.toLowerCase().includes('(dt)') && !c.toLowerCase().includes('activo') && !c.toLowerCase().includes('cargo'));
         if (val) dt = val;
         return;
       }
       if (rowText.includes('asistente') || rowText.includes('(at)')) {
-        const val = cleanCells.find((c, i) => i > 0 && c && !c.toLowerCase().includes('asistente') && !c.toLowerCase().includes('(at)') && !c.toLowerCase().includes('activo'));
+        const val = cleanCells.find((c, i) => i > 0 && c && !c.toLowerCase().includes('asistente') && !c.toLowerCase().includes('(at)') && !c.toLowerCase().includes('activo') && !c.toLowerCase().includes('cargo'));
         if (val) at = val;
         return;
       }
       if (rowText.includes('preparador') || rowText.includes('(pf)')) {
-        const val = cleanCells.find((c, i) => i > 0 && c && !c.toLowerCase().includes('preparador') && !c.toLowerCase().includes('(pf)') && !c.toLowerCase().includes('activo'));
+        const val = cleanCells.find((c, i) => i > 0 && c && !c.toLowerCase().includes('preparador') && !c.toLowerCase().includes('(pf)') && !c.toLowerCase().includes('activo') && !c.toLowerCase().includes('cargo'));
         if (val) pf = val;
         return;
       }
       if (rowText.includes('médico') || rowText.includes('medico') || rowText.includes('kinesio') || rowText.includes('fisio')) {
-        const val = cleanCells.find((c, i) => i > 0 && c && !c.toLowerCase().includes('médico') && !c.toLowerCase().includes('medico') && !c.toLowerCase().includes('activo'));
-        if (val) med = val;
+        const val = cleanCells.find((c, i) => i > 0 && c && !c.toLowerCase().includes('médico') && !c.toLowerCase().includes('medico') && !c.toLowerCase().includes('activo') && !c.toLowerCase().includes('cargo'));
+        if (val) staffMed = val;
         return;
       }
 
       // Capitanes
       if (rowText.includes('1er cap') || rowText.includes('primer cap')) {
-        const val = cleanCells.find((c, i) => i > 0 && c && !c.toLowerCase().includes('capit') && !c.toLowerCase().includes('titular') && !/^\d+$/.test(c));
+        const val = cleanCells.find((c, i) => i > 0 && c && !c.toLowerCase().includes('capit') && !c.toLowerCase().includes('titular') && !/^\d+$/.test(c) && !c.toLowerCase().includes('orden'));
         if (val) cap1 = val;
         return;
       }
       if (rowText.includes('2do cap') || rowText.includes('segundo cap') || rowText.includes('subcap')) {
-        const val = cleanCells.find((c, i) => i > 0 && c && !c.toLowerCase().includes('capit') && !c.toLowerCase().includes('subcap') && !/^\d+$/.test(c));
+        const val = cleanCells.find((c, i) => i > 0 && c && !c.toLowerCase().includes('capit') && !c.toLowerCase().includes('subcap') && !/^\d+$/.test(c) && !c.toLowerCase().includes('orden'));
         if (val) cap2 = val;
         return;
       }
       if (rowText.includes('3er cap') || rowText.includes('tercer cap')) {
-        const val = cleanCells.find((c, i) => i > 0 && c && !c.toLowerCase().includes('capit') && !c.toLowerCase().includes('alterno') && !/^\d+$/.test(c));
+        const val = cleanCells.find((c, i) => i > 0 && c && !c.toLowerCase().includes('capit') && !c.toLowerCase().includes('alterno') && !/^\d+$/.test(c) && !c.toLowerCase().includes('orden'));
         if (val) cap3 = val;
         return;
       }
 
-      if (rowText.includes('cuerpo técnico') || rowText.includes('cuerpo tecnico') || rowText.includes('capitanes del equipo') || rowText.includes('lista oficial de jugadores') || rowText.includes('listado oficial')) {
-        return;
-      }
-
-      // Detección de Jugador
+      // Extracción Universal de Jugador
       let dorsal = '';
-      let nombre = '';
       let posicion = '';
+      let nombre = '';
 
-      const validCells = cleanCells.filter(Boolean);
-      if (validCells.length === 0) return;
-
-      // 1. Buscar dorsal numérico
-      for (let c of cleanCells) {
-        if (/^\d{1,2}$/.test(c) && !dorsal) {
-          dorsal = c;
+      // 1. Encontrar dorsal
+      for (const c of cleanCells) {
+        if (/^#?\s*\d{1,2}$/.test(c) && !dorsal) {
+          dorsal = c.replace('#', '').trim();
           break;
         }
       }
 
-      // 2. Buscar posición
-      for (let c of cleanCells) {
-        const low = c.toLowerCase();
-        if (/^(por|portero|arquero|gk|goalkeeper)$/i.test(low)) { posicion = 'por'; break; }
-        if (/^(def|defensa|zaguero|lateral|central|df|cb|lb|rb)$/i.test(low)) { posicion = 'def'; break; }
-        if (/^(med|medio|mediocampista|volante|pivote|mf|cm|cdm|cam)$/i.test(low)) { posicion = 'med'; break; }
-        if (/^(del|delantero|atacante|punta|extremo|fw|st|rw|lw)$/i.test(low)) { posicion = 'del'; break; }
-      }
-
-      if (!posicion) {
-        for (let c of cleanCells) {
-          const low = c.toLowerCase();
-          if (low.includes('por') || low.includes('arquero') || low.includes('portero')) { posicion = 'por'; break; }
-          if (low.includes('def') || low.includes('zaguero') || low.includes('lateral') || low.includes('central')) { posicion = 'def'; break; }
-          if (low.includes('med') || low.includes('volante') || low.includes('pivote') || low.includes('medio')) { posicion = 'med'; break; }
-          if (low.includes('del') || low.includes('atacante') || low.includes('punta') || low.includes('extremo')) { posicion = 'del'; break; }
+      // 2. Encontrar posición
+      for (const c of cleanCells) {
+        if (esPosicion(c) && !posicion) {
+          posicion = normalizarPos(c);
+          break;
         }
       }
 
-      // 3. Buscar nombre
-      for (let c of cleanCells) {
-        const low = c.toLowerCase();
-        if (c === dorsal) continue;
-        if (c.toLowerCase() === posicion.toLowerCase()) continue;
-        if (/^(diestro|zurdo|ambidiestro|derecho|izquierdo)$/i.test(low)) continue;
+      // 3. Encontrar nombre
+      for (const c of cleanCells) {
+        if (!c) continue;
+        if (c === dorsal || `#${dorsal}` === c) continue;
+        if (esPosicion(c)) continue;
+        if (/^(diestro|zurdo|ambidiestro|derecho|izquierdo|activo|inactivo)$/i.test(c)) continue;
         if (/^\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}$/.test(c)) continue;
         if (/^\+?\d{6,}$/.test(c.replace(/[\s\-]/g, ''))) continue;
+        if (/^(dorsal|nombre|posici|edad|contacto|estado|rol)$/i.test(c)) continue;
         if (c.length >= 2) {
           nombre = c;
           break;
         }
       }
 
-      if (nombre && !/^(portero|defensa|mediocampista|delantero)\s+\d+$/i.test(nombre)) {
-        if (dorsal) dorsalesMap[nombre] = dorsal;
-        if (posicion.includes('por') || posicion.includes('arquero') || posicion.includes('gk')) {
-          if (!porList.includes(nombre)) porList.push(nombre);
-        } else if (posicion.includes('def') || posicion.includes('zaguero') || posicion.includes('lateral') || posicion.includes('central') || posicion.includes('df')) {
-          if (!defList.includes(nombre)) defList.push(nombre);
-        } else if (posicion.includes('del') || posicion.includes('atacante') || posicion.includes('punta') || posicion.includes('extremo') || posicion.includes('fw')) {
-          if (!delList.includes(nombre)) delList.push(nombre);
-        } else {
-          if (!medList.includes(nombre)) medList.push(nombre);
-        }
+      if (!nombre) return;
+      if (dorsal) dorsalesMap[nombre] = dorsal;
+
+      const p = posicion || 'med';
+      if (p === 'por') {
+        if (!porList.includes(nombre)) porList.push(nombre);
+      } else if (p === 'def') {
+        if (!defList.includes(nombre)) defList.push(nombre);
+      } else if (p === 'del') {
+        if (!delList.includes(nombre)) delList.push(nombre);
+      } else {
+        if (!medList.includes(nombre)) medList.push(nombre);
       }
     });
 
@@ -844,7 +1066,7 @@ export function importarPlantelArchivo(input) {
     if (dt) plantel.cuerpoTecnico.dt = dt;
     if (at) plantel.cuerpoTecnico.at = at;
     if (pf) plantel.cuerpoTecnico.pf = pf;
-    if (med) plantel.cuerpoTecnico.med = med;
+    if (staffMed) plantel.cuerpoTecnico.med = staffMed;
 
     if (cap1) plantel.capitanes[0] = cap1;
     if (cap2) plantel.capitanes[1] = cap2;
