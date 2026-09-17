@@ -2722,3 +2722,87 @@ body.body-fullscreen-active {
   border-color: var(--oro);
   transform: translateY(-1px);
 }
+
+/* ── TACTICAL FIELD POSITION SELECTOR (PARLA SPORT STYLE) ── */
+.tactical-pitch-container {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  height: 270px;
+  margin: 0 auto;
+  border-radius: 14px;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 90%, #064e3b 0%, #032d23 60%, #021a14 100%);
+  border: 2px solid rgba(16, 185, 129, 0.35);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), inset 0 0 40px rgba(0, 0, 0, 0.6);
+  user-select: none;
+}
+
+.tactical-pitch-stripes {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.02) 0px, rgba(255, 255, 255, 0.02) 30px, transparent 30px, transparent 60px);
+  pointer-events: none;
+}
+
+.tactical-pos-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  background: rgba(15, 23, 42, 0.88);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  color: #e2e8f0;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 800;
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+}
+
+.tactical-pos-node:hover {
+  transform: translate(-50%, -50%) scale(1.12);
+  border-color: rgba(255, 255, 255, 0.7);
+  background: rgba(30, 41, 59, 0.95);
+  z-index: 5;
+}
+
+.tactical-pos-node.active {
+  transform: translate(-50%, -50%) scale(1.18);
+  z-index: 10;
+}
+
+.tactical-pos-node .pos-check-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #fff;
+  color: #000;
+  font-size: 9px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+@keyframes highlightNewPlayerAnim {
+  0% { background: rgba(212, 175, 55, 0.45); border-color: var(--oro); box-shadow: 0 0 16px rgba(212, 175, 55, 0.85); }
+  60% { background: rgba(212, 175, 55, 0.2); border-color: var(--oro); box-shadow: 0 0 8px rgba(212, 175, 55, 0.4); }
+  100% { background: transparent; border-color: rgba(255, 255, 255, 0.08); box-shadow: none; }
+}
+
+.highlight-new-player {
+  animation: highlightNewPlayerAnim 2.5s ease-out forwards;
+}

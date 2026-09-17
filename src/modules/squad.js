@@ -106,6 +106,34 @@ export const POS_CONFIG = {
   del: { title: '⚡ DELANTEROS', singular: 'Delantero', badge: 'DEL', class: 'badge-del' }
 };
 
+export const FIELD_POSITIONS = [
+  // Delantera (Ataque) - zona verde
+  { id: 'EI',  label: 'Extremo Izquierdo',          shortLabel: 'EI',  category: 'Delantero',    catKey: 'del', zone: 'attack',     x: 20, y: 16 },
+  { id: 'DC',  label: 'Delantero Centro',           shortLabel: 'DC',  category: 'Delantero',    catKey: 'del', zone: 'attack',     x: 50, y: 12 },
+  { id: 'ED',  label: 'Extremo Derecho',            shortLabel: 'ED',  category: 'Delantero',    catKey: 'del', zone: 'attack',     x: 80, y: 16 },
+
+  // Mediocampo (Organización) - zona violeta
+  { id: 'MCO', label: 'Mediapunta (Ofensivo)',      shortLabel: 'MCO', category: 'Mediocampista', catKey: 'med', zone: 'midfield',   x: 50, y: 32 },
+  { id: 'MC',  label: 'Mediocentro (Organizador)',  shortLabel: 'MC',  category: 'Mediocampista', catKey: 'med', zone: 'midfield',   x: 50, y: 48 },
+  { id: 'MCD', label: 'Mediocentro Defensivo',      shortLabel: 'MCD', category: 'Mediocampista', catKey: 'med', zone: 'midfield',   x: 50, y: 64 },
+
+  // Línea Defensiva (Línea de 4) - zona azul
+  { id: 'LI',   label: 'Lateral Izquierdo',         shortLabel: 'LI',  category: 'Defensa',      catKey: 'def', zone: 'defense',    x: 18, y: 78 },
+  { id: 'DFCI', label: 'Defensa Central (Izquierdo)', shortLabel: 'DFC', category: 'Defensa',    catKey: 'def', zone: 'defense',    x: 38, y: 80 },
+  { id: 'DFCD', label: 'Defensa Central (Derecho)',   shortLabel: 'DFC', category: 'Defensa',    catKey: 'def', zone: 'defense',    x: 62, y: 80 },
+  { id: 'LD',   label: 'Lateral Derecho',           shortLabel: 'LD',  category: 'Defensa',      catKey: 'def', zone: 'defense',    x: 82, y: 78 },
+
+  // Portería - zona oro/ámbar
+  { id: 'POR', label: 'Portero (Arquero)',          shortLabel: 'POR', category: 'Portero',      catKey: 'por', zone: 'goalkeeper', x: 50, y: 92 }
+];
+
+export const ZONE_COLORS = {
+  goalkeeper: { bg: 'rgba(245, 158, 11, 0.25)', border: '#F59E0B', text: '#FBBF24', glow: 'rgba(245, 158, 11, 0.45)' },
+  defense:    { bg: 'rgba(59, 130, 246, 0.25)', border: '#3B82F6', text: '#60A5FA', glow: 'rgba(59, 130, 246, 0.45)' },
+  midfield:   { bg: 'rgba(139, 92, 246, 0.25)', border: '#8B5CF6', text: '#A78BFA', glow: 'rgba(139, 92, 246, 0.45)' },
+  attack:     { bg: 'rgba(16, 185, 129, 0.25)', border: '#10B981', text: '#34D399', glow: 'rgba(16, 185, 129, 0.45)' }
+};
+
 export function initPlantelUI() {
   const cont = document.getElementById('lista-inputs');
   if (!cont) return;
@@ -307,6 +335,235 @@ window._onPlayerNameInput = (cat, idx, val) => {
   if (countEl && plantel[cat]) {
     countEl.textContent = plantel[cat].filter(Boolean).length;
   }
+};
+
+let selectedPosNuevoJugador = 'DC';
+
+export function abrirModalNuevoJugador() {
+  const modal = document.getElementById('modal');
+  const modalContent = document.getElementById('modal-content');
+  if (!modal || !modalContent) return;
+
+  selectedPosNuevoJugador = 'DC';
+  renderModalNuevoJugadorBody();
+  modal.style.display = 'flex';
+
+  setTimeout(() => {
+    const inp = document.getElementById('nuevo-jugador-nombre');
+    if (inp) inp.focus();
+  }, 100);
+}
+
+window._abrirModalNuevoJugador = () => abrirModalNuevoJugador();
+
+function renderModalNuevoJugadorBody() {
+  const modalContent = document.getElementById('modal-content');
+  if (!modalContent) return;
+
+  const currentPos = FIELD_POSITIONS.find(p => p.id === selectedPosNuevoJugador) || FIELD_POSITIONS[1];
+  const color = ZONE_COLORS[currentPos.zone] || ZONE_COLORS.attack;
+  const cfg = POS_CONFIG[currentPos.catKey];
+
+  let nodesHtml = '';
+  FIELD_POSITIONS.forEach(pos => {
+    const isSel = pos.id === selectedPosNuevoJugador;
+    const zColor = ZONE_COLORS[pos.zone];
+    const nodeStyle = isSel
+      ? `left:${pos.x}%;top:${pos.y}%;border:2px solid ${zColor.border};background:${zColor.bg};box-shadow:0 0 14px ${zColor.glow}, inset 0 0 6px ${zColor.glow};color:${zColor.text};`
+      : `left:${pos.x}%;top:${pos.y}%;`;
+
+    nodesHtml += `
+      <button type="button" class="tactical-pos-node ${isSel ? 'active' : ''}" id="tactical-node-${pos.id}" style="${nodeStyle}" title="${pos.label} (${pos.category})" onclick="window._seleccionarPosNuevoJugador('${pos.id}')">
+        ${pos.shortLabel}
+        ${isSel ? `<span class="pos-check-badge" style="background:${zColor.border};">✓</span>` : ''}
+      </button>
+    `;
+  });
+
+  modalContent.innerHTML = `
+    <div style="max-width:440px;width:100%;margin:0 auto;">
+      <!-- CABECERA -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1px solid #222;padding-bottom:10px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:var(--oro);display:flex;align-items:center;gap:8px;">
+          <span>👤 REGISTRAR JUGADOR MANUALMENTE</span>
+        </div>
+        <button type="button" onclick="document.getElementById('modal').style.display='none'" style="background:none;border:none;color:#aaa;font-size:22px;cursor:pointer;line-height:1;" title="Cerrar">✕</button>
+      </div>
+
+      <!-- CAMPOS DEL JUGADOR -->
+      <div style="display:grid;grid-template-columns:1fr 95px;gap:10px;margin-bottom:12px;">
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--oro);display:block;margin-bottom:4px;">NOMBRE DEL JUGADOR: *</label>
+          <input type="text" id="nuevo-jugador-nombre" placeholder="Ej: Lionel Messi" style="width:100%;font-size:13px;padding:8px 10px;border-radius:8px;" onkeydown="if(event.key==='Enter') window._guardarNuevoJugadorManual()">
+        </div>
+        <div>
+          <label style="font-size:11px;font-weight:700;color:var(--oro);display:block;margin-bottom:4px;">DORSAL (#):</label>
+          <input type="number" id="nuevo-jugador-dorsal" placeholder="10" min="1" max="99" style="width:100%;font-size:13px;padding:8px 10px;border-radius:8px;text-align:center;" onkeydown="if(event.key==='Enter') window._guardarNuevoJugadorManual()">
+        </div>
+      </div>
+
+      <!-- SELECTOR TÁCTICO EN CANCHA (PARLA SPORT STYLE) -->
+      <div style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-size:11px;font-weight:800;color:#fff;letter-spacing:0.5px;">⚽ POSICIÓN TÁCTICA EN CANCHA:</span>
+          <span style="font-size:10px;color:#34d399;font-weight:600;">Toca el círculo en el campo</span>
+        </div>
+
+        <!-- CANCHA TÁCTICA -->
+        <div class="tactical-pitch-container">
+          <div class="tactical-pitch-stripes"></div>
+
+          <!-- LÍNEAS REGLAMENTARIAS -->
+          <div style="position:absolute;inset:8px;border:1.5px solid rgba(255,255,255,0.25);border-bottom:2px solid rgba(255,255,255,0.4);border-radius:4px;pointer-events:none;"></div>
+          <div style="position:absolute;top:8px;left:8px;right:8px;height:1.5px;background:rgba(255,255,255,0.4);pointer-events:none;"></div>
+          <div style="position:absolute;top:8px;left:50%;transform:translateX(-50%);width:70px;height:35px;border:1.5px solid rgba(255,255,255,0.25);border-top:none;border-bottom-left-radius:35px;border-bottom-right-radius:35px;pointer-events:none;"></div>
+          <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:62%;height:58px;border:1.5px solid rgba(255,255,255,0.25);border-bottom:none;pointer-events:none;"></div>
+          <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:34%;height:26px;border:1.5px solid rgba(255,255,255,0.25);border-bottom:none;pointer-events:none;"></div>
+          <div style="position:absolute;bottom:42px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,0.4);pointer-events:none;"></div>
+          <div style="position:absolute;bottom:66px;left:50%;transform:translateX(-50%);width:46px;height:20px;border:1.5px solid rgba(255,255,255,0.2);border-bottom:none;border-top-left-radius:25px;border-top-right-radius:25px;pointer-events:none;"></div>
+          <div style="position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:26%;height:5px;border:1.5px solid rgba(255,255,255,0.6);border-radius:2px 2px 0 0;background:rgba(255,255,255,0.1);pointer-events:none;"></div>
+
+          <!-- NODOS DE POSICIÓN -->
+          <div id="tactical-nodes-wrap">
+            ${nodesHtml}
+          </div>
+        </div>
+      </div>
+
+      <!-- RESUMEN DE POSICIÓN Y DESTINO -->
+      <div id="resumen-pos-tactica" style="background:#0a0a0a;border:1px solid #222;border-radius:8px;padding:8px 12px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:11px;color:#888;">Posición táctica:</span>
+          <span id="badge-tactica-info" style="font-size:12px;font-weight:800;color:${color.text};background:${color.bg};border:1px solid ${color.border};padding:2px 8px;border-radius:6px;">
+            ${currentPos.label} (${currentPos.shortLabel})
+          </span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:11px;color:#888;">Se clasifica en:</span>
+          <span id="badge-categoria-destino" class="pos-badge ${cfg.class}" style="font-size:11px;font-weight:900;padding:2px 8px;">
+            ${cfg.title}
+          </span>
+        </div>
+      </div>
+
+      <!-- BOTONES DE ACCIÓN -->
+      <div style="display:flex;gap:8px;">
+        <button type="button" class="btn btn-gold" style="flex:2;font-weight:900;font-size:13px;padding:10px;" onclick="window._guardarNuevoJugadorManual()">
+          💾 REGISTRAR Y CLASIFICAR
+        </button>
+        <button type="button" class="btn btn-gray" style="flex:1;font-size:12px;padding:10px;" onclick="document.getElementById('modal').style.display='none'">
+          CANCELAR
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+window._seleccionarPosNuevoJugador = (posId) => {
+  selectedPosNuevoJugador = posId;
+  const currentPos = FIELD_POSITIONS.find(p => p.id === posId) || FIELD_POSITIONS[1];
+  const color = ZONE_COLORS[currentPos.zone] || ZONE_COLORS.attack;
+  const cfg = POS_CONFIG[currentPos.catKey];
+
+  FIELD_POSITIONS.forEach(pos => {
+    const btn = document.getElementById(`tactical-node-${pos.id}`);
+    if (!btn) return;
+    const isSel = pos.id === posId;
+    const zColor = ZONE_COLORS[pos.zone];
+
+    if (isSel) {
+      btn.className = 'tactical-pos-node active';
+      btn.style.border = `2px solid ${zColor.border}`;
+      btn.style.background = zColor.bg;
+      btn.style.boxShadow = `0 0 14px ${zColor.glow}, inset 0 0 6px ${zColor.glow}`;
+      btn.style.color = zColor.text;
+      btn.innerHTML = `${pos.shortLabel}<span class="pos-check-badge" style="background:${zColor.border};">✓</span>`;
+    } else {
+      btn.className = 'tactical-pos-node';
+      btn.style.border = '1.5px solid rgba(255,255,255,0.28)';
+      btn.style.background = 'rgba(15, 23, 42, 0.88)';
+      btn.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.5)';
+      btn.style.color = '#e2e8f0';
+      btn.innerHTML = pos.shortLabel;
+    }
+  });
+
+  const badgeInfo = document.getElementById('badge-tactica-info');
+  if (badgeInfo) {
+    badgeInfo.style.color = color.text;
+    badgeInfo.style.background = color.bg;
+    badgeInfo.style.borderColor = color.border;
+    badgeInfo.textContent = `${currentPos.label} (${currentPos.shortLabel})`;
+  }
+
+  const badgeDestino = document.getElementById('badge-categoria-destino');
+  if (badgeDestino) {
+    badgeDestino.className = `pos-badge ${cfg.class}`;
+    badgeDestino.textContent = cfg.title;
+  }
+};
+
+window._guardarNuevoJugadorManual = async () => {
+  const nombreInput = document.getElementById('nuevo-jugador-nombre');
+  const dorsalInput = document.getElementById('nuevo-jugador-dorsal');
+  const nombre = (nombreInput?.value || '').trim();
+  const dorsal = (dorsalInput?.value || '').trim();
+
+  if (!nombre) {
+    mostrarNotificacionApp('Campo Requerido', 'Por favor ingresa el nombre del jugador.', false);
+    if (nombreInput) nombreInput.focus();
+    return;
+  }
+
+  const posItem = FIELD_POSITIONS.find(p => p.id === selectedPosNuevoJugador) || FIELD_POSITIONS[1];
+  const catKey = posItem.catKey;
+
+  syncPlantelFromUI();
+
+  const todos = [...(plantel.por || []), ...(plantel.def || []), ...(plantel.med || []), ...(plantel.del || [])];
+  if (todos.some(p => p && p.toLowerCase() === nombre.toLowerCase())) {
+    mostrarNotificacionApp('Jugador Duplicado', `El jugador "${nombre}" ya está registrado en el plantel.`, false);
+    return;
+  }
+
+  if (!plantel[catKey]) plantel[catKey] = [];
+  plantel[catKey].push(nombre);
+
+  if (dorsal) {
+    if (!plantel.dorsales) plantel.dorsales = {};
+    plantel.dorsales[nombre] = dorsal;
+  }
+
+  const modal = document.getElementById('modal');
+  if (modal) modal.style.display = 'none';
+
+  filtroTextoPlantel = '';
+  filtroPosPlantel = 'TODOS';
+  const searchInp = document.getElementById('input-buscar-jugador');
+  if (searchInp) searchInp.value = '';
+  document.querySelectorAll('#squad-pos-chips .filter-chip').forEach(chip => {
+    chip.classList.toggle('active', chip.textContent.trim() === 'TODOS');
+  });
+
+  initPlantelUI();
+  aplicarPlantelUI();
+  renderCapitanesUI();
+
+  autoSaveLocal();
+  await guardarFirebase();
+
+  setTimeout(() => {
+    const newIdx = plantel[catKey].length - 1;
+    const row = document.querySelector(`.jugador-card-row[data-pos="${catKey}"][data-idx="${newIdx}"]`);
+    if (row) {
+      row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      row.classList.add('highlight-new-player');
+      setTimeout(() => row.classList.remove('highlight-new-player'), 2800);
+    }
+  }, 150);
+
+  const cfg = POS_CONFIG[catKey];
+  mostrarNotificacionApp('Jugador Registrado', `✅ ${nombre} clasificado en ${cfg.title} con éxito.`);
 };
 
 export async function guardarSquad() {
