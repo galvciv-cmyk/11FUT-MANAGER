@@ -1,4 +1,4 @@
-import { perfil, setPinHash, setCategoriaActiva, autoSaveLocal, updateStats, updateHistorial, categoriasData, plantel, currentProfile, isSuperAdmin, DEFAULT_PLANTEL, DEFAULT_PERFIL, esAdminOEntrenadorUnico, TABLA_PLANES_SAAS, TABLA_SAAS_PLANES, obtenerPlanPorDTs, KITS } from "./state.js";
+import { perfil, setPinHash, setCategoriaActiva, autoSaveLocal, updateStats, updateHistorial, categoriasData, plantel, currentProfile, isSuperAdmin, DEFAULT_PLANTEL, DEFAULT_PERFIL, esAdminOEntrenadorUnico, TABLA_PLANES_SAAS, TABLA_SAAS_PLANES, obtenerPlanPorDTs, KITS, generarFechaVencimientoPrueba } from "./state.js";
 import { guardarFirebase, hashPin, getPublicId, auth, db } from "../services/firebase.js";
 import { doc, setDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
@@ -1754,11 +1754,15 @@ export async function finalizarOnboardingWizard() {
       if (typeof window._mostrarPantallaVerificacionEmail === 'function') {
         window._mostrarPantallaVerificacionEmail(user);
       }
-    } else if (perfil.estadoCuenta === 'PENDIENTE' && !isMaster) {
-      if (typeof window._mostrarPantallaEsperaAprobacion === 'function') {
-        window._mostrarPantallaEsperaAprobacion();
+    } else if ((perfil.estadoCuenta === 'CANCELADA' || perfil.estadoCuenta === 'CANCELADO') && !isMaster) {
+      if (typeof window._mostrarPantallaCuentaCancelada === 'function') {
+        window._mostrarPantallaCuentaCancelada();
       }
     } else {
+      if ((!perfil.estadoCuenta || perfil.estadoCuenta === 'PENDIENTE') && !isMaster) {
+        perfil.estadoCuenta = 'PRUEBA';
+        perfil.fechaVencimiento = generarFechaVencimientoPrueba();
+      }
       if (typeof window._mostrarProfileSelectorSetup === 'function') {
         window._mostrarProfileSelectorSetup();
       }
@@ -1783,12 +1787,18 @@ export async function finalizarOnboardingWizard() {
       if (typeof window._mostrarPantallaVerificacionEmail === 'function') {
         window._mostrarPantallaVerificacionEmail(user);
       }
-    } else if (perfil.estadoCuenta === 'PENDIENTE' && !isMaster) {
-      if (typeof window._mostrarPantallaEsperaAprobacion === 'function') {
-        window._mostrarPantallaEsperaAprobacion();
+    } else if ((perfil.estadoCuenta === 'CANCELADA' || perfil.estadoCuenta === 'CANCELADO') && !isMaster) {
+      if (typeof window._mostrarPantallaCuentaCancelada === 'function') {
+        window._mostrarPantallaCuentaCancelada();
       }
-    } else if (typeof window._mostrarProfileSelectorSetup === 'function') {
-      window._mostrarProfileSelectorSetup();
+    } else {
+      if ((!perfil.estadoCuenta || perfil.estadoCuenta === 'PENDIENTE') && !isMaster) {
+        perfil.estadoCuenta = 'PRUEBA';
+        perfil.fechaVencimiento = generarFechaVencimientoPrueba();
+      }
+      if (typeof window._mostrarProfileSelectorSetup === 'function') {
+        window._mostrarProfileSelectorSetup();
+      }
     }
   }
 }

@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /dev-dist/
+Disallow: /src/
+
+Sitemap: https://11futmanager.com/sitemap.xml

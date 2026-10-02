@@ -1,7 +1,7 @@
 import "./styles/main.css";
 import { isSuperAdmin, SUPER_ADMIN_EMAIL, perfil, setPinHash, setUserEmail, setCategoriaActiva, autoSaveLocal, historial, categoriasData, autoLoadLocal, plantel, setPublicViewActive } from "./modules/state.js";
 
-import { auth, hashPin, cargarFirebase, guardarFirebase, cargarFirebasePublico, limpiarDocumentosObsoletosFirebase, db } from "./services/firebase.js";
+import { auth, hashPin, cargarFirebase, guardarFirebase, cargarFirebasePublico, limpiarDocumentosObsoletosFirebase, db, useEmulator } from "./services/firebase.js";
 import { setDoc, doc, onSnapshot } from "firebase/firestore";
 import { cargarKits } from "./services/cloudinary.js";
 import { actualizarTactica, exportarPNG, setDrawingMode, setDrawingColor, setLineWidth, setLineDash, agregarMarcador, clearCanvas, toggleFullscreen, salirFullscreenTotal, guardarEsquemaCustom, limpiarCanchaYBanco, setVistaCancha, setModoPizarra, agregarFichaLibre, limpiarFichasLibres, abrirModalSustitucion, ejecutarSustitucion, undoCanvas, grabarPasoAnimacion, reproducirAnimacion, detenerAnimacion } from "./modules/tactics.js";
@@ -18,9 +18,10 @@ import { renderSuperAdminDashboard, renderMarquesinasDinamicas } from "./modules
 import { currentProfile, setCurrentProfile, getCurrentProfile, esAdminOEntrenadorUnico } from "./modules/state.js";
 import { initEntrenamientosUI, renderBibliotecaEjercicios, renderPlannerUI, renderAsistenciaUI, renderLesionesUI } from "./modules/training.js";
 import { subirImagenCloudinary } from "./services/cloudinary.js";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, sendEmailVerification } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, sendEmailVerification, applyActionCode } from "firebase/auth";
 import { registerBiometric, loginBiometric, isBiometricSupported } from "./modules/biometric.js";
 import { generarFechaVencimientoPrueba } from "./modules/state.js";
+import { checkRateLimit, resetRateLimit } from "./utils/rateLimiter.js";
 
 // ══════════════════════════════════════════
 // LISTA NEGRA — DOMINIOS DE EMAIL DESECHABLES
@@ -62,6 +63,27 @@ function _ocultarTodasLasPantallas() {
 
 let _verifPollTimer = null;
 let _pendingPollTimer = null;
+
+export async function autoAprobarEnEmuladorLocal(user) {
+  if (!user || !user.email) return;
+  try {
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || useEmulator;
+    if (!isLocal) return;
+
+    const resp = await fetch('http://127.0.0.1:9099/emulator/v1/projects/fut-manager-oficial/oobCodes');
+    if (resp.ok) {
+      const data = await resp.json();
+      const currentEmail = user.email.toLowerCase();
+      const targetOob = (data.oobCodes || []).reverse().find(o => (o.email || '').toLowerCase() === currentEmail);
+      if (targetOob && targetOob.oobCode) {
+        await applyActionCode(auth, targetOob.oobCode);
+        if (auth.currentUser) await auth.currentUser.reload();
+      }
+    }
+  } catch (e) {
+    // Modo silencioso: no interrumpir la experiencia local
+  }
+}
 
 export function mostrarPantallaVerificacionEmail(user) {
   window.location.hash = '#verificar-email';
@@ -124,11 +146,20 @@ export function mostrarPantallaVerificacionEmail(user) {
         }
         setTimeout(async () => {
           screen.style.display = 'none';
+          localStorage.setItem('11fut_email_verified', 'true');
           await cargarFirebase();
-          aplicarPerfil();
           const isMaster = isSuperAdmin();
-          if (perfil.estadoCuenta === 'PENDIENTE' && !isMaster) {
-            mostrarPantallaEsperaAprobacion();
+          
+          // ACTIVAR PRUEBA GRATUITA: Cuentas verificadas obtienen 3 días de prueba sin requerir pago
+          if ((perfil.estadoCuenta === 'PENDIENTE' || !perfil.estadoCuenta) && !isMaster) {
+            perfil.estadoCuenta = 'PRUEBA';
+            perfil.fechaVencimiento = generarFechaVencimientoPrueba();
+            await guardarFirebase();
+          }
+          aplicarPerfil();
+
+          if (!perfil.wizardCompletado && !isMaster) {
+            abrirOnboardingWizard(true);
           } else {
             renderProfileSelector(handleProfileSelected);
           }
@@ -778,12 +809,50 @@ function renderHistorialPublico() {
 // LOGIN & PERSISTENT AUTHENTICATION
 // ══════════════════════════════════════════
 async function login() {
-  const emailInput = document.getElementById('email-input')?.value.trim();
-  const pinInput = document.getElementById('pin-input')?.value.trim();
+  const emailInputEl = document.getElementById('email-input');
+  const pinInputEl = document.getElementById('pin-input');
+  const emailInput = emailInputEl?.value.trim();
+  const pinInput = pinInputEl?.value.trim();
   const statusEl = document.getElementById('login-status');
+  const errEl = document.getElementById('login-input-error');
 
-  if (!emailInput || !pinInput) {
-    if (statusEl) statusEl.textContent = 'Ingresa tu correo y PIN';
+  const limpiarErroresLogin = () => {
+    emailInputEl?.classList.remove('input-error');
+    pinInputEl?.classList.remove('input-error');
+    if (errEl) {
+      errEl.style.display = 'none';
+      errEl.textContent = '';
+    }
+  };
+
+  const mostrarErrorLogin = (msg, inputToFocus) => {
+    if (errEl) {
+      errEl.innerHTML = `⚠️ ${msg}`;
+      errEl.style.display = 'flex';
+    }
+    if (inputToFocus) {
+      inputToFocus.classList.add('input-error');
+      inputToFocus.focus();
+    }
+    if (statusEl) statusEl.textContent = '';
+  };
+
+  limpiarErroresLogin();
+
+  if (!emailInput) {
+    mostrarErrorLogin('Ingresa tu correo electrónico', emailInputEl);
+    return;
+  }
+  if (!pinInput) {
+    mostrarErrorLogin('Ingresa tu contraseña o PIN', pinInputEl);
+    return;
+  }
+
+  // 1. Rate Limiting de Peticiones: Máximo 5 intentos por minuto
+  const rateLimitKey = 'login:' + emailInput.toLowerCase();
+  const rl = checkRateLimit(rateLimitKey, 5, 60000);
+  if (!rl.allowed) {
+    mostrarErrorLogin(`Demasiados intentos fallidos. Por seguridad, espera ${rl.retryAfterSec} segundos.`, pinInputEl);
     return;
   }
 
@@ -796,13 +865,24 @@ async function login() {
     const hashed = await hashPin(pinInput + user.email);
     setPinHash(hashed);
 
+    // Éxito: Resetear contador de intentos fallidos
+    resetRateLimit(rateLimitKey);
+
     const isMaster = (user.email || '').toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
 
-    // 1. Validar si el correo está verificado
+    // 1. Validar si el correo está verificado (en local se auto-aprueba)
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || useEmulator;
     if (!user.emailVerified && !isMaster) {
-      document.getElementById('login-screen').style.display = 'none';
-      mostrarPantallaVerificacionEmail(user);
-      return;
+      if (isLocal) {
+        await autoAprobarEnEmuladorLocal(user);
+        localStorage.setItem('11fut_email_verified', 'true');
+      } else {
+        document.getElementById('login-screen').style.display = 'none';
+        mostrarPantallaVerificacionEmail(user);
+        return;
+      }
+    } else {
+      localStorage.setItem('11fut_email_verified', 'true');
     }
 
     if (statusEl) statusEl.textContent = 'Cargando datos...';
@@ -848,8 +928,8 @@ async function login() {
       return;
     }
 
-    // 2. Si ya configuró su Club pero su cuenta está pendiente o en revisión de aprobación por SuperAdmin
-    if (perfil.estadoCuenta === 'PENDIENTE' || perfil.estadoCuenta === 'EN_REVISION') {
+    // 2. Si ya configuró su Club pero su cuenta está pendiente o en revisión de aprobación por SuperAdmin (en prod)
+    if (!useEmulator && (perfil.estadoCuenta === 'PENDIENTE' || perfil.estadoCuenta === 'EN_REVISION')) {
       mostrarPantallaEsperaAprobacion();
       return;
     }
@@ -882,7 +962,15 @@ async function login() {
       }
     }
 
-    if (statusEl) statusEl.textContent = `Error: ${e.message || 'Correo o contraseña incorrectos'}`;
+    let userMsg = 'Correo o contraseña incorrectos';
+    if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+      userMsg = 'Credenciales incorrectas. Verifica tu correo y contraseña.';
+    } else if (e.code === 'auth/user-not-found') {
+      userMsg = 'No existe una cuenta registrada con este correo.';
+    } else if (e.code === 'auth/too-many-requests') {
+      userMsg = 'Acceso bloqueado temporalmente por seguridad. Espera unos momentos.';
+    }
+    mostrarErrorLogin(userMsg, pinInputEl);
   }
 }
 
@@ -988,6 +1076,13 @@ async function ejecutarRegistroUsuario() {
     return;
   }
 
+  // Rate Limiting anti-spam en registro (máximo 4 intentos por minuto)
+  const regRate = checkRateLimit('register_attempt', 4, 60000);
+  if (!regRate.allowed) {
+    mostrarNotificacionApp('Por favor espera', `Demasiados intentos de registro. Intenta de nuevo en ${regRate.retryAfterSec} segundos.`, false);
+    return;
+  }
+
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, emailInput, pinInput);
     const user = userCredential.user;
@@ -999,11 +1094,11 @@ async function ejecutarRegistroUsuario() {
 
     perfil.email = emailInput;
     perfil.whatsapp = waInput;
-    // Cuentas nuevas inician como PENDIENTE de aprobación por SuperAdmin (a menos que sea el Master)
-    perfil.estadoCuenta = isMaster ? "ACTIVO" : "PENDIENTE";
+    // Cuentas nuevas inician con su Período Oficial de Prueba Gratuita (3 días)
+    perfil.estadoCuenta = isMaster ? "ACTIVO" : "PRUEBA";
     perfil.fechaVencimiento = isMaster 
       ? new Date("2099-01-01").toISOString() 
-      : "";
+      : generarFechaVencimientoPrueba();
     perfil.maxPerfiles = isMaster ? 8 : 1;
     perfil.categorias = [];
     perfil.categoriaActiva = "";
@@ -1055,6 +1150,18 @@ async function ejecutarRegistroUsuario() {
     document.getElementById('main-app').style.display = 'none';
     const profScreen = document.getElementById('profile-selector-overlay') || document.getElementById('profile-selector-screen');
     if (profScreen) profScreen.style.display = 'none';
+
+    // BLINDAJE: Toda cuenta no Master debe verificar su email antes de acceder (en local se auto-aprueba)
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || useEmulator;
+    if (isLocal) {
+      await autoAprobarEnEmuladorLocal(user);
+      localStorage.setItem('11fut_email_verified', 'true');
+    } else if (!isMaster) {
+      localStorage.removeItem('11fut_email_verified');
+      _ocultarTodasLasPantallas();
+      mostrarPantallaVerificacionEmail(user);
+      return;
+    }
 
     aplicarPerfil();
     abrirOnboardingWizard(true);
@@ -1350,8 +1457,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  if (urlParams.get('logout') === 'true') {
+    localStorage.clear();
+    sessionStorage.clear();
+  }
+
   // Restauración instantánea para que F5 no parpadee al login screen
   const localProfId = localStorage.getItem('11fut_active_profile_id');
+  const localEmail = localStorage.getItem('11fut_user_email');
   const isMasterLocal = isSuperAdmin();
 
   if (isMasterLocal) {
@@ -1373,9 +1486,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     switchTab(8, false);
     actualizarVisibilidadPestanasRol();
   } else if (localProfId || localEmail) {
-    if (perfil.estadoCuenta === 'CANCELADA' || perfil.estadoCuenta === 'CANCELADO' || perfil.cancelada) {
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || useEmulator;
+    const isEmailVerifiedLocal = isLocal || localStorage.getItem('11fut_email_verified') === 'true';
+
+    // BLINDAJE DE SEGURIDAD: Si no es Master y no ha verificado email (en producción), no permitir acceso a mainApp
+    if (!isMasterLocal && !isEmailVerifiedLocal && !isLocal) {
+      _ocultarTodasLasPantallas();
+      const loginSc = document.getElementById('login-screen');
+      if (loginSc) loginSc.style.display = 'none';
+      if (window.location.hash === '#verificar-email') {
+        mostrarPantallaVerificacionEmail({ email: localEmail });
+      }
+      // Esperar a que onAuthStateChanged valide formalmente con Firebase
+    } else if (perfil.estadoCuenta === 'CANCELADA' || perfil.estadoCuenta === 'CANCELADO' || perfil.cancelada) {
       mostrarPantallaCuentaCancelada();
-    } else if (perfil.estadoCuenta === 'PENDIENTE' || perfil.estadoCuenta === 'EN_REVISION') {
+    } else if ((perfil.estadoCuenta === 'EN_REVISION' || (perfil.estadoCuenta === 'PENDIENTE' && perfil.pagoReportado)) && !isMasterLocal) {
       mostrarPantallaEsperaAprobacion();
     } else if (!perfil.wizardCompletado) {
       abrirOnboardingWizard(true);
@@ -1441,7 +1566,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
-      // 1. Si no ha completado el Wizard de su club
+      // 1. PRIMER FILTRO DE SEGURIDAD: El correo DEBE estar verificado (en local se auto-aprueba)
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || useEmulator;
+      if (!user.emailVerified && !isMaster) {
+        if (isLocal) {
+          await autoAprobarEnEmuladorLocal(user);
+          localStorage.setItem('11fut_email_verified', 'true');
+        } else {
+          localStorage.removeItem('11fut_email_verified');
+          _ocultarTodasLasPantallas();
+          mostrarPantallaVerificacionEmail(user);
+          return;
+        }
+      } else {
+        localStorage.setItem('11fut_email_verified', 'true');
+      }
+
+      // Si la cuenta estaba erróneamente en PENDIENTE sin pagos reportados, habilitar su periodo de prueba oficial (3 días)
+      if (perfil.estadoCuenta === 'PENDIENTE' && !perfil.pagoReportado && !perfil.reportePago) {
+        perfil.estadoCuenta = 'PRUEBA';
+        if (!perfil.fechaVencimiento) {
+          perfil.fechaVencimiento = generarFechaVencimientoPrueba();
+        }
+        await guardarFirebase();
+      }
+
+      // 2. Si no ha completado el Wizard de su club
       const tieneConfiguracionPrevia = (perfil.categorias && perfil.categorias.length > 0) || (perfil.club && perfil.club !== '11FUT MANAGER' && perfil.club !== 'Nuevo Club');
       if (tieneConfiguracionPrevia) {
         perfil.wizardCompletado = true;
@@ -1454,22 +1604,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
 
-      // 2. Si el correo no está verificado (después del wizard)
-      if (!user.emailVerified && !isMaster) {
-        _ocultarTodasLasPantallas();
-        mostrarPantallaVerificacionEmail(user);
-        return;
-      }
-
-      // 2. Si la cuenta fue cancelada por la administración
+      // 3. Si la cuenta fue cancelada por la administración
       if ((perfil.estadoCuenta === 'CANCELADA' || perfil.estadoCuenta === 'CANCELADO' || perfil.cancelada) && !isMaster) {
         _ocultarTodasLasPantallas();
         mostrarPantallaCuentaCancelada();
         return;
       }
 
-      // 3. Si está en estado PENDIENTE o EN_REVISION de aprobación por SuperAdmin
-      if ((perfil.estadoCuenta === 'PENDIENTE' || perfil.estadoCuenta === 'EN_REVISION') && !isMaster) {
+      // 4. Si está en estado EN_REVISION o PENDIENTE con pago reportado
+      if ((perfil.estadoCuenta === 'EN_REVISION' || (perfil.estadoCuenta === 'PENDIENTE' && perfil.pagoReportado)) && !isMaster) {
         _ocultarTodasLasPantallas();
         mostrarPantallaEsperaAprobacion();
         return;
@@ -1868,5 +2011,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
+  function initCookieConsent() {
+    const banner = document.getElementById('cookie-consent-banner');
+    const btnAccept = document.getElementById('btn-accept-cookies');
+    const btnReject = document.getElementById('btn-reject-cookies');
+    if (!banner) return;
+
+    const consent = localStorage.getItem('11fut_cookie_consent');
+    if (!consent) {
+      banner.style.display = 'block';
+    }
+
+    btnAccept?.addEventListener('click', () => {
+      localStorage.setItem('11fut_cookie_consent', 'accepted');
+      banner.style.display = 'none';
+    });
+
+    btnReject?.addEventListener('click', () => {
+      localStorage.setItem('11fut_cookie_consent', 'essential_only');
+      banner.style.display = 'none';
+    });
+  }
+
+  initCookieConsent();
   restaurarPestanaDesdeURL();
 });
+

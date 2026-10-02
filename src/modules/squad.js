@@ -1,7 +1,8 @@
 import { plantel, cupos, catNombres, perfil, stats, autoSaveLocal } from "./state.js";
 import { guardarFirebase } from "../services/firebase.js";
 import { renderStats } from "./stats.js";
-import { mostrarNotificacionApp, mostrarConfirmacionApp } from "./config.js";
+import { mostrarNotificacionApp, mostrarConfirmacionApp, mostrarToastRapido } from "./config.js";
+import { throttleDownload } from "../utils/rateLimiter.js";
 
 let filtroTextoPlantel = '';
 let filtroPosPlantel = 'TODOS';
@@ -912,6 +913,12 @@ function descargarArchivoExcel(contenidoHTML, nombreArchivo) {
 }
 
 export function descargarPlantillaExcel() {
+  const throttle = throttleDownload('squad_template_dl', 3500);
+  if (!throttle.allowed) {
+    mostrarToastRapido(`Espera ${throttle.remainingSec}s antes de descargar de nuevo.`, 'warning');
+    return;
+  }
+
   const clubSafe = (perfil.club || 'plantel').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_');
   const catSafe = (perfil.categoriaActiva || 'oficial').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_');
   const clubNombre = (perfil.club || '11FUT MANAGER').toUpperCase();
@@ -999,6 +1006,12 @@ export function descargarPlantillaExcel() {
 }
 
 export function exportarPlantelExcel() {
+  const throttle = throttleDownload('squad_export_dl', 3500);
+  if (!throttle.allowed) {
+    mostrarToastRapido(`Espera ${throttle.remainingSec}s antes de exportar de nuevo.`, 'warning');
+    return;
+  }
+
   const clubSafe = (perfil.club || 'plantel').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_');
   const catSafe = (perfil.categoriaActiva || 'oficial').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_');
   const clubNombre = (perfil.club || '11FUT MANAGER').toUpperCase();

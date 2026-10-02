@@ -30,7 +30,7 @@ if (isLocalhost && window.location.search.includes('use_emulator=true')) {
   localStorage.removeItem('11fut_use_emulator');
 }
 
-const useEmulator = isLocalhost && (localStorage.getItem('11fut_use_emulator') === 'true' || window.location.search.includes('use_emulator=true'));
+export const useEmulator = isLocalhost && (localStorage.getItem('11fut_use_emulator') === 'true' || window.location.search.includes('use_emulator=true'));
 
 if (useEmulator) {
   try {

@@ -47,7 +47,7 @@ body {
   z-index: 1;
 }
 
-/* ── BOTONES / INPUTS (GLASSMORPHISM) ── */
+/* ── BOTONES / INPUTS (GLASSMORPHISM & ESTÁNDARES EMIL KOWALSKI / LEONXLNX) ── */
 input,
 select,
 button {
@@ -55,6 +55,7 @@ button {
   outline: none;
 }
 
+/* REGLAS PARA UN INPUT PERFECTO: Área táctil, contraste y legibilidad */
 input[type="text"],
 input[type="password"],
 input[type="email"],
@@ -62,26 +63,190 @@ input[type="tel"],
 input[type="number"],
 input[type="date"],
 input[type="time"],
+input[type="search"],
 select {
   width: 100%;
+  min-height: 48px; /* Área táctil táctica recomendada (48px) */
   background: rgba(8, 12, 18, 0.75) !important;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.14) !important;
   color: #fff !important;
-  padding: 10px 14px;
+  padding: 12px 14px;
   border-radius: 10px;
-  font-size: 14px;
+  font-size: 15px;
   margin-bottom: 8px;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s ease;
   color-scheme: dark;
 }
 
-
+/* FOCO CLARO Y ACCESIBLE (WCAG Focus-Visible) */
 input:focus,
-select:focus {
+select:focus,
+input:focus-visible,
+select:focus-visible {
   border-color: var(--oro) !important;
-  box-shadow: 0 0 14px rgba(212, 175, 55, 0.35);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.45), 0 0 16px rgba(212, 175, 55, 0.35) !important;
+  outline: none;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--oro) !important;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.35) !important;
+}
+
+/* ERRORES VISIBLES: Borde, shake de microinteracción y mensaje semántico */
+input.input-error,
+select.input-error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.4) !important;
+  animation: inputShake 0.35s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes inputShake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
+  40%, 60% { transform: translate3d(3px, 0, 0); }
+}
+
+.input-error-msg {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #f87171;
+  font-size: 12.5px;
+  font-weight: 600;
+  margin-top: -4px;
+  margin-bottom: 10px;
+  text-align: left;
+}
+
+/* ── CAÍDA DE ESQUELETO (SKELETON SHIMMER LOADING) ── */
+.skeleton {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 20%, rgba(255, 255, 255, 0.11) 50%, rgba(255, 255, 255, 0.03) 80%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s infinite cubic-bezier(0.4, 0, 0.6, 1);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+@keyframes skeletonShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-text {
+  height: 14px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+}
+
+.skeleton-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.skeleton-card {
+  min-height: 80px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 14px;
+  margin-bottom: 10px;
+}
+
+/* ── JERARQUÍA VISUAL Y ACCESIBILIDAD ── */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border-width: 0 !important;
+}
+
+/* Microinteracciones y feedback de presión */
+.btn-primary-action {
+  box-shadow: 0 4px 18px rgba(226, 30, 34, 0.4);
+  transform: translateZ(0);
+}
+.btn-primary-action:hover {
+  box-shadow: 0 6px 24px rgba(226, 30, 34, 0.6);
+  transform: translateY(-1px);
+}
+.btn-primary-action:active {
+  transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── BOTÓN FLOTANTE OFICIAL DE WHATSAPP ── */
+.btn-whatsapp-float {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #25D366;
+  color: #fff !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.45);
+  z-index: 8500;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+  text-decoration: none;
+  cursor: pointer;
+}
+.btn-whatsapp-float:hover {
+  transform: scale(1.08) translateY(-2px);
+  box-shadow: 0 8px 26px rgba(37, 211, 102, 0.65);
+}
+.btn-whatsapp-float:active {
+  transform: scale(0.95);
+}
+
+/* ── BANNER DE COOKIES (RGPD) ── */
+.cookie-banner {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  right: 84px;
+  max-width: 560px;
+  background: rgba(10, 14, 22, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 12px;
+  padding: 14px 18px;
+  z-index: 8400;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65);
+  font-size: 13px;
+  color: #cbd5e1;
+}
+.cookie-banner p {
+  margin: 0 0 10px 0;
+  line-height: 1.4;
+}
+@media (max-width: 600px) {
+  .cookie-banner {
+    right: 16px;
+    bottom: 84px;
+  }
 }
 
 .btn {
@@ -527,31 +692,34 @@ body.theme-light .juego-programado-item {
   box-sizing: border-box;
 }
 
-/* ── PIZARRA Y CANCHA NORMAL (PROPORCIÓN RECTANGULAR 2/3 SIN BARRAS NEGRAS) ── */
+/* ── PIZARRA Y CANCHA NORMAL (PROPORCIÓN RECTANGULAR 2/3 CON VALLAS LED POR FUERA) ── */
 .campo-layout {
   position: relative;
-  background: #000;
+  background: #040d06; /* Césped perimetral exterior oscuro de estadio */
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid #222;
+  border: 1px solid #1a2a1f;
   width: 100%;
-  max-width: 520px;
+  max-width: 580px;
   display: flex;
   justify-content: center;
+  align-items: center;
   padding: 0;
   margin: 0 auto;
+  perspective: 1200px;
+  perspective-origin: center center;
 }
 
 .cancha-wrapper {
   position: relative;
   aspect-ratio: 2 / 3 !important;
-  width: 100% !important;
-  max-width: 100% !important;
+  width: calc(100% - 76px) !important;
+  max-width: calc(100% - 76px) !important;
   height: auto !important;
   max-height: 82vh !important;
+  margin: 0 38px !important; /* Espacio exterior exclusivo para las vallas LED 3D */
   background: #0c4520 url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='450' viewBox='0 0 300 450'><rect width='300' height='450' fill='%230c4520'/><rect y='0' width='300' height='45' fill='%230a3d1c'/><rect y='90' width='300' height='45' fill='%230a3d1c'/><rect y='180' width='300' height='45' fill='%230a3d1c'/><rect y='270' width='300' height='45' fill='%230a3d1c'/><rect y='360' width='300' height='45' fill='%230a3d1c'/><rect x='2' y='2' width='296' height='446' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><line x1='2' y1='225' x2='298' y2='225' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><circle cx='150' cy='225' r='40' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><circle cx='150' cy='225' r='4' fill='rgba(255,255,255,0.95)'/><rect x='60' y='2' width='180' height='65' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><rect x='95' y='2' width='110' height='25' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><circle cx='150' cy='44' r='4' fill='rgba(255,255,255,0.95)'/><path d='M 115 67 A 35 35 0 0 0 185 67' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><rect x='60' y='383' width='180' height='65' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><rect x='95' y='423' width='110' height='25' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><circle cx='150' cy='406' r='4' fill='rgba(255,255,255,0.95)'/><path d='M 115 383 A 35 35 0 0 1 185 383' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/></svg>") center center / 100% 100% no-repeat !important;
   overflow: hidden;
-  margin: 0 auto !important;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
 }
 
@@ -595,14 +763,14 @@ body.body-fullscreen-active {
   filter: drop-shadow(0 0 8px rgba(226, 30, 34, 0.85));
 }
 
-/* CANCHA HORIZONTAL EN FULLSCREEN (LLENADO 100% DE ANCHO 100vw Y ALTO 100vh) */
+/* CANCHA HORIZONTAL EN FULLSCREEN (CON VALLAS HORIZONTALES POR FUERA EN BANDAS) */
 .cancha-wrapper.horizontal {
   aspect-ratio: auto !important;
   width: 100vw !important;
   max-width: 100vw !important;
-  height: 100vh !important;
-  max-height: 100vh !important;
-  margin: 0 !important;
+  height: calc(100vh - 60px) !important;
+  max-height: calc(100vh - 60px) !important;
+  margin: 30px 0 !important; /* Margen superior e inferior para situar las vallas LED fuera de la cancha */
   padding: 0 !important;
   background: #0c4520 url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='500' height='300' viewBox='0 0 500 300'><rect width='500' height='300' fill='%230c4520'/><rect x='0' width='50' height='300' fill='%230a3d1c'/><rect x='100' width='50' height='300' fill='%230a3d1c'/><rect x='200' width='50' height='300' fill='%230a3d1c'/><rect x='300' width='50' height='300' fill='%230a3d1c'/><rect x='400' width='50' height='300' fill='%230a3d1c'/><rect x='2' y='2' width='496' height='296' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><line x1='250' y1='2' x2='250' y2='298' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><circle cx='250' cy='150' r='42' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><circle cx='250' cy='150' r='4' fill='rgba(255,255,255,0.95)'/><rect x='2' y='60' width='70' height='180' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><rect x='2' y='95' width='28' height='110' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><circle cx='48' cy='150' r='4' fill='rgba(255,255,255,0.95)'/><path d='M 72 115 A 38 38 0 0 1 72 185' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><rect x='428' y='60' width='70' height='180' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><rect x='470' y='95' width='28' height='110' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/><circle cx='452' cy='150' r='4' fill='rgba(255,255,255,0.95)'/><path d='M 428 115 A 38 38 0 0 0 428 185' fill='none' stroke='rgba(255,255,255,0.95)' stroke-width='3'/></svg>") center center / 100% 100% no-repeat !important;
 }
@@ -2328,43 +2496,95 @@ body.body-fullscreen-active {
 }
 
 /* ══════════════════════════════════════════════════════════════════
-   VALLAS PUBLICITARIAS LED LATERALES EN EL CÉSPED DE LA CANCHA (BANDAS)
+   VALLAS PUBLICITARIAS LED 3D DE ESTADIO (MARQUESINA PERIMÉTRICA)
    ══════════════════════════════════════════════════════════════════ */
+
+/* ── 1. VALLAS LED LATERALES VERTICALES (MODO NORMAL Y VERTICAL) ── */
 .cancha-led-lateral {
   position: absolute;
   top: 0;
   bottom: 0;
   width: 36px;
-  z-index: 100000 !important;
-  background: rgba(4, 8, 14, 0.95);
+  z-index: 95;
+  background: linear-gradient(90deg, rgba(3, 7, 12, 0.98), rgba(12, 20, 32, 0.92) 50%, rgba(3, 7, 12, 0.98));
   display: flex;
   flex-direction: column;
   align-items: center;
   overflow: hidden;
   user-select: none;
   pointer-events: auto;
+  border-top: 2.5px solid rgba(212, 175, 55, 0.85);
+  border-bottom: 2.5px solid rgba(212, 175, 55, 0.5);
+  box-sizing: border-box;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+}
+
+/* Textura sutil de rejilla de diodos LED */
+.cancha-led-lateral::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.04) 0px,
+    rgba(255, 255, 255, 0.04) 2px,
+    transparent 2px,
+    transparent 4px
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Barrido de luz reflejada animado de valla LED encendida */
+.cancha-led-lateral::after {
+  content: '';
+  position: absolute;
+  top: -120%;
+  left: 0;
+  right: 0;
+  height: 60%;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(212, 175, 55, 0.15),
+    rgba(255, 255, 255, 0.22),
+    rgba(212, 175, 55, 0.15),
+    transparent
+  );
+  pointer-events: none;
+  z-index: 3;
+  animation: ledSweepVertical 7s ease-in-out infinite;
+}
+
+@keyframes ledSweepVertical {
+  0%, 35% {
+    top: -120%;
+  }
+  65%, 100% {
+    top: 160%;
+  }
 }
 
 .cancha-led-lateral.left {
   left: 0;
-  border-right: 1.5px solid rgba(212, 175, 55, 0.65);
-  box-shadow: 2px 0 14px rgba(0, 0, 0, 0.85);
-  mask-image: linear-gradient(to bottom, transparent, black 6%, black 94%, transparent);
-  -webkit-mask-image: linear-gradient(to bottom, transparent, black 6%, black 94%, transparent);
+  transform: perspective(450px) rotateY(20deg);
+  transform-origin: left center;
+  border-right: 2.5px solid rgba(212, 175, 55, 0.95);
+  border-left: 2px solid #000;
+  box-shadow: 6px 0 20px rgba(0, 0, 0, 0.95), 0 0 16px rgba(212, 175, 55, 0.35), inset 0 2px 2px rgba(255, 255, 255, 0.35), inset 0 -2px 3px rgba(0, 0, 0, 0.8);
+  mask-image: linear-gradient(to bottom, transparent, black 3%, black 97%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 3%, black 97%, transparent);
 }
 
 .cancha-led-lateral.right {
   right: 0;
-  border-left: 1.5px solid rgba(212, 175, 55, 0.65);
-  box-shadow: -2px 0 14px rgba(0, 0, 0, 0.85);
-  mask-image: linear-gradient(to bottom, transparent, black 6%, black 94%, transparent);
-  -webkit-mask-image: linear-gradient(to bottom, transparent, black 6%, black 94%, transparent);
-}
-
-.campo-layout.fullscreen .cancha-led-lateral {
-  z-index: 100000 !important;
-  display: flex !important;
-  visibility: visible !important;
+  transform: perspective(450px) rotateY(-20deg);
+  transform-origin: right center;
+  border-left: 2.5px solid rgba(212, 175, 55, 0.95);
+  border-right: 2px solid #000;
+  box-shadow: -6px 0 20px rgba(0, 0, 0, 0.95), 0 0 16px rgba(212, 175, 55, 0.35), inset 0 2px 2px rgba(255, 255, 255, 0.35), inset 0 -2px 3px rgba(0, 0, 0, 0.8);
+  mask-image: linear-gradient(to bottom, transparent, black 3%, black 97%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 3%, black 97%, transparent);
 }
 
 .cancha-lateral-track {
@@ -2394,8 +2614,8 @@ body.body-fullscreen-active {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 18px;
-  padding-bottom: 18px;
+  gap: 20px;
+  padding-bottom: 20px;
 }
 
 .cancha-lateral-item {
@@ -2405,13 +2625,13 @@ body.body-fullscreen-active {
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 11.5px;
   font-weight: 900;
-  letter-spacing: 1px;
+  letter-spacing: 1.2px;
   color: #fff;
   display: flex;
   align-items: center;
   gap: 8px;
   white-space: nowrap;
-  text-shadow: 0 0 8px rgba(212, 175, 55, 0.35);
+  text-shadow: 0 0 8px rgba(212, 175, 55, 0.45), 0 0 12px rgba(255, 255, 255, 0.25);
 }
 
 .cancha-lateral-item img {
@@ -2419,13 +2639,186 @@ body.body-fullscreen-active {
   height: 18px;
   object-fit: contain;
   transform: rotate(-90deg);
-  filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.5));
+  filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.6));
 }
 
 .cancha-lateral-sep {
   color: var(--oro);
   font-size: 11px;
-  text-shadow: 0 0 8px rgba(212, 175, 55, 0.7);
+  text-shadow: 0 0 8px rgba(212, 175, 55, 0.8);
+}
+
+
+/* ── 2. VALLAS LED HORIZONTALES 3D EN BANDAS (MODO HORIZONTAL / FULLSCREEN) ── */
+.cancha-led-horizontal {
+  display: none;
+  position: absolute;
+  height: 26px;
+  z-index: 95;
+  background: linear-gradient(180deg, rgba(3, 7, 12, 0.98), rgba(12, 20, 32, 0.94) 50%, rgba(3, 7, 12, 0.98));
+  overflow: hidden;
+  user-select: none;
+  pointer-events: auto;
+  border-left: 2px solid rgba(212, 175, 55, 0.7);
+  border-right: 2px solid rgba(212, 175, 55, 0.7);
+  border-radius: 4px;
+  box-sizing: border-box;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+}
+
+.cancha-led-horizontal::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.03) 0px,
+    rgba(255, 255, 255, 0.03) 2px,
+    transparent 2px,
+    transparent 4px
+  );
+  pointer-events: none;
+  z-index: 2;
+}
+
+.cancha-led-horizontal::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 40%;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(212, 175, 55, 0.18),
+    rgba(255, 255, 255, 0.28),
+    rgba(212, 175, 55, 0.18),
+    transparent
+  );
+  pointer-events: none;
+  z-index: 3;
+  animation: ledSweepHorizontal 7s ease-in-out infinite;
+}
+
+@keyframes ledSweepHorizontal {
+  0%, 35% {
+    left: -60%;
+  }
+  65%, 100% {
+    left: 140%;
+  }
+}
+
+.cancha-led-horizontal.top {
+  top: 2px;
+  left: 65px;
+  right: 175px; /* Espacio de seguridad para no chocar con el botón salir fullscreen */
+  transform: perspective(450px) rotateX(22deg);
+  transform-origin: center top;
+  border-bottom: 3px solid rgba(212, 175, 55, 0.95);
+  border-top: 1.5px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.95), 0 0 18px rgba(212, 175, 55, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  mask-image: linear-gradient(to right, transparent, black 3%, black 97%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 3%, black 97%, transparent);
+}
+
+.cancha-led-horizontal.bottom {
+  bottom: 2px;
+  left: 65px;
+  right: 65px;
+  transform: perspective(450px) rotateX(-22deg);
+  transform-origin: center bottom;
+  border-top: 3px solid rgba(212, 175, 55, 0.95);
+  border-bottom: 1.5px solid rgba(0, 0, 0, 0.9);
+  box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.95), 0 0 18px rgba(212, 175, 55, 0.35), inset 0 -1px 2px rgba(255, 255, 255, 0.3);
+  mask-image: linear-gradient(to right, transparent, black 3%, black 97%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 3%, black 97%, transparent);
+}
+
+.cancha-horizontal-track {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: max-content;
+  height: 100%;
+  pointer-events: none;
+  animation: horizontalMarqueeLoop 30s linear infinite;
+}
+
+.cancha-led-horizontal:hover .cancha-horizontal-track {
+  animation-play-state: paused !important;
+}
+
+@keyframes horizontalMarqueeLoop {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.cancha-horizontal-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 30px;
+  padding-right: 30px;
+  height: 100%;
+}
+
+.cancha-horizontal-item {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12.5px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  text-shadow: 0 0 8px rgba(212, 175, 55, 0.4), 0 0 12px rgba(255, 255, 255, 0.3);
+}
+
+.cancha-horizontal-item img {
+  height: 16px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.6));
+}
+
+.cancha-horizontal-sep {
+  color: var(--oro);
+  font-size: 11px;
+  text-shadow: 0 0 8px rgba(212, 175, 55, 0.8);
+}
+
+
+/* ── 3. CORRECCIÓN Y ADAPTACIÓN INTEGRAL EN PANTALLA COMPLETA (FULLSCREEN) ── */
+
+/* Si la cancha está en Fullscreen con orientación Horizontal (predeterminada) */
+.campo-layout.fullscreen .cancha-wrapper.horizontal ~ .cancha-led-lateral {
+  display: none !important; /* Ocultar vallas laterales para no tapar porterías ni controles */
+}
+
+.campo-layout.fullscreen .cancha-wrapper.horizontal ~ .cancha-led-horizontal {
+  display: flex !important; /* Mostrar vallas perimétricas 3D en las bandas */
+  visibility: visible !important;
+  z-index: 95 !important;
+}
+
+/* Si la cancha en Fullscreen está en orientación Vertical / Mitad */
+.campo-layout.fullscreen .cancha-wrapper:not(.horizontal) ~ .cancha-led-lateral {
+  display: flex !important;
+  visibility: visible !important;
+  z-index: 95 !important;
+  top: 55px !important; /* Despejar el botón de salir de pantalla completa */
+  bottom: 8px !important;
+}
+
+.campo-layout.fullscreen .cancha-wrapper:not(.horizontal) ~ .cancha-led-horizontal {
+  display: none !important;
 }
 
 /* ══════════════════════════════════════════════════════════════════

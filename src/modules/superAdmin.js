@@ -110,6 +110,23 @@ export async function renderMarquesinasDinamicas() {
       </div>
     `;
   });
+
+  // 3. Pitch horizontal 3D tracks (.cancha-horizontal-track)
+  const horizHTML = itemsLista.map(s => {
+    const logoImg = s.logo ? `<img src="${s.logo}" alt="${s.nombre}" style="height:18px;max-width:32px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(212,175,55,0.5));margin-right:4px;">` : '';
+    return `<span class="cancha-horizontal-item">${logoImg}${s.nombre}</span><span class="cancha-horizontal-sep">⚡</span>`;
+  }).join('');
+
+  document.querySelectorAll('.cancha-horizontal-track').forEach(track => {
+    track.innerHTML = `
+      <div class="cancha-horizontal-group">
+        ${horizHTML}
+      </div>
+      <div class="cancha-horizontal-group" aria-hidden="true">
+        ${horizHTML}
+      </div>
+    `;
+  });
 }
 
 // ════════════════════════════════════════════════════════════════
