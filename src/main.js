@@ -2025,15 +2025,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnAccept?.addEventListener('click', () => {
       localStorage.setItem('11fut_cookie_consent', 'accepted');
       banner.style.display = 'none';
+      if (typeof window.gtag === 'function') {
+        window.gtag('consent', 'update', {
+          'analytics_storage': 'granted'
+        });
+      }
     });
 
     btnReject?.addEventListener('click', () => {
       localStorage.setItem('11fut_cookie_consent', 'essential_only');
       banner.style.display = 'none';
+      if (typeof window.gtag === 'function') {
+        window.gtag('consent', 'update', {
+          'analytics_storage': 'denied'
+        });
+      }
     });
   }
 
   initCookieConsent();
   restaurarPestanaDesdeURL();
 });
+
+export function registrarEventoGA(eventName, eventParams = {}) {
+  if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+    window.gtag('event', eventName, eventParams);
+  }
+}
+window.registrarEventoGA = registrarEventoGA;
 

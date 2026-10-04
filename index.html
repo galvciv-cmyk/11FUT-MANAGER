@@ -34,6 +34,20 @@
     }
   }
   </script>
+  <!-- Google tag (gtag.js) - Google Analytics 4 -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-KV69GJBF4L"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    // Google Consent Mode: Respeta la preferencia guardada en el banner de cookies
+    gtag('consent', 'default', {
+      'analytics_storage': localStorage.getItem('11fut_cookie_consent') === 'accepted' ? 'granted' : 'denied'
+    });
+    gtag('js', new Date());
+    gtag('config', 'G-KV69GJBF4L', {
+      send_page_view: true
+    });
+  </script>
 </head>
 
 <body>
