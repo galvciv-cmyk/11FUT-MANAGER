@@ -36,10 +36,12 @@ export default defineConfig({
       output: {
         manualChunks: {
           'vendor-firebase': ['firebase/app', 'firebase/firestore', 'firebase/auth'],
-          'vendor-pdf': ['jspdf', 'html2canvas']
+          'vendor-jspdf': ['jspdf'],
+          'vendor-html2canvas': ['html2canvas']
         }
       }
-    }
+    },
+    chunkSizeWarningLimit: 600
   },
   optimizeDeps: {
     exclude: ['canvg', 'html2canvas']
