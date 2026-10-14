@@ -64,10 +64,22 @@ function _ocultarTodasLasPantallas() {
 let _verifPollTimer = null;
 let _pendingPollTimer = null;
 
+export function esEntornoLocal() {
+  const host = (typeof window !== 'undefined' && window.location) ? window.location.hostname : '';
+  return host === 'localhost' || 
+         host === '127.0.0.1' || 
+         host === '0.0.0.0' || 
+         host.startsWith('192.168.') || 
+         host.startsWith('10.') || 
+         host.startsWith('172.') || 
+         host.endsWith('.local') || 
+         useEmulator;
+}
+
 export async function autoAprobarEnEmuladorLocal(user) {
   if (!user || !user.email) return;
   try {
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || useEmulator;
+    const isLocal = esEntornoLocal();
     if (!isLocal) return;
 
     const resp = await fetch('http://127.0.0.1:9099/emulator/v1/projects/fut-manager-oficial/oobCodes');
@@ -871,7 +883,7 @@ async function login() {
     const isMaster = (user.email || '').toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
 
     // 1. Validar si el correo está verificado (en local se auto-aprueba)
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || useEmulator;
+    const isLocal = esEntornoLocal();
     if (!user.emailVerified && !isMaster) {
       if (isLocal) {
         await autoAprobarEnEmuladorLocal(user);
@@ -1152,7 +1164,7 @@ async function ejecutarRegistroUsuario() {
     if (profScreen) profScreen.style.display = 'none';
 
     // BLINDAJE: Toda cuenta no Master debe verificar su email antes de acceder (en local se auto-aprueba)
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || useEmulator;
+    const isLocal = esEntornoLocal();
     if (isLocal) {
       await autoAprobarEnEmuladorLocal(user);
       localStorage.setItem('11fut_email_verified', 'true');
@@ -1485,46 +1497,37 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     switchTab(8, false);
     actualizarVisibilidadPestanasRol();
-  } else if (localProfId || localEmail) {
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || useEmulator;
-    const isEmailVerifiedLocal = isLocal || localStorage.getItem('11fut_email_verified') === 'true';
+  } else if (window.location.hash === '#verificar-email' && localEmail) {
+    _ocultarTodasLasPantallas();
+    mostrarPantallaVerificacionEmail({ email: localEmail });
+  } else if (window.location.hash === '#cuenta-cancelada') {
+    _ocultarTodasLasPantallas();
+    mostrarPantallaCuentaCancelada();
+  } else if (window.location.hash === '#pendiente-aprobacion') {
+    _ocultarTodasLasPantallas();
+    mostrarPantallaEsperaAprobacion();
+  } else if (localProfId && localStorage.getItem('11fut_email_verified') === 'true' && perfil.wizardCompletado) {
+    const loginSc = document.getElementById('login-screen');
+    if (loginSc) loginSc.style.display = 'none';
+    const mainApp = document.getElementById('main-app');
+    if (mainApp) mainApp.style.display = 'block';
+    aplicarPerfil();
 
-    // BLINDAJE DE SEGURIDAD: Si no es Master y no ha verificado email (en producción), no permitir acceso a mainApp
-    if (!isMasterLocal && !isEmailVerifiedLocal && !isLocal) {
-      _ocultarTodasLasPantallas();
-      const loginSc = document.getElementById('login-screen');
-      if (loginSc) loginSc.style.display = 'none';
-      if (window.location.hash === '#verificar-email') {
-        mostrarPantallaVerificacionEmail({ email: localEmail });
-      }
-      // Esperar a que onAuthStateChanged valide formalmente con Firebase
-    } else if (perfil.estadoCuenta === 'CANCELADA' || perfil.estadoCuenta === 'CANCELADO' || perfil.cancelada) {
-      mostrarPantallaCuentaCancelada();
-    } else if ((perfil.estadoCuenta === 'EN_REVISION' || (perfil.estadoCuenta === 'PENDIENTE' && perfil.pagoReportado)) && !isMasterLocal) {
-      mostrarPantallaEsperaAprobacion();
-    } else if (!perfil.wizardCompletado) {
-      abrirOnboardingWizard(true);
+    const currentHash = window.location.hash || '';
+    if (currentHash === '#profiles' || currentHash === '#perfiles') {
+      renderProfileSelector(handleProfileSelected, true);
     } else {
-      const loginSc = document.getElementById('login-screen');
-      if (loginSc) loginSc.style.display = 'none';
-      const mainApp = document.getElementById('main-app');
-      if (mainApp) mainApp.style.display = 'block';
-      aplicarPerfil();
-
-      const currentHash = window.location.hash || '';
-      if (currentHash === '#profiles' || currentHash === '#perfiles') {
-        renderProfileSelector(handleProfileSelected, true);
-      } else {
-        const foundProfile = (perfil.profiles || []).find(p => p.id === localProfId) || (perfil.profiles && perfil.profiles[0]);
-        if (foundProfile) {
-          handleProfileSelected(foundProfile);
-        }
+      const foundProfile = (perfil.profiles || []).find(p => p.id === localProfId) || (perfil.profiles && perfil.profiles[0]);
+      if (foundProfile) {
+        handleProfileSelected(foundProfile);
       }
     }
   } else {
-    // Si no hay sesión local previa, mostrar pantalla de inicio de sesión
+    // Si no hay sesión local verificada activa, SIEMPRE mostrar login-screen (NUNCA dejar pantalla vacía)
     const loginSc = document.getElementById('login-screen');
     if (loginSc) loginSc.style.display = 'flex';
+    const mainApp = document.getElementById('main-app');
+    if (mainApp) mainApp.style.display = 'none';
   }
 
   // Persistencia de Sesión con Firebase Auth (No se cierra al recargar F5)
@@ -1567,7 +1570,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       // 1. PRIMER FILTRO DE SEGURIDAD: El correo DEBE estar verificado (en local se auto-aprueba)
-      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || useEmulator;
+      const isLocal = esEntornoLocal();
       if (!user.emailVerified && !isMaster) {
         if (isLocal) {
           await autoAprobarEnEmuladorLocal(user);
@@ -1727,16 +1730,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
       }
     } else {
-      const activeProfId = localStorage.getItem('11fut_active_profile_id');
-      if (!activeProfId) {
-        localStorage.removeItem('11fut_active_profile_id');
-        const wiz = document.getElementById('modal-onboarding-wizard');
-        if (wiz) wiz.style.display = 'none';
-        const loginSc = document.getElementById('login-screen');
-        if (loginSc) loginSc.style.display = 'flex';
-        const mainApp = document.getElementById('main-app');
-        if (mainApp) mainApp.style.display = 'none';
-      }
+      // Usuario desautenticado o sesión inexistente: limpiar estado y mostrar pantalla de login garantizada
+      localStorage.removeItem('11fut_active_profile_id');
+      const wiz = document.getElementById('modal-onboarding-wizard');
+      if (wiz) wiz.style.display = 'none';
+      const emailVerifScreen = document.getElementById('email-verification-screen');
+      if (emailVerifScreen) emailVerifScreen.style.display = 'none';
+      const pendingScreen = document.getElementById('pending-approval-screen');
+      if (pendingScreen) pendingScreen.style.display = 'none';
+      const cancelScreen = document.getElementById('account-cancelled-screen');
+      if (cancelScreen) cancelScreen.style.display = 'none';
+      const mainApp = document.getElementById('main-app');
+      if (mainApp) mainApp.style.display = 'none';
+      const loginSc = document.getElementById('login-screen');
+      if (loginSc) loginSc.style.display = 'flex';
     }
   });
 
