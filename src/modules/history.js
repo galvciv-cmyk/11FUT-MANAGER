@@ -1,7 +1,7 @@
 import { historial, updateHistorial, juegosProgramados, updateJuegosProgramados, stats, updateStats, perfil, autoSaveLocal, plantel } from "./state.js";
 import { guardarFirebase } from "../services/firebase.js";
 import { renderStats } from "./stats.js";
-import { mostrarNotificacionApp, mostrarConfirmacionApp } from "./config.js";
+import { mostrarNotificacionApp, mostrarConfirmacionApp, mostrarToastRapido } from "./config.js";
 
 export function formatFecha(str) {
   if (!str) return '';
@@ -686,12 +686,15 @@ export function renderHistorial() {
     } else {
       contProg.innerHTML = juegosProgramados.map(j => `
         <div class="juego-programado-item">
-          <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
             <div>
               <div style="font-weight:900;color:var(--oro);font-size:15px;">🆚 vs ${j.rival} (${j.torneo})</div>
               <div style="font-size:11px;color:#aaa;margin-top:2px;">📅 ${formatFecha(j.fecha)} • ⏰ ${formatHora(j.cita)} • Convocados: ${(j.convocados || []).length}</div>
             </div>
-            <button class="btn btn-green" style="width:auto;padding:8px 12px;font-size:12px;" onclick="window._iniciarJuegoProgramado('${j.id}')">▶️ INICIO / REGISTRAR</button>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+              <button class="btn btn-green" style="width:auto;padding:8px 12px;font-size:12px;" onclick="window._iniciarJuegoProgramado('${j.id}')">▶️ INICIO / REGISTRAR</button>
+              <button class="btn btn-gray" style="width:auto;padding:8px 12px;font-size:12px;color:#f87171;" title="Eliminar encuentro programado" onclick="window._eliminarJuegoProgramado('${j.id}')">🗑️ Borrar</button>
+            </div>
           </div>
         </div>
       `).join('');
@@ -786,104 +789,171 @@ export function abrirModalEstadisticasPartido(id) {
   const cambiosTotalA = (h.sustituciones || []).length;
 
   let html = `
-    <div class="modal-title">📊 ESTADÍSTICAS DEL PARTIDO</div>
-    
-    <div class="card" style="margin-bottom:10px;text-align:center;">
-      <div style="font-size:12px;color:#888;margin-bottom:4px;">🏆 ${h.torneo || 'Torneo Oficial'} • 📅 ${formatFecha(h.fecha)}</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--oro);margin:6px 0;">
-        ${eqNombre.toUpperCase()} ${h.gf} - ${h.gc} ${(h.rival || 'RIVAL').toUpperCase()}
-      </div>
-      <div style="font-size:11px;color:#aaa;">⏱️ Tiempo total: ${h.duracion || 60} minutos</div>
-    </div>
-
-    <!-- TABLA COMPARATIVA DE ESTADÍSTICAS ENFRENTADAS -->
-    <div class="card" style="margin-bottom:10px;padding:12px;background:#0d0d0d;border:1px solid var(--gold);">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;">
-        <span style="color:var(--oro);">${eqNombre.toUpperCase()}</span>
-        <span style="color:#aaa;">${(h.rival || 'RIVAL').toUpperCase()}</span>
+    <div id="match-stats-capture-card" style="background:#070a10;padding:16px;border-radius:14px;border:1px solid rgba(212,175,55,0.3);box-shadow:0 8px 30px rgba(0,0,0,0.8);margin-bottom:12px;">
+      <div class="modal-title" style="margin-bottom:12px;text-align:center;">📊 ESTADÍSTICAS DEL PARTIDO</div>
+      
+      <div class="card" style="margin-bottom:10px;text-align:center;background:rgba(18,24,35,0.85);border:1px solid rgba(212,175,55,0.35);">
+        <div style="font-size:12px;color:#888;margin-bottom:4px;">🏆 ${h.torneo || 'Torneo Oficial'} • 📅 ${formatFecha(h.fecha)}</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:900;color:var(--oro);margin:6px 0;letter-spacing:1px;">
+          ${eqNombre.toUpperCase()} ${h.gf} - ${h.gc} ${(h.rival || 'RIVAL').toUpperCase()}
+        </div>
+        <div style="font-size:11px;color:#aaa;">⏱️ Tiempo total: ${h.duracion || 60} minutos</div>
       </div>
 
-      <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a1a1a;padding-bottom:4px;">
-          <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;font-size:14px;">${h.gf || 0}</span>
-          <span style="color:#aaa;flex:1;text-align:center;font-size:12px;font-weight:600;text-transform:uppercase;">goles</span>
-          <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;font-size:14px;">${h.gc || 0}</span>
+      <!-- TABLA COMPARATIVA DE ESTADÍSTICAS ENFRENTADAS -->
+      <div class="card" style="margin-bottom:10px;padding:12px;background:#0d0d0d;border:1px solid rgba(212,175,55,0.4);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;">
+          <span style="color:var(--oro);">${eqNombre.toUpperCase()}</span>
+          <span style="color:#aaa;">${(h.rival || 'RIVAL').toUpperCase()}</span>
         </div>
 
-        <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a1a1a;padding-bottom:4px;">
-          <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;font-size:14px;">${h.rematesA || 0}</span>
-          <span style="color:#aaa;flex:1;text-align:center;font-size:12px;font-weight:600;text-transform:uppercase;">tiros a puerta</span>
-          <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;font-size:14px;">${h.rematesC || 0}</span>
-        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a1a1a;padding-bottom:4px;">
+            <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;font-size:14px;">${h.gf || 0}</span>
+            <span style="color:#aaa;flex:1;text-align:center;font-size:12px;font-weight:600;text-transform:uppercase;">goles</span>
+            <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;font-size:14px;">${h.gc || 0}</span>
+          </div>
 
-        <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a1a1a;padding-bottom:4px;">
-          <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;font-size:14px;">${asistTotalA}</span>
-          <span style="color:#aaa;flex:1;text-align:center;font-size:12px;font-weight:600;text-transform:uppercase;">pases a gol (asistencia)</span>
-          <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;font-size:14px;">0</span>
-        </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a1a1a;padding-bottom:4px;">
+            <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;font-size:14px;">${h.rematesA || 0}</span>
+            <span style="color:#aaa;flex:1;text-align:center;font-size:12px;font-weight:600;text-transform:uppercase;">tiros a puerta</span>
+            <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;font-size:14px;">${h.rematesC || 0}</span>
+          </div>
 
-        <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a1a1a;padding-bottom:4px;">
-          <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;font-size:14px;">${h.cornersA || 0}</span>
-          <span style="color:#aaa;flex:1;text-align:center;font-size:12px;font-weight:600;text-transform:uppercase;">corners</span>
-          <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;font-size:14px;">${h.cornersC || 0}</span>
-        </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a1a1a;padding-bottom:4px;">
+            <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;font-size:14px;">${asistTotalA}</span>
+            <span style="color:#aaa;flex:1;text-align:center;font-size:12px;font-weight:600;text-transform:uppercase;">pases a gol (asistencia)</span>
+            <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;font-size:14px;">0</span>
+          </div>
 
-        <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a1a1a;padding-bottom:4px;">
-          <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;font-size:14px;">${h.faltasA || 0}</span>
-          <span style="color:#aaa;flex:1;text-align:center;font-size:12px;font-weight:600;text-transform:uppercase;">faltas</span>
-          <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;font-size:14px;">${h.faltasC || 0}</span>
-        </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a1a1a;padding-bottom:4px;">
+            <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;font-size:14px;">${h.cornersA || 0}</span>
+            <span style="color:#aaa;flex:1;text-align:center;font-size:12px;font-weight:600;text-transform:uppercase;">corners</span>
+            <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;font-size:14px;">${h.cornersC || 0}</span>
+          </div>
 
-        <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a1a1a;padding-bottom:4px;">
-          <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;font-size:14px;">${amarillasTotalA}</span>
-          <span style="color:#aaa;flex:1;text-align:center;font-size:12px;font-weight:600;text-transform:uppercase;">tarjetas amarillas</span>
-          <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;font-size:14px;">0</span>
-        </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a1a1a;padding-bottom:4px;">
+            <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;font-size:14px;">${h.faltasA || 0}</span>
+            <span style="color:#aaa;flex:1;text-align:center;font-size:12px;font-weight:600;text-transform:uppercase;">faltas</span>
+            <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;font-size:14px;">${h.faltasC || 0}</span>
+          </div>
 
-        <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a1a1a;padding-bottom:4px;">
-          <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;font-size:14px;">${rojasTotalA}</span>
-          <span style="color:#aaa;flex:1;text-align:center;font-size:12px;font-weight:600;text-transform:uppercase;">tarjetas rojas</span>
-          <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;font-size:14px;">0</span>
-        </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a1a1a;padding-bottom:4px;">
+            <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;font-size:14px;">${amarillasTotalA}</span>
+            <span style="color:#aaa;flex:1;text-align:center;font-size:12px;font-weight:600;text-transform:uppercase;">tarjetas amarillas</span>
+            <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;font-size:14px;">0</span>
+          </div>
 
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-          <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;font-size:14px;">${cambiosTotalA}</span>
-          <span style="color:#aaa;flex:1;text-align:center;font-size:12px;font-weight:600;text-transform:uppercase;">sustituciones</span>
-          <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;font-size:14px;">0</span>
+          <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #1a1a1a;padding-bottom:4px;">
+            <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;font-size:14px;">${rojasTotalA}</span>
+            <span style="color:#aaa;flex:1;text-align:center;font-size:12px;font-weight:600;text-transform:uppercase;">tarjetas rojas</span>
+            <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;font-size:14px;">0</span>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-weight:900;color:var(--oro);width:32px;text-align:left;font-size:14px;">${cambiosTotalA}</span>
+            <span style="color:#aaa;flex:1;text-align:center;font-size:12px;font-weight:600;text-transform:uppercase;">sustituciones</span>
+            <span style="font-weight:900;color:var(--rojo);width:32px;text-align:right;font-size:14px;">0</span>
+          </div>
         </div>
+      </div>
+
+      <div class="card" style="margin-bottom:10px;">
+        <div class="card-title">📈 MÉTRICAS TÁCTICAS</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;color:#eee;">
+          <div>🎯 Efectividad Chutes: <b>${efecPct}%</b> (${h.gf}/${h.rematesA || 0})</div>
+          <div>🧤 Atajadas Guardameta: <b>${atajadasPct}%</b></div>
+          <div>🚩 Córners: <b>${h.cornersA || 0} - ${h.cornersC || 0}</b></div>
+          <div>🛑 Faltas: <b>${h.faltasA || 0} - ${h.faltasC || 0}</b></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:10px;">
+        <div class="card-title">⚽ GOLEADORES Y ASISTIDORES</div>
+        <div style="font-size:12px;line-height:1.6;color:#eee;">
+          <div style="margin-bottom:8px;"><b>Goles:</b><br>${goleadoresTxt}</div>
+          <div><b>Asistencias:</b><br>${asistidoresTxt}</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:10px;">
+        <div class="card-title">🔄 SUSTITUCIONES Y CAMBIOS</div>
+        <div style="font-size:12px;line-height:1.5;color:#eee;">${sustitucionesTxt}</div>
+      </div>
+
+      <div style="text-align:center;font-size:10.5px;color:#718096;margin-top:8px;font-weight:600;letter-spacing:0.5px;">
+        11FUT MANAGER • SISTEMA PROFESIONAL DE ANÁLISIS DEPORTIVO
       </div>
     </div>
 
-    <div class="card" style="margin-bottom:10px;">
-      <div class="card-title">📈 MÉTRICAS TÁCTICAS</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;color:#eee;">
-        <div>🎯 Efectividad Chutes: <b>${efecPct}%</b> (${h.gf}/${h.rematesA || 0})</div>
-        <div>🧤 Atajadas Guardameta: <b>${atajadasPct}%</b></div>
-        <div>🚩 Córners: <b>${h.cornersA || 0} - ${h.cornersC || 0}</b></div>
-        <div>🛑 Faltas: <b>${h.faltasA || 0} - ${h.faltasC || 0}</b></div>
-      </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-green" id="btn-descargar-match-stats" onclick="window._descargarEstadisticasPartidoPNG('${h.id}')" style="flex:1;min-width:180px;font-size:12px;padding:10px;">📸 DESCARGAR IMAGEN ESTADÍSTICAS</button>
+      <button class="btn btn-gold" onclick="document.getElementById('modal').style.display='none'" style="flex:1;min-width:100px;font-size:12px;padding:10px;">CERRAR</button>
     </div>
-
-    <div class="card" style="margin-bottom:10px;">
-      <div class="card-title">⚽ GOLEADORES Y ASISTIDORES</div>
-      <div style="font-size:12px;line-height:1.6;color:#eee;">
-        <div style="margin-bottom:8px;"><b>Goles:</b><br>${goleadoresTxt}</div>
-        <div><b>Asistencias:</b><br>${asistidoresTxt}</div>
-      </div>
-    </div>
-
-    <div class="card" style="margin-bottom:12px;">
-      <div class="card-title">🔄 SUSTITUCIONES Y CAMBIOS</div>
-      <div style="font-size:12px;line-height:1.5;color:#eee;">${sustitucionesTxt}</div>
-    </div>
-
-    <button class="btn btn-gold" onclick="document.getElementById('modal').style.display='none'">ACEPTAR</button>
   `;
 
   modalContent.innerHTML = html;
   modal.style.display = 'flex';
 }
 
+window._descargarEstadisticasPartidoPNG = async (id) => {
+  const card = document.getElementById('match-stats-capture-card');
+  if (!card) return;
+
+  const btn = document.getElementById('btn-descargar-match-stats');
+  const prevText = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.innerHTML = '⏳ GENERANDO IMAGEN...';
+    btn.disabled = true;
+  }
+
+  try {
+    const html2canvasModule = await import('html2canvas');
+    const html2canvas = html2canvasModule.default || html2canvasModule;
+    const canvas = await html2canvas(card, {
+      scale: 2.5,
+      backgroundColor: '#070a10',
+      useCORS: true,
+      logging: false,
+      allowTaint: true
+    });
+
+    const dataUrl = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.download = `Estadisticas_Partido_${id || Date.now()}.png`;
+    link.href = dataUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    mostrarToastRapido('✅ Imagen de estadísticas descargada');
+  } catch (err) {
+    console.error('Error al exportar estadísticas de partido:', err);
+    mostrarToastRapido('⚠️ Error al generar imagen');
+  } finally {
+    if (btn) {
+      btn.innerHTML = prevText;
+      btn.disabled = false;
+    }
+  }
+};
+
+window._eliminarJuegoProgramado = (id) => {
+  mostrarConfirmacionApp(
+    'Eliminar Encuentro Programado',
+    '¿Estás seguro de que deseas eliminar este partido programado/convocado? Esta acción no se puede deshacer.',
+    async () => {
+      const idx = juegosProgramados.findIndex(j => j.id === id);
+      if (idx !== -1) {
+        juegosProgramados.splice(idx, 1);
+        updateJuegosProgramados(juegosProgramados);
+        autoSaveLocal();
+        await guardarFirebase();
+        renderHistorial();
+        mostrarToastRapido('🗑️ Encuentro programado eliminado');
+      }
+    }
+  );
+};
 
 window._abrirModalEstadisticasPartido = (id) => abrirModalEstadisticasPartido(id);
 

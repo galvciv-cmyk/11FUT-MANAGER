@@ -1892,37 +1892,100 @@ window._borrarCTSlot = () => {
 };
 
 export async function exportarPNG(eq, btnElement) {
-  const el = document.getElementById(`pizarra-${eq}`);
+  const el = document.getElementById(`cancha-${eq}`) || document.getElementById(`pizarra-${eq}`);
   if (!el || !btnElement) return;
 
   const eqName = (perfil[`eq${eq}`] || 'EQUIPO').toUpperCase();
+  const clubName = (perfil.club || eqName || '11FUT MANAGER').toUpperCase();
+  const catName = (perfil.categoriaActiva || '').toUpperCase();
+  const esquemaVal = document.getElementById(`esquema-${eq}`)?.value || '';
+  const modoVal = document.getElementById(`modo-${eq}`)?.value || '11';
+
   const orig = btnElement.innerHTML;
-  btnElement.innerHTML = '⏳ GENERANDO PNG...';
+  btnElement.innerHTML = '⏳ GENERANDO PNG DE ALTA DEFINICIÓN...';
   btnElement.disabled = true;
 
   try {
-    const html2canvas = (await import("html2canvas")).default;
-    const canvas = await html2canvas(el, {
-      backgroundColor: '#000',
-      scale: 2,
+    const html2canvasModule = await import("html2canvas");
+    const html2canvas = html2canvasModule.default || html2canvasModule;
+
+    const pitchCanvas = await html2canvas(el, {
+      backgroundColor: '#070a10',
+      scale: 3,
       useCORS: true,
       allowTaint: true,
       logging: false,
       imageTimeout: 0
     });
 
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
-    ctx.fillStyle = '#d4af37';
-    ctx.font = `bold ${Math.round(canvas.width * 0.026)}px Barlow Condensed, sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText((perfil.club || '11FUT MANAGER').toUpperCase(), canvas.width / 2, canvas.height - 14);
+    const headerHeight = Math.round(pitchCanvas.width * 0.075);
+    const footerHeight = Math.round(pitchCanvas.width * 0.045);
 
+    const outCanvas = document.createElement('canvas');
+    outCanvas.width = pitchCanvas.width;
+    outCanvas.height = pitchCanvas.height + headerHeight + footerHeight;
+
+    const ctx = outCanvas.getContext('2d');
+
+    // Fondo global
+    ctx.fillStyle = '#06080c';
+    ctx.fillRect(0, 0, outCanvas.width, outCanvas.height);
+
+    // ── HEADER SUPERIOR ELEGANTE ──
+    const gradHeader = ctx.createLinearGradient(0, 0, outCanvas.width, 0);
+    gradHeader.addColorStop(0, '#0a0f18');
+    gradHeader.addColorStop(0.5, '#141c2c');
+    gradHeader.addColorStop(1, '#0a0f18');
+    ctx.fillStyle = gradHeader;
+    ctx.fillRect(0, 0, outCanvas.width, headerHeight);
+
+    // Borde dorado inferior del header
+    ctx.fillStyle = '#d4af37';
+    ctx.fillRect(0, headerHeight - 3, outCanvas.width, 3);
+
+    // Textos del Header
+    const fontBase = Math.round(pitchCanvas.width * 0.024);
+    ctx.fillStyle = '#d4af37';
+    ctx.font = `bold ${Math.round(fontBase * 1.35)}px 'Barlow Condensed', sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText(clubName + (catName ? ` • ${catName}` : ''), 24, Math.round(headerHeight * 0.6));
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold ${fontBase}px 'Barlow Condensed', sans-serif`;
+    ctx.textAlign = 'right';
+    const esquemaTxt = esquemaVal ? `SISTEMA: ${esquemaVal.toUpperCase()} (FÚTBOL ${modoVal})` : `FÚTBOL ${modoVal}`;
+    ctx.fillText(esquemaTxt, outCanvas.width - 24, Math.round(headerHeight * 0.6));
+
+    // ── CANCHA DE ALTA RESOLUCIÓN EN EL CENTRO ──
+    ctx.drawImage(pitchCanvas, 0, headerHeight);
+
+    // ── FOOTER ELEGANTE ──
+    const gradFooter = ctx.createLinearGradient(0, 0, outCanvas.width, 0);
+    gradFooter.addColorStop(0, '#070a10');
+    gradFooter.addColorStop(0.5, '#0d131f');
+    gradFooter.addColorStop(1, '#070a10');
+    ctx.fillStyle = gradFooter;
+    ctx.fillRect(0, outCanvas.height - footerHeight, outCanvas.width, footerHeight);
+
+    // Borde dorado superior del footer
+    ctx.fillStyle = '#d4af37';
+    ctx.fillRect(0, outCanvas.height - footerHeight, outCanvas.width, 2);
+
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = `600 ${Math.round(fontBase * 0.85)}px 'Barlow Condensed', sans-serif`;
+    ctx.textAlign = 'center';
+    const fechaHoy = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+    ctx.fillText(`11FUT MANAGER • PIZARRA TÁCTICA OFICIAL • ${fechaHoy.toUpperCase()}`, outCanvas.width / 2, outCanvas.height - Math.round(footerHeight * 0.38));
+
+    // Descarga del PNG
     const link = document.createElement('a');
     link.download = `pizarra_${eqName}_${new Date().toLocaleDateString('es-ES').replace(/\//g, '-')}.png`;
-    link.href = canvas.toDataURL('image/png');
+    link.href = outCanvas.toDataURL('image/png');
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
+
+    mostrarNotificacionApp('Imagen Guardada', '✅ Imagen táctica en alta resolución descargada con éxito.');
   } catch (e) {
     mostrarNotificacionApp('Error al exportar', 'Ocurrió un error al generar la imagen PNG.', false);
     console.error(e);

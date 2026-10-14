@@ -186,18 +186,20 @@ export function initPlantelUI() {
   aplicarFiltrosPlantel();
 }
 
-function renderJugadorRowHTML(cat, idx, nombre, dorsal, cfg) {
+function renderJugadorRowHTML(cat, idx, nombre, dorsal, cfg, isNew = false) {
+  const isEditing = isNew;
   return `
-    <div class="jugador-card-row" data-pos="${cat}" data-idx="${idx}">
+    <div class="jugador-card-row ${isEditing ? 'is-editing' : 'is-locked'}" id="row-${cat}-${idx}" data-pos="${cat}" data-idx="${idx}">
       <div class="dorsal-badge-wrap" title="Dorsal del Jugador (#)">
         <span class="dorsal-hash">#</span>
-        <input type="number" class="input-dorsal" id="dorsal-${cat}-${idx}" value="${dorsal}" placeholder="--" min="1" max="99" oninput="window._cambiarDorsal('${cat}', ${idx}, this.value)">
+        <input type="number" class="input-dorsal" id="dorsal-${cat}-${idx}" value="${dorsal}" placeholder="--" min="1" max="99" ${isEditing ? '' : 'readonly'} oninput="window._cambiarDorsal('${cat}', ${idx}, this.value)" onkeydown="if(event.key==='Enter') window._toggleEditarJugador('${cat}', ${idx})">
       </div>
       <div class="jugador-nombre-wrap">
-        <input type="text" class="input-nombre-jugador" id="p-${cat}-${idx}" value="${nombre}" placeholder="Nombre del jugador" oninput="window._onPlayerNameInput('${cat}', ${idx}, this.value)">
+        <input type="text" class="input-nombre-jugador" id="p-${cat}-${idx}" value="${nombre}" placeholder="Nombre del jugador" ${isEditing ? '' : 'readonly'} oninput="window._onPlayerNameInput('${cat}', ${idx}, this.value)" onkeydown="if(event.key==='Enter') window._toggleEditarJugador('${cat}', ${idx})">
       </div>
       <span class="pos-badge ${cfg.class}">${cfg.badge}</span>
       <div class="jugador-actions">
+        <button type="button" class="btn-squad-action btn-edit-player ${isEditing ? 'is-saving' : ''}" id="btn-edit-${cat}-${idx}" title="${isEditing ? 'Guardar cambios' : 'Editar jugador'}" onclick="window._toggleEditarJugador('${cat}', ${idx})">${isEditing ? '💾' : '✏️'}</button>
         <button type="button" class="btn-squad-action" title="Estadísticas de ${nombre || 'Jugador'}" onclick="window._abrirStatModal(document.getElementById('p-${cat}-${idx}').value)">📊</button>
         <button type="button" class="btn-squad-action btn-delete-player" title="Eliminar este jugador de la lista" onclick="window._eliminarFilaJugador('${cat}', ${idx})">🗑️</button>
       </div>
@@ -301,8 +303,45 @@ window._agregarFilaJugador = (cat) => {
   initPlantelUI();
   aplicarPlantelUI();
   const lastIdx = plantel[cat].length - 1;
-  const newInp = document.getElementById(`p-${cat}-${lastIdx}`);
-  if (newInp) newInp.focus();
+  window._toggleEditarJugador(cat, lastIdx);
+};
+
+window._toggleEditarJugador = async (cat, idx) => {
+  const row = document.getElementById(`row-${cat}-${idx}`);
+  const btn = document.getElementById(`btn-edit-${cat}-${idx}`);
+  const inpNombre = document.getElementById(`p-${cat}-${idx}`);
+  const inpDorsal = document.getElementById(`dorsal-${cat}-${idx}`);
+  if (!row || !btn || !inpNombre || !inpDorsal) return;
+
+  const isEditing = row.classList.contains('is-editing');
+
+  if (isEditing) {
+    // GUARDAR CAMBIOS Y BLOQUEAR
+    inpNombre.setAttribute('readonly', 'true');
+    inpDorsal.setAttribute('readonly', 'true');
+    row.classList.remove('is-editing');
+    row.classList.add('is-locked');
+    btn.innerHTML = '✏️';
+    btn.classList.remove('is-saving');
+    btn.title = 'Editar jugador';
+
+    syncPlantelFromUI();
+    autoSaveLocal();
+    await guardarFirebase();
+    renderCapitanesUI();
+    mostrarToastRapido('✅ Jugador guardado con éxito');
+  } else {
+    // DESBLOQUEAR Y EDITAR
+    inpNombre.removeAttribute('readonly');
+    inpDorsal.removeAttribute('readonly');
+    row.classList.remove('is-locked');
+    row.classList.add('is-editing');
+    btn.innerHTML = '💾';
+    btn.classList.add('is-saving');
+    btn.title = 'Guardar cambios';
+    inpNombre.focus();
+    inpNombre.select?.();
+  }
 };
 
 window._eliminarFilaJugador = (cat, idx) => {
