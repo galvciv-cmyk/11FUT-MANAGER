@@ -1804,6 +1804,57 @@ window._seleccionarSuplente = (nombre) => {
   autoSaveLocal();
 };
 
+export function getCuerpoTecnicoLista(eq = 'A') {
+  let misCT = [];
+  if (Array.isArray(plantel.cuerpoTecnico)) {
+    misCT = plantel.cuerpoTecnico.filter(m => m && m.nombre && m.nombre.trim());
+  } else if (plantel.cuerpoTecnico && typeof plantel.cuerpoTecnico === 'object') {
+    const obj = plantel.cuerpoTecnico;
+    if (obj.dt) misCT.push({ rol: 'DT', nombre: obj.dt });
+    if (obj.at) misCT.push({ rol: 'AT', nombre: obj.at });
+    if (obj.pa) misCT.push({ rol: 'PA', nombre: obj.pa });
+    if (obj.pf) misCT.push({ rol: 'PF', nombre: obj.pf });
+    if (obj.del) misCT.push({ rol: 'DEL', nombre: obj.del });
+    if (obj.med) misCT.push({ rol: 'MED', nombre: obj.med });
+  }
+
+  // Fallback si no hay en plantel pero sí en plantel['ct_' + eq]
+  if (!misCT.length && Array.isArray(plantel['ct_' + eq])) {
+    misCT = plantel['ct_' + eq].filter(m => m && m.nombre && m.nombre.trim());
+  }
+  return misCT;
+}
+
+const MAPA_ROLES_OFFICIAL = {
+  DT: 'Director Técnico',
+  AT: 'Segundo Entrenador / Asistente',
+  PA: 'Preparador de Porteros',
+  PF: 'Preparador Físico',
+  DEL: 'Delegado de Equipo',
+  MED: 'Médico',
+  FIS: 'Fisioterapeuta',
+  REA: 'Readaptador Físico',
+  ANA: 'Analista Táctico',
+  UTI: 'Utillero / Material',
+  NUT: 'Nutricionista',
+  PSI: 'Psicólogo Deportivo'
+};
+
+const MAPA_ROLES_BADGE = {
+  DT: 'DIR. TÉCNICO',
+  AT: '2° ENTRENADOR',
+  PA: 'PREP. PORTEROS',
+  PF: 'PREP. FÍSICO',
+  DEL: 'DELEGADO',
+  MED: 'MÉDICO',
+  FIS: 'FISIOTERAPIA',
+  REA: 'READAPTADOR',
+  ANA: 'ANALISTA',
+  UTI: 'UTILLERO',
+  NUT: 'NUTRICIÓN',
+  PSI: 'PSICOLOGÍA'
+};
+
 export function renderCT(eq) {
   const containers = [
     document.getElementById('ct-' + eq),
@@ -1811,35 +1862,40 @@ export function renderCT(eq) {
   ].filter(Boolean);
 
   if (!containers.length) return;
-  const misCT = (plantel['ct_' + eq] || []).slice(0, 5);
+
+  const misCT = getCuerpoTecnicoLista(eq);
 
   containers.forEach(cont => {
     cont.innerHTML = '';
+
+    if (!misCT.length) {
+      cont.innerHTML = `
+        <div style="font-size:11px;color:#64748b;text-align:center;padding:12px 8px;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.1);border-radius:8px;width:100%;">
+          Sin cuerpo técnico asignado en el plantel.
+          <button type="button" class="btn btn-gold" style="width:auto;margin:6px auto 0;font-size:10px;padding:4px 10px;" onclick="if(window._switchTab) window._switchTab(3)">➕ Inscribir en Plantel</button>
+        </div>
+      `;
+      return;
+    }
+
     misCT.forEach((m, i) => {
       const slot = document.createElement('div');
       slot.className = 'ct-slot';
-      slot.onclick = () => abrirModalCT(eq, i);
+      const rolRaw = m.rol || 'CT';
+      const rolLabel = MAPA_ROLES_BADGE[rolRaw] || rolRaw;
+
       slot.innerHTML = `
-        <div style="font-size:11px;color:#00ab55;margin-bottom:0;font-weight:900;z-index:2;">CT #${i + 1}</div>
+        <div style="font-size:9.5px;color:var(--oro);margin-bottom:0;font-weight:900;z-index:2;letter-spacing:0.5px;max-width:88px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${MAPA_ROLES_OFFICIAL[rolRaw] || rolLabel}">${rolLabel}</div>
         <div class="dugout-seat-wrapper ct-seat-wrapper">
           ${STADIUM_CT_SEAT_SVG}
-          <div class="token-camisa" style="width:54px;height:54px;z-index:2;position:relative;margin-top:2px;">
+          <div class="token-camisa" style="width:50px;height:50px;z-index:2;position:relative;margin-top:2px;">
             <img src="${getImg(eq, 'ct')}">
           </div>
         </div>
-        <span class="ct-label" style="font-size:11px;z-index:2;margin-top:0;font-weight:800;">${m.nombre || 'LIBRE'}</span>
-        <span class="ct-rol" style="font-size:10px;color:#aaa;z-index:2;font-weight:700;">${m.rol || ''}</span>`;
+        <span class="ct-label" style="font-size:11px;z-index:2;margin-top:0;font-weight:900;color:#fff;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.nombre}</span>
+      `;
       cont.appendChild(slot);
     });
-
-    if (misCT.length < 5) {
-      const add = document.createElement('div');
-      add.className = 'ct-slot';
-      add.onclick = () => abrirModalCT(eq, misCT.length);
-      add.innerHTML = `<div style="width:40px;height:40px;border:2px dashed #1a3a6e;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;color:#1a3a6e;">+</div>
-        <span class="ct-rol" style="color:#1a3a6e;margin-top:2px;">AGREGAR</span>`;
-      cont.appendChild(add);
-    }
   });
 }
 
@@ -1891,6 +1947,148 @@ window._borrarCTSlot = () => {
   }
 };
 
+/**
+ * Construye el elemento DOM fuera de pantalla del Banquillo Oficial
+ * (Suplentes + Cuerpo Técnico del Plantel) para ser capturado en alta definición.
+ */
+function crearBanquilloExportElement(eq, minHeightPx) {
+  const container = document.createElement('div');
+  container.style.cssText = `
+    width: 490px;
+    min-height: ${minHeightPx ? minHeightPx + 'px' : 'auto'};
+    background: linear-gradient(180deg, #0c121d 0%, #060910 100%);
+    border: 2px solid rgba(212, 175, 55, 0.5);
+    border-radius: 16px;
+    padding: 18px 16px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 16px;
+    color: #ffffff;
+    font-family: 'Barlow Condensed', -apple-system, sans-serif;
+  `;
+
+  // 1. Header del Banquillo
+  const headerHtml = `
+    <div style="background: linear-gradient(90deg, rgba(212,175,55,0.22), rgba(0,0,0,0.5)); border: 1px solid rgba(212,175,55,0.4); border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 20px;">🏟️</span>
+        <span style="font-size: 16px; font-weight: 900; color: #d4af37; letter-spacing: 0.8px;">BANQUILLO Y CUERPO TÉCNICO</span>
+      </div>
+      <span style="font-size: 11px; font-weight: 900; background: #d4af37; color: #060910; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.5px;">OFICIAL</span>
+    </div>
+  `;
+
+  // 2. Sección Suplentes
+  const suplentes = (plantel[`sup_${eq}`] || []);
+  const maxSup = Math.max(suplentes.length, plantel[`maxSup_${eq}`] || 7);
+  let suplentesSlotsHtml = '';
+
+  for (let i = 0; i < maxSup; i++) {
+    const nombre = suplentes[i] || `SUP ${i + 1}`;
+    const tieneJugador = !!(suplentes[i] && suplentes[i].trim() && suplentes[i] !== `SUP ${i + 1}`);
+    suplentesSlotsHtml += `
+      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: rgba(255,255,255,0.03); border: 1px solid ${tieneJugador ? 'rgba(212,175,55,0.35)' : 'rgba(255,255,255,0.07)'}; border-radius: 10px; padding: 6px 4px; min-height: 80px; position: relative;">
+        <div style="font-size: 10px; font-weight: 900; color: #d4af37; margin-bottom: 1px;">#${i + 1}</div>
+        <div style="width: 40px; height: 40px; position: relative; display: flex; align-items: center; justify-content: center;">
+          <div style="position: absolute; inset: 0; width: 40px; height: 40px; opacity: 0.85;">${STADIUM_SEAT_SVG}</div>
+          <img src="${getImg(eq, 'sup')}" style="width: 32px; height: 32px; object-fit: contain; z-index: 2; position: relative; margin-top: 2px;">
+        </div>
+        <div style="font-size: 10.5px; font-weight: 900; color: ${tieneJugador ? '#ffffff' : '#94a3b8'}; margin-top: 3px; max-width: 95px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          ${nombre}
+        </div>
+      </div>
+    `;
+  }
+
+  const numAsignados = suplentes.filter(s => s && s.trim() && !s.startsWith('SUP ')).length;
+  const secSuplentesHtml = `
+    <div>
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px;">
+        <div style="font-size: 13px; font-weight: 900; color: #f1f5f9; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+          <span>🪑</span> JUGADORES SUPLENTES
+        </div>
+        <div style="font-size: 11px; font-weight: 800; color: #d4af37;">
+          ${numAsignados > 0 ? `${numAsignados} EN BANCA` : `${maxSup} ASIENTOS`}
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px;">
+        ${suplentesSlotsHtml}
+      </div>
+    </div>
+  `;
+
+  // 3. Sección Cuerpo Técnico del Plantel
+  const misCT = getCuerpoTecnicoLista(eq);
+
+  let ctSlotsHtml = '';
+  if (!misCT.length) {
+    ctSlotsHtml = `
+      <div style="grid-column: 1 / -1; text-align: center; color: #94a3b8; font-size: 12px; font-weight: 700; padding: 14px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 8px;">
+        Sin cuerpo técnico asignado en el plantel
+      </div>
+    `;
+  } else {
+    misCT.forEach((m) => {
+      const rolRaw = m.rol || 'CT';
+      const rolLabel = MAPA_ROLES_BADGE[rolRaw] || rolRaw;
+      ctSlotsHtml += `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: rgba(212,175,55,0.05); border: 1px solid rgba(212,175,55,0.4); border-radius: 10px; padding: 8px 4px; min-height: 84px;">
+          <div style="font-size: 9px; font-weight: 900; color: #d4af37; background: rgba(212,175,55,0.18); border: 1px solid rgba(212,175,55,0.45); border-radius: 4px; padding: 1px 6px; margin-bottom: 3px; max-width: 125px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: uppercase;">
+            ${rolLabel}
+          </div>
+          <div style="width: 40px; height: 40px; position: relative; display: flex; align-items: center; justify-content: center;">
+            <div style="position: absolute; inset: 0; width: 40px; height: 40px; opacity: 0.9;">${STADIUM_CT_SEAT_SVG}</div>
+            <img src="${getImg(eq, 'ct')}" style="width: 34px; height: 34px; object-fit: contain; z-index: 2; position: relative; margin-top: 2px;">
+          </div>
+          <div style="font-size: 11px; font-weight: 900; color: #ffffff; margin-top: 3px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            ${m.nombre}
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  const secCTHtml = `
+    <div>
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px;">
+        <div style="font-size: 13px; font-weight: 900; color: #f1f5f9; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+          <span>🧥</span> CUERPO TÉCNICO OFICIAL
+        </div>
+        <div style="font-size: 11px; font-weight: 800; color: #d4af37;">
+          ${misCT.length} INTEGRANTES
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(${misCT.length > 2 ? '3' : '2'}, 1fr); gap: 7px;">
+        ${ctSlotsHtml}
+      </div>
+    </div>
+  `;
+
+  // 4. Valla LED oficial inferior del banquillo
+  const marqueeHtml = `
+    <div style="background: linear-gradient(90deg, #05080e, #111a2e, #05080e); border: 1px solid rgba(212,175,55,0.3); border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+      <img src="https://res.cloudinary.com/djhpfdklk/image/upload/v1785381403/gk_nova_logo_spdofl.png" style="height: 18px; filter: drop-shadow(0 0 4px rgba(212,175,55,0.4));">
+      <span style="font-size: 11px; font-weight: 800; color: #d4af37; letter-spacing: 0.5px;">G&K NOVA</span>
+      <span style="color: #64748b;">⚡</span>
+      <img src="https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png" style="height: 18px; filter: drop-shadow(0 0 4px rgba(212,175,55,0.4));">
+      <span style="font-size: 11px; font-weight: 800; color: #ffffff; letter-spacing: 0.5px;">11FUT MANAGER</span>
+    </div>
+  `;
+
+  container.innerHTML = `
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+      ${headerHtml}
+      ${secSuplentesHtml}
+      ${secCTHtml}
+    </div>
+    ${marqueeHtml}
+  `;
+
+  return container;
+}
+
 export async function exportarPNG(eq, btnElement) {
   const el = document.getElementById(`cancha-${eq}`) || document.getElementById(`pizarra-${eq}`);
   if (!el || !btnElement) return;
@@ -1902,33 +2100,88 @@ export async function exportarPNG(eq, btnElement) {
   const modoVal = document.getElementById(`modo-${eq}`)?.value || '11';
 
   const orig = btnElement.innerHTML;
-  btnElement.innerHTML = '⏳ GENERANDO PNG DE ALTA DEFINICIÓN...';
+  btnElement.innerHTML = '⏳ GENERANDO PNG CON CANCHA Y BANQUILLO...';
   btnElement.disabled = true;
 
   try {
     const html2canvasModule = await import("html2canvas");
     const html2canvas = html2canvasModule.default || html2canvasModule;
 
+    // 1. Capturar la Cancha con todas sus fichas, dorsales y trazos tácticos
     const pitchCanvas = await html2canvas(el, {
       backgroundColor: '#070a10',
-      scale: 3,
+      scale: 2.5,
       useCORS: true,
       allowTaint: true,
       logging: false,
       imageTimeout: 0
     });
 
-    const headerHeight = Math.round(pitchCanvas.width * 0.075);
-    const footerHeight = Math.round(pitchCanvas.width * 0.045);
+    // 2. Construir y capturar el Banquillo Oficial (Suplentes + Cuerpo Técnico del Plantel)
+    const minBenchHeight = Math.max(el.clientHeight || 550, 600);
+    const benchEl = crearBanquilloExportElement(eq, minBenchHeight);
+    benchEl.style.position = 'fixed';
+    benchEl.style.left = '-9999px';
+    benchEl.style.top = '0';
+    benchEl.style.zIndex = '-9999';
+    document.body.appendChild(benchEl);
+
+    let benchCanvas;
+    try {
+      benchCanvas = await html2canvas(benchEl, {
+        backgroundColor: '#070a10',
+        scale: 2.5,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        imageTimeout: 0
+      });
+    } finally {
+      benchEl.remove();
+    }
+
+    // 3. Determinar disposición y dimensiones de la imagen final compuesta
+    const isPitchHorizontal = pitchCanvas.width > pitchCanvas.height;
+    const padding = Math.round(pitchCanvas.width * 0.025);
+    const gap = Math.round(pitchCanvas.width * 0.02);
+
+    let totalWidth, totalHeight, pitchX, pitchY, benchX, benchY;
+    let headerHeight, footerHeight;
+
+    if (isPitchHorizontal) {
+      totalWidth = Math.max(pitchCanvas.width, benchCanvas.width) + (padding * 2);
+      headerHeight = Math.round(totalWidth * 0.06);
+      footerHeight = Math.round(totalWidth * 0.038);
+      totalHeight = headerHeight + pitchCanvas.height + gap + benchCanvas.height + footerHeight + (padding * 2);
+
+      pitchX = padding + Math.round((totalWidth - (padding * 2) - pitchCanvas.width) / 2);
+      pitchY = headerHeight + padding;
+      benchX = padding + Math.round((totalWidth - (padding * 2) - benchCanvas.width) / 2);
+      benchY = pitchY + pitchCanvas.height + gap;
+    } else {
+      totalWidth = pitchCanvas.width + benchCanvas.width + gap + (padding * 2);
+      headerHeight = Math.round(totalWidth * 0.055);
+      footerHeight = Math.round(totalWidth * 0.032);
+      const contentHeight = Math.max(pitchCanvas.height, benchCanvas.height);
+      totalHeight = headerHeight + contentHeight + footerHeight + (padding * 2);
+
+      pitchX = padding;
+      pitchY = headerHeight + padding + Math.round((contentHeight - pitchCanvas.height) / 2);
+      benchX = padding + pitchCanvas.width + gap;
+      benchY = headerHeight + padding + Math.round((contentHeight - benchCanvas.height) / 2);
+    }
 
     const outCanvas = document.createElement('canvas');
-    outCanvas.width = pitchCanvas.width;
-    outCanvas.height = pitchCanvas.height + headerHeight + footerHeight;
-
+    outCanvas.width = totalWidth;
+    outCanvas.height = totalHeight;
     const ctx = outCanvas.getContext('2d');
 
-    // Fondo global
-    ctx.fillStyle = '#06080c';
+    // Fondo global oscuro con gradiente premium de estadio
+    const bgGrad = ctx.createLinearGradient(0, 0, outCanvas.width, outCanvas.height);
+    bgGrad.addColorStop(0, '#06080c');
+    bgGrad.addColorStop(0.5, '#0a0f19');
+    bgGrad.addColorStop(1, '#05070a');
+    ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, outCanvas.width, outCanvas.height);
 
     // ── HEADER SUPERIOR ELEGANTE ──
@@ -1944,20 +2197,21 @@ export async function exportarPNG(eq, btnElement) {
     ctx.fillRect(0, headerHeight - 3, outCanvas.width, 3);
 
     // Textos del Header
-    const fontBase = Math.round(pitchCanvas.width * 0.024);
+    const fontBase = Math.round(totalWidth * 0.018);
     ctx.fillStyle = '#d4af37';
     ctx.font = `bold ${Math.round(fontBase * 1.35)}px 'Barlow Condensed', sans-serif`;
     ctx.textAlign = 'left';
-    ctx.fillText(clubName + (catName ? ` • ${catName}` : ''), 24, Math.round(headerHeight * 0.6));
+    ctx.fillText(clubName + (catName ? ` • ${catName}` : ''), padding + 12, Math.round(headerHeight * 0.62));
 
     ctx.fillStyle = '#ffffff';
     ctx.font = `bold ${fontBase}px 'Barlow Condensed', sans-serif`;
     ctx.textAlign = 'right';
     const esquemaTxt = esquemaVal ? `SISTEMA: ${esquemaVal.toUpperCase()} (FÚTBOL ${modoVal})` : `FÚTBOL ${modoVal}`;
-    ctx.fillText(esquemaTxt, outCanvas.width - 24, Math.round(headerHeight * 0.6));
+    ctx.fillText(esquemaTxt, outCanvas.width - padding - 12, Math.round(headerHeight * 0.62));
 
-    // ── CANCHA DE ALTA RESOLUCIÓN EN EL CENTRO ──
-    ctx.drawImage(pitchCanvas, 0, headerHeight);
+    // ── DIBUJAR CANCHA Y BANQUILLO ──
+    ctx.drawImage(pitchCanvas, pitchX, pitchY);
+    ctx.drawImage(benchCanvas, benchX, benchY);
 
     // ── FOOTER ELEGANTE ──
     const gradFooter = ctx.createLinearGradient(0, 0, outCanvas.width, 0);
@@ -1975,17 +2229,17 @@ export async function exportarPNG(eq, btnElement) {
     ctx.font = `600 ${Math.round(fontBase * 0.85)}px 'Barlow Condensed', sans-serif`;
     ctx.textAlign = 'center';
     const fechaHoy = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
-    ctx.fillText(`11FUT MANAGER • PIZARRA TÁCTICA OFICIAL • ${fechaHoy.toUpperCase()}`, outCanvas.width / 2, outCanvas.height - Math.round(footerHeight * 0.38));
+    ctx.fillText(`11FUT MANAGER • ALINEACIÓN Y BANQUILLO OFICIAL • ${fechaHoy.toUpperCase()}`, outCanvas.width / 2, outCanvas.height - Math.round(footerHeight * 0.38));
 
     // Descarga del PNG
     const link = document.createElement('a');
-    link.download = `pizarra_${eqName}_${new Date().toLocaleDateString('es-ES').replace(/\//g, '-')}.png`;
+    link.download = `tactica_${eqName}_${new Date().toLocaleDateString('es-ES').replace(/\//g, '-')}.png`;
     link.href = outCanvas.toDataURL('image/png');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 
-    mostrarNotificacionApp('Imagen Guardada', '✅ Imagen táctica en alta resolución descargada con éxito.');
+    mostrarNotificacionApp('Imagen Guardada', '✅ Imagen táctica con banquillo y cuerpo técnico descargada en alta resolución.');
   } catch (e) {
     mostrarNotificacionApp('Error al exportar', 'Ocurrió un error al generar la imagen PNG.', false);
     console.error(e);

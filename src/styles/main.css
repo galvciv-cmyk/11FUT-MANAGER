@@ -2686,7 +2686,7 @@ body.body-fullscreen-active {
   width: 18px;
   height: 18px;
   object-fit: contain;
-  transform: rotate(90deg);
+  transform: none;
   filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.6));
 }
 

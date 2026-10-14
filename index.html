@@ -1013,35 +1013,17 @@
           <!-- COLUMNA DERECHA (50% EN PC): CUERPO TÉCNICO, CAPITANES Y BOTONES -->
           <div class="squad-col-der" style="display:flex;flex-direction:column;gap:14px;">
 
-            <!-- CUERPO TÉCNICO -->
+            <!-- CUERPO TÉCNICO OFICIAL DINÁMICO -->
             <div class="card" style="margin:0;">
-              <div class="card-title">📋 CUERPO TÉCNICO DE LA CATEGORÍA</div>
-              <div style="display:flex;flex-direction:column;gap:8px;">
-                <div>
-                  <label style="font-size:11px;color:var(--oro);font-weight:700;display:block;margin-bottom:2px;">🧢
-                    Director Técnico (DT):</label>
-                  <input type="text" id="ct-dt-nombre" placeholder="Nombre del Director Técnico"
-                    oninput="window._autoSaveLocal()">
-                </div>
-                <div>
-                  <label style="font-size:11px;color:#aaa;font-weight:700;display:block;margin-bottom:2px;">📋 Asistente
-                    Técnico (AT):</label>
-                  <input type="text" id="ct-at-nombre" placeholder="Nombre del Asistente Técnico"
-                    oninput="window._autoSaveLocal()">
-                </div>
-                <div>
-                  <label style="font-size:11px;color:#aaa;font-weight:700;display:block;margin-bottom:2px;">🏃‍♂️
-                    Preparador Físico (PF):</label>
-                  <input type="text" id="ct-pf-nombre" placeholder="Nombre del Preparador Físico"
-                    oninput="window._autoSaveLocal()">
-                </div>
-                <div>
-                  <label style="font-size:11px;color:#aaa;font-weight:700;display:block;margin-bottom:2px;">🏥 Médico /
-                    Fisioterapeuta:</label>
-                  <input type="text" id="ct-med-nombre" placeholder="Nombre del Médico o Kinesiólogo"
-                    oninput="window._autoSaveLocal()">
-                </div>
+              <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
+                <span>🧢 CUERPO TÉCNICO OFICIAL</span>
+                <span class="count-badge" id="count-ct" style="background:rgba(212,175,55,0.15);color:var(--oro);border:1px solid rgba(212,175,55,0.4);border-radius:10px;padding:1px 8px;font-size:11px;font-weight:900;">0</span>
               </div>
+              <div id="ct-plantel-lista" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;"></div>
+              <button type="button" class="btn btn-gray" id="btn-add-ct" onclick="window._agregarMiembroCT()"
+                style="width:100%;font-size:12px;font-weight:700;border:1px dashed var(--oro);color:var(--oro);padding:8px;display:flex;align-items:center;justify-content:center;gap:6px;">
+                ➕ Añadir Miembro del Cuerpo Técnico
+              </button>
             </div>
 
             <!-- CAPITANES DEL EQUIPO -->

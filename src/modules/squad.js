@@ -2,6 +2,7 @@ import { plantel, cupos, catNombres, perfil, stats, autoSaveLocal } from "./stat
 import { guardarFirebase } from "../services/firebase.js";
 import { renderStats } from "./stats.js";
 import { mostrarNotificacionApp, mostrarConfirmacionApp, mostrarToastRapido } from "./config.js";
+import { renderCT } from "./tactics.js";
 import { throttleDownload } from "../utils/rateLimiter.js";
 
 let filtroTextoPlantel = '';
@@ -183,6 +184,7 @@ export function initPlantelUI() {
     cont.innerHTML += h;
   }
 
+  renderCuerpoTecnicoUI();
   aplicarFiltrosPlantel();
 }
 
@@ -205,6 +207,90 @@ function renderJugadorRowHTML(cat, idx, nombre, dorsal, cfg, isNew = false) {
       </div>
     </div>
   `;
+}
+
+export const ROLES_CUERPO_TECNICO = [
+  { id: 'DT', label: 'Director Técnico (DT)', icon: '🧢' },
+  { id: 'AT', label: 'Segundo Entrenador / Asistente (AT)', icon: '📋' },
+  { id: 'PA', label: 'Preparador de Porteros', icon: '🧤' },
+  { id: 'PF', label: 'Preparador Físico (PF)', icon: '🏃‍♂️' },
+  { id: 'DEL', label: 'Delegado de Equipo / Campo', icon: '👔' },
+  { id: 'MED', label: 'Médico', icon: '🏥' },
+  { id: 'FIS', label: 'Fisioterapeuta / Kinesiólogo', icon: '💆‍♂️' },
+  { id: 'REA', label: 'Readaptador Físico', icon: '🩹' },
+  { id: 'ANA', label: 'Analista Táctico / Video', icon: '💻' },
+  { id: 'UTI', label: 'Utillero / Encargado de Material', icon: '👕' },
+  { id: 'NUT', label: 'Nutricionista', icon: '🥗' },
+  { id: 'PSI', label: 'Psicólogo Deportivo', icon: '🧠' }
+];
+
+export function obtenerCuerpoTecnicoLista() {
+  if (!plantel.cuerpoTecnico) {
+    plantel.cuerpoTecnico = [];
+    return [];
+  }
+  if (Array.isArray(plantel.cuerpoTecnico)) {
+    return plantel.cuerpoTecnico;
+  }
+  const list = [];
+  const obj = plantel.cuerpoTecnico;
+  if (obj.dt) list.push({ id: 'ct_dt', nombre: obj.dt, rol: 'DT' });
+  if (obj.at) list.push({ id: 'ct_at', nombre: obj.at, rol: 'AT' });
+  if (obj.pa) list.push({ id: 'ct_pa', nombre: obj.pa, rol: 'PA' });
+  if (obj.pf) list.push({ id: 'ct_pf', nombre: obj.pf, rol: 'PF' });
+  if (obj.del) list.push({ id: 'ct_del', nombre: obj.del, rol: 'DEL' });
+  if (obj.med) list.push({ id: 'ct_med', nombre: obj.med, rol: 'MED' });
+  plantel.cuerpoTecnico = list;
+  return list;
+}
+
+export function sincronizarCuerpoTecnicoLegacy() {
+  const list = obtenerCuerpoTecnicoLista();
+  plantel.cuerpoTecnico = list;
+  plantel.cuerpoTecnico.dt = list.find(m => m.rol === 'DT')?.nombre || '';
+  plantel.cuerpoTecnico.at = list.find(m => m.rol === 'AT')?.nombre || '';
+  plantel.cuerpoTecnico.pa = list.find(m => m.rol === 'PA')?.nombre || '';
+  plantel.cuerpoTecnico.pf = list.find(m => m.rol === 'PF')?.nombre || '';
+  plantel.cuerpoTecnico.del = list.find(m => m.rol === 'DEL')?.nombre || '';
+  plantel.cuerpoTecnico.med = list.find(m => m.rol === 'MED' || m.rol === 'FIS')?.nombre || '';
+}
+
+export function renderCuerpoTecnicoUI() {
+  const cont = document.getElementById('ct-plantel-lista');
+  const countEl = document.getElementById('count-ct');
+  if (!cont) return;
+
+  const lista = obtenerCuerpoTecnicoLista();
+  if (countEl) countEl.textContent = lista.filter(m => m.nombre && m.nombre.trim()).length;
+
+  if (lista.length === 0) {
+    cont.innerHTML = `
+      <div style="padding:10px 14px;text-align:center;color:#64748b;font-size:11px;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.1);border-radius:8px;">
+        Sin cuerpo técnico registrado aún. Haz clic en "➕ Añadir Miembro del Cuerpo Técnico".
+      </div>
+    `;
+    return;
+  }
+
+  cont.innerHTML = lista.map((m, idx) => {
+    const isEditing = !!m._isEditing;
+    return `
+      <div class="ct-card-row ${isEditing ? 'is-editing' : 'is-locked'}" id="ct-row-${idx}" style="display:flex;align-items:center;gap:6px;background:rgba(18,24,35,0.7);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:6px 10px;transition:all 0.2s;">
+        <div style="flex-shrink:0;width:145px;">
+          <select class="select-rol-ct" id="ct-rol-${idx}" ${isEditing ? '' : 'disabled'} onchange="window._onCTChange(${idx})" style="width:100%;min-height:36px;height:36px;padding:4px 8px;font-size:11px;background:#0d121c;border:1px solid rgba(212,175,55,0.4);border-radius:8px;color:#fff;margin:0;">
+            ${ROLES_CUERPO_TECNICO.map(r => `<option value="${r.id}" ${r.id === m.rol ? 'selected' : ''}>${r.icon} ${r.label}</option>`).join('')}
+          </select>
+        </div>
+        <div style="flex:1;min-width:100px;">
+          <input type="text" class="input-nombre-ct" id="ct-nombre-${idx}" value="${m.nombre || ''}" placeholder="Nombre del integrante" ${isEditing ? '' : 'readonly'} oninput="window._onCTChange(${idx})" onkeydown="if(event.key==='Enter') window._toggleEditarCT(${idx})" style="width:100%;min-height:36px;height:36px;background:rgba(8,12,18,0.6);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#fff;padding:6px 10px;font-size:12.5px;font-weight:700;margin:0;box-sizing:border-box;">
+        </div>
+        <div style="display:flex;gap:4px;flex-shrink:0;">
+          <button type="button" class="btn-squad-action btn-edit-player ${isEditing ? 'is-saving' : ''}" id="btn-edit-ct-${idx}" title="${isEditing ? 'Guardar' : 'Editar'}" onclick="window._toggleEditarCT(${idx})">${isEditing ? '💾' : '✏️'}</button>
+          <button type="button" class="btn-squad-action btn-delete-player" title="Eliminar miembro" onclick="window._eliminarMiembroCT(${idx})">🗑️</button>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 export function renderCapitanesUI() {
@@ -248,19 +334,10 @@ export function aplicarPlantelUI() {
     }
   }
 
-  const ct = plantel.cuerpoTecnico || {};
-  const dtEl = document.getElementById('ct-dt-nombre');
-  const atEl = document.getElementById('ct-at-nombre');
-  const pfEl = document.getElementById('ct-pf-nombre');
-  const medEl = document.getElementById('ct-med-nombre');
-
-  if (dtEl) dtEl.value = ct.dt || '';
-  if (atEl) atEl.value = ct.at || '';
-  if (pfEl) pfEl.value = ct.pf || '';
-  if (medEl) medEl.value = ct.med || '';
-
+  renderCuerpoTecnicoUI();
   renderCapitanesUI();
   aplicarFiltrosPlantel();
+  renderCT('A');
 }
 
 export function syncPlantelFromUI() {
@@ -289,12 +366,24 @@ export function syncPlantelFromUI() {
     document.getElementById('cap-select-2')?.value || '',
     document.getElementById('cap-select-3')?.value || ''
   ];
-  plantel.cuerpoTecnico = {
-    dt: document.getElementById('ct-dt-nombre')?.value.trim() || '',
-    at: document.getElementById('ct-at-nombre')?.value.trim() || '',
-    pf: document.getElementById('ct-pf-nombre')?.value.trim() || '',
-    med: document.getElementById('ct-med-nombre')?.value.trim() || ''
-  };
+
+  const ctRows = document.querySelectorAll('.ct-card-row');
+  if (ctRows.length) {
+    const list = [];
+    ctRows.forEach((row, idx) => {
+      const sel = document.getElementById(`ct-rol-${idx}`);
+      const inp = document.getElementById(`ct-nombre-${idx}`);
+      if (sel && inp) {
+        list.push({
+          id: `ct_${idx}_${Date.now()}`,
+          rol: sel.value,
+          nombre: inp.value.trim()
+        });
+      }
+    });
+    plantel.cuerpoTecnico = list;
+    sincronizarCuerpoTecnicoLegacy();
+  }
 }
 
 window._agregarFilaJugador = (cat) => {
@@ -342,6 +431,72 @@ window._toggleEditarJugador = async (cat, idx) => {
     inpNombre.focus();
     inpNombre.select?.();
   }
+};
+
+window._agregarMiembroCT = () => {
+  const lista = obtenerCuerpoTecnicoLista();
+  lista.push({
+    id: 'ct_' + Date.now().toString(),
+    rol: lista.length === 0 ? 'DT' : (lista.length === 1 ? 'AT' : (lista.length === 2 ? 'PA' : 'PF')),
+    nombre: '',
+    _isEditing: true
+  });
+  renderCuerpoTecnicoUI();
+  sincronizarCuerpoTecnicoLegacy();
+  renderCT('A');
+  autoSaveLocal();
+  const lastIdx = lista.length - 1;
+  const newInp = document.getElementById(`ct-nombre-${lastIdx}`);
+  if (newInp) newInp.focus();
+};
+
+window._toggleEditarCT = async (idx) => {
+  const lista = obtenerCuerpoTecnicoLista();
+  const m = lista[idx];
+  if (!m) return;
+
+  m._isEditing = !m._isEditing;
+  if (!m._isEditing) {
+    const selRol = document.getElementById(`ct-rol-${idx}`);
+    const inpNom = document.getElementById(`ct-nombre-${idx}`);
+    if (selRol) m.rol = selRol.value;
+    if (inpNom) m.nombre = inpNom.value.trim();
+    sincronizarCuerpoTecnicoLegacy();
+    autoSaveLocal();
+    await guardarFirebase();
+    renderCT('A');
+    mostrarToastRapido('✅ Cuerpo técnico guardado');
+  }
+  renderCuerpoTecnicoUI();
+  if (m._isEditing) {
+    const inp = document.getElementById(`ct-nombre-${idx}`);
+    inp?.focus();
+    inp?.select?.();
+  }
+};
+
+window._eliminarMiembroCT = async (idx) => {
+  const lista = obtenerCuerpoTecnicoLista();
+  lista.splice(idx, 1);
+  sincronizarCuerpoTecnicoLegacy();
+  renderCuerpoTecnicoUI();
+  renderCT('A');
+  autoSaveLocal();
+  await guardarFirebase();
+  mostrarToastRapido('🗑️ Miembro eliminado');
+};
+
+window._onCTChange = (idx) => {
+  const lista = obtenerCuerpoTecnicoLista();
+  const m = lista[idx];
+  if (!m) return;
+  const selRol = document.getElementById(`ct-rol-${idx}`);
+  const inpNom = document.getElementById(`ct-nombre-${idx}`);
+  if (selRol) m.rol = selRol.value;
+  if (inpNom) m.nombre = inpNom.value;
+  sincronizarCuerpoTecnicoLegacy();
+  renderCT('A');
+  autoSaveLocal();
 };
 
 window._eliminarFilaJugador = (cat, idx) => {
