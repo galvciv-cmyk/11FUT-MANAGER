@@ -22,6 +22,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswor
 import { registerBiometric, loginBiometric, isBiometricSupported } from "./modules/biometric.js";
 import { generarFechaVencimientoPrueba } from "./modules/state.js";
 import { checkRateLimit, resetRateLimit } from "./utils/rateLimiter.js";
+import { abrirFichaJugador, cerrarFichaJugador } from "./modules/playerCard.js";
 
 // ══════════════════════════════════════════
 // LISTA NEGRA — DOMINIOS DE EMAIL DESECHABLES
@@ -758,7 +759,7 @@ function renderSquadPublico() {
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;">
           ${lista.length 
-            ? lista.map(n => `<div style="font-size:13px;color:#eee;background:#141414;padding:6px 10px;border-radius:6px;font-weight:600;">⚽ ${n}</div>`).join('') 
+            ? lista.map(n => `<div style="font-size:13px;color:#eee;background:#141414;padding:6px 10px;border-radius:6px;font-weight:600;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:background 0.2s;" onclick="window._abrirFichaJugador('${n}')" title="Ver ficha y estadísticas de ${n}"><span>⚽ ${n}</span><span style="font-size:10.5px;color:var(--oro);font-weight:800;">Ficha 📊</span></div>`).join('') 
             : '<div style="font-size:11px;color:#666;">Sin jugadores registrados</div>'}
         </div>
       </div>

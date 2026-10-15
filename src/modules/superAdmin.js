@@ -96,8 +96,8 @@ export async function renderMarquesinasDinamicas() {
 
   // 2. Pitch lateral vertical tracks (.cancha-lateral-track)
   const lateralHTML = itemsLista.map(s => {
-    const logoImg = s.logo ? `<img src="${s.logo}" alt="${s.nombre}">` : '';
-    return `<span class="cancha-lateral-item">${logoImg}${s.nombre}</span><span class="cancha-lateral-sep">⚡</span>`;
+    const logoBlock = s.logo ? `<div class="cancha-lateral-logo"><img src="${s.logo}" alt="${s.nombre}"></div>` : '';
+    return `<div class="cancha-lateral-item">${logoBlock}<span class="cancha-lateral-text">${s.nombre}</span></div><span class="cancha-lateral-sep">⚡</span>`;
   }).join('');
 
   document.querySelectorAll('.cancha-lateral-track').forEach(track => {

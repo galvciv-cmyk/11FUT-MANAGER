@@ -1,6 +1,7 @@
 import { stats, updateStats, autoSaveLocal, plantel, perfil, historial } from "./state.js";
 import { guardarFirebase } from "../services/firebase.js";
 import { mostrarNotificacionApp } from "./config.js";
+import { abrirFichaJugador, cerrarFichaJugador } from "./playerCard.js";
 
 export function renderStats(targetId = 'stats-list') {
   renderDashboardColectivo();
@@ -53,7 +54,9 @@ export function renderStats(targetId = 'stats-list') {
 
     html += `
       <tr style="border-bottom:1px solid #1a1a1a;">
-        <td style="padding:8px;font-weight:700;">${nombre} ${esPortero ? '🧤' : ''}</td>
+        <td style="padding:8px;font-weight:700;cursor:pointer;" title="Ver Ficha y Estadísticas" onclick="window._abrirFichaJugador('${nombre}')">
+          <span style="color:var(--oro);text-decoration:underline;">${nombre}</span> ${esPortero ? '🧤' : ''}
+        </td>
         <td style="padding:8px;text-align:center;">${st.pj || 0}</td>
         <td style="padding:8px;text-align:center;">${st.minJug || 0}'</td>
         <td style="padding:8px;text-align:center;color:var(--verde);font-weight:700;">${st.goles || 0}</td>
@@ -64,10 +67,9 @@ export function renderStats(targetId = 'stats-list') {
         <td style="padding:8px;text-align:center;color:var(--oro);font-weight:700;">${efectividad}</td>
         <td style="padding:8px;text-align:center;font-size:11px;color:#aaa;">${vallaDisplay}</td>
         <td style="padding:8px;text-align:center;color:var(--oro);font-weight:700;">${(st.rat || 6.5).toFixed(1)}</td>
-        ${targetId === 'pub-stats-container' ? '' : `
         <td style="padding:8px;text-align:center;">
-          <button class="btn btn-gray" style="padding:4px 8px;font-size:10px;width:auto;" onclick="window._abrirStatModal('${nombre}')">✏️</button>
-        </td>`}
+          <button class="btn btn-gold" style="padding:3px 8px;font-size:10px;width:auto;" title="Ver Ficha del Jugador" onclick="window._abrirFichaJugador('${nombre}')">📊 Ficha</button>
+        </td>
       </tr>
     `;
   });
@@ -346,20 +348,10 @@ window._exportarEstadisticasCSV = exportarEstadisticasExcel;
 let jugadorStatEdicion = '';
 
 window._abrirStatModal = (nombre) => {
-  jugadorStatEdicion = nombre;
-  const st = stats[nombre] || { pj: 0, minJug: 0, goles: 0, asist: 0, am: 0, ro: 0, rat: 6.5 };
-
-  document.getElementById('stat-modal-nombre').textContent = `📊 ESTADÍSTICAS: ${nombre}`;
-  document.getElementById('sm-pj').value = st.pj || 0;
-  document.getElementById('sm-minJug').value = st.minJug || 0;
-  document.getElementById('sm-goles').value = st.goles || 0;
-  document.getElementById('sm-asist').value = st.asist || 0;
-  document.getElementById('sm-am').value = st.am || 0;
-  document.getElementById('sm-ro').value = st.ro || 0;
-  document.getElementById('sm-rat').value = st.rat || 6.5;
-
-  document.getElementById('stat-modal').style.display = 'flex';
+  abrirFichaJugador(nombre);
 };
+
+export { abrirFichaJugador, cerrarFichaJugador };
 
 export function cerrarStatModal() {
   document.getElementById('stat-modal').style.display = 'none';
