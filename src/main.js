@@ -2166,7 +2166,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, true);
   });
 
-  document.getElementById('cfg-modo-predeterminado')?.addEventListener('change', renderEsquemaPredeterminadoUI);
+  document.getElementById('cfg-modo-predeterminado')?.addEventListener('change', (e) => {
+    perfil.modoPredeterminado = e.target.value;
+    renderEsquemaPredeterminadoUI();
+    guardarEsquemaPredeterminadoConfig();
+  });
+  document.getElementById('cfg-esquema-predeterminado')?.addEventListener('change', () => {
+    guardarEsquemaPredeterminadoConfig();
+  });
   document.getElementById('uz-cfg-logo')?.addEventListener('click', () => document.getElementById('up-cfg-logo')?.click());
   document.getElementById('btn-cfg-subir-logo')?.addEventListener('click', guardarLogo);
 

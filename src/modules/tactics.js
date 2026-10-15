@@ -286,9 +286,15 @@ export function guardarEsquemaCustom(eq) {
 
   modalContent.innerHTML = `
     <div class="modal-title">💾 GUARDAR ESQUEMA PERSONALIZADO</div>
-    <div class="card">
-      <label style="font-size:12px;color:#aaa;">Nombre para este esquema táctico:</label>
-      <input type="text" id="custom-scheme-name-input" placeholder="ej. Presión Alta 4-3-3" style="margin-top:6px;margin-bottom:12px;">
+    <div class="card" style="margin:0;">
+      <label style="font-size:12px;color:var(--oro);font-weight:700;">Nombre para este esquema táctico:</label>
+      <input type="text" id="custom-scheme-name-input" placeholder="ej. Presión Alta 4-3-3" style="margin-top:6px;margin-bottom:10px;">
+      
+      <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#fff;margin-bottom:14px;cursor:pointer;background:#0d0d0d;padding:8px 10px;border-radius:6px;border:1px solid #333;">
+        <input type="checkbox" id="custom-scheme-favorito-chk" checked style="width:16px;height:16px;accent-color:var(--oro);">
+        <span>⭐ Establecer como <strong>esquema favorito / predeterminado</strong> del club</span>
+      </label>
+
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
         <button class="btn btn-gold" onclick="window._confirmarGuardarEsquema('${eq}')">✅ GUARDAR</button>
         <button class="btn btn-gray" onclick="document.getElementById('modal').style.display='none'">CANCELAR</button>
@@ -334,6 +340,12 @@ window._confirmarGuardarEsquema = async (eq) => {
   if (!perfil.esquemasCustom) perfil.esquemasCustom = [];
   perfil.esquemasCustom.push(nuevoEsquema);
 
+  const esFavorito = document.getElementById('custom-scheme-favorito-chk')?.checked;
+  if (esFavorito) {
+    perfil.modoPredeterminado = modo;
+    perfil.esquemaPredeterminado = `custom_${nuevoEsquema.id}`;
+  }
+
   renderSelectEsquemas('A');
   renderSelectEsquemas('B');
 
@@ -345,6 +357,12 @@ window._confirmarGuardarEsquema = async (eq) => {
   autoSaveLocal();
   await guardarFirebase();
   actualizarTactica(eq);
+
+  if (typeof window._renderEsquemaPredeterminadoUI === 'function') {
+    window._renderEsquemaPredeterminadoUI();
+  }
+
+  mostrarNotificacionApp('Esquema Guardado', `✅ Esquema **${nombre}** guardado con éxito.${esFavorito ? ' ⭐ Se estableció como tu esquema táctico favorito predeterminado.' : ' Ya puedes agregarlo a favoritos en Configuración.'}`);
 };
 
 const YELLOW_KIT_SVG = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60"><path d="M 18,12 L 24,18 L 36,18 L 42,12 L 54,20 L 46,28 L 44,26 L 44,52 L 16,52 L 16,26 L 14,28 L 6,20 Z" fill="%23ffd700" stroke="%23222222" stroke-width="2.5"/><path d="M 24,18 Q 30,24 36,18" fill="none" stroke="%23222222" stroke-width="2.5"/></svg>`;

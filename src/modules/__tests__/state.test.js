@@ -171,4 +171,21 @@ describe('Módulo de Estado (state.js)', () => {
     expect(perfil.categorias).toContain('Sub-16');
     expect(Object.keys(categoriasData)).toEqual(expect.arrayContaining(['Sub-12', 'Sub-14', 'Sub-16']));
   });
+  it('debe persistir esquemas personalizados y esquema favorito predeterminado', () => {
+    const customScheme = {
+      id: 'custom_123',
+      nombre: 'Presión Alta 4-3-3',
+      modo: '11',
+      posiciones: [{ x: 50, y: 88, cat: 'por', pos: 'POR' }]
+    };
+    updatePerfil({
+      esquemasCustom: [customScheme],
+      modoPredeterminado: '11',
+      esquemaPredeterminado: 'custom_123'
+    });
+
+    expect(perfil.esquemasCustom).toHaveLength(1);
+    expect(perfil.esquemasCustom[0].nombre).toBe('Presión Alta 4-3-3');
+    expect(perfil.esquemaPredeterminado).toBe('custom_123');
+  });
 });

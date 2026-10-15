@@ -6,7 +6,7 @@ import { obtenerConfiguracionPasarelas } from "./superAdmin.js";
 import { subirImagenCloudinary, subirKitCloudinary, resizarImagenPNG, resizarImagen } from "../services/cloudinary.js";
 import { renderStats } from "./stats.js";
 import { renderHistorial } from "./history.js";
-import { actualizarTactica, FORMACIONES } from "./tactics.js";
+import { actualizarTactica, FORMACIONES, renderSelectEsquemas } from "./tactics.js";
 
 const DEFAULT_LOGO = "https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png";
 
@@ -165,7 +165,16 @@ function _dispararAutoGuardado(inmediato = false) {
         }
         if (!p.avatar || p.avatar === DEFAULT_LOGO) p.avatar = perfil.logo || DEFAULT_LOGO;
       });
+    }    // Auto-guardar modo y esquema táctico favorito predeterminado
+    const modoSelect = document.getElementById('cfg-modo-predeterminado');
+    const esqSelect = document.getElementById('cfg-esquema-predeterminado');
+    if (modoSelect && modoSelect.value) {
+      perfil.modoPredeterminado = modoSelect.value;
     }
+    if (esqSelect && esqSelect.value) {
+      perfil.esquemaPredeterminado = esqSelect.value;
+    }
+
     autoSaveLocal();
     guardarFirebase();
     // Indicador sutil de guardado automático
@@ -268,14 +277,79 @@ export function renderEsquemaPredeterminadoUI() {
   const esqActual = perfil.esquemaPredeterminado || '1-4-4-2';
 
   let html = '';
+
+  // 1. Esquemas personalizados del club (filtrados por formato de juego)
+  const customs = (perfil.esquemasCustom || []).filter(c => c.modo === modoActual);
+  if (customs.length > 0) {
+    html += '<optgroup label="⭐ Mis Esquemas Personalizados">';
+    customs.forEach(c => {
+      const val = 'custom_' + c.id;
+      html += '<option value="' + val + '" ' + (val === esqActual ? 'selected' : '') + '>⭐ ' + c.nombre + ' (Personalizado)</option>';
+    });
+    html += '</optgroup>';
+  }
+
+  // 2. Esquemas base estándar
+  html += '<optgroup label="📋 Esquemas Estándar (Fútbol ' + modoActual + ')">';
   Object.keys(formacionesModo).forEach(key => {
-    html += `<option value="${key}" ${key === esqActual ? 'selected' : ''}>${key}</option>`;
+    html += '<option value="' + key + '" ' + (key === esqActual ? 'selected' : '') + '>' + key + '</option>';
   });
+  html += '</optgroup>';
 
   esqSelect.innerHTML = html;
+  if (esqActual) {
+    esqSelect.value = esqActual;
+  }
+
+  // Actualizar badge indicador del esquema favorito
+  const badgeEl = document.getElementById('cfg-esquema-favorito-badge');
+  if (badgeEl) {
+    const textoOpcion = esqSelect.options[esqSelect.selectedIndex]?.text || esqActual;
+    badgeEl.innerHTML = '<span>⭐ Favorito Activo:</span> <strong style="color:var(--oro);margin-left:4px;">' + textoOpcion + '</strong>';
+  }
+
+  renderListaEsquemasCustomConfig(modoActual);
+}
+
+export function renderListaEsquemasCustomConfig(modoActual) {
+  const listaCont = document.getElementById('cfg-lista-esquemas-custom');
+  if (!listaCont) return;
+
+  const esquemas = perfil.esquemasCustom || [];
+  if (esquemas.length === 0) {
+    listaCont.innerHTML = '<div style="font-size:11px;color:#777;padding:10px;background:#0d0d0d;border-radius:6px;border:1px dashed #333;text-align:center;">' +
+      'No tienes esquemas personalizados creados aún.<br>' +
+      '<span style="color:#aaa;">Ve a la <strong>Cancha Táctica</strong>, mueve tus jugadores y toca <strong>"💾 GUARDAR ESQUEMA"</strong> para crear y agregarlo a tus favoritos.</span>' +
+    '</div>';
+    return;
+  }
+
+  const esqFavorito = perfil.esquemaPredeterminado || '1-4-4-2';
+
+  let html = '<div style="display:flex;flex-direction:column;gap:6px;">';
+  esquemas.forEach(esq => {
+    const val = 'custom_' + esq.id;
+    const esFavorito = esqFavorito === val;
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#141414;border-radius:8px;border:1px solid ' + (esFavorito ? 'var(--oro)' : '#2a2a2a') + ';">' +
+      '<div>' +
+        '<div style="font-size:12px;font-weight:800;color:' + (esFavorito ? 'var(--oro)' : '#fff') + ';display:flex;align-items:center;gap:6px;">' +
+          (esFavorito ? '⭐' : '📋') + ' ' + esq.nombre + ' ' +
+          (esFavorito ? '<span style="font-size:9px;background:var(--oro);color:#000;padding:1px 6px;border-radius:10px;font-weight:900;">FAVORITO</span>' : '') +
+        '</div>' +
+        '<div style="font-size:10px;color:#888;">Formato: Fútbol ' + (esq.modo || '11') + '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:6px;align-items:center;">' +
+        (!esFavorito ? '<button type="button" class="btn btn-gold" onclick="window._establecerEsquemaFavoritoDirecto(\'' + val + '\', \'' + (esq.modo || '11') + '\')" style="font-size:10px;padding:4px 8px;">⭐ Hacer Favorito</button>' : '<span style="font-size:11px;color:#2ecc71;font-weight:700;">✅ Activo</span>') +
+        '<button type="button" class="btn btn-red" onclick="window._eliminarEsquemaCustom(\'' + esq.id + '\')" style="font-size:10px;padding:4px 6px;" title="Eliminar este esquema">🗑️</button>' +
+      '</div>' +
+    '</div>';
+  });
+  html += '</div>';
+  listaCont.innerHTML = html;
 }
 
 window._renderEsquemaPredeterminadoUI = renderEsquemaPredeterminadoUI;
+window._renderListaEsquemasCustomConfig = renderListaEsquemasCustomConfig;
 
 export function guardarEsquemaPredeterminadoConfig() {
   const modoSelect = document.getElementById('cfg-modo-predeterminado');
@@ -290,16 +364,53 @@ export function guardarEsquemaPredeterminadoConfig() {
 
   const modoA = document.getElementById('modo-A');
   const esquemaA = document.getElementById('esquema-A');
-  if (modoA) modoA.value = perfil.modoPredeterminado;
-  if (esquemaA) esquemaA.value = perfil.esquemaPredeterminado;
+  if (modoA && perfil.modoPredeterminado) {
+    modoA.value = perfil.modoPredeterminado;
+  }
+  if (esquemaA) {
+    renderSelectEsquemas('A');
+    esquemaA.value = perfil.esquemaPredeterminado;
+  }
 
   if (plantel) delete plantel.pos_custom_A;
   actualizarTactica('A');
 
-  mostrarNotificacionApp('Esquema Predeterminado Guardado', `⭐ Se estableció **${perfil.esquemaPredeterminado}** (Fútbol ${perfil.modoPredeterminado}) como el esquema táctico predeterminado del club.`);
+  renderEsquemaPredeterminadoUI();
+
+  const nombreEsq = esqSelect.options[esqSelect.selectedIndex]?.text || perfil.esquemaPredeterminado;
+  mostrarNotificacionApp('Esquema Favorito Guardado', '⭐ Se estableció **' + nombreEsq + '** (Fútbol ' + perfil.modoPredeterminado + ') como el esquema táctico favorito y predeterminado.');
 }
 
 window._guardarEsquemaPredeterminadoConfig = guardarEsquemaPredeterminadoConfig;
+
+window._establecerEsquemaFavoritoDirecto = (esqVal, modoVal) => {
+  const modoSelect = document.getElementById('cfg-modo-predeterminado');
+  const esqSelect = document.getElementById('cfg-esquema-predeterminado');
+  if (modoSelect) modoSelect.value = modoVal;
+  perfil.modoPredeterminado = modoVal;
+  perfil.esquemaPredeterminado = esqVal;
+
+  renderEsquemaPredeterminadoUI();
+  guardarEsquemaPredeterminadoConfig();
+};
+
+window._eliminarEsquemaCustom = (esqId) => {
+  const esquema = (perfil.esquemasCustom || []).find(e => e.id === esqId);
+  const nombre = esquema ? esquema.nombre : 'este esquema';
+  if (!confirm('¿Estás seguro de eliminar el esquema táctico "' + nombre + '"?')) return;
+
+  perfil.esquemasCustom = (perfil.esquemasCustom || []).filter(e => e.id !== esqId);
+  if (perfil.esquemaPredeterminado === 'custom_' + esqId) {
+    perfil.esquemaPredeterminado = '1-4-4-2';
+  }
+
+  autoSaveLocal();
+  guardarFirebase();
+  renderSelectEsquemas('A');
+  renderEsquemaPredeterminadoUI();
+  actualizarTactica('A');
+  mostrarNotificacionApp('Esquema Eliminado', '🗑️ Se eliminó el esquema "' + nombre + '".');
+};
 
 export function renderPerfilesPinsUI() {
   const cont = document.getElementById('cfg-lista-perfiles-pins');

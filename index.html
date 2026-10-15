@@ -2040,17 +2040,34 @@
               <span class="cfg-arrow">►</span>
             </button>
             <div class="cfg-accordion-content" id="cfg-sec-tactica" style="display:none;padding-top:8px;">
-              <div class="card" style="margin:0;">
-                <div style="display:flex;flex-direction:column;gap:6px;">
-                  <label style="font-size:11px;color:#aaa;">Formato Predeterminado (Auto-guardado):</label>
+              <div class="card" style="margin:0;display:flex;flex-direction:column;gap:12px;">
+                <div style="display:flex;flex-direction:column;gap:6px;background:#0d0d0d;padding:12px;border-radius:8px;border:1px solid #222;">
+                  <label style="font-size:11px;color:var(--oro);font-weight:700;">Formato Predeterminado (Auto-guardado):</label>
                   <select id="cfg-modo-predeterminado">
                     <option value="11">Fútbol 11</option>
                     <option value="8">Fútbol 8</option>
                     <option value="5">Fútbol 5</option>
                   </select>
 
-                  <label style="font-size:11px;color:#aaa;">Esquema / Formación Predeterminada (Auto-guardado):</label>
+                  <label style="font-size:11px;color:var(--oro);font-weight:700;margin-top:6px;">Esquema / Formación Favorita (Auto-guardado):</label>
                   <select id="cfg-esquema-predeterminado"></select>
+
+                  <div id="cfg-esquema-favorito-badge" style="font-size:11px;color:var(--oro);font-weight:700;padding:6px 10px;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.25);border-radius:6px;margin-top:6px;"></div>
+
+                  <button type="button" class="btn btn-gold" id="btn-guardar-esquema-predeterminado"
+                    onclick="window._guardarEsquemaPredeterminadoConfig && window._guardarEsquemaPredeterminadoConfig()"
+                    style="font-size:12px;font-weight:900;padding:8px 12px;margin-top:8px;">
+                    ⭐ GUARDAR COMO ESQUEMA FAVORITO
+                  </button>
+                </div>
+
+                <!-- LISTA DE ESQUEMAS PERSONALIZADOS GUARDADOS -->
+                <div style="background:#0d0d0d;padding:12px;border-radius:8px;border:1px solid #222;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                    <span style="font-size:11px;color:var(--oro);font-weight:700;">⭐ MIS ESQUEMAS PERSONALIZADOS:</span>
+                    <span style="font-size:10px;color:#888;">(Guardados desde la Pizarra)</span>
+                  </div>
+                  <div id="cfg-lista-esquemas-custom"></div>
                 </div>
               </div>
             </div>
