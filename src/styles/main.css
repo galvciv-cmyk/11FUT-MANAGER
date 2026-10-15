@@ -2635,24 +2635,42 @@ body.body-fullscreen-active {
   -webkit-mask-image: linear-gradient(to bottom, transparent, black 3%, black 97%, transparent);
 }
 
+/* ── TRACKS LATERALES Y ANIMACIÓN EN SENTIDOS CONTRARIOS (HACIA SU IZQUIERDA) ── */
 .cancha-lateral-track {
   display: flex;
   flex-direction: column;
   align-items: center;
   height: max-content;
   pointer-events: none;
-  animation: lateralMarqueeLoop 24s linear infinite;
+}
+
+/* Valla Izquierda: Se rueda hacia abajo (hacia su izquierda según la perspectiva de la valla) */
+.cancha-led-lateral.left .cancha-lateral-track {
+  animation: lateralMarqueeLoopDown 24s linear infinite;
+}
+
+/* Valla Derecha: Se rueda hacia arriba (hacia su izquierda según la perspectiva de la valla) */
+.cancha-led-lateral.right .cancha-lateral-track {
+  animation: lateralMarqueeLoopUp 24s linear infinite;
 }
 
 .cancha-led-lateral:hover .cancha-lateral-track {
   animation-play-state: paused !important;
 }
 
-@keyframes lateralMarqueeLoop {
+@keyframes lateralMarqueeLoopDown {
+  0% {
+    transform: translateY(-50%);
+  }
+  100% {
+    transform: translateY(0%);
+  }
+}
+
+@keyframes lateralMarqueeLoopUp {
   0% {
     transform: translateY(0%);
   }
-
   100% {
     transform: translateY(-50%);
   }
@@ -2668,11 +2686,9 @@ body.body-fullscreen-active {
 
 .cancha-lateral-item {
   display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 8px;
   white-space: nowrap;
-  transform: none !important;
 }
 
 .cancha-lateral-logo {
@@ -2683,7 +2699,6 @@ body.body-fullscreen-active {
   height: 22px;
   flex-shrink: 0;
   writing-mode: horizontal-tb !important;
-  transform: none !important;
 }
 
 .cancha-lateral-logo img,
@@ -2693,7 +2708,6 @@ body.body-fullscreen-active {
   width: auto;
   height: auto;
   object-fit: contain;
-  transform: none !important;
   filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.6));
 }
 
@@ -2708,7 +2722,6 @@ body.body-fullscreen-active {
   color: #fff;
   white-space: nowrap;
   text-shadow: 0 0 8px rgba(212, 175, 55, 0.45), 0 0 12px rgba(255, 255, 255, 0.25);
-  transform: none !important;
 }
 
 .cancha-lateral-sep {
@@ -2719,7 +2732,42 @@ body.body-fullscreen-active {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* ── 1. VALLA IZQUIERDA: LETRAS Y ESCUDOS HACIA ADENTRO DE LA CANCHA (HACIA LA DERECHA) ── */
+.cancha-led-lateral.left .cancha-lateral-item {
+  flex-direction: column;
+}
+
+.cancha-led-lateral.left .cancha-lateral-logo img,
+.cancha-led-lateral.left .cancha-lateral-item img {
+  transform: rotate(90deg) !important;
+}
+
+.cancha-led-lateral.left .cancha-lateral-text {
   transform: none !important;
+}
+
+.cancha-led-lateral.left .cancha-lateral-sep {
+  transform: rotate(90deg) !important;
+}
+
+/* ── 2. VALLA DERECHA: LETRAS Y ESCUDOS HACIA ADENTRO DE LA CANCHA (HACIA LA IZQUIERDA) ── */
+.cancha-led-lateral.right .cancha-lateral-item {
+  flex-direction: column-reverse;
+}
+
+.cancha-led-lateral.right .cancha-lateral-logo img,
+.cancha-led-lateral.right .cancha-lateral-item img {
+  transform: rotate(-90deg) !important;
+}
+
+.cancha-led-lateral.right .cancha-lateral-text {
+  transform: rotate(180deg) !important;
+}
+
+.cancha-led-lateral.right .cancha-lateral-sep {
+  transform: rotate(-90deg) !important;
 }
 
 
