@@ -161,4 +161,14 @@ describe('Módulo de Estado (state.js)', () => {
     const adminMulti = perfil.profiles[0];
     expect(esAdminOEntrenadorUnico(adminMulti)).toBe(true);
   });
+  it('debe mantener e indexar múltiples categorías creadas sincronizadas en perfil y categoriasData', () => {
+    setCategoriaActiva('Sub-12');
+    setCategoriaActiva('Sub-14');
+    setCategoriaActiva('Sub-16');
+
+    expect(perfil.categorias).toContain('Sub-12');
+    expect(perfil.categorias).toContain('Sub-14');
+    expect(perfil.categorias).toContain('Sub-16');
+    expect(Object.keys(categoriasData)).toEqual(expect.arrayContaining(['Sub-12', 'Sub-14', 'Sub-16']));
+  });
 });

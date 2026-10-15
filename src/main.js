@@ -1,5 +1,5 @@
 import "./styles/main.css";
-import { isSuperAdmin, SUPER_ADMIN_EMAIL, perfil, setPinHash, setUserEmail, setCategoriaActiva, autoSaveLocal, historial, categoriasData, autoLoadLocal, plantel, setPublicViewActive } from "./modules/state.js";
+import { isSuperAdmin, SUPER_ADMIN_EMAIL, perfil, setPinHash, setUserEmail, setCategoriaActiva, autoSaveLocal, historial, categoriasData, autoLoadLocal, plantel, setPublicViewActive, DEFAULT_PLANTEL, updatePerfil, updateCategoriasData } from "./modules/state.js";
 
 import { auth, hashPin, cargarFirebase, guardarFirebase, cargarFirebasePublico, limpiarDocumentosObsoletosFirebase, db, useEmulator } from "./services/firebase.js";
 import { setDoc, doc, onSnapshot } from "firebase/firestore";
@@ -552,8 +552,29 @@ export function renderSelectorCategoria(isPublic = false) {
   const selectTraining = document.getElementById('training-categoria-selector');
   const selectPub = document.getElementById('pub-selector-categoria');
 
-  let categorias = Array.isArray(perfil.categorias) ? perfil.categorias.filter(Boolean) : [];
-  perfil.categorias = categorias;
+  // Unificar categorías registradas en perfil con las llaves de categoriasData
+  let todas = [
+    ...(Array.isArray(perfil.categorias) ? perfil.categorias : []),
+    ...Object.keys(categoriasData || {})
+  ].filter(Boolean);
+
+  // Si está vacío, intentar recuperar desde localStorage
+  if (todas.length === 0 && typeof localStorage !== 'undefined') {
+    try {
+      const rawC = localStorage.getItem('11fut_categorias_data');
+      if (rawC) {
+        const parsedC = JSON.parse(rawC);
+        if (parsedC && typeof parsedC === 'object') todas.push(...Object.keys(parsedC));
+      }
+      const rawP = localStorage.getItem('11fut_perfil');
+      if (rawP) {
+        const parsedP = JSON.parse(rawP);
+        if (parsedP && Array.isArray(parsedP.categorias)) todas.push(...parsedP.categorias);
+      }
+    } catch (e) {}
+  }
+
+  let categorias = [...new Set(todas.filter(Boolean))];
 
   // En la vista pública oficial del club (portal para padres, jugadores y scouts), SIEMPRE mostrar TODAS las categorías del club
   const esPerfilDT = !isPublic && currentProfile && currentProfile.rol === 'DT';
@@ -568,37 +589,39 @@ export function renderSelectorCategoria(isPublic = false) {
     }
   }
 
-  let html = '';
   if (categorias.length === 0) {
-    perfil.categoriaActiva = '';
-    html = `<option value="">⚠️ Sin categorías creadas</option>`;
-  } else {
-    const activa = (perfil.categoriaActiva && categorias.includes(perfil.categoriaActiva)) 
-      ? perfil.categoriaActiva 
-      : categorias[0];
-    perfil.categoriaActiva = activa;
-
-    // Asegurar estructura inicial en categoriasData para cada categoría activa
-    categorias.forEach(c => {
-      if (!categoriasData[c]) {
-        categoriasData[c] = {
-          plantel: JSON.parse(JSON.stringify(DEFAULT_PLANTEL)),
-          stats: {},
-          historial: [],
-          juegosProgramados: [],
-          torneo: 'Torneo Oficial'
-        };
-      }
-    });
-
-    html = categorias.map(c => `<option value="${c}" ${c === activa ? 'selected' : ''}>⚽ ${c}</option>`).join('');
+    categorias = ['Sub-14'];
   }
+  perfil.categorias = categorias;
+
+  const activa = (perfil.categoriaActiva && categorias.includes(perfil.categoriaActiva)) 
+    ? perfil.categoriaActiva 
+    : categorias[0];
+  perfil.categoriaActiva = activa;
+
+  // Asegurar estructura inicial en categoriasData para cada categoría
+  categorias.forEach(c => {
+    if (!categoriasData[c]) {
+      categoriasData[c] = {
+        plantel: JSON.parse(JSON.stringify(DEFAULT_PLANTEL)),
+        stats: {},
+        historial: [],
+        juegosProgramados: [],
+        torneo: 'Torneo Oficial'
+      };
+    }
+  });
+
+  const html = categorias.map(c => `<option value="${c}" ${c === activa ? 'selected' : ''}>⚽ ${c}</option>`).join('');
 
   if (selectTactica) selectTactica.innerHTML = html;
   if (selectPlantel) selectPlantel.innerHTML = html;
   if (selectStats) selectStats.innerHTML = html;
   if (selectTraining) selectTraining.innerHTML = html;
-  if (selectPub) selectPub.innerHTML = html;
+  if (selectPub) {
+    selectPub.innerHTML = html;
+    selectPub.value = activa;
+  }
 }
 
 window._renderSelectorCategoria = renderSelectorCategoria;
@@ -631,8 +654,41 @@ async function cargarPerfilPublico(publicId, profId = null, catReq = null) {
 
   const cargado = await cargarFirebasePublico(publicId);
   if (!cargado) {
-    updatePerfil({ club: '11FUT MANAGER', logo: 'https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png', categorias: ['Sub-14'], categoriaActiva: 'Sub-14' });
+    let tieneDatosLocales = false;
+    try {
+      const rawP = localStorage.getItem('11fut_perfil');
+      const rawC = localStorage.getItem('11fut_categorias_data');
+      if (rawP || rawC) {
+        if (rawP) {
+          const parsedP = JSON.parse(rawP);
+          if (parsedP && (parsedP.club || (parsedP.categorias && parsedP.categorias.length))) {
+            updatePerfil(parsedP);
+            tieneDatosLocales = true;
+          }
+        }
+        if (rawC) {
+          const parsedC = JSON.parse(rawC);
+          if (parsedC && Object.keys(parsedC).length) {
+            updateCategoriasData(parsedC);
+            tieneDatosLocales = true;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Aviso en fallback local de perfil público:', e);
+    }
+
+    if (!tieneDatosLocales && (!perfil.categorias || perfil.categorias.length === 0) && Object.keys(categoriasData).length === 0) {
+      updatePerfil({ club: '11FUT MANAGER', logo: 'https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png', categorias: ['Sub-14'], categoriaActiva: 'Sub-14' });
+    }
   }
+
+  // Asegurar que perfil.categorias incluya todas las categorías existentes
+  const todasCats = [
+    ...(Array.isArray(perfil.categorias) ? perfil.categorias : []),
+    ...Object.keys(categoriasData || {})
+  ].filter(Boolean);
+  perfil.categorias = [...new Set(todasCats)];
 
   // Establecer el perfil seleccionado si viene en la URL
   if (profId && perfil.profiles && perfil.profiles.length) {
@@ -645,7 +701,7 @@ async function cargarPerfilPublico(publicId, profId = null, catReq = null) {
   // 1. Resolver categoría solicitada (tolerante a mayúsculas/minúsculas y espacios/guiones)
   const decodedCat = catReq ? decodeURIComponent(catReq).trim() : null;
   let catMatch = null;
-  if (decodedCat && Array.isArray(perfil.categorias)) {
+  if (decodedCat && Array.isArray(perfil.categorias) && perfil.categorias.length) {
     catMatch = perfil.categorias.find(c => c.toLowerCase() === decodedCat.toLowerCase())
       || perfil.categorias.find(c => c.toLowerCase().replace(/[\s\-_]+/g, '') === decodedCat.toLowerCase().replace(/[\s\-_]+/g, ''));
   }
@@ -660,12 +716,20 @@ async function cargarPerfilPublico(publicId, profId = null, catReq = null) {
   // 2. Renderizar selector de categorías públicas
   renderSelectorCategoria(true);
 
-  // 3. Establecer categoría activa oficial en el select
+  // 3. Establecer categoría activa oficial en el select y su evento onchange
   const selectPub = document.getElementById('pub-selector-categoria');
   if (selectPub) {
     selectPub.value = catActiva;
     selectPub.onchange = (e) => {
-      setCategoriaActiva(e.target.value);
+      const nuevaCat = e.target.value;
+      setCategoriaActiva(nuevaCat);
+
+      try {
+        const urlObj = new URL(window.location.href);
+        urlObj.searchParams.set('cat', nuevaCat);
+        window.history.replaceState({}, '', urlObj.toString());
+      } catch (err) {}
+
       renderDashboardColectivo('pub-dashboard-colectivo-container');
       renderRankingsPublico();
       renderSquadPublico();
@@ -676,14 +740,14 @@ async function cargarPerfilPublico(publicId, profId = null, catReq = null) {
     };
   }
 
-  // 3. Encabezado del Club, Contacto y Logo
+  // 4. Encabezado del Club, Contacto y Logo
   const pubHeader = document.getElementById('pub-header-club');
   if (pubHeader) pubHeader.textContent = perfil.club || '11FUT MANAGER';
 
   const contactBadge = document.getElementById('pub-contacto-badge');
   if (contactBadge) {
     if (perfil.whatsapp) {
-      contactBadge.textContent = `📞 ${perfil.whatsapp}`;
+      contactBadge.textContent = '📞 ' + perfil.whatsapp;
       contactBadge.style.display = 'inline-block';
     } else {
       contactBadge.style.display = 'none';
@@ -698,14 +762,14 @@ async function cargarPerfilPublico(publicId, profId = null, catReq = null) {
   if (perfil.bg) {
     const bgEl = document.getElementById('app-bg');
     if (bgEl) {
-      bgEl.style.backgroundImage = `url(${perfil.bg})`;
+      bgEl.style.backgroundImage = 'url(' + perfil.bg + ')';
       bgEl.style.backgroundSize = 'cover';
       bgEl.style.backgroundPosition = 'center';
       bgEl.style.opacity = '0.4';
     }
   }
 
-  // 4. Renderizar todas las vistas del perfil público
+  // 5. Renderizar todas las vistas del perfil público
   renderDashboardColectivo('pub-dashboard-colectivo-container');
   renderRankingsPublico();
   renderSquadPublico();

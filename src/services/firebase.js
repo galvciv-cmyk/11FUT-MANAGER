@@ -66,11 +66,11 @@ export function setSyncStatus(type, msg) {
 }
 
 export function getPublicId() {
-  if (pinHash) {
-    return `usr_${pinHash}`;
-  }
   if (auth && auth.currentUser && auth.currentUser.uid) {
-    return `usr_${auth.currentUser.uid}`;
+    return 'usr_' + auth.currentUser.uid;
+  }
+  if (pinHash) {
+    return 'usr_' + pinHash;
   }
   return 'perfil_demo';
 }
@@ -164,6 +164,8 @@ export async function guardarFirebase() {
         };
 
         const pubPayload = {
+          uid: (auth && auth.currentUser && auth.currentUser.uid) ? auth.currentUser.uid : '',
+          pinHash: pinHash || '',
           club: perfil.club || '11FUT MANAGER',
           email: perfil.email || '',
           whatsapp: perfil.whatsapp || '',
@@ -192,6 +194,9 @@ export async function guardarFirebase() {
 
         if (pubKey) {
           writes.push(setDoc(doc(db, 'publicos', pubKey), pubPayload, { merge: true }));
+        }
+        if (auth && auth.currentUser && auth.currentUser.uid && pinHash && ('usr_' + pinHash) !== pubKey) {
+          writes.push(setDoc(doc(db, 'publicos', 'usr_' + pinHash), pubPayload, { merge: true }));
         }
 
         if (writes.length > 0) {
@@ -298,15 +303,11 @@ export async function sincronizarEstadoDesdeNube() {
 }
 
 export async function cargarFirebasePublico(targetPublicId) {
-  if (!targetPublicId || targetPublicId === 'true' || targetPublicId === 'perfil_demo') return false;
-
-  const cacheKey = `11fut_pub_cache_${targetPublicId}`;
-  const cachedRaw = localStorage.getItem(cacheKey);
+  const isDemoOrPreview = !targetPublicId || targetPublicId === 'true' || targetPublicId === 'perfil_demo' || targetPublicId === 'preview';
 
   function hidratarDatosPublicos(data) {
     if (!data) return;
 
-    // 1. Hidratar perfil PRIMERO para tener las categorías registradas
     if (data.perfil) {
       updatePerfil(data.perfil);
     } else if (data.club) {
@@ -319,7 +320,6 @@ export async function cargarFirebasePublico(targetPublicId) {
       });
     }
 
-    // 2. Asegurar que las categorías de categoriasData estén en perfil.categorias
     if (data.categoriasData && typeof data.categoriasData === 'object') {
       const keys = Object.keys(data.categoriasData);
       if (keys.length > 0) {
@@ -333,7 +333,22 @@ export async function cargarFirebasePublico(targetPublicId) {
     }
   }
 
-  // 1. Hidratar instantáneamente si existe cache local no expirada (<15 minutos)
+  if (isDemoOrPreview) {
+    try {
+      autoLoadLocal();
+      const hasCats = (perfil.categorias && perfil.categorias.length > 0) || Object.keys(categoriasData).length > 0;
+      if (hasCats || (perfil.club && perfil.club !== '11FUT MANAGER')) {
+        return true;
+      }
+    } catch (e) {
+      console.warn('Aviso cargando datos locales en preview:', e);
+    }
+    return false;
+  }
+
+  const cacheKey = '11fut_pub_cache_' + targetPublicId;
+  const cachedRaw = localStorage.getItem(cacheKey);
+
   if (cachedRaw) {
     try {
       const cached = JSON.parse(cachedRaw);
@@ -347,27 +362,57 @@ export async function cargarFirebasePublico(targetPublicId) {
     }
   }
 
-  // 2. Si no hay cache o expiró, consultar Firestore y actualizar la cache
-  if (!db) return false;
+  if (db) {
+    try {
+      let snap = await getDoc(doc(db, 'publicos', targetPublicId));
+      if (!snap.exists()) {
+        snap = await getDoc(doc(db, 'publico', targetPublicId));
+      }
+      if (!snap.exists() && auth && auth.currentUser && auth.currentUser.uid) {
+        snap = await getDoc(doc(db, 'publicos', 'usr_' + auth.currentUser.uid));
+      }
+
+      if (snap && snap.exists()) {
+        const data = snap.data();
+        hidratarDatosPublicos(data);
+
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify({
+            timestamp: Date.now(),
+            data
+          }));
+        } catch (e) {}
+
+        return true;
+      }
+    } catch (e) {
+      console.error('Error al cargar perfil público desde Firebase:', e);
+    }
+  }
+
   try {
-    const refPub = doc(db, 'publicos', targetPublicId);
-    const snap = await getDoc(refPub);
-
-    if (snap.exists()) {
-      const data = snap.data();
-      hidratarDatosPublicos(data);
-
-      try {
-        localStorage.setItem(cacheKey, JSON.stringify({
-          timestamp: Date.now(),
-          data
-        }));
-      } catch (e) {}
-
-      return true;
+    const rawLocalP = localStorage.getItem('11fut_perfil');
+    const rawLocalC = localStorage.getItem('11fut_categorias_data');
+    if (rawLocalP || rawLocalC) {
+      if (rawLocalP) {
+        const parsedP = JSON.parse(rawLocalP);
+        if (parsedP && (parsedP.club || (parsedP.categorias && parsedP.categorias.length))) {
+          updatePerfil(parsedP);
+        }
+      }
+      if (rawLocalC) {
+        const parsedC = JSON.parse(rawLocalC);
+        if (parsedC && Object.keys(parsedC).length) {
+          updateCategoriasData(parsedC);
+        }
+      }
+      if ((perfil.categorias && perfil.categorias.length) || Object.keys(categoriasData).length) {
+        return true;
+      }
     }
   } catch (e) {
-    console.error('Error al cargar perfil público:', e);
+    console.warn('Error en fallback local de perfil público:', e);
   }
+
   return false;
 }
