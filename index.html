@@ -259,7 +259,7 @@
 
         <!-- HERO BANNER DEL CLUB EN VISTA PÚBLICA -->
         <div
-          style="background:linear-gradient(135deg, rgba(20,20,20,0.95) 0%, rgba(9,33,19,0.9) 100%);border:1px solid var(--verde-campo);border-radius:16px;padding:20px;margin-bottom:20px;box-shadow:0 8px 30px rgba(0,0,0,0.6);position:relative;overflow:hidden;">
+          style="background:linear-gradient(135deg, rgba(20,20,20,0.95) 0%, rgba(9,33,19,0.9) 100%);border:1px solid var(--verde-campo);border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 8px 30px rgba(0,0,0,0.6);position:relative;overflow:hidden;">
           <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:16px;">
             <div style="display:flex; align-items:center; gap:16px;">
               <img id="pub-header-logo"
@@ -269,11 +269,12 @@
                 <div
                   style="font-family:'Barlow Condensed',sans-serif; font-size:28px; font-weight:900; color:var(--oro);letter-spacing:0.5px;"
                   id="pub-header-club">11FUT MANAGER</div>
-                <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+                <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap;">
                   <span
                     style="font-size:11px;background:#092113;color:var(--verde-campo);border:1px solid var(--verde-campo);padding:2px 8px;border-radius:12px;font-weight:900;">✅
                     CLUB OFICIAL VERIFICADO</span>
                   <span style="font-size:11px;color:#aaa;">Portal Institucional</span>
+                  <span id="pub-contacto-badge" style="display:none;font-size:11px;color:#25D366;font-weight:700;"></span>
                 </div>
               </div>
             </div>
@@ -285,12 +286,21 @@
                 <select id="pub-selector-categoria" class="select-categoria-header"
                   style="font-size:12px;padding:4px 8px;"></select>
               </div>
+              <button onclick="window._contactarClubWhatsApp()" id="btn-pub-contactar-wa"
+                style="background:rgba(37,211,102,0.15);color:#25D366;border:1px solid #25D366;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:900;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                💬 Contactar Club
+              </button>
               <button onclick="window._compartirPerfilWhatsApp()"
                 style="background:#25D366;color:#000;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:900;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 0 12px rgba(37,211,102,0.3);">
                 📲 Compartir por WhatsApp
               </button>
             </div>
           </div>
+        </div>
+
+        <!-- MARQUESINA DE PATROCINADORES OFICIALES DEL CLUB -->
+        <div class="dugout-ad-wall" style="margin-bottom:20px;" title="Patrocinadores Oficiales">
+          <div class="dugout-marquee-track"></div>
         </div>
 
         <!-- DASHBOARD COLECTIVO DE RENDIMIENTO EN VISTA PÚBLICA -->
@@ -302,6 +312,9 @@
             onclick="window._switchPubTab('pub-tab-plantel')"
             style="padding:10px 16px;border-radius:8px;background:var(--oro);color:#000;border:none;font-weight:900;font-size:12px;cursor:pointer;white-space:nowrap;">👥
             PLANTEL OFICIAL</button>
+          <button class="pub-tab-btn" data-tab="pub-tab-tactica" onclick="window._switchPubTab('pub-tab-tactica')"
+            style="padding:10px 16px;border-radius:8px;background:#181818;color:#ccc;border:1px solid #333;font-weight:900;font-size:12px;cursor:pointer;white-space:nowrap;">📋
+            ONCE TITULAR</button>
           <button class="pub-tab-btn" data-tab="pub-tab-stats" onclick="window._switchPubTab('pub-tab-stats')"
             style="padding:10px 16px;border-radius:8px;background:#181818;color:#ccc;border:1px solid #333;font-weight:900;font-size:12px;cursor:pointer;white-space:nowrap;">📊
             STATS INDIVIDUALES</button>
@@ -316,12 +329,23 @@
         <!-- PESTAÑA 1: PLANTEL -->
         <div id="pub-tab-plantel" class="pub-tab-content" style="display:block;">
           <div class="card" style="margin-bottom:16px;">
-            <div class="card-title">👥 PLANTEL DE JUGADORES REGISTRADOS</div>
+            <div class="card-title">👥 PLANTEL DE JUGADORES REGISTRADOS (Toca para ver Ficha)</div>
             <div id="pub-squad-container"></div>
           </div>
         </div>
 
-        <!-- PESTAÑA 2: STATS INDIVIDUALES -->
+        <!-- PESTAÑA 2: ONCE TITULAR & ALINEACIÓN TÁCTICA -->
+        <div id="pub-tab-tactica" class="pub-tab-content" style="display:none;">
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+              <span>📋 ALINEACIÓN OFICIAL & ONCE TITULAR (Toca un jugador para ver su Ficha)</span>
+              <span id="pub-tactica-esquema-badge" style="font-size:11px;background:rgba(212,175,55,0.15);color:var(--oro);border:1px solid var(--oro);padding:2px 8px;border-radius:6px;font-weight:800;">1-4-4-2</span>
+            </div>
+            <div id="pub-cancha-tactica-container"></div>
+          </div>
+        </div>
+
+        <!-- PESTAÑA 3: STATS INDIVIDUALES -->
         <div id="pub-tab-stats" class="pub-tab-content" style="display:none;">
           <div class="card" style="margin-bottom:16px;">
             <div class="card-title">📊 ESTADÍSTICAS INDIVIDUALES DE JUGADORES</div>
@@ -329,12 +353,12 @@
           </div>
         </div>
 
-        <!-- PESTAÑA 3: RANKINGS TEMPORADA -->
+        <!-- PESTAÑA 4: RANKINGS TEMPORADA -->
         <div id="pub-tab-rankings" class="pub-tab-content" style="display:none;">
           <div id="pub-rankings-container" style="margin-bottom:16px;"></div>
         </div>
 
-        <!-- PESTAÑA 4: PARTIDOS & RESULTADOS -->
+        <!-- PESTAÑA 5: PARTIDOS & RESULTADOS -->
         <div id="pub-tab-historial" class="pub-tab-content" style="display:none;">
           <div class="card">
             <div class="card-title">📚 ÚLTIMOS PARTIDOS Y RESULTADOS</div>

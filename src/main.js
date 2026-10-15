@@ -4,7 +4,7 @@ import { isSuperAdmin, SUPER_ADMIN_EMAIL, perfil, setPinHash, setUserEmail, setC
 import { auth, hashPin, cargarFirebase, guardarFirebase, cargarFirebasePublico, limpiarDocumentosObsoletosFirebase, db, useEmulator } from "./services/firebase.js";
 import { setDoc, doc, onSnapshot } from "firebase/firestore";
 import { cargarKits } from "./services/cloudinary.js";
-import { actualizarTactica, exportarPNG, setDrawingMode, setDrawingColor, setLineWidth, setLineDash, agregarMarcador, clearCanvas, toggleFullscreen, salirFullscreenTotal, guardarEsquemaCustom, limpiarCanchaYBanco, setVistaCancha, setModoPizarra, agregarFichaLibre, limpiarFichasLibres, abrirModalSustitucion, ejecutarSustitucion, undoCanvas, grabarPasoAnimacion, reproducirAnimacion, detenerAnimacion } from "./modules/tactics.js";
+import { actualizarTactica, exportarPNG, setDrawingMode, setDrawingColor, setLineWidth, setLineDash, agregarMarcador, clearCanvas, toggleFullscreen, salirFullscreenTotal, guardarEsquemaCustom, limpiarCanchaYBanco, setVistaCancha, setModoPizarra, agregarFichaLibre, limpiarFichasLibres, abrirModalSustitucion, ejecutarSustitucion, undoCanvas, grabarPasoAnimacion, reproducirAnimacion, detenerAnimacion, FORMACIONES, getImg } from "./modules/tactics.js";
 import { renderStats, guardarStatJugador, cerrarStatModal, renderRankings, renderDashboardColectivo, exportarEstadisticasExcel } from "./modules/stats.js";
 import { renderHistorial, formatFecha } from "./modules/history.js";
 import { initPlantelUI, aplicarPlantelUI, guardarSquad, descargarPlantilla, descargarPlantillaExcel, exportarPlantelExcel, importarPlantelArchivo, importarCSV, exportarPDF, eliminarListadoPlantel } from "./modules/squad.js";
@@ -669,14 +669,26 @@ async function cargarPerfilPublico(publicId, profId = null, catReq = null) {
       renderDashboardColectivo('pub-dashboard-colectivo-container');
       renderRankingsPublico();
       renderSquadPublico();
+      renderTacticaPublico();
       renderStatsPublico();
       renderHistorialPublico();
+      renderMarquesinasDinamicas().catch(console.error);
     };
   }
 
-  // 3. Encabezado del Club y Logo
+  // 3. Encabezado del Club, Contacto y Logo
   const pubHeader = document.getElementById('pub-header-club');
   if (pubHeader) pubHeader.textContent = perfil.club || '11FUT MANAGER';
+
+  const contactBadge = document.getElementById('pub-contacto-badge');
+  if (contactBadge) {
+    if (perfil.whatsapp) {
+      contactBadge.textContent = `📞 ${perfil.whatsapp}`;
+      contactBadge.style.display = 'inline-block';
+    } else {
+      contactBadge.style.display = 'none';
+    }
+  }
 
   if (perfil.logo) {
     const pubLogo = document.getElementById('pub-header-logo');
@@ -697,8 +709,10 @@ async function cargarPerfilPublico(publicId, profId = null, catReq = null) {
   renderDashboardColectivo('pub-dashboard-colectivo-container');
   renderRankingsPublico();
   renderSquadPublico();
+  renderTacticaPublico();
   renderStatsPublico();
   renderHistorialPublico();
+  renderMarquesinasDinamicas().catch(console.error);
 }
 
 export function switchPubTab(tabId) {
@@ -732,6 +746,103 @@ export function compartirPerfilWhatsApp() {
 }
 
 window._compartirPerfilWhatsApp = compartirPerfilWhatsApp;
+
+export function contactarClubWhatsApp() {
+  const waNum = (perfil.whatsapp || '').replace(/[^0-9]/g, '');
+  const club = perfil.club || '11FUT MANAGER';
+  const cat = perfil.categoriaActiva || 'Oficial';
+  const msg = `Hola, me comunico a través del Portal Oficial de *${club}* para solicitar información de la categoría ${cat}.`;
+  const waUrl = waNum 
+    ? `https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`
+    : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  window.open(waUrl, '_blank');
+}
+
+window._contactarClubWhatsApp = contactarClubWhatsApp;
+
+function renderTacticaPublico() {
+  const cont = document.getElementById('pub-cancha-tactica-container');
+  if (!cont) return;
+
+  const activePlantel = (categoriasData && perfil.categoriaActiva && categoriasData[perfil.categoriaActiva])
+    ? categoriasData[perfil.categoriaActiva].plantel
+    : (plantel || {});
+
+  const esquema = activePlantel.esquema_A || perfil.esquemaPredeterminado || '1-4-4-2';
+  const badgeEsquema = document.getElementById('pub-tactica-esquema-badge');
+  if (badgeEsquema) badgeEsquema.textContent = esquema;
+
+  const titulares = activePlantel.tit_A || [];
+  const suplentes = activePlantel.sup_A || [];
+  const capitan = activePlantel.capitan_A || '';
+  const dorsales = activePlantel.dorsales || {};
+
+  const posicionesCoords = (FORMACIONES && FORMACIONES['11'] && FORMACIONES['11'][esquema]) 
+    ? FORMACIONES['11'][esquema] 
+    : (FORMACIONES && FORMACIONES['11'] ? FORMACIONES['11']['1-4-4-2'] : []);
+
+  let tokensHTML = '';
+  posicionesCoords.forEach((p, idx) => {
+    const nombre = titulares[idx] || 'LIBRE';
+    const esLibre = nombre === 'LIBRE' || !nombre;
+    const dorsal = (!esLibre && dorsales[nombre]) ? dorsales[nombre] : (idx + 1);
+    const esCap = !esLibre && (capitan === nombre);
+    const kitTipo = p.cat === 'por' ? 'por' : 'titular';
+    const kitSrc = getImg('A', kitTipo);
+
+    tokensHTML += `
+      <div style="position:absolute;left:${p.x}%;top:${p.y}%;transform:translate(-50%, -50%);display:flex;flex-direction:column;align-items:center;cursor:${esLibre ? 'default' : 'pointer'};z-index:5;"
+        ${!esLibre ? `onclick="window._abrirFichaJugador('${nombre}')" title="Ver ficha y estadísticas de ${nombre}"` : ''}>
+        <div style="position:relative;width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
+          <img src="${kitSrc}" alt="Camiseta" style="height:38px;object-fit:contain;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.8));">
+          ${esCap ? `<span style="position:absolute;top:-2px;right:-2px;background:var(--oro);color:#000;font-size:9px;font-weight:900;border-radius:50%;width:15px;height:15px;display:flex;align-items:center;justify-content:center;border:1px solid #000;">C</span>` : ''}
+        </div>
+        <div style="background:rgba(0,0,0,0.85);border:1px solid ${esLibre ? '#444' : 'var(--oro)'};border-radius:4px;padding:1px 6px;margin-top:2px;display:flex;align-items:center;gap:4px;max-width:90px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-shadow:0 2px 6px rgba(0,0,0,0.6);">
+          <span style="font-size:9px;color:var(--oro);font-weight:900;">#${dorsal}</span>
+          <span style="font-size:10px;font-weight:800;color:${esLibre ? '#777' : '#fff'};overflow:hidden;text-overflow:ellipsis;">${nombre}</span>
+        </div>
+      </div>
+    `;
+  });
+
+  let suplentesHTML = '';
+  if (suplentes && suplentes.length > 0) {
+    suplentesHTML = `
+      <div style="margin-top:16px;background:#0d0d0d;border:1px solid #222;border-radius:10px;padding:12px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:var(--oro);margin-bottom:8px;letter-spacing:0.5px;">
+          💺 BANQUILLO DE SUPLENTES:
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          ${suplentes.filter(Boolean).map((s) => {
+            const d = dorsales[s] || '--';
+            return `
+              <div onclick="window._abrirFichaJugador('${s}')" title="Ver ficha de ${s}"
+                style="background:#141414;border:1px solid #333;border-radius:6px;padding:6px 10px;display:flex;align-items:center;gap:6px;cursor:pointer;transition:border-color 0.2s;">
+                <span style="font-size:10px;background:rgba(212,175,55,0.15);color:var(--oro);padding:1px 5px;border-radius:4px;font-weight:900;">#${d}</span>
+                <span style="font-size:12px;color:#eee;font-weight:700;">${s}</span>
+                <span style="font-size:10px;color:var(--oro);">📊</span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  cont.innerHTML = `
+    <div style="position:relative;width:100%;max-width:500px;height:480px;margin:0 auto;background:radial-gradient(ellipse at 50% 50%, #064e3b 0%, #032d23 70%, #021a14 100%);border:2px solid rgba(16,185,129,0.4);border-radius:16px;overflow:hidden;box-shadow:0 12px 35px rgba(0,0,0,0.8);user-select:none;">
+      <div style="position:absolute;inset:0;background-image:repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 36px, transparent 36px, transparent 72px);pointer-events:none;"></div>
+      <div style="position:absolute;inset:10px;border:1.5px solid rgba(255,255,255,0.3);border-radius:6px;pointer-events:none;"></div>
+      <div style="position:absolute;top:50%;left:10px;right:10px;height:1.5px;background:rgba(255,255,255,0.3);pointer-events:none;"></div>
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%, -50%);width:80px;height:80px;border:1.5px solid rgba(255,255,255,0.3);border-radius:50%;pointer-events:none;"></div>
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%, -50%);width:4px;height:4px;background:rgba(255,255,255,0.5);border-radius:50%;pointer-events:none;"></div>
+      <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);width:50%;height:64px;border:1.5px solid rgba(255,255,255,0.3);border-top:none;pointer-events:none;"></div>
+      <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);width:50%;height:64px;border:1.5px solid rgba(255,255,255,0.3);border-bottom:none;pointer-events:none;"></div>
+      ${tokensHTML}
+    </div>
+    ${suplentesHTML}
+  `;
+}
 
 function renderSquadPublico() {
   const cont = document.getElementById('pub-squad-container');
