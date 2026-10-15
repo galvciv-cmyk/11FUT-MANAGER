@@ -2734,40 +2734,40 @@ body.body-fullscreen-active {
   justify-content: center;
 }
 
-/* ── 1. VALLA IZQUIERDA: LETRAS Y ESCUDOS HACIA ADENTRO DE LA CANCHA (HACIA LA DERECHA) ── */
+/* ── 1. VALLA IZQUIERDA: LETRAS Y ESCUDOS CON BASE EN EL CAMPO (SE RUEDA HACIA ABAJO) ── */
 .cancha-led-lateral.left .cancha-lateral-item {
   flex-direction: column;
 }
 
 .cancha-led-lateral.left .cancha-lateral-logo img,
 .cancha-led-lateral.left .cancha-lateral-item img {
-  transform: rotate(90deg) !important;
+  transform: rotate(-90deg) !important;
 }
 
 .cancha-led-lateral.left .cancha-lateral-text {
-  transform: none !important;
+  transform: rotate(180deg) !important;
 }
 
 .cancha-led-lateral.left .cancha-lateral-sep {
-  transform: rotate(90deg) !important;
+  transform: rotate(-90deg) !important;
 }
 
-/* ── 2. VALLA DERECHA: LETRAS Y ESCUDOS HACIA ADENTRO DE LA CANCHA (HACIA LA IZQUIERDA) ── */
+/* ── 2. VALLA DERECHA: LETRAS Y ESCUDOS CON BASE EN EL CAMPO (SE RUEDA HACIA ARRIBA) ── */
 .cancha-led-lateral.right .cancha-lateral-item {
-  flex-direction: column-reverse;
+  flex-direction: column;
 }
 
 .cancha-led-lateral.right .cancha-lateral-logo img,
 .cancha-led-lateral.right .cancha-lateral-item img {
-  transform: rotate(-90deg) !important;
+  transform: rotate(90deg) !important;
 }
 
 .cancha-led-lateral.right .cancha-lateral-text {
-  transform: rotate(180deg) !important;
+  transform: none !important;
 }
 
 .cancha-led-lateral.right .cancha-lateral-sep {
-  transform: rotate(-90deg) !important;
+  transform: rotate(90deg) !important;
 }
 
 
