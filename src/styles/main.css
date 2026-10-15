@@ -1660,6 +1660,21 @@ body.body-fullscreen-active {
 }
 
 /* ── LOGIN / SETUP / PERFIL PÚBLICO GLASSMORPHISM ── */
+html.is-public-mode #login-screen,
+html.is-public-mode #main-app,
+html.is-public-mode #modal-onboarding-wizard,
+html.is-public-mode #profile-selector-overlay,
+html.is-public-mode #profile-selector-screen,
+html.is-public-mode #email-verification-screen,
+html.is-public-mode #pending-approval-screen,
+html.is-public-mode #account-cancelled-screen,
+html.is-public-mode .modal-overlay {
+  display: none !important;
+}
+html.is-public-mode #public-profile-screen {
+  display: block !important;
+}
+
 #login-screen,
 #setup-screen,
 #public-profile-screen {

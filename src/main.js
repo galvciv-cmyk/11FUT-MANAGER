@@ -54,7 +54,7 @@ function esDominioDesechable(email) {
 const _DEFAULT_LOGO = "https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png";
 
 function _ocultarTodasLasPantallas() {
-  ['login-screen','main-app'].forEach(id => {
+  ['login-screen', 'main-app', 'setup-screen', 'public-profile-screen', 'email-verification-screen', 'pending-approval-screen', 'account-cancelled-screen', 'profile-selector-screen', 'modal-onboarding-wizard'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
@@ -650,6 +650,8 @@ function refrescarTodaLaVista() {
 // ══════════════════════════════════════════
 async function cargarPerfilPublico(publicId, profId = null, catReq = null) {
   setPublicViewActive(true);
+  document.documentElement.classList.add('is-public-mode');
+  _ocultarTodasLasPantallas();
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('main-app').style.display = 'none';
   document.getElementById('public-profile-screen').style.display = 'block';
@@ -1643,23 +1645,47 @@ function handleProfileSelected(prof) {
 
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // Detect Public Profile Mode INMEDIATAMENTE (Cero flash de Login)
+  const urlParams = new URLSearchParams(window.location.search);
+  const isPublicMode = urlParams.has('public') ||
+    urlParams.has('publico') ||
+    (window.location.hash || '').includes('public') ||
+    document.documentElement.classList.contains('is-public-mode');
+
+  if (isPublicMode) {
+    document.documentElement.classList.add('is-public-mode');
+    setPublicViewActive(true);
+    _ocultarTodasLasPantallas();
+    const loginSc = document.getElementById('login-screen');
+    if (loginSc) loginSc.style.display = 'none';
+    const mainApp = document.getElementById('main-app');
+    if (mainApp) mainApp.style.display = 'none';
+    const pubSc = document.getElementById('public-profile-screen');
+    if (pubSc) pubSc.style.display = 'block';
+
+    const publicVal = urlParams.get('public') || urlParams.get('publico') || 'true';
+    const profParam = urlParams.get('profile');
+    const catParam = urlParams.get('cat');
+    cargarPerfilPublico(publicVal, profParam, catParam);
+    return;
+  }
+
   autoLoadLocal();
   aplicarPerfil();
   aplicarTema(localStorage.getItem('11fut_theme') || 'dark');
   cargarKits().catch(console.error);
   renderMarquesinasDinamicas().catch(console.error);
 
-  // Detect Public Profile Mode
-  const urlParams = new URLSearchParams(window.location.search);
-  const publicVal = urlParams.get('public');
-  const profParam = urlParams.get('profile');
-  const catParam = urlParams.get('cat');
-  if (publicVal) {
-    cargarPerfilPublico(publicVal, profParam, catParam);
-    return;
-  }
 
-  if (urlParams.get('logout') === 'true') {
+
+
+
+
+
+
+
+
+  if (urlParams.get('logout') === 'true') {
     localStorage.clear();
     sessionStorage.clear();
   }
@@ -1722,6 +1748,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Persistencia de Sesión con Firebase Auth (No se cierra al recargar F5)
   onAuthStateChanged(auth, async (user) => {
+    const isPublic = new URLSearchParams(window.location.search).has('public') ||
+      new URLSearchParams(window.location.search).has('publico') ||
+      (window.location.hash || '').includes('public') ||
+      document.documentElement.classList.contains('is-public-mode') ||
+      isPublicViewActive;
+    if (isPublic) {
+      document.documentElement.classList.add('is-public-mode');
+      const loginSc = document.getElementById('login-screen');
+      if (loginSc) loginSc.style.display = 'none';
+      const mainApp = document.getElementById('main-app');
+      if (mainApp) mainApp.style.display = 'none';
+      const pubSc = document.getElementById('public-profile-screen');
+      if (pubSc) pubSc.style.display = 'block';
+      return;
+    }
     const modalReg = document.getElementById('modal-register');
     if (modalReg && modalReg.style.display !== 'none') {
       return;
@@ -1921,6 +1962,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     } else {
       // Usuario desautenticado o sesión inexistente: limpiar estado y mostrar pantalla de login garantizada
+      // Si estamos en perfil público, JAMÁS mostrar login screen
+      const isPublic = new URLSearchParams(window.location.search).has('public') ||
+        new URLSearchParams(window.location.search).has('publico') ||
+        (window.location.hash || '').includes('public') ||
+        document.documentElement.classList.contains('is-public-mode') ||
+        isPublicViewActive;
+      if (isPublic) {
+        return;
+      }
       localStorage.removeItem('11fut_active_profile_id');
       const wiz = document.getElementById('modal-onboarding-wizard');
       if (wiz) wiz.style.display = 'none';
