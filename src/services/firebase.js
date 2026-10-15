@@ -176,6 +176,9 @@ export async function guardarFirebase() {
           maxPerfiles: isMaster ? 8 : (perfil.maxPerfiles || 1),
           wizardCompletado: !!perfil.wizardCompletado,
           perfil: sanitizarParaFirestore(perfilPublicoSanitizado),
+          esquemaPredeterminado: perfil.esquemaPredeterminado || '1-4-4-2',
+          modoPredeterminado: perfil.modoPredeterminado || '11',
+          esquemasCustom: sanitizarParaFirestore(perfil.esquemasCustom || []),
           categoriasData: sanitizarParaFirestore(categoriasData),
           plantel: sanitizarParaFirestore(plantel),
           stats: sanitizarParaFirestore(stats),
@@ -310,6 +313,15 @@ export async function cargarFirebasePublico(targetPublicId) {
 
     if (data.perfil) {
       updatePerfil(data.perfil);
+    }
+    if (data.esquemasCustom && Array.isArray(data.esquemasCustom)) {
+      perfil.esquemasCustom = data.esquemasCustom;
+    }
+    if (data.esquemaPredeterminado) {
+      perfil.esquemaPredeterminado = data.esquemaPredeterminado;
+    }
+    if (data.modoPredeterminado) {
+      perfil.modoPredeterminado = data.modoPredeterminado;
     } else if (data.club) {
       updatePerfil({
         club: data.club,

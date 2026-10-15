@@ -359,6 +359,14 @@ export function guardarEsquemaPredeterminadoConfig() {
   perfil.modoPredeterminado = modoSelect.value;
   perfil.esquemaPredeterminado = esqSelect.value;
 
+  const activePlantel = (categoriasData && perfil.categoriaActiva && categoriasData[perfil.categoriaActiva])
+    ? categoriasData[perfil.categoriaActiva].plantel
+    : (plantel || {});
+  if (activePlantel) {
+    activePlantel.esquema_A = perfil.esquemaPredeterminado;
+    delete activePlantel.pos_custom_A;
+  }
+
   autoSaveLocal();
   guardarFirebase();
 
@@ -368,13 +376,12 @@ export function guardarEsquemaPredeterminadoConfig() {
     modoA.value = perfil.modoPredeterminado;
   }
   if (esquemaA) {
+    esquemaA.dataset.userSelected = 'false';
     renderSelectEsquemas('A');
     esquemaA.value = perfil.esquemaPredeterminado;
   }
 
-  if (plantel) delete plantel.pos_custom_A;
   actualizarTactica('A');
-
   renderEsquemaPredeterminadoUI();
 
   const nombreEsq = esqSelect.options[esqSelect.selectedIndex]?.text || perfil.esquemaPredeterminado;
@@ -1256,9 +1263,12 @@ export function aplicarPerfil() {
     const modoA = document.getElementById('modo-A');
     if (modoA) modoA.value = perfil.modoPredeterminado;
   }
+  renderSelectEsquemas('A');
   if (perfil.esquemaPredeterminado) {
     const esquemaA = document.getElementById('esquema-A');
-    if (esquemaA) esquemaA.value = perfil.esquemaPredeterminado;
+    if (esquemaA) {
+      esquemaA.value = perfil.esquemaPredeterminado;
+    }
   }
 
   if (perfil.bg) {

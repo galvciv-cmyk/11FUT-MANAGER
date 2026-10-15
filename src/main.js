@@ -628,6 +628,8 @@ window._renderSelectorCategoria = renderSelectorCategoria;
 
 export function cambiarCategoria(catNombre) {
   setCategoriaActiva(catNombre);
+  const esqA = document.getElementById('esquema-A');
+  if (esqA) esqA.dataset.userSelected = 'false';
   renderSelectorCategoria();
   refrescarTodaLaVista();
   autoSaveLocal();
@@ -834,16 +836,27 @@ function renderTacticaPublico() {
 
   const esquema = activePlantel.esquema_A || perfil.esquemaPredeterminado || '1-4-4-2';
   const badgeEsquema = document.getElementById('pub-tactica-esquema-badge');
-  if (badgeEsquema) badgeEsquema.textContent = esquema;
 
-  const titulares = activePlantel.tit_A || [];
-  const suplentes = activePlantel.sup_A || [];
-  const capitan = activePlantel.capitan_A || '';
-  const dorsales = activePlantel.dorsales || {};
+  let nombreEsquema = esquema;
+  let posicionesCoords = [];
 
-  const posicionesCoords = (FORMACIONES && FORMACIONES['11'] && FORMACIONES['11'][esquema]) 
-    ? FORMACIONES['11'][esquema] 
-    : (FORMACIONES && FORMACIONES['11'] ? FORMACIONES['11']['1-4-4-2'] : []);
+  if (esquema && esquema.startsWith('custom_')) {
+    const customId = esquema.replace('custom_', '');
+    const esqObj = (perfil.esquemasCustom || []).find(c => c.id === customId);
+    if (esqObj) {
+      nombreEsquema = '⭐ ' + esqObj.nombre;
+      posicionesCoords = esqObj.posiciones || [];
+    }
+  }
+
+  if (!posicionesCoords || posicionesCoords.length === 0) {
+    const modo = perfil.modoPredeterminado || '11';
+    posicionesCoords = (FORMACIONES && FORMACIONES[modo] && FORMACIONES[modo][esquema]) 
+      ? FORMACIONES[modo][esquema] 
+      : (FORMACIONES && FORMACIONES['11'] && FORMACIONES['11']['1-4-4-2'] ? FORMACIONES['11']['1-4-4-2'] : []);
+  }
+
+  if (badgeEsquema) badgeEsquema.textContent = nombreEsquema;
 
   let tokensHTML = '';
   posicionesCoords.forEach((p, idx) => {
@@ -1631,6 +1644,7 @@ function handleProfileSelected(prof) {
 
 document.addEventListener('DOMContentLoaded', async () => {
   autoLoadLocal();
+  aplicarPerfil();
   aplicarTema(localStorage.getItem('11fut_theme') || 'dark');
   cargarKits().catch(console.error);
   renderMarquesinasDinamicas().catch(console.error);
@@ -2073,8 +2087,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     autoSaveLocal();
     actualizarTactica('A');
   });
-  document.getElementById('esquema-A')?.addEventListener('change', () => {
+  document.getElementById('esquema-A')?.addEventListener('change', (e) => {
     delete plantel.pos_custom_A;
+    const nuevoVal = e.target.value;
+    e.target.dataset.userSelected = 'true';
+    plantel.esquema_A = nuevoVal;
+    if (categoriasData && perfil.categoriaActiva && categoriasData[perfil.categoriaActiva]?.plantel) {
+      categoriasData[perfil.categoriaActiva].plantel.esquema_A = nuevoVal;
+    }
     autoSaveLocal();
     actualizarTactica('A');
   });

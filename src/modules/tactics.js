@@ -261,22 +261,49 @@ export const FORMACIONES = {
 export function renderSelectEsquemas(eq) {
   const select = document.getElementById(`esquema-${eq}`);
   if (!select) return;
-  const modo = document.getElementById(`modo-${eq}`)?.value || '11';
-  const valorPrevio = select.value;
+
+  const modoSelect = document.getElementById(`modo-${eq}`);
+  if (modoSelect && !modoSelect.dataset.userChanged && perfil.modoPredeterminado) {
+    modoSelect.value = perfil.modoPredeterminado;
+  }
+  const modo = modoSelect?.value || perfil.modoPredeterminado || '11';
+
+  const activePlantel = (categoriasData && perfil.categoriaActiva && categoriasData[perfil.categoriaActiva])
+    ? categoriasData[perfil.categoriaActiva].plantel
+    : (plantel || {});
+
+  let targetEsquema = select.dataset.userSelected === 'true'
+    ? select.value
+    : (activePlantel[`esquema_${eq}`] || perfil.esquemaPredeterminado || select.value || '1-4-4-2');
 
   const baseEsquemas = FORMACIONES[modo] ? Object.keys(FORMACIONES[modo]) : ['1-4-4-2'];
-  let html = baseEsquemas.map(esq => `<option value="${esq}">${esq}</option>`).join('');
+  let html = '';
 
   if (perfil.esquemasCustom && perfil.esquemasCustom.length) {
-    html += `<optgroup label="⭐ Mis Esquemas Guardados">`;
-    perfil.esquemasCustom.filter(c => c.modo === modo).forEach(c => {
-      html += `<option value="custom_${c.id}">${c.nombre}</option>`;
-    });
-    html += `</optgroup>`;
+    const customs = perfil.esquemasCustom.filter(c => c.modo === modo);
+    if (customs.length > 0) {
+      html += '<optgroup label="⭐ Mis Esquemas Guardados">';
+      customs.forEach(c => {
+        html += '<option value="custom_' + c.id + '">⭐ ' + c.nombre + '</option>';
+      });
+      html += '</optgroup>';
+    }
   }
 
+  html += '<optgroup label="📋 Esquemas Estándar">';
+  baseEsquemas.forEach(esq => {
+    html += '<option value="' + esq + '">' + esq + '</option>';
+  });
+  html += '</optgroup>';
+
   select.innerHTML = html;
-  if (valorPrevio) select.value = valorPrevio;
+
+  if (targetEsquema) {
+    select.value = targetEsquema;
+  }
+  if (!select.value && select.options.length > 0) {
+    select.selectedIndex = 0;
+  }
 }
 
 export function guardarEsquemaCustom(eq) {
