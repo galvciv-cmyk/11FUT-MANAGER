@@ -1,4 +1,4 @@
-import { perfil, plantel, KITS, autoSaveLocal } from "./state.js";
+import { perfil, plantel, KITS, autoSaveLocal, categoriasData } from "./state.js";
 import { guardarFirebase } from "../services/firebase.js";
 import { mostrarNotificacionApp, mostrarConfirmacionApp } from "./config.js";
 

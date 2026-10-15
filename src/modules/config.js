@@ -1255,7 +1255,7 @@ export function aplicarPerfil() {
 
   const loginLogo = document.getElementById('login-logo');
   if (loginLogo) {
-    loginLogo.src = logoUrl;
+    loginLogo.src = DEFAULT_LOGO;
     loginLogo.onerror = () => { loginLogo.src = DEFAULT_LOGO; };
   }
 
