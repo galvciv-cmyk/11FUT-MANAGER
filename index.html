@@ -57,9 +57,11 @@
       try {
         var s = window.location.search || '';
         var h = window.location.hash || '';
-        var isPublic = (s.indexOf('public=') !== -1 || s.indexOf('publico=') !== -1 || h.indexOf('public') !== -1);
+        var isPublic = (s.indexOf('public=') !== -1 || s.indexOf('publico=') !== -1 || h === '#public' || h.indexOf('#public?') !== -1);
         if (isPublic) {
           document.documentElement.classList.add('is-public-mode');
+        } else {
+          document.documentElement.classList.remove('is-public-mode');
         }
       } catch (e) { }
     })();
@@ -88,7 +90,7 @@
   <div id="app-content">
 
     <!-- ══ LOGIN SCREEN ══ -->
-    <div id="login-screen" style="display:none;">
+    <div id="login-screen">
       <div class="login-box">
         <img id="login-logo" class="login-logo"
           src="https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png"

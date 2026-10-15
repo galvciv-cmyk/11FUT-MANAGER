@@ -1644,7 +1644,7 @@ function handleProfileSelected(prof) {
 
 
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function initApp() {
   // Detect Public Profile Mode INMEDIATAMENTE (Cero flash de Login)
   const urlParams = new URLSearchParams(window.location.search);
   const isPublicMode = urlParams.has('public') ||
@@ -1668,6 +1668,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const catParam = urlParams.get('cat');
     cargarPerfilPublico(publicVal, profParam, catParam);
     return;
+  } else {
+    document.documentElement.classList.remove('is-public-mode');
+    setPublicViewActive(false);
   }
 
   autoLoadLocal();
@@ -1691,7 +1694,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Restauración instantánea para que F5 no parpadee al login screen
-  const localProfId = localStorage.getItem('11fut_active_profile_id');
+  const localProfId = localStorage.getItem('11fut_active_profile_id') || localStorage.getItem('11fut_current_profile_id');
+  const tieneConfigPrevia = (perfil.categorias && perfil.categorias.length > 0) || (perfil.club && perfil.club !== '11FUT MANAGER' && perfil.club !== 'Nuevo Club');
+  if (tieneConfigPrevia) {
+    perfil.wizardCompletado = true;
+  }
   const localEmail = localStorage.getItem('11fut_user_email');
   const isMasterLocal = isSuperAdmin();
 
@@ -1722,7 +1729,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   } else if (window.location.hash === '#pendiente-aprobacion') {
     _ocultarTodasLasPantallas();
     mostrarPantallaEsperaAprobacion();
-  } else if (localProfId && localStorage.getItem('11fut_email_verified') === 'true' && perfil.wizardCompletado) {
+  } else if (localProfId) {
     const loginSc = document.getElementById('login-screen');
     if (loginSc) loginSc.style.display = 'none';
     const mainApp = document.getElementById('main-app');
@@ -1733,7 +1740,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (currentHash === '#profiles' || currentHash === '#perfiles') {
       renderProfileSelector(handleProfileSelected, true);
     } else {
-      const foundProfile = (perfil.profiles || []).find(p => p.id === localProfId) || (perfil.profiles && perfil.profiles[0]);
+      const foundProfile = (perfil.profiles || []).find(p => p.id === localProfId) || (perfil.profiles && perfil.profiles[0]) || { id: localProfId, nombre: perfil.club || 'Entrenador', rol: 'ADMIN' };
       if (foundProfile) {
         handleProfileSelected(foundProfile);
       }
@@ -2305,7 +2312,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   initCookieConsent();
   restaurarPestanaDesdeURL();
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
 
 export function registrarEventoGA(eventName, eventParams = {}) {
   if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
