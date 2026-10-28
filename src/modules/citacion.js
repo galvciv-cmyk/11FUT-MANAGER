@@ -88,4 +88,28 @@ export function enviarWA(eq) {
   }
 
   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+  limpiarFormularioCitacion(eq);
+  mostrarNotificacionApp('Convocatoria Enviada', '✅ Convocatoria enviada y datos del formulario reiniciados para el próximo juego.');
 }
+
+
+export function limpiarFormularioCitacion(eq = 'A') {
+  const rivalEl = document.getElementById(`rival-${eq}`);
+  const lugarEl = document.getElementById(`lugar-${eq}`);
+  const mapaEl = document.getElementById(`mapa-${eq}`);
+  const fechaEl = document.getElementById(`fecha-${eq}-top`);
+  const citaEl = document.getElementById(`cita-${eq}`);
+  const partEl = document.getElementById(`partido-${eq}`);
+  const kitEl = document.getElementById(`kit-${eq}`);
+  const saludoEl = document.getElementById(`saludo-${eq}`);
+
+  if (rivalEl) rivalEl.value = '';
+  if (lugarEl) lugarEl.value = '';
+  if (mapaEl) mapaEl.value = '';
+  if (fechaEl) fechaEl.value = '';
+  if (citaEl) citaEl.value = '';
+  if (partEl) partEl.value = '';
+  if (kitEl) kitEl.value = '';
+  if (saludoEl) saludoEl.value = '⚽ CONVOCATORIA';
+}
+window._limpiarFormularioCitacion = limpiarFormularioCitacion;
