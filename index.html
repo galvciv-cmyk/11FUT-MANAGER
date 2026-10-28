@@ -3,11 +3,17 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
   <title>11FUT MANAGER • Pizarra Táctica y Gestión Integral de Clubes</title>
   <meta name="description"
     content="11FUT MANAGER: Software profesional de gestión deportiva, pizarra táctica digital interactiva, control de planteles, asistencias y convocatorias para cuerpos técnicos.">
   <meta name="theme-color" content="#06080b">
+  <!-- PWA & iOS Safari Configuración Nativa -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="11FUT">
+  <link rel="manifest" href="/manifest.json">
 
   <!-- Open Graph / Meta Compartir -->
   <meta property="og:type" content="website">
@@ -570,6 +576,9 @@
 
                 <button class="btn btn-blue" id="btn-fs-A"
                   style="margin-top:12px;padding:12px;font-size:13px;font-weight:900;">⛶ PANTALLA COMPLETA</button>
+                <button class="btn btn-gold" id="btn-share-tactica-A"
+                  style="margin-top:6px;padding:10px;background:linear-gradient(135deg, #25D366, #128C7E);color:#fff;border:none;font-weight:900;"
+                  title="Compartir alineación por WhatsApp o redes">📲 COMPARTIR EN WHATSAPP</button>
                 <button class="btn btn-gray" id="btn-export-png-A" style="margin-top:6px;padding:10px;">📸 GUARDAR
                   IMAGEN TÁCTICA</button>
                 <button class="btn btn-red" id="btn-limpiar-cancha-A" style="margin-top:6px;padding:10px;">🧹 LIMPIAR
@@ -2303,9 +2312,21 @@
       </div>
     </div>
 
+    <!-- ══ BANNER INTELIGENTE DE INSTALACIÓN IPHONE (PWA) ══ -->
+    <div id="ios-pwa-install-banner" class="ios-install-banner" style="display:none;" role="banner">
+      <div class="ios-install-content">
+        <img src="/favicon.png" alt="11FUT" class="ios-install-logo">
+        <div class="ios-install-text">
+          <strong>📲 Instala 11FUT en tu iPhone</strong>
+          <span>Toca el botón <b>Compartir</b> <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:-2px;"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> y luego <b>"Agregar a inicio"</b> para usarla a pantalla completa sin barras.</span>
+        </div>
+      </div>
+      <button id="btn-close-ios-banner" class="ios-install-close" aria-label="Cerrar aviso">&times;</button>
+    </div>
+
   </div>
 
-  <script src="/vendor/xlsx.full.min.js"></script>
+  <script defer src="/vendor/xlsx.full.min.js"></script>
   <script type="module" src="/src/main.js"></script>
 </body>
 

@@ -4,14 +4,14 @@ import { getAuth, connectAuthEmulator, createUserWithEmailAndPassword, signInWit
 import { perfil, plantel, stats, historial, pinHash, userEmail, setPinHash, setUserEmail, updatePerfil, updatePlantel, updateStats, updateHistorial, autoSaveLocal, categoriasData, updateCategoriasData, isSuperAdmin, SUPER_ADMIN_EMAIL } from "../modules/state.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyB6McwyGjozN5EAiEJ3J2Q-wP-SR4h68DQ",
-  authDomain: "fut-manager-oficial.firebaseapp.com",
-  databaseURL: "https://fut-manager-oficial-default-rtdb.firebaseio.com",
-  projectId: "fut-manager-oficial",
-  storageBucket: "fut-manager-oficial.firebasestorage.app",
-  messagingSenderId: "838588250397",
-  appId: "1:838588250397:web:d7fbfcb0d6dbb5433249f4",
-  measurementId: "G-KV69GJBF4L"
+  apiKey: import.meta.env?.VITE_FIREBASE_API_KEY || "AIzaSyB6McwyGjozN5EAiEJ3J2Q-wP-SR4h68DQ",
+  authDomain: import.meta.env?.VITE_FIREBASE_AUTH_DOMAIN || "fut-manager-oficial.firebaseapp.com",
+  databaseURL: import.meta.env?.VITE_FIREBASE_DATABASE_URL || "https://fut-manager-oficial-default-rtdb.firebaseio.com",
+  projectId: import.meta.env?.VITE_FIREBASE_PROJECT_ID || "fut-manager-oficial",
+  storageBucket: import.meta.env?.VITE_FIREBASE_STORAGE_BUCKET || "fut-manager-oficial.firebasestorage.app",
+  messagingSenderId: import.meta.env?.VITE_FIREBASE_MESSAGING_SENDER_ID || "838588250397",
+  appId: import.meta.env?.VITE_FIREBASE_APP_ID || "1:838588250397:web:d7fbfcb0d6dbb5433249f4",
+  measurementId: import.meta.env?.VITE_FIREBASE_MEASUREMENT_ID || "G-KV69GJBF4L"
 };
 
 
@@ -156,9 +156,11 @@ export async function guardarFirebase() {
           ...perfil,
           pin: undefined,
           pins: undefined,
+          password: undefined,
           profiles: (perfil.profiles || []).map(p => {
             const cp = { ...p };
             delete cp.pin;
+            delete cp.password;
             return cp;
           })
         };

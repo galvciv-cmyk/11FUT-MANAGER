@@ -7,26 +7,68 @@
  * - Navegación o aperturas de URLs descontroladas
  */
 
-// Memoria volátil para seguimiento en tiempo real
+// Memoria volátil para seguimiento rápido
 const rateLimits = new Map();
 const downloadCooldowns = new Map();
 
 /**
+ * Obtiene timestamps guardados en memoria o sessionStorage para persistir entre recargas.
+ */
+function getTimestamps(key, windowMs) {
+  const now = Date.now();
+  let timestamps = rateLimits.get(key)?.timestamps || [];
+
+  if (typeof window !== 'undefined' && window.sessionStorage) {
+    try {
+      const stored = sessionStorage.getItem(`11fut_rl_${key}`);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          // Unir y eliminar duplicados
+          const combined = Array.from(new Set([...timestamps, ...parsed]));
+          timestamps = combined;
+        }
+      }
+    } catch {
+      // sessionStorage no disponible o restringido
+    }
+  }
+
+  // Filtrar marcas de tiempo que aún estén dentro de la ventana
+  return timestamps.filter(ts => typeof ts === 'number' && now - ts < windowMs);
+}
+
+/**
+ * Guarda los timestamps actualizados tanto en memoria como en sessionStorage.
+ */
+function saveTimestamps(key, timestamps) {
+  rateLimits.set(key, { timestamps });
+  if (typeof window !== 'undefined' && window.sessionStorage) {
+    try {
+      if (timestamps.length === 0) {
+        sessionStorage.removeItem(`11fut_rl_${key}`);
+      } else {
+        sessionStorage.setItem(`11fut_rl_${key}`, JSON.stringify(timestamps));
+      }
+    } catch {
+      // Ignorar si el almacenamiento está restringido
+    }
+  }
+}
+
+/**
  * Comprueba si una acción/petición supera el límite permitido en una ventana de tiempo.
- * @param {string} key - Identificador único (ej: 'login:user@email.com', 'firestore:sync')
+ * @param {string} key - Identificador único (ej: 'login:user@email.com', 'pin_auth', 'firestore:sync')
  * @param {number} maxAttempts - Número máximo de intentos permitidos en la ventana
  * @param {number} windowMs - Duración de la ventana en milisegundos (por defecto: 60.000 ms / 1 min)
  * @returns {{ allowed: boolean, remainingAttempts: number, retryAfterSec: number }}
  */
 export function checkRateLimit(key, maxAttempts = 5, windowMs = 60000) {
   const now = Date.now();
-  const record = rateLimits.get(key) || { timestamps: [] };
+  let timestamps = getTimestamps(key, windowMs);
 
-  // Filtrar marcas de tiempo que aún estén dentro de la ventana
-  record.timestamps = record.timestamps.filter(ts => now - ts < windowMs);
-
-  if (record.timestamps.length >= maxAttempts) {
-    const oldest = record.timestamps[0];
+  if (timestamps.length >= maxAttempts) {
+    const oldest = timestamps[0];
     const retryAfterSec = Math.ceil((oldest + windowMs - now) / 1000);
     return {
       allowed: false,
@@ -35,12 +77,12 @@ export function checkRateLimit(key, maxAttempts = 5, windowMs = 60000) {
     };
   }
 
-  record.timestamps.push(now);
-  rateLimits.set(key, record);
+  timestamps.push(now);
+  saveTimestamps(key, timestamps);
 
   return {
     allowed: true,
-    remainingAttempts: maxAttempts - record.timestamps.length,
+    remainingAttempts: maxAttempts - timestamps.length,
     retryAfterSec: 0
   };
 }
@@ -51,6 +93,13 @@ export function checkRateLimit(key, maxAttempts = 5, windowMs = 60000) {
  */
 export function resetRateLimit(key) {
   rateLimits.delete(key);
+  if (typeof window !== 'undefined' && window.sessionStorage) {
+    try {
+      sessionStorage.removeItem(`11fut_rl_${key}`);
+    } catch {
+      // ignorar
+    }
+  }
 }
 
 /**

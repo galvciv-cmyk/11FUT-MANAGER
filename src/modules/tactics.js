@@ -2294,6 +2294,173 @@ export async function exportarPNG(eq, btnElement) {
   }
 }
 
+export async function compartirTactica(eq, btnElement) {
+  const el = document.getElementById(`cancha-${eq}`) || document.getElementById(`pizarra-${eq}`);
+  if (!el || !btnElement) return;
+
+  const eqName = (perfil[`eq${eq}`] || 'EQUIPO').toUpperCase();
+  const clubName = (perfil.club || eqName || '11FUT MANAGER').toUpperCase();
+  const catName = (perfil.categoriaActiva || '').toUpperCase();
+  const esquemaVal = document.getElementById(`esquema-${eq}`)?.value || '';
+  const modoVal = document.getElementById(`modo-${eq}`)?.value || '11';
+
+  const orig = btnElement.innerHTML;
+  btnElement.innerHTML = '⏳ PREPARANDO ENVÍO...';
+  btnElement.disabled = true;
+
+  try {
+    const html2canvasModule = await import("html2canvas");
+    const html2canvas = html2canvasModule.default || html2canvasModule;
+
+    const pitchCanvas = await html2canvas(el, {
+      backgroundColor: '#070a10',
+      scale: 2.2,
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+      imageTimeout: 0
+    });
+
+    const minBenchHeight = Math.max(el.clientHeight || 550, 600);
+    const benchEl = crearBanquilloExportElement(eq, minBenchHeight);
+    benchEl.style.position = 'fixed';
+    benchEl.style.left = '-9999px';
+    benchEl.style.top = '0';
+    benchEl.style.zIndex = '-9999';
+    document.body.appendChild(benchEl);
+
+    let benchCanvas;
+    try {
+      benchCanvas = await html2canvas(benchEl, {
+        backgroundColor: '#070a10',
+        scale: 2.2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        imageTimeout: 0
+      });
+    } finally {
+      benchEl.remove();
+    }
+
+    const isPitchHorizontal = pitchCanvas.width > pitchCanvas.height;
+    const padding = Math.round(pitchCanvas.width * 0.025);
+    const gap = Math.round(pitchCanvas.width * 0.02);
+    let totalWidth, totalHeight, pitchX, pitchY, benchX, benchY;
+    let headerHeight, footerHeight;
+
+    if (isPitchHorizontal) {
+      totalWidth = Math.max(pitchCanvas.width, benchCanvas.width) + (padding * 2);
+      headerHeight = Math.round(totalWidth * 0.06);
+      footerHeight = Math.round(totalWidth * 0.038);
+      totalHeight = headerHeight + pitchCanvas.height + gap + benchCanvas.height + footerHeight + (padding * 2);
+      pitchX = padding + Math.round((totalWidth - (padding * 2) - pitchCanvas.width) / 2);
+      pitchY = headerHeight + padding;
+      benchX = padding + Math.round((totalWidth - (padding * 2) - benchCanvas.width) / 2);
+      benchY = pitchY + pitchCanvas.height + gap;
+    } else {
+      totalWidth = pitchCanvas.width + benchCanvas.width + gap + (padding * 2);
+      headerHeight = Math.round(totalWidth * 0.055);
+      footerHeight = Math.round(totalWidth * 0.032);
+      const contentHeight = Math.max(pitchCanvas.height, benchCanvas.height);
+      totalHeight = headerHeight + contentHeight + footerHeight + (padding * 2);
+      pitchX = padding;
+      pitchY = headerHeight + padding + Math.round((contentHeight - pitchCanvas.height) / 2);
+      benchX = padding + pitchCanvas.width + gap;
+      benchY = headerHeight + padding + Math.round((contentHeight - benchCanvas.height) / 2);
+    }
+
+    const outCanvas = document.createElement('canvas');
+    outCanvas.width = totalWidth;
+    outCanvas.height = totalHeight;
+    const ctx = outCanvas.getContext('2d');
+
+    const bgGrad = ctx.createLinearGradient(0, 0, outCanvas.width, outCanvas.height);
+    bgGrad.addColorStop(0, '#06080c');
+    bgGrad.addColorStop(0.5, '#0a0f19');
+    bgGrad.addColorStop(1, '#05070a');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, outCanvas.width, outCanvas.height);
+
+    const gradHeader = ctx.createLinearGradient(0, 0, outCanvas.width, 0);
+    gradHeader.addColorStop(0, '#0a0f18');
+    gradHeader.addColorStop(0.5, '#141c2c');
+    gradHeader.addColorStop(1, '#0a0f18');
+    ctx.fillStyle = gradHeader;
+    ctx.fillRect(0, 0, outCanvas.width, headerHeight);
+
+    ctx.fillStyle = '#d4af37';
+    ctx.fillRect(0, headerHeight - 3, outCanvas.width, 3);
+
+    const fontBase = Math.round(totalWidth * 0.018);
+    ctx.fillStyle = '#d4af37';
+    ctx.font = `bold ${Math.round(fontBase * 1.35)}px 'Barlow Condensed', sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText(clubName + (catName ? ` • ${catName}` : ''), padding + 12, Math.round(headerHeight * 0.62));
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `bold ${fontBase}px 'Barlow Condensed', sans-serif`;
+    ctx.textAlign = 'right';
+    const esquemaTxt = esquemaVal ? `SISTEMA: ${esquemaVal.toUpperCase()} (FÚTBOL ${modoVal})` : `FÚTBOL ${modoVal}`;
+    ctx.fillText(esquemaTxt, outCanvas.width - padding - 12, Math.round(headerHeight * 0.62));
+
+    ctx.drawImage(pitchCanvas, pitchX, pitchY);
+    ctx.drawImage(benchCanvas, benchX, benchY);
+
+    const gradFooter = ctx.createLinearGradient(0, 0, outCanvas.width, 0);
+    gradFooter.addColorStop(0, '#070a10');
+    gradFooter.addColorStop(0.5, '#0d131f');
+    gradFooter.addColorStop(1, '#070a10');
+    ctx.fillStyle = gradFooter;
+    ctx.fillRect(0, outCanvas.height - footerHeight, outCanvas.width, footerHeight);
+
+    ctx.fillStyle = '#d4af37';
+    ctx.fillRect(0, outCanvas.height - footerHeight, outCanvas.width, 2);
+
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = `600 ${Math.round(fontBase * 0.85)}px 'Barlow Condensed', sans-serif`;
+    ctx.textAlign = 'center';
+    const fechaHoy = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+    ctx.fillText(`11FUT MANAGER • ALINEACIÓN Y BANQUILLO OFICIAL • ${fechaHoy.toUpperCase()}`, outCanvas.width / 2, outCanvas.height - Math.round(footerHeight * 0.38));
+
+    // Web Share API
+    const blobPromise = new Promise(resolve => outCanvas.toBlob(resolve, 'image/png'));
+    const blob = await blobPromise;
+
+    if (blob && navigator.share && navigator.canShare) {
+      const fileName = `alineacion_${eqName}_${fechaHoy.replace(/\//g, '-')}.png`;
+      const file = new File([blob], fileName, { type: 'image/png' });
+
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: `Alineación Oficial - ${clubName}`,
+          text: `📋 Convocatoria y táctica oficial de ${clubName} (${esquemaTxt}). Generado con 11FUT MANAGER.`,
+          files: [file]
+        });
+        mostrarNotificacionApp('Alineación Compartida', '✅ Compartida exitosamente.');
+        return;
+      }
+    }
+
+    // Fallback: descarga directa
+    const link = document.createElement('a');
+    link.download = `tactica_${eqName}_${new Date().toLocaleDateString('es-ES').replace(/\//g, '-')}.png`;
+    link.href = outCanvas.toDataURL('image/png');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    mostrarNotificacionApp('Imagen Guardada', '✅ Imagen táctica descargada en tu dispositivo (puedes adjuntarla en WhatsApp).');
+  } catch (e) {
+    if (e.name !== 'AbortError') {
+      mostrarNotificacionApp('Error al compartir', 'Ocurrió un error al preparar la imagen.', false);
+      console.error(e);
+    }
+  } finally {
+    btnElement.innerHTML = orig;
+    btnElement.disabled = false;
+  }
+}
+
 export function mostrarToastPizarraFullscreen(eq = 'A', titulo, mensaje, esExito = true) {
   const banner = document.getElementById(`fs-toast-banner-${eq}`);
   if (!banner) return;

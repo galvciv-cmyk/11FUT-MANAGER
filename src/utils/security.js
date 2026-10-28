@@ -46,3 +46,20 @@ export function isSafeURL(url) {
 export function sanitizeURL(url) {
   return isSafeURL(url) ? url.trim() : '';
 }
+
+/**
+ * Sanitiza valores para exportación e importación en hojas de cálculo (CSV / Excel).
+ * Neutraliza la ejecución de fórmulas maliciosas (CSV/Formula Injection)
+ * si el campo comienza con '=', '+', '-', '@', tabulación o retorno.
+ * @param {string|any} val 
+ * @returns {string}
+ */
+export function sanitizeForSpreadsheet(val) {
+  if (val === null || val === undefined) return '';
+  const str = String(val).trim();
+  if (/^[=+\-@\t\r]/.test(str)) {
+    return "'" + str;
+  }
+  return str;
+}
+

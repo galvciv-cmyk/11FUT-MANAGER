@@ -144,8 +144,12 @@ export function renderFichaJugadorContent(nombre) {
       else if (esSuplente) rolBadge = `<span style="color:#f59e0b;font-weight:800;font-size:11px;">🟡 Suplente</span>`;
       else rolBadge = `<span style="color:#94a3b8;font-weight:700;font-size:11px;">⚪ Convocado</span>`;
 
-      const resBadgeClass = h.res === 'V' ? 'background:rgba(16,185,129,0.2);color:#34d399;border:1px solid #10b981;' : (h.res === 'D' ? 'background:rgba(239,68,68,0.2);color:#f87171;border:1px solid #ef4444;' : 'background:rgba(234,179,8,0.2);color:#facc15;border:1px solid #eab308;');
-      const resLetra = h.res === 'V' ? 'VICTORIA' : (h.res === 'D' ? 'DERROTA' : 'EMPATE');
+      const isVic = (typeof h.gf === 'number' && typeof h.gc === 'number') ? (h.gf > h.gc) : (h.res === 'W' || h.res === 'V' || h.res === 'G');
+      const isDer = (typeof h.gf === 'number' && typeof h.gc === 'number') ? (h.gf < h.gc) : (h.res === 'L' || h.res === 'P');
+      const resBadgeClass = isVic 
+        ? 'background:rgba(16,185,129,0.2);color:#34d399;border:1px solid #10b981;' 
+        : (isDer ? 'background:rgba(239,68,68,0.2);color:#f87171;border:1px solid #ef4444;' : 'background:rgba(234,179,8,0.2);color:#facc15;border:1px solid #eab308;');
+      const resLetra = isVic ? 'VICTORIA' : (isDer ? 'DERROTA' : 'EMPATE');
 
       return `
         <div style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 12px;margin-bottom:8px;transition:border-color 0.2s;">

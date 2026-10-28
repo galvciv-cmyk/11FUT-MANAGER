@@ -10,6 +10,12 @@
   --glass-border: rgba(212, 175, 55, 0.22);
   --glass-border-light: rgba(255, 255, 255, 0.08);
   --glass-shadow: 0 12px 32px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+  /* Safe Area Insets para iPhone Notch, Dynamic Island y Home Indicator */
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
 }
 
 * {
@@ -18,12 +24,22 @@
   padding: 0;
 }
 
+html {
+  overscroll-behavior-y: contain;
+}
+
 body {
   background: #06080b;
   color: #fff;
   font-family: 'Barlow', sans-serif;
   overflow-x: hidden;
   min-height: 100vh;
+  min-height: 100dvh;
+  padding-top: var(--sat);
+  padding-bottom: var(--sab);
+  padding-left: var(--sal);
+  padding-right: var(--sar);
+  overscroll-behavior-y: contain;
 }
 
 /* ── FONDO DINÁMICO DE PIZARRA TÁCTICA ── */
@@ -1302,11 +1318,12 @@ body.body-fullscreen-active {
 
 .token-camisa {
   position: relative;
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: width 0.15s ease, height 0.15s ease;
 }
 
 .token-camisa img {
@@ -1341,16 +1358,101 @@ body.body-fullscreen-active {
   color: #fff;
   font-family: 'Barlow Condensed', sans-serif;
   font-weight: 700;
-  font-size: 12px;
-  padding: 2px 7px;
+  font-size: 11px;
+  padding: 1.5px 6px;
   border-radius: 4px;
   margin-top: 2px;
   white-space: nowrap;
-  max-width: 100px;
+  max-width: 90px;
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: center;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ADAPTACIÓN RESPONSIVE DE JUGADORES EN CANCHA PARA MÓVILES (SMARTPHONES)
+   ══════════════════════════════════════════════════════════════════ */
+@media screen and (max-width: 768px) {
+  /* Reducir los márgenes laterales de la cancha para ganar más césped útil */
+  .cancha-wrapper {
+    width: calc(100% - 16px) !important;
+    max-width: calc(100% - 16px) !important;
+    margin: 0 8px !important;
+  }
+
+  /* Reducir tamaño de las camisetas en cancha: de 48px a 30px */
+  .cancha-wrapper .token-camisa {
+    width: 30px !important;
+    height: 30px !important;
+  }
+
+  /* Reducir etiquetas de nombre para que no choquen entre sí */
+  .cancha-wrapper .nombre-label {
+    font-size: 9px !important;
+    padding: 1px 4px !important;
+    max-width: 58px !important;
+    line-height: 1.15 !important;
+    margin-top: 1px !important;
+    border-radius: 3px !important;
+  }
+
+  /* Distintivo de capitán proporcional */
+  .cancha-wrapper .capitan-badge {
+    width: 13px !important;
+    height: 13px !important;
+    font-size: 8px !important;
+    border-width: 1px !important;
+    top: -2px !important;
+    right: -2px !important;
+  }
+
+  /* Marcadores tácticos (balón / conos) proporcionales en móvil */
+  .cancha-wrapper .marcador-token {
+    font-size: 19px !important;
+  }
+
+  .cancha-wrapper .jugador-token.equip-cono,
+  .cancha-wrapper .jugador-token.equip-mina,
+  .cancha-wrapper .jugador-token.equip-balon {
+    width: 22px !important;
+    height: 22px !important;
+    margin-left: -11px !important;
+    margin-top: -11px !important;
+  }
+}
+
+/* ── PANTALLAS MÓVILES PEQUEÑAS (iPhone 12/13/14/15 Mini, SE, pantallas < 420px) ── */
+@media screen and (max-width: 420px) {
+  .cancha-wrapper {
+    width: calc(100% - 8px) !important;
+    max-width: calc(100% - 8px) !important;
+    margin: 0 4px !important;
+  }
+
+  .cancha-wrapper .token-camisa {
+    width: 26px !important;
+    height: 26px !important;
+  }
+
+  .cancha-wrapper .nombre-label {
+    font-size: 8px !important;
+    padding: 0.5px 3px !important;
+    max-width: 48px !important;
+    letter-spacing: -0.2px !important;
+  }
+
+  .cancha-wrapper .capitan-badge {
+    width: 11px !important;
+    height: 11px !important;
+    font-size: 7.5px !important;
+    top: -2px !important;
+    right: -2px !important;
+  }
+
+  .cancha-wrapper .marcador-token {
+    font-size: 16px !important;
+  }
 }
 
 /* MARCADOR DIBUJABLE (BALÓN / CONO) */
@@ -1916,15 +2018,15 @@ html.is-public-mode #public-profile-screen {
   font-weight: 900;
 }
 
-.resultado-W {
+.resultado-W, .resultado-G, .resultado-V {
   color: var(--verde);
 }
 
-.resultado-L {
+.resultado-L, .resultado-P {
   color: var(--rojo);
 }
 
-.resultado-D {
+.resultado-D, .resultado-E {
   color: var(--oro);
 }
 
@@ -3428,4 +3530,97 @@ html.is-public-mode #public-profile-screen {
 
 .highlight-new-player {
   animation: highlightNewPlayerAnim 2.5s ease-out forwards;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   BANNER INTELIGENTE DE INSTALACIÓN IPHONE (PWA EN SAFARI)
+   ══════════════════════════════════════════════════════════════════ */
+.ios-install-banner {
+  position: fixed;
+  bottom: calc(14px + var(--sab));
+  left: 12px;
+  right: 12px;
+  max-width: 460px;
+  margin: 0 auto;
+  z-index: 99998;
+  background: rgba(14, 18, 28, 0.95);
+  border: 1.5px solid var(--oro);
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(212, 175, 55, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: slideUpIOS 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUpIOS {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ios-install-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.ios-install-logo {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  flex-shrink: 0;
+}
+
+.ios-install-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  color: #d1d5db;
+  line-height: 1.35;
+}
+
+.ios-install-text strong {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ios-install-text b {
+  color: var(--oro);
+}
+
+.ios-install-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.ios-install-close:hover {
+  background: rgba(255, 255, 255, 0.25);
 }

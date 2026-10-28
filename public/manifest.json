@@ -1,0 +1,25 @@
+{
+  "id": "/",
+  "name": "11FUT MANAGER • Gestión Integral y Pizarra Táctica",
+  "short_name": "11FUT",
+  "description": "Software profesional de gestión deportiva, pizarra táctica digital interactiva, control de planteles, asistencias y convocatorias para cuerpos técnicos.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#06080b",
+  "theme_color": "#d4af37",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

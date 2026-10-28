@@ -4,6 +4,7 @@ import { renderStats } from "./stats.js";
 import { mostrarNotificacionApp, mostrarConfirmacionApp, mostrarToastRapido } from "./config.js";
 import { renderCT } from "./tactics.js";
 import { throttleDownload } from "../utils/rateLimiter.js";
+import { sanitizeForSpreadsheet } from "../utils/security.js";
 
 let filtroTextoPlantel = '';
 let filtroPosPlantel = 'TODOS';
@@ -1223,16 +1224,16 @@ export function exportarPlantelExcel() {
       [''],
       ['🧥 CUERPO TÉCNICO OFICIAL'],
       ['CARGO TÉCNICO', 'NOMBRE Y APELLIDOS', 'TELÉFONO / WHATSAPP', 'ESTADO'],
-      ['Director Técnico (DT)', ct.dt || '', '', 'Activo'],
-      ['Asistente Técnico (AT)', ct.at || '', '', 'Activo'],
-      ['Preparador Físico (PF)', ct.pf || '', '', 'Activo'],
-      ['Médico / Fisioterapeuta', ct.med || '', '', 'Activo'],
+      ['Director Técnico (DT)', sanitizeForSpreadsheet(ct.dt || ''), '', 'Activo'],
+      ['Asistente Técnico (AT)', sanitizeForSpreadsheet(ct.at || ''), '', 'Activo'],
+      ['Preparador Físico (PF)', sanitizeForSpreadsheet(ct.pf || ''), '', 'Activo'],
+      ['Médico / Fisioterapeuta', sanitizeForSpreadsheet(ct.med || ''), '', 'Activo'],
       [''],
       ['⭐ CAPITANES DEL EQUIPO'],
       ['ORDEN', 'NOMBRE DEL CAPITÁN', 'DORSAL (#)', 'ROL'],
-      ['1er Capitán', caps[0] || '', (caps[0] && plantel.dorsales && plantel.dorsales[caps[0]]) || '', 'Titular'],
-      ['2do Capitán', caps[1] || '', (caps[1] && plantel.dorsales && plantel.dorsales[caps[1]]) || '', 'Subcapitán'],
-      ['3er Capitán', caps[2] || '', (caps[2] && plantel.dorsales && plantel.dorsales[caps[2]]) || '', 'Alterno'],
+      ['1er Capitán', sanitizeForSpreadsheet(caps[0] || ''), sanitizeForSpreadsheet((caps[0] && plantel.dorsales && plantel.dorsales[caps[0]]) || ''), 'Titular'],
+      ['2do Capitán', sanitizeForSpreadsheet(caps[1] || ''), sanitizeForSpreadsheet((caps[1] && plantel.dorsales && plantel.dorsales[caps[1]]) || ''), 'Subcapitán'],
+      ['3er Capitán', sanitizeForSpreadsheet(caps[2] || ''), sanitizeForSpreadsheet((caps[2] && plantel.dorsales && plantel.dorsales[caps[2]]) || ''), 'Alterno'],
       [''],
       ['⚽ LISTA DE JUGADORES REGISTRADOS'],
       ['# DORSAL', 'NOMBRE Y APELLIDOS DEL JUGADOR', 'POSICIÓN PRINCIPAL', 'PIERNA HÁBIL', 'FECHA NAC. / EDAD', 'CONTACTO / TELÉFONO']
@@ -1249,7 +1250,14 @@ export function exportarPlantelExcel() {
       const list = (plantel && Array.isArray(plantel[p.key])) ? plantel[p.key].filter(Boolean) : [];
       list.forEach(nombre => {
         const dorsal = (plantel.dorsales && plantel.dorsales[nombre]) || '';
-        data.push([dorsal, nombre, p.label, '', '', '']);
+        data.push([
+          sanitizeForSpreadsheet(dorsal),
+          sanitizeForSpreadsheet(nombre),
+          p.label,
+          '',
+          '',
+          ''
+        ]);
       });
     });
 
@@ -1390,7 +1398,13 @@ export function importarPlantelArchivo(input) {
 
     rowsData.forEach(cells => {
       if (!cells || cells.length === 0) return;
-      const cleanCells = cells.map(c => String(c ?? '').trim().replace(/\u00a0/g, ' '));
+      const cleanCells = cells.map(c => {
+        let s = String(c ?? '').trim().replace(/\u00a0/g, ' ');
+        if (/^[=+\-@\t\r]/.test(s)) {
+          s = s.replace(/^[=+\-@\t\r]+/, '');
+        }
+        return s;
+      });
       const rowText = cleanCells.join(' ').toLowerCase();
       if (!rowText) return;
 

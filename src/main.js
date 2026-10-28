@@ -4,7 +4,7 @@ import { isSuperAdmin, SUPER_ADMIN_EMAIL, perfil, setPinHash, setUserEmail, setC
 import { auth, hashPin, cargarFirebase, guardarFirebase, cargarFirebasePublico, limpiarDocumentosObsoletosFirebase, db, useEmulator } from "./services/firebase.js";
 import { setDoc, doc, onSnapshot } from "firebase/firestore";
 import { cargarKits } from "./services/cloudinary.js";
-import { actualizarTactica, exportarPNG, setDrawingMode, setDrawingColor, setLineWidth, setLineDash, agregarMarcador, clearCanvas, toggleFullscreen, salirFullscreenTotal, guardarEsquemaCustom, limpiarCanchaYBanco, setVistaCancha, setModoPizarra, agregarFichaLibre, limpiarFichasLibres, abrirModalSustitucion, ejecutarSustitucion, undoCanvas, grabarPasoAnimacion, reproducirAnimacion, detenerAnimacion, FORMACIONES, getImg } from "./modules/tactics.js";
+import { actualizarTactica, exportarPNG, compartirTactica, setDrawingMode, setDrawingColor, setLineWidth, setLineDash, agregarMarcador, clearCanvas, toggleFullscreen, salirFullscreenTotal, guardarEsquemaCustom, limpiarCanchaYBanco, setVistaCancha, setModoPizarra, agregarFichaLibre, limpiarFichasLibres, abrirModalSustitucion, ejecutarSustitucion, undoCanvas, grabarPasoAnimacion, reproducirAnimacion, detenerAnimacion, FORMACIONES, getImg } from "./modules/tactics.js";
 import { renderStats, guardarStatJugador, cerrarStatModal, renderRankings, renderDashboardColectivo, exportarEstadisticasExcel } from "./modules/stats.js";
 import { renderHistorial, formatFecha } from "./modules/history.js";
 import { initPlantelUI, aplicarPlantelUI, guardarSquad, descargarPlantilla, descargarPlantillaExcel, exportarPlantelExcel, importarPlantelArchivo, importarCSV, exportarPDF, eliminarListadoPlantel } from "./modules/squad.js";
@@ -2156,6 +2156,7 @@ async function initApp() {
     actualizarTactica('A');
   });
   document.getElementById('btn-save-esquema-A')?.addEventListener('click', () => guardarEsquemaCustom('A'));
+  document.getElementById(`btn-share-tactica-${eq}`)?.addEventListener('click', (e) => compartirTactica(eq, e.target));
   document.getElementById(`btn-export-png-${eq}`)?.addEventListener('click', (e) => exportarPNG(eq, e.target));
   document.getElementById(`btn-limpiar-cancha-${eq}`)?.addEventListener('click', () => limpiarCanchaYBanco(eq));
 
@@ -2312,6 +2313,33 @@ async function initApp() {
 
   initCookieConsent();
   restaurarPestanaDesdeURL();
+  initIOSInstallBanner();
+}
+
+
+function initIOSInstallBanner() {
+  try {
+    const ua = window.navigator.userAgent.toLowerCase();
+    const isIOS = /iphone|ipad|ipod/.test(ua);
+    const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+    const isDismissed = localStorage.getItem('11fut_ios_banner_dismissed') === 'true';
+
+    if (isIOS && !isStandalone && !isDismissed) {
+      const banner = document.getElementById('ios-pwa-install-banner');
+      if (banner) {
+        setTimeout(() => {
+          banner.style.display = 'flex';
+        }, 1500);
+
+        document.getElementById('btn-close-ios-banner')?.addEventListener('click', () => {
+          banner.style.display = 'none';
+          localStorage.setItem('11fut_ios_banner_dismissed', 'true');
+        });
+      }
+    }
+  } catch (err) {
+    console.debug('iOS install banner check', err);
+  }
 }
 
 if (document.readyState === 'loading') {

@@ -642,6 +642,24 @@ function acumularStatsPartido(p) {
   updateStats(stats);
 }
 
+
+export function obtenerResultadoPartido(h) {
+  if (!h) return 'E';
+  const gf = typeof h.gf === 'number' ? h.gf : parseInt(h.gf, 10);
+  const gc = typeof h.gc === 'number' ? h.gc : parseInt(h.gc, 10);
+  if (!isNaN(gf) && !isNaN(gc)) {
+    if (gf > gc) return 'G';
+    if (gf < gc) return 'P';
+    return 'E';
+  }
+  const r = String(h.res || '').toUpperCase();
+  if (r === 'G' || r === 'W' || r === 'V') return 'G';
+  if (r === 'P' || r === 'L') return 'P';
+  if (r === 'E' || r === 'D' || r === 'X') return 'E';
+  return 'E';
+}
+window._obtenerResultadoPartido = obtenerResultadoPartido;
+
 let filtroTextoHistorial = '';
 let filtroResultadoHistorial = 'TODOS';
 
@@ -713,7 +731,13 @@ export function renderHistorial() {
         (h.rival && h.rival.toLowerCase().includes(filtroTextoHistorial)) ||
         (h.torneo && h.torneo.toLowerCase().includes(filtroTextoHistorial)) ||
         (h.fecha && h.fecha.toLowerCase().includes(filtroTextoHistorial));
-      const matchRes = filtroResultadoHistorial === 'TODOS' || h.res === filtroResultadoHistorial;
+      const outcome = obtenerResultadoPartido(h);
+      let matchRes = true;
+      if (filtroResultadoHistorial && filtroResultadoHistorial !== 'TODOS') {
+        const f = filtroResultadoHistorial.toUpperCase();
+        const fNorm = (f === 'W' || f === 'V') ? 'G' : ((f === 'L') ? 'P' : ((f === 'D' || f === 'X') ? 'E' : f));
+        matchRes = (outcome === fNorm);
+      }
       return matchTxt && matchRes;
     });
 
@@ -731,7 +755,8 @@ export function renderHistorial() {
 
     contHist.innerHTML = partidosFiltrados.map((h) => {
       const eqNombre = perfil.club || perfil.eqA || 'EQUIPO';
-      const resClass = `resultado-${h.res}`;
+      const outcome = obtenerResultadoPartido(h);
+      const resClass = `resultado-${outcome} resultado-${h.res || outcome}`;
 
       return `
         <div class="partido-item">
