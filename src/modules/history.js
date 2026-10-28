@@ -89,7 +89,110 @@ export let partidoEnVivoState = {
   sustitucionesList: [],
   tarjetasAmarillasMap: {},
   tarjetasRojasMap: {},
+  titularesIniciales: [],
   convocadosList: []
+};
+
+
+export function obtenerJugadoresEnCancha() {
+  const st = partidoEnVivoState;
+  if (!st || !st.activo) return [];
+
+  let iniciales = [];
+  if (Array.isArray(st.titularesIniciales) && st.titularesIniciales.length > 0) {
+    iniciales = [...st.titularesIniciales];
+  } else if (Array.isArray(plantel.tit_A) && plantel.tit_A.filter(Boolean).length > 0) {
+    iniciales = [...plantel.tit_A.filter(Boolean)];
+  } else if (Array.isArray(st.convocadosList) && st.convocadosList.length > 0) {
+    iniciales = st.convocadosList.slice(0, 11);
+  }
+
+  const enCancha = new Set(iniciales);
+
+  // Aplicar sustituciones registradas
+  (st.sustitucionesList || []).forEach(sub => {
+    if (sub.sale) enCancha.delete(sub.sale);
+    if (sub.entra) enCancha.add(sub.entra);
+  });
+
+  // Excluir expulsados (tarjeta roja)
+  Object.keys(st.tarjetasRojasMap || {}).forEach(exp => {
+    enCancha.delete(exp);
+  });
+
+  // Fallback seguro: si quedó vacío, retornar convocados disponibles
+  if (enCancha.size === 0 && st.convocadosList && st.convocadosList.length > 0) {
+    return st.convocadosList.filter(n => !(st.tarjetasRojasMap && st.tarjetasRojasMap[n]));
+  }
+
+  return Array.from(enCancha);
+}
+window._obtenerJugadoresEnCancha = obtenerJugadoresEnCancha;
+
+export function obtenerJugadoresEnBanquillo() {
+  const st = partidoEnVivoState;
+  if (!st || !st.activo) return [];
+  const enCancha = new Set(obtenerJugadoresEnCancha());
+  const convocados = st.convocadosList || [];
+
+  return convocados.filter(n => !enCancha.has(n) && !(st.tarjetasRojasMap && st.tarjetasRojasMap[n]));
+}
+window._obtenerJugadoresEnBanquillo = obtenerJugadoresEnBanquillo;
+
+export function getDorsalJugador(nombre) {
+  if (!nombre) return '';
+  const d = (plantel.dorsales && plantel.dorsales[nombre]);
+  return d ? `#${d} ` : '';
+}
+window._getDorsalJugador = getDorsalJugador;
+
+window._ajustarTitularesLiveModal = () => {
+  const modal = document.getElementById('modal');
+  const modalContent = document.getElementById('modal-content');
+  if (!modal || !modalContent) return;
+
+  const st = partidoEnVivoState;
+  const convocados = st.convocadosList || [];
+  const titularesActuales = new Set(st.titularesIniciales && st.titularesIniciales.length ? st.titularesIniciales : (plantel.tit_A || []).filter(Boolean));
+
+  let html = `<div class="modal-title">⚙️ SELECCIONAR TITULARES INICIALES</div>`;
+  html += `<div style="font-size:11px;color:#aaa;margin-bottom:8px;">Marca los jugadores que iniciaron como titulares en cancha:</div>`;
+  html += `<div style="display:flex;flex-direction:column;gap:6px;max-height:340px;overflow-y:auto;padding-right:4px;">`;
+
+  convocados.forEach(n => {
+    const isChecked = titularesActuales.has(n);
+    const d = getDorsalJugador(n);
+    html += `
+      <label style="display:flex;align-items:center;gap:10px;background:#111;padding:8px 10px;border-radius:6px;cursor:pointer;border:1px solid #222;">
+        <input type="checkbox" class="chk-titular-live" value="${n}" ${isChecked ? 'checked' : ''} style="width:18px;height:18px;accent-color:var(--oro);">
+        <span style="font-weight:700;color:#fff;">${d}${n}</span>
+      </label>
+    `;
+  });
+
+  html += `</div>`;
+  html += `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
+      <button class="btn btn-green" onclick="window._guardarAjusteTitularesLive()">✅ APLICAR</button>
+      <button class="btn btn-gray" onclick="document.getElementById('modal').style.display='none'">CANCELAR</button>
+    </div>
+  `;
+
+  modalContent.innerHTML = html;
+  modal.style.display = 'flex';
+};
+
+window._guardarAjusteTitularesLive = () => {
+  const checks = document.querySelectorAll('.chk-titular-live:checked');
+  const sel = Array.from(checks).map(c => c.value);
+  if (!sel.length) {
+    mostrarNotificacionApp('Titulares', 'Debes seleccionar al menos un titular para el encuentro.', false);
+    return;
+  }
+  partidoEnVivoState.titularesIniciales = sel;
+  document.getElementById('modal').style.display = 'none';
+  renderConsolaPartidoVivo();
+  mostrarToastRapido(`✅ Titulares actualizados: ${sel.length} jugadores en cancha.`);
 };
 
 export function iniciarJuegoProgramado(id) {
@@ -97,6 +200,14 @@ export function iniciarJuegoProgramado(id) {
   if (!prog) return;
 
   const convocados = prog.convocados || [...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
+  let titularesIniciales = [];
+  if (Array.isArray(prog.titulares) && prog.titulares.length) {
+    titularesIniciales = [...prog.titulares];
+  } else if (Array.isArray(plantel.tit_A) && plantel.tit_A.filter(Boolean).length) {
+    titularesIniciales = [...plantel.tit_A.filter(Boolean)];
+  } else {
+    titularesIniciales = convocados.slice(0, 11);
+  }
 
   partidoEnVivoState = {
     activo: true,
@@ -117,6 +228,7 @@ export function iniciarJuegoProgramado(id) {
     sustitucionesList: [],
     tarjetasAmarillasMap: {},
     tarjetasRojasMap: {},
+    titularesIniciales: titularesIniciales,
     convocadosList: convocados
   };
 
@@ -133,6 +245,12 @@ window._iniciarJuegoProgramado = (id) => iniciarJuegoProgramado(id);
 export function abrirNuevoPartidoForm() {
   const todos = [...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
   const convocadosDefault = [...new Set(todos)];
+  let titularesIniciales = [];
+  if (Array.isArray(plantel.tit_A) && plantel.tit_A.filter(Boolean).length) {
+    titularesIniciales = [...plantel.tit_A.filter(Boolean)];
+  } else {
+    titularesIniciales = convocadosDefault.slice(0, 11);
+  }
 
   partidoEnVivoState = {
     activo: true,
@@ -152,6 +270,7 @@ export function abrirNuevoPartidoForm() {
     sustitucionesList: [],
     tarjetasAmarillasMap: {},
     tarjetasRojasMap: {},
+    titularesIniciales: titularesIniciales,
     convocadosList: convocadosDefault
   };
 
@@ -179,6 +298,22 @@ export function renderConsolaPartidoVivo() {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
         <input type="text" id="live-rival-input" value="${st.rival}" placeholder="Nombre del Rival" onchange="window._actualizarLiveRival(this.value)">
         <input type="number" id="live-duracion-input" value="${st.duracionMin}" placeholder="Minutos por tiempo" onchange="window._actualizarLiveDuracion(this.value)">
+      </div>
+
+      
+      <!-- ESTADO ACTUAL DEL EQUIPO: EN CANCHA Y BANQUILLO -->
+      <div style="background:#0d111a;border:1px solid #222e42;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="color:#34d399;font-weight:800;letter-spacing:0.3px;">🟢 JUGADORES EN CANCHA (${obtenerJugadoresEnCancha().length})</span>
+          <button type="button" class="btn btn-gray" style="width:auto;padding:3px 8px;font-size:10px;" onclick="window._ajustarTitularesLiveModal()">⚙️ Ajustar Titulares</button>
+        </div>
+        <div style="color:#e2e8f0;font-size:11.5px;line-height:1.4;margin-bottom:8px;">
+          ${obtenerJugadoresEnCancha().map(n => `<span style="display:inline-block;background:rgba(52,211,153,0.12);color:#6ee7b7;border:1px solid rgba(52,211,153,0.25);border-radius:4px;padding:1px 6px;margin:2px 3px 2px 0;">${(plantel.dorsales && plantel.dorsales[n]) ? `<b>#${plantel.dorsales[n]}</b> ` : ''}${n}</span>`).join('') || '<span style="color:#888;">Sin jugadores en cancha</span>'}
+        </div>
+        <div style="color:#facc15;font-weight:800;letter-spacing:0.3px;margin-bottom:4px;">🟡 BANQUILLO / SUPLENTES (${obtenerJugadoresEnBanquillo().length})</div>
+        <div style="color:#94a3b8;font-size:11px;line-height:1.4;">
+          ${obtenerJugadoresEnBanquillo().map(n => `<span style="display:inline-block;background:rgba(250,204,21,0.08);color:#fde047;border:1px solid rgba(250,204,21,0.2);border-radius:4px;padding:1px 6px;margin:2px 3px 2px 0;">${(plantel.dorsales && plantel.dorsales[n]) ? `<b>#${plantel.dorsales[n]}</b> ` : ''}${n}</span>`).join('') || '<span style="color:#666;">Banquillo vacío</span>'}
+        </div>
       </div>
 
       <!-- CONTADOR DE GOLES (0 +) -->
@@ -308,13 +443,16 @@ window._sumarGolContraModal = () => {
   const modalContent = document.getElementById('modal-content');
   if (!modal || !modalContent) return;
 
-  const porteros = (plantel.por || []).length ? plantel.por : ['Guardameta'];
+  const enCancha = obtenerJugadoresEnCancha();
+  let porteros = enCancha.filter(n => (plantel.por || []).includes(n));
+  if (!porteros.length) porteros = enCancha.length ? enCancha : ((plantel.por || []).length ? plantel.por : ['Guardameta']);
 
-  let html = `<div class="modal-title">🧤 SELECCIONAR GUARDAMETA QUE RECIBIÓ EL GOL</div>`;
-  html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
+  let html = `<div class="modal-title">🧤 SELECCIONAR GUARDAMETA EN CANCHA</div>`;
+  html += `<div style="display:flex;flex-direction:column;gap:6px;max-height:360px;overflow-y:auto;">`;
 
   porteros.forEach(n => {
-    html += `<button class="btn btn-gray" style="text-align:left;padding:10px;" onclick="window._confirmarGolContraPortero('${n}')">🧤 ${n}</button>`;
+    const d = getDorsalJugador(n);
+    html += `<button class="btn btn-gray" style="text-align:left;padding:10px;" onclick="window._confirmarGolContraPortero('${n}')">🧤 ${d}${n}</button>`;
   });
 
   html += `<button class="btn btn-red" style="margin-top:8px;" onclick="document.getElementById('modal').style.display='none'">CANCELAR</button>`;
@@ -337,13 +475,16 @@ window._sumarRemateContraModal = () => {
   const modalContent = document.getElementById('modal-content');
   if (!modal || !modalContent) return;
 
-  const porteros = (plantel.por || []).length ? plantel.por : ['Guardameta'];
+  const enCancha = obtenerJugadoresEnCancha();
+  let porteros = enCancha.filter(n => (plantel.por || []).includes(n));
+  if (!porteros.length) porteros = enCancha.length ? enCancha : ((plantel.por || []).length ? plantel.por : ['Guardameta']);
 
   let html = `<div class="modal-title">🧤 SELECCIONAR GUARDAMETA EN CHUTE DEL RIVAL</div>`;
-  html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
+  html += `<div style="display:flex;flex-direction:column;gap:6px;max-height:360px;overflow-y:auto;">`;
 
   porteros.forEach(n => {
-    html += `<button class="btn btn-gray" style="text-align:left;padding:10px;" onclick="window._confirmarRemateContraPortero('${n}')">🧤 ${n}</button>`;
+    const d = getDorsalJugador(n);
+    html += `<button class="btn btn-gray" style="text-align:left;padding:10px;" onclick="window._confirmarRemateContraPortero('${n}')">🧤 ${d}${n}</button>`;
   });
 
   html += `<button class="btn btn-red" style="margin-top:8px;" onclick="document.getElementById('modal').style.display='none'">CANCELAR</button>`;
@@ -364,13 +505,15 @@ window._sumarGolFavor = () => {
   const modalContent = document.getElementById('modal-content');
   if (!modal || !modalContent) return;
 
-  const convocados = partidoEnVivoState.convocadosList.length ? partidoEnVivoState.convocadosList : [...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
+  const enCancha = obtenerJugadoresEnCancha();
+  const jugadores = enCancha.length ? enCancha : (partidoEnVivoState.convocadosList || []);
 
-  let html = `<div class="modal-title">⚽ SELECCIONAR GOLEADOR DE LA CONVOCATORIA</div>`;
-  html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
+  let html = `<div class="modal-title">⚽ SELECCIONAR GOLEADOR (JUGADORES EN CANCHA)</div>`;
+  html += `<div style="display:flex;flex-direction:column;gap:6px;max-height:360px;overflow-y:auto;">`;
 
-  convocados.forEach(n => {
-    html += `<button class="btn btn-gray" style="text-align:left;padding:10px;" onclick="window._confirmarGolFavorJugador('${n}')">⚽ ${n}</button>`;
+  jugadores.forEach(n => {
+    const d = getDorsalJugador(n);
+    html += `<button class="btn btn-gray" style="text-align:left;padding:10px;" onclick="window._confirmarGolFavorJugador('${n}')">⚽ ${d}${n}</button>`;
   });
 
   html += `<button class="btn btn-red" style="margin-top:8px;" onclick="document.getElementById('modal').style.display='none'">CANCELAR</button>`;
@@ -393,13 +536,15 @@ window._sumarRemateFavor = () => {
   const modalContent = document.getElementById('modal-content');
   if (!modal || !modalContent) return;
 
-  const convocados = partidoEnVivoState.convocadosList.length ? partidoEnVivoState.convocadosList : [...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
+  const enCancha = obtenerJugadoresEnCancha();
+  const jugadores = enCancha.length ? enCancha : (partidoEnVivoState.convocadosList || []);
 
-  let html = `<div class="modal-title">🎯 SELECCIONAR JUGADOR QUE REMATÓ A PUERTA</div>`;
-  html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
+  let html = `<div class="modal-title">🎯 SELECCIONAR REMATADOR (JUGADORES EN CANCHA)</div>`;
+  html += `<div style="display:flex;flex-direction:column;gap:6px;max-height:360px;overflow-y:auto;">`;
 
-  convocados.forEach(n => {
-    html += `<button class="btn btn-gray" style="text-align:left;padding:10px;" onclick="window._confirmarRemateFavorJugador('${n}')">🎯 ${n}</button>`;
+  jugadores.forEach(n => {
+    const d = getDorsalJugador(n);
+    html += `<button class="btn btn-gray" style="text-align:left;padding:10px;" onclick="window._confirmarRemateFavorJugador('${n}')">🎯 ${d}${n}</button>`;
   });
 
   html += `<button class="btn btn-red" style="margin-top:8px;" onclick="document.getElementById('modal').style.display='none'">CANCELAR</button>`;
@@ -421,13 +566,15 @@ window._sumarAsistencia = () => {
   const modalContent = document.getElementById('modal-content');
   if (!modal || !modalContent) return;
 
-  const convocados = partidoEnVivoState.convocadosList.length ? partidoEnVivoState.convocadosList : [...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
+  const enCancha = obtenerJugadoresEnCancha();
+  const jugadores = enCancha.length ? enCancha : (partidoEnVivoState.convocadosList || []);
 
-  let html = `<div class="modal-title">🎯 SELECCIONAR ASISTIDOR DEL GOL</div>`;
-  html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
+  let html = `<div class="modal-title">🎯 SELECCIONAR ASISTIDOR (JUGADORES EN CANCHA)</div>`;
+  html += `<div style="display:flex;flex-direction:column;gap:6px;max-height:360px;overflow-y:auto;">`;
 
-  convocados.forEach(n => {
-    html += `<button class="btn btn-gray" style="text-align:left;padding:10px;" onclick="window._confirmarAsistenciaJugador('${n}')">🎯 ${n}</button>`;
+  jugadores.forEach(n => {
+    const d = getDorsalJugador(n);
+    html += `<button class="btn btn-gray" style="text-align:left;padding:10px;" onclick="window._confirmarAsistenciaJugador('${n}')">🎯 ${d}${n}</button>`;
   });
 
   html += `<button class="btn btn-gold" style="margin-top:4px;" onclick="window._confirmarAsistenciaJugador('Sin Asistencia (Tiro Libre / Penal)')">🚫 Sin Asistencia (Tiro Libre / Penal)</button>`;
@@ -451,19 +598,28 @@ window._abrirModalCambioLive = () => {
   const modalContent = document.getElementById('modal-content');
   if (!modal || !modalContent) return;
 
-  const convocados = partidoEnVivoState.convocadosList.length ? partidoEnVivoState.convocadosList : [...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
+  const enCancha = obtenerJugadoresEnCancha();
+  const enBanquillo = obtenerJugadoresEnBanquillo();
+
+  const optionsSale = enCancha.length
+    ? enCancha.map(n => `<option value="${n}">🔴 ${getDorsalJugador(n)}${n}</option>`).join('')
+    : `<option value="" disabled>No hay jugadores en cancha</option>`;
+
+  const optionsEntra = enBanquillo.length
+    ? enBanquillo.map(n => `<option value="${n}">🟢 ${getDorsalJugador(n)}${n}</option>`).join('')
+    : `<option value="" disabled>No hay jugadores en el banquillo</option>`;
 
   modalContent.innerHTML = `
     <div class="modal-title">🔄 REGISTRAR SUSTITUCIÓN (CAMBIO)</div>
     <div class="card">
-      <label style="font-size:11px;color:#aaa;">🔴 JUGADOR QUE SALE:</label>
-      <select id="live-cambio-sale" style="margin-bottom:8px;">
-        ${convocados.map(n => `<option value="${n}">${n}</option>`).join('')}
+      <label style="font-size:11px;color:#f87171;font-weight:700;">🔴 JUGADOR QUE SALE (EN CANCHA):</label>
+      <select id="live-cambio-sale" style="margin-bottom:10px;">
+        ${optionsSale}
       </select>
 
-      <label style="font-size:11px;color:#aaa;">🟢 JUGADOR QUE ENTRA:</label>
-      <select id="live-cambio-entra" style="margin-bottom:8px;">
-        ${convocados.map(n => `<option value="${n}">${n}</option>`).join('')}
+      <label style="font-size:11px;color:#34d399;font-weight:700;">🟢 JUGADOR QUE ENTRA (EN BANQUILLO):</label>
+      <select id="live-cambio-entra" style="margin-bottom:10px;">
+        ${optionsEntra}
       </select>
 
       <label style="font-size:11px;color:#aaa;">⏱️ MINUTO DEL CAMBIO:</label>
@@ -499,13 +655,15 @@ window._sumarTarjetaLive = (tipo) => {
   const modalContent = document.getElementById('modal-content');
   if (!modal || !modalContent) return;
 
-  const convocados = partidoEnVivoState.convocadosList.length ? partidoEnVivoState.convocadosList : [...plantel.por, ...plantel.def, ...plantel.med, ...plantel.del];
+  const enCancha = obtenerJugadoresEnCancha();
+  const jugadores = enCancha.length ? enCancha : (partidoEnVivoState.convocadosList || []);
 
-  let html = `<div class="modal-title">${tipo === 'AMARILLA' ? '🟨 AMONESTACIÓN' : '🟥 EXPULSIÓN'} - SELECCIONAR JUGADOR</div>`;
-  html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
+  let html = `<div class="modal-title">${tipo === 'AMARILLA' ? '🟨 AMONESTACIÓN' : '🟥 EXPULSIÓN'} - SELECCIONAR JUGADOR EN CANCHA</div>`;
+  html += `<div style="display:flex;flex-direction:column;gap:6px;max-height:360px;overflow-y:auto;">`;
 
-  convocados.forEach(n => {
-    html += `<button class="btn btn-gray" style="text-align:left;padding:10px;" onclick="window._confirmarTarjetaJugador('${tipo}', '${n}')">${tipo === 'AMARILLA' ? '🟨' : '🟥'} ${n}</button>`;
+  jugadores.forEach(n => {
+    const d = getDorsalJugador(n);
+    html += `<button class="btn btn-gray" style="text-align:left;padding:10px;" onclick="window._confirmarTarjetaJugador('${tipo}', '${n}')">${tipo === 'AMARILLA' ? '🟨' : '🟥'} ${d}${n}</button>`;
   });
 
   html += `<button class="btn btn-red" style="margin-top:8px;" onclick="document.getElementById('modal').style.display='none'">CANCELAR</button>`;
@@ -708,6 +866,7 @@ export function renderHistorial() {
             <div>
               <div style="font-weight:900;color:var(--oro);font-size:15px;">🆚 vs ${j.rival} (${j.torneo})</div>
               <div style="font-size:11px;color:#aaa;margin-top:2px;">📅 ${formatFecha(j.fecha)} • ⏰ ${formatHora(j.cita)} • Convocados: ${(j.convocados || []).length}</div>
+              <div style="font-size:11px;color:#888;margin-top:4px;line-height:1.3;max-height:36px;overflow:hidden;text-overflow:ellipsis;">📋 <b>Convocatoria:</b> ${(j.convocados || []).map(n => `${getDorsalJugador(n)}${n}`).join(' • ') || 'Todos'}</div>
             </div>
             <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
               <button class="btn btn-green" style="width:auto;padding:8px 12px;font-size:12px;" onclick="window._iniciarJuegoProgramado('${j.id}')">▶️ INICIO / REGISTRAR</button>

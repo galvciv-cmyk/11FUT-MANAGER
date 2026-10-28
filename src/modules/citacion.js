@@ -61,7 +61,8 @@ export function enviarWA(eq) {
 
   msg += `\n📋 *JUGADORES CONVOCADOS (${convocados.length}):*\n`;
   convocados.forEach((n, i) => {
-    msg += `${i + 1}. ${n}\n`;
+    const dorsal = (plantel.dorsales && plantel.dorsales[n]) ? `#${plantel.dorsales[n]} ` : '';
+    msg += `${i + 1}. ${dorsal}${n}\n`;
   });
 
   // Guardar automáticamente como JUEGO PROGRAMADO
@@ -73,6 +74,8 @@ export function enviarWA(eq) {
     cita,
     part,
     lugar,
+    titulares: tit,
+    suplentes: sup,
     convocados
   };
 
