@@ -14,6 +14,21 @@ export const DEFAULT_PLANTEL = {
 
 export const SUPER_ADMIN_EMAIL = "gyknova@gmail.com";
 
+export const DEFAULT_PLANTILLA_CONVOCATORIA = `*{encabezado}*
+
+🏆 *Torneo:* {torneo}
+📌 *Jornada:* {jornada}
+🆚 *Rival:* {rival}
+📅 *Fecha:* {fecha}
+⏰ *Hora Cita:* {hora_cita}
+⚽ *Hora Inicio:* {hora_partido}
+📍 *Sede:* {sede}
+🗺️ *Mapa:* {mapa}
+🎽 *Uniforme:* {uniforme}
+
+📋 *JUGADORES CONVOCADOS ({total_convocados}):*
+{convocados}`;
+
 export const DEFAULT_PERFIL = {
   club: "11FUT MANAGER",
   eqA: "Equipo Principal",
@@ -40,7 +55,9 @@ export const DEFAULT_PERFIL = {
       avatar: "https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png"
     }
   ],
-  esquemasCustom: []
+  esquemasCustom: [],
+  rivales: [],
+  plantillaConvocatoria: DEFAULT_PLANTILLA_CONVOCATORIA
 };
 
 export const DIAS_PRUEBA_DEFECTO = 3;
@@ -214,6 +231,10 @@ export function updatePerfil(newPerfil) {
     perfil = { ...DEFAULT_PERFIL, ...newPerfil };
     if (!perfil.categorias) perfil.categorias = [];
     if (!perfil.esquemasCustom) perfil.esquemasCustom = [];
+    if (!Array.isArray(perfil.rivales)) perfil.rivales = [];
+    if (!perfil.plantillaConvocatoria || typeof perfil.plantillaConvocatoria !== 'string') {
+      perfil.plantillaConvocatoria = DEFAULT_PLANTILLA_CONVOCATORIA;
+    }
     
     // Si ya completó wizard antes o tiene categorías/club configurado, mantener wizardCompletado: true
     if (newPerfil.wizardCompletado !== undefined) {
@@ -275,6 +296,14 @@ export function autoSaveLocal() {
           if (typeof v === 'string' && v.length > 40000) {
             delete perfilRescate.customKits[k];
           }
+        });
+      }
+      if (Array.isArray(perfilRescate.rivales)) {
+        perfilRescate.rivales = perfilRescate.rivales.map(r => {
+          if (r && typeof r.escudo === 'string' && r.escudo.length > 60000 && !r.escudo.startsWith('http')) {
+            return { ...r, escudo: '' };
+          }
+          return r;
         });
       }
       localStorage.setItem("11fut_perfil", JSON.stringify(perfilRescate));
@@ -347,4 +376,92 @@ export function setKits(kitsArray) {
   } else {
     KITS.push(DEFAULT_PREDETERMINADO_KIT);
   }
+}
+
+export function obtenerPlantillaConvocatoriaActiva(catNombre = perfil.categoriaActiva) {
+  if (catNombre && categoriasData && categoriasData[catNombre] && typeof categoriasData[catNombre].plantillaConvocatoria === 'string' && categoriasData[catNombre].plantillaConvocatoria.trim()) {
+    return categoriasData[catNombre].plantillaConvocatoria;
+  }
+  if (perfil && typeof perfil.plantillaConvocatoria === 'string' && perfil.plantillaConvocatoria.trim()) {
+    return perfil.plantillaConvocatoria;
+  }
+  return DEFAULT_PLANTILLA_CONVOCATORIA;
+}
+
+export function aplicarPlantillaConvocatoria(plantillaStr, datos = {}) {
+  const tpl = (typeof plantillaStr === 'string' && plantillaStr.trim())
+    ? plantillaStr
+    : DEFAULT_PLANTILLA_CONVOCATORIA;
+
+  const valores = {
+    encabezado: datos.encabezado ?? datos.saludo ?? '',
+    saludo: datos.encabezado ?? datos.saludo ?? '',
+    club: datos.club ?? perfil.club ?? '',
+    categoria: datos.categoria ?? perfil.categoriaActiva ?? '',
+    torneo: datos.torneo ?? '',
+    jornada: datos.jornada ?? '',
+    rival: datos.rival ?? '',
+    fecha: datos.fecha ?? '',
+    hora_cita: datos.hora_cita ?? datos.cita ?? '',
+    cita: datos.hora_cita ?? datos.cita ?? '',
+    hora_partido: datos.hora_partido ?? datos.hora_inicio ?? datos.part ?? '',
+    hora_inicio: datos.hora_partido ?? datos.hora_inicio ?? datos.part ?? '',
+    partido: datos.hora_partido ?? datos.hora_inicio ?? datos.part ?? '',
+    sede: datos.sede ?? datos.lugar ?? '',
+    lugar: datos.sede ?? datos.lugar ?? '',
+    mapa: datos.mapa ?? '',
+    uniforme: datos.uniforme ?? datos.kit ?? '',
+    kit: datos.uniforme ?? datos.kit ?? '',
+    total_convocados: datos.total_convocados !== undefined ? String(datos.total_convocados) : '0',
+    convocados: datos.convocados ?? '',
+    titulares: datos.titulares ?? '',
+    suplentes: datos.suplentes ?? ''
+  };
+
+  const tagRegexGlobal = /\{([a-zA-Z0-9_]+)\}/g;
+
+  const resolverSegmento = (seg) => {
+    const matches = [...seg.matchAll(tagRegexGlobal)].filter(m => Object.prototype.hasOwnProperty.call(valores, m[1].toLowerCase()));
+    if (matches.length === 0) return seg;
+
+    const algunoConValor = matches.some(m => String(valores[m[1].toLowerCase()] ?? '').trim() !== '');
+    if (!algunoConValor) return null;
+
+    let res = seg.replace(tagRegexGlobal, (full, key) => {
+      const k = key.toLowerCase();
+      if (!Object.prototype.hasOwnProperty.call(valores, k)) return full;
+      return String(valores[k] ?? '');
+    });
+
+    res = res
+      .replace(/\(\s*\)/g, '')
+      .replace(/(\s*[•\-|–—/]\s*){2,}/g, ' • ')
+      .replace(/(\s*[•\-|–—/]\s*)+$/g, '')
+      .replace(/^(\s*[•\-|–—/]\s*)+/g, '');
+
+    return res;
+  };
+
+  const lineasProcesadas = tpl.split(/\r?\n/).map(linea => {
+    const matchesLinea = [...linea.matchAll(tagRegexGlobal)].filter(m => Object.prototype.hasOwnProperty.call(valores, m[1].toLowerCase()));
+    if (matchesLinea.length === 0) return linea;
+
+    // Si la línea separa varios campos en línea con " | " o " • ", evaluar cada subsegmento de forma independiente
+    if (linea.includes(' | ')) {
+      const partes = linea.split(' | ').map(resolverSegmento).filter(p => p !== null && p.trim() !== '');
+      return partes.length ? partes.join(' | ') : null;
+    }
+    if (linea.includes(' • ')) {
+      const partes = linea.split(' • ').map(resolverSegmento).filter(p => p !== null && p.trim() !== '');
+      return partes.length ? partes.join(' • ') : null;
+    }
+
+    return resolverSegmento(linea);
+  });
+
+  return lineasProcesadas
+    .filter(l => l !== null)
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }

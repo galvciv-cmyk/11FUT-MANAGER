@@ -6,7 +6,8 @@ import { setDoc, doc, onSnapshot } from "firebase/firestore";
 import { cargarKits } from "./services/cloudinary.js";
 import { actualizarTactica, exportarPNG, compartirTactica, setDrawingMode, setDrawingColor, setLineWidth, setLineDash, agregarMarcador, clearCanvas, toggleFullscreen, salirFullscreenTotal, guardarEsquemaCustom, limpiarCanchaYBanco, setVistaCancha, setModoPizarra, agregarFichaLibre, limpiarFichasLibres, abrirModalSustitucion, ejecutarSustitucion, undoCanvas, grabarPasoAnimacion, reproducirAnimacion, detenerAnimacion, FORMACIONES, getImg } from "./modules/tactics.js";
 import { renderStats, guardarStatJugador, cerrarStatModal, renderRankings, renderDashboardColectivo, exportarEstadisticasExcel } from "./modules/stats.js";
-import { renderHistorial, formatFecha } from "./modules/history.js";
+import { renderHistorial, formatFecha, renderPartidoCardHTML } from "./modules/history.js";
+import "./modules/matchSheetPdf.js";
 import { initPlantelUI, aplicarPlantelUI, guardarSquad, descargarPlantilla, descargarPlantillaExcel, exportarPlantelExcel, importarPlantelArchivo, importarCSV, exportarPDF, eliminarListadoPlantel } from "./modules/squad.js";
 import { buscarMaps, enviarWA, renderTorneosCitacionUI } from "./modules/citacion.js";
 import { abrirConfig, cerrarConfig, guardarNombres, guardarKits, guardarLogo, guardarFondo, cambiarPin, resetearStats, borrarHistorial, cerrarSesion, aplicarPerfil, copiarEnlacePublico, agregarNuevaCategoriaConfig, abrirSoporteWhatsApp, abrirOnboardingWizard, siguientePasoWizard, anteriorPasoWizard, finalizarOnboardingWizard, renderEsquemaPredeterminadoUI, guardarEsquemaPredeterminadoConfig, renderPerfilesPinsUI, guardarPinsConfig, limpiarHistorialNotificaciones, mostrarNotificacionApp, mostrarToastRapido } from "./modules/config.js";
@@ -28,19 +29,19 @@ import { abrirFichaJugador, cerrarFichaJugador } from "./modules/playerCard.js";
 // LISTA NEGRA — DOMINIOS DE EMAIL DESECHABLES
 // ══════════════════════════════════════════
 const DISPOSABLE_EMAIL_DOMAINS = new Set([
-  'mailinator.com','guerrillamail.com','guerrillamail.net','guerrillamail.org',
-  '10minutemail.com','10minutemail.net','tempmail.com','temp-mail.org',
-  'throwam.com','yopmail.com','yopmail.fr','sharklasers.com','guerrillamailblock.com',
-  'spam4.me','trashmail.com','trashmail.me','trashmail.at','trashmail.net',
-  'maildrop.cc','dispostable.com','discard.email','fakeinbox.com',
-  'mailnesia.com','mailnull.com','spamcero.com','spamspot.com',
-  'tempinbox.com','mailscrap.com','tempr.email','emailondeck.com',
-  'filzmail.com','binkmail.com','bobmail.info','devnullmail.com',
-  'incognitomail.com','incognitomail.net','spamevader.com','mailexpire.com',
-  'temporaryemail.net','throwaway.email','inboxalias.com','getairmail.com',
-  'mailbucket.org','junk1.com','meltmail.com','mailzilla.org','mbx.cc',
-  'wegwerfmail.de','kurzepost.de','maileimer.de','inoutmail.de',
-  'getonemail.com','gowikibooks.com','gowikicampus.com','gowikifilms.com',
+  'mailinator.com', 'guerrillamail.com', 'guerrillamail.net', 'guerrillamail.org',
+  '10minutemail.com', '10minutemail.net', 'tempmail.com', 'temp-mail.org',
+  'throwam.com', 'yopmail.com', 'yopmail.fr', 'sharklasers.com', 'guerrillamailblock.com',
+  'spam4.me', 'trashmail.com', 'trashmail.me', 'trashmail.at', 'trashmail.net',
+  'maildrop.cc', 'dispostable.com', 'discard.email', 'fakeinbox.com',
+  'mailnesia.com', 'mailnull.com', 'spamcero.com', 'spamspot.com',
+  'tempinbox.com', 'mailscrap.com', 'tempr.email', 'emailondeck.com',
+  'filzmail.com', 'binkmail.com', 'bobmail.info', 'devnullmail.com',
+  'incognitomail.com', 'incognitomail.net', 'spamevader.com', 'mailexpire.com',
+  'temporaryemail.net', 'throwaway.email', 'inboxalias.com', 'getairmail.com',
+  'mailbucket.org', 'junk1.com', 'meltmail.com', 'mailzilla.org', 'mbx.cc',
+  'wegwerfmail.de', 'kurzepost.de', 'maileimer.de', 'inoutmail.de',
+  'getonemail.com', 'gowikibooks.com', 'gowikicampus.com', 'gowikifilms.com',
 ]);
 
 function esDominioDesechable(email) {
@@ -67,14 +68,14 @@ let _pendingPollTimer = null;
 
 export function esEntornoLocal() {
   const host = (typeof window !== 'undefined' && window.location) ? window.location.hostname : '';
-  return host === 'localhost' || 
-         host === '127.0.0.1' || 
-         host === '0.0.0.0' || 
-         host.startsWith('192.168.') || 
-         host.startsWith('10.') || 
-         host.startsWith('172.') || 
-         host.endsWith('.local') || 
-         useEmulator;
+  return host === 'localhost' ||
+    host === '127.0.0.1' ||
+    host === '0.0.0.0' ||
+    host.startsWith('192.168.') ||
+    host.startsWith('10.') ||
+    host.startsWith('172.') ||
+    host.endsWith('.local') ||
+    useEmulator;
 }
 
 export async function autoAprobarEnEmuladorLocal(user) {
@@ -111,7 +112,7 @@ export function mostrarPantallaVerificacionEmail(user) {
     document.body.appendChild(screen);
   }
   screen.style.cssText = 'position:fixed;inset:0;background:#050505;z-index:9998;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto;';
-  
+
   const emailMostrar = user?.email || auth?.currentUser?.email || '';
 
   screen.innerHTML = `
@@ -162,7 +163,7 @@ export function mostrarPantallaVerificacionEmail(user) {
           localStorage.setItem('11fut_email_verified', 'true');
           await cargarFirebase();
           const isMaster = isSuperAdmin();
-          
+
           // ACTIVAR PRUEBA GRATUITA: Cuentas verificadas obtienen 3 días de prueba sin requerir pago
           if ((perfil.estadoCuenta === 'PENDIENTE' || !perfil.estadoCuenta) && !isMaster) {
             perfil.estadoCuenta = 'PRUEBA';
@@ -225,7 +226,7 @@ export function mostrarPantallaVerificacionEmail(user) {
     screen.style.display = 'none';
     try {
       if (auth) await signOut(auth);
-    } catch (e) {}
+    } catch (e) { }
     localStorage.clear();
     sessionStorage.clear();
     window.location.hash = '';
@@ -261,7 +262,7 @@ export function mostrarPantallaEsperaAprobacion() {
   }
   const esEnRevision = perfil.estadoCuenta === 'EN_REVISION';
   const tituloHeader = esEnRevision ? 'PAGO REPORTADO EN REVISIÓN' : 'CUENTA PENDIENTE DE ACTIVACIÓN';
-  const descHeader = esEnRevision 
+  const descHeader = esEnRevision
     ? `Tu reporte de pago fue recibido exitosamente ✅<br>El Administrador está conciliando los últimos 4 dígitos y activará tu cuenta en breve.`
     : `Tu correo fue verificado exitosamente ✅<br>El equipo de <strong style="color:var(--oro)">11FUT MANAGER</strong> revisará tu solicitud.<br>Recibirás confirmación por <strong>WhatsApp</strong> cuando tu período de prueba sea activado.`;
 
@@ -339,7 +340,7 @@ export function mostrarPantallaEsperaAprobacion() {
     panel.style.display = 'none';
     try {
       if (auth) await signOut(auth);
-    } catch (e) {}
+    } catch (e) { }
     localStorage.clear();
     sessionStorage.clear();
     window.location.hash = '';
@@ -393,7 +394,7 @@ export function mostrarPantallaCuentaCancelada() {
     document.getElementById('btn-cancelada-salir')?.addEventListener('click', async () => {
       try {
         if (auth) await signOut(auth);
-      } catch (e) {}
+      } catch (e) { }
       localStorage.clear();
       sessionStorage.clear();
       window.location.hash = '';
@@ -571,7 +572,7 @@ export function renderSelectorCategoria(isPublic = false) {
         const parsedP = JSON.parse(rawP);
         if (parsedP && Array.isArray(parsedP.categorias)) todas.push(...parsedP.categorias);
       }
-    } catch (e) {}
+    } catch (e) { }
   }
 
   let categorias = [...new Set(todas.filter(Boolean))];
@@ -579,10 +580,10 @@ export function renderSelectorCategoria(isPublic = false) {
   // En la vista pública oficial del club (portal para padres, jugadores y scouts), SIEMPRE mostrar TODAS las categorías del club
   const esPerfilDT = !isPublic && currentProfile && currentProfile.rol === 'DT';
   if (esPerfilDT) {
-    let equiposDT = currentProfile.equipos && Array.isArray(currentProfile.equipos) && currentProfile.equipos.length 
-      ? currentProfile.equipos.filter(Boolean) 
+    let equiposDT = currentProfile.equipos && Array.isArray(currentProfile.equipos) && currentProfile.equipos.length
+      ? currentProfile.equipos.filter(Boolean)
       : (currentProfile.categoria ? [currentProfile.categoria] : []);
-    
+
     equiposDT = equiposDT.slice(0, 3); // Máximo 3 equipos por perfil DT en su panel privado
     if (equiposDT.length) {
       categorias = equiposDT;
@@ -594,8 +595,8 @@ export function renderSelectorCategoria(isPublic = false) {
   }
   perfil.categorias = categorias;
 
-  const activa = (perfil.categoriaActiva && categorias.includes(perfil.categoriaActiva)) 
-    ? perfil.categoriaActiva 
+  const activa = (perfil.categoriaActiva && categorias.includes(perfil.categoriaActiva))
+    ? perfil.categoriaActiva
     : categorias[0];
   perfil.categoriaActiva = activa;
 
@@ -732,7 +733,7 @@ async function cargarPerfilPublico(publicId, profId = null, catReq = null) {
         const urlObj = new URL(window.location.href);
         urlObj.searchParams.set('cat', nuevaCat);
         window.history.replaceState({}, '', urlObj.toString());
-      } catch (err) {}
+      } catch (err) { }
 
       renderDashboardColectivo('pub-dashboard-colectivo-container');
       renderRankingsPublico();
@@ -820,7 +821,7 @@ export function contactarClubWhatsApp() {
   const club = perfil.club || '11FUT MANAGER';
   const cat = perfil.categoriaActiva || 'Oficial';
   const msg = `Hola, me comunico a través del Portal Oficial de *${club}* para solicitar información de la categoría ${cat}.`;
-  const waUrl = waNum 
+  const waUrl = waNum
     ? `https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`
     : `https://wa.me/?text=${encodeURIComponent(msg)}`;
   window.open(waUrl, '_blank');
@@ -853,8 +854,8 @@ function renderTacticaPublico() {
 
   if (!posicionesCoords || posicionesCoords.length === 0) {
     const modo = perfil.modoPredeterminado || '11';
-    posicionesCoords = (FORMACIONES && FORMACIONES[modo] && FORMACIONES[modo][esquema]) 
-      ? FORMACIONES[modo][esquema] 
+    posicionesCoords = (FORMACIONES && FORMACIONES[modo] && FORMACIONES[modo][esquema])
+      ? FORMACIONES[modo][esquema]
       : (FORMACIONES && FORMACIONES['11'] && FORMACIONES['11']['1-4-4-2'] ? FORMACIONES['11']['1-4-4-2'] : []);
   }
 
@@ -893,8 +894,8 @@ function renderTacticaPublico() {
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           ${suplentes.filter(Boolean).map((s) => {
-            const d = dorsales[s] || '--';
-            return `
+      const d = dorsales[s] || '--';
+      return `
               <div onclick="window._abrirFichaJugador('${s}')" title="Ver ficha de ${s}"
                 style="background:#141414;border:1px solid #333;border-radius:6px;padding:6px 10px;display:flex;align-items:center;gap:6px;cursor:pointer;transition:border-color 0.2s;">
                 <span style="font-size:10px;background:rgba(212,175,55,0.15);color:var(--oro);padding:1px 5px;border-radius:4px;font-weight:900;">#${d}</span>
@@ -902,7 +903,7 @@ function renderTacticaPublico() {
                 <span style="font-size:10px;color:var(--oro);">📊</span>
               </div>
             `;
-          }).join('')}
+    }).join('')}
         </div>
       </div>
     `;
@@ -948,9 +949,9 @@ function renderSquadPublico() {
           ${r.title} (${lista.length})
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;">
-          ${lista.length 
-            ? lista.map(n => `<div style="font-size:13px;color:#eee;background:#141414;padding:6px 10px;border-radius:6px;font-weight:600;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:background 0.2s;" onclick="window._abrirFichaJugador('${n}')" title="Ver ficha y estadísticas de ${n}"><span>⚽ ${n}</span><span style="font-size:10.5px;color:var(--oro);font-weight:800;">Ficha 📊</span></div>`).join('') 
-            : '<div style="font-size:11px;color:#666;">Sin jugadores registrados</div>'}
+          ${lista.length
+        ? lista.map(n => `<div style="font-size:13px;color:#eee;background:#141414;padding:6px 10px;border-radius:6px;font-weight:600;display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:background 0.2s;" onclick="window._abrirFichaJugador('${n}')" title="Ver ficha y estadísticas de ${n}"><span>⚽ ${n}</span><span style="font-size:10.5px;color:var(--oro);font-weight:800;">Ficha 📊</span></div>`).join('')
+        : '<div style="font-size:11px;color:#666;">Sin jugadores registrados</div>'}
         </div>
       </div>
     `;
@@ -982,30 +983,7 @@ function renderHistorialPublico() {
     return;
   }
 
-  pubHistContainer.innerHTML = historial.map((h) => {
-    const eqNombre = perfil.club || perfil.eqA || 'EQUIPO';
-    const resClass = `resultado-${h.res}`;
-
-    return `
-      <div class="partido-item">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <span style="font-family:'Barlow Condensed',sans-serif;font-size:13px;color:#888;">🏆 ${h.torneo || 'Liga'} • 📅 ${formatFecha(h.fecha)}</span>
-          <span class="partido-resultado ${resClass}">${h.gf} - ${h.gc}</span>
-        </div>
-
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:#fff;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;background:#0d0d0d;padding:10px 14px;border-radius:8px;border:1px solid #222;">
-          <span style="color:var(--oro);">${eqNombre.toUpperCase()}</span>
-          <span style="font-size:22px;color:#fff;margin:0 10px;">${h.gf} - ${h.gc}</span>
-          <span style="color:#aaa;">${(h.rival || 'RIVAL').toUpperCase()}</span>
-        </div>
-
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-gold" style="font-size:11px;padding:8px 12px;width:auto;" onclick="window._abrirModalEstadisticasPartido('${h.id}')">📊 VER ESTADÍSTICAS DEL PARTIDO</button>
-          <button class="btn btn-green" style="font-size:11px;padding:8px 12px;width:auto;" onclick="window._compartirPartidoWA('${h.id}')">📲 COMPARTIR POR WHATSAPP</button>
-        </div>
-      </div>
-    `;
-  }).join('');
+  pubHistContainer.innerHTML = historial.map((h) => renderPartidoCardHTML(h, { esPublico: true })).join('');
 }
 
 // ══════════════════════════════════════════
@@ -1140,9 +1118,9 @@ async function login() {
     renderProfileSelector(handleProfileSelected);
   } catch (e) {
     console.error('Error de inicio de sesión:', e);
-    const isEmulatorActive = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && 
-                            (localStorage.getItem('11fut_use_emulator') === 'true' || window.location.search.includes('use_emulator=true'));
-    
+    const isEmulatorActive = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') &&
+      (localStorage.getItem('11fut_use_emulator') === 'true' || window.location.search.includes('use_emulator=true'));
+
     if (isEmulatorActive && (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential')) {
       try {
         if (statusEl) statusEl.textContent = '⚡ Registrando cuenta en Emulador Local...';
@@ -1299,8 +1277,8 @@ async function ejecutarRegistroUsuario() {
     perfil.whatsapp = waInput;
     // Cuentas nuevas inician con su Período Oficial de Prueba Gratuita (3 días)
     perfil.estadoCuenta = isMaster ? "ACTIVO" : "PRUEBA";
-    perfil.fechaVencimiento = isMaster 
-      ? new Date("2099-01-01").toISOString() 
+    perfil.fechaVencimiento = isMaster
+      ? new Date("2099-01-01").toISOString()
       : generarFechaVencimientoPrueba();
     perfil.maxPerfiles = isMaster ? 8 : 1;
     perfil.categorias = [];
@@ -1688,7 +1666,8 @@ async function initApp() {
 
 
 
-  if (urlParams.get('logout') === 'true') {
+
+  if (urlParams.get('logout') === 'true') {
     localStorage.clear();
     sessionStorage.clear();
   }
@@ -1863,7 +1842,7 @@ async function initApp() {
       if (emailVerifScreen) emailVerifScreen.style.display = 'none';
       const pendingScreen = document.getElementById('pending-approval-screen');
       if (pendingScreen) pendingScreen.style.display = 'none';
-      
+
       const loginSc = document.getElementById('login-screen');
       if (loginSc) loginSc.style.display = 'none';
       const mainApp = document.getElementById('main-app');
@@ -1892,7 +1871,7 @@ async function initApp() {
       // ── ESCUCHA EN TIEMPO REAL: Si el Súper Admin borra o cancela la cuenta, cerrar sesión inmediatamente (<100ms) ──
       if (!isMaster && user && user.uid) {
         if (window._unsubAccountLive) {
-          try { window._unsubAccountLive(); } catch (e) {}
+          try { window._unsubAccountLive(); } catch (e) { }
         }
 
         const pubKey = `usr_${user.uid}`;
@@ -1943,7 +1922,7 @@ async function initApp() {
             autoSaveLocal();
             verificarMembresiaYLock();
             aplicarPerfil();
-            
+
             // Si estaba en pantalla de espera de aprobación y el estado ya es ACTIVO o PRUEBA
             const pendingScreen = document.getElementById('pending-approval-screen');
             if (pendingScreen && pendingScreen.style.display !== 'none' && (perfil.estadoCuenta === 'ACTIVO' || perfil.estadoCuenta === 'PRUEBA')) {
@@ -1959,12 +1938,12 @@ async function initApp() {
           }
         };
 
-        const u1 = onSnapshot(doc(db, 'publicos', pubKey), handleLiveSnap, () => {});
-        const u2 = emailKey ? onSnapshot(doc(db, 'publicos', emailKey), handleLiveSnap, () => {}) : () => {};
-        const u3 = onSnapshot(doc(db, 'usuarios', user.uid), handleLiveSnap, () => {});
+        const u1 = onSnapshot(doc(db, 'publicos', pubKey), handleLiveSnap, () => { });
+        const u2 = emailKey ? onSnapshot(doc(db, 'publicos', emailKey), handleLiveSnap, () => { }) : () => { };
+        const u3 = onSnapshot(doc(db, 'usuarios', user.uid), handleLiveSnap, () => { });
 
         window._unsubAccountLive = () => {
-          try { u1(); u2(); u3(); } catch (e) {}
+          try { u1(); u2(); u3(); } catch (e) { }
         };
       }
     } else {

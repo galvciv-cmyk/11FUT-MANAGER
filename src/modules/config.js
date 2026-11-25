@@ -1,4 +1,4 @@
-import { perfil, setPinHash, setCategoriaActiva, autoSaveLocal, updateStats, updateHistorial, categoriasData, plantel, currentProfile, isSuperAdmin, DEFAULT_PLANTEL, DEFAULT_PERFIL, esAdminOEntrenadorUnico, TABLA_PLANES_SAAS, TABLA_SAAS_PLANES, obtenerPlanPorDTs, KITS, generarFechaVencimientoPrueba } from "./state.js";
+import { perfil, setPinHash, setCategoriaActiva, autoSaveLocal, updateStats, updateHistorial, categoriasData, plantel, currentProfile, isSuperAdmin, DEFAULT_PLANTEL, DEFAULT_PERFIL, DEFAULT_PLANTILLA_CONVOCATORIA, aplicarPlantillaConvocatoria, esAdminOEntrenadorUnico, TABLA_PLANES_SAAS, TABLA_SAAS_PLANES, obtenerPlanPorDTs, KITS, generarFechaVencimientoPrueba } from "./state.js";
 import { guardarFirebase, hashPin, getPublicId, auth, db } from "../services/firebase.js";
 import { doc, setDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
@@ -174,6 +174,17 @@ function _dispararAutoGuardado(inmediato = false) {
     if (esqSelect && esqSelect.value) {
       perfil.esquemaPredeterminado = esqSelect.value;
     }
+    const convTplArea = document.getElementById('cfg-convocatoria-template');
+    const convScopeSel = document.getElementById('cfg-conv-scope');
+    if (convTplArea && convTplArea.value.trim()) {
+      const sc = convScopeSel?.value || '__club__';
+      if (sc.startsWith('cat:')) {
+        const catKey = sc.slice(4);
+        if (categoriasData[catKey]) categoriasData[catKey].plantillaConvocatoria = convTplArea.value.trim();
+      } else {
+        perfil.plantillaConvocatoria = convTplArea.value.trim();
+      }
+    }
 
     autoSaveLocal();
     guardarFirebase();
@@ -242,6 +253,7 @@ export function abrirConfig() {
     renderKitGallery('A');
     renderEsquemaPredeterminadoUI();
     renderPerfilesPinsUI();
+    renderPlantillaConvocatoriaConfigUI();
 
     const imgPrev = document.getElementById('img-prev-cfg-logo');
     const divPrev = document.getElementById('prev-cfg-logo');
@@ -2420,6 +2432,184 @@ export async function abrirModalReportarPago(montoSugerido = '', planDtsSugerido
 }
 
 window._abrirModalReportarPago = abrirModalReportarPago;
+
+// ══════════════════════════════════════════════════════════════════════════
+// CONFIGURACIÓN DE PLANTILLA PREDETERMINADA DE CONVOCATORIA (WHATSAPP)
+// ══════════════════════════════════════════════════════════════════════════
+function _escaparYFormatearNegritaWA(texto) {
+  const safe = String(texto || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  return safe.replace(/\*([^*\n]+)\*/g, '<strong>$1</strong>');
+}
+
+export function renderPlantillaConvocatoriaConfigUI(scopeForzado = '') {
+  const scopeSelect = document.getElementById('cfg-conv-scope');
+  const txtArea = document.getElementById('cfg-convocatoria-template');
+  if (!scopeSelect || !txtArea) return;
+
+  const prevScope = scopeForzado || scopeSelect.value || '__club__';
+  const cats = Array.isArray(perfil.categorias) && perfil.categorias.length
+    ? perfil.categorias
+    : Object.keys(categoriasData || {});
+
+  let optsHtml = `<option value="__club__" ${prevScope === '__club__' ? 'selected' : ''}>🌐 General para todo el Club (Predeterminado)</option>`;
+  cats.forEach(c => {
+    const val = `cat:${c}`;
+    const tienePropia = Boolean(categoriasData[c] && categoriasData[c].plantillaConvocatoria && categoriasData[c].plantillaConvocatoria.trim());
+    optsHtml += `<option value="${val}" ${prevScope === val ? 'selected' : ''}>⚽ Categoría ${c}${tienePropia ? ' (Personalizada ⭐)' : ''}</option>`;
+  });
+  scopeSelect.innerHTML = optsHtml;
+
+  const activeScope = scopeSelect.value || '__club__';
+  _cargarTextoPlantillaSegunScope(activeScope);
+}
+
+function _cargarTextoPlantillaSegunScope(scope) {
+  const txtArea = document.getElementById('cfg-convocatoria-template');
+  const hintEl = document.getElementById('cfg-conv-scope-hint');
+  if (!txtArea) return;
+
+  if (scope && scope.startsWith('cat:')) {
+    const cat = scope.slice(4);
+    const propia = categoriasData[cat]?.plantillaConvocatoria || '';
+    if (propia.trim()) {
+      txtArea.value = propia;
+      if (hintEl) {
+        hintEl.innerHTML = `⭐ Esta categoría usa un formato propio exclusivo. <button type="button" onclick="window._usarPlantillaClubEnCategoria('${cat.replace(/'/g, "\\'")}')" style="background:none;border:none;color:var(--oro);text-decoration:underline;cursor:pointer;font-size:10.5px;padding:0;margin-left:4px;">Volver a usar el general del club</button>`;
+      }
+    } else {
+      txtArea.value = perfil.plantillaConvocatoria || DEFAULT_PLANTILLA_CONVOCATORIA;
+      if (hintEl) {
+        hintEl.textContent = `ℹ️ Actualmente hereda el mensaje general del club. Si lo editas y guardas aquí, solo cambiará para ${cat}.`;
+      }
+    }
+  } else {
+    txtArea.value = perfil.plantillaConvocatoria || DEFAULT_PLANTILLA_CONVOCATORIA;
+    if (hintEl) {
+      hintEl.textContent = '🌐 Se aplicará automáticamente a todas las categorías del club que no tengan un formato exclusivo.';
+    }
+  }
+
+  actualizarPreviewConvocatoriaConfig();
+}
+
+export function actualizarPreviewConvocatoriaConfig() {
+  const txtArea = document.getElementById('cfg-convocatoria-template');
+  const prevBox = document.getElementById('cfg-convocatoria-preview');
+  if (!txtArea || !prevBox) return;
+
+  const scope = document.getElementById('cfg-conv-scope')?.value || '__club__';
+  const catEjemplo = (scope && scope.startsWith('cat:')) ? scope.slice(4) : (perfil.categoriaActiva || 'Sub-14');
+
+  const textoEjemplo = aplicarPlantillaConvocatoria(txtArea.value, {
+    encabezado: '⚽ CONVOCATORIA OFICIAL',
+    club: perfil.club || 'MI CLUB FC',
+    categoria: catEjemplo,
+    torneo: 'Liga Oficial',
+    jornada: 'Jornada 4',
+    rival: 'Caracas FC',
+    fecha: '28 de Noviembre de 2026',
+    hora_cita: '08:30 hs',
+    hora_partido: '09:15 hs',
+    sede: 'Cancha Principal',
+    mapa: 'https://maps.google.com/?q=Estadio',
+    uniforme: 'Titular Completo',
+    total_convocados: 14,
+    convocados: '1. #1 Luis Vega\n2. #4 Dylan Calderas\n3. #9 Emmanuel Martínez\n4. #12 Christopher Moreno',
+    titulares: '1. #1 Luis Vega\n2. #4 Dylan Calderas\n3. #9 Emmanuel Martínez',
+    suplentes: '1. #12 Christopher Moreno'
+  });
+
+  prevBox.innerHTML = _escaparYFormatearNegritaWA(textoEjemplo);
+}
+
+export function guardarPlantillaConvocatoriaConfig(silencioso = false) {
+  const scope = document.getElementById('cfg-conv-scope')?.value || '__club__';
+  const txtArea = document.getElementById('cfg-convocatoria-template');
+  if (!txtArea) return;
+
+  const nuevoTexto = txtArea.value.trim() || DEFAULT_PLANTILLA_CONVOCATORIA;
+
+  if (scope && scope.startsWith('cat:')) {
+    const cat = scope.slice(4);
+    if (!categoriasData[cat]) {
+      categoriasData[cat] = { plantel: JSON.parse(JSON.stringify(DEFAULT_PLANTEL)), stats: {}, historial: [], juegosProgramados: [] };
+    }
+    categoriasData[cat].plantillaConvocatoria = nuevoTexto;
+  } else {
+    perfil.plantillaConvocatoria = nuevoTexto;
+  }
+
+  autoSaveLocal();
+  guardarFirebase();
+  renderPlantillaConvocatoriaConfigUI(scope);
+
+  if (!silencioso) {
+    mostrarNotificacionApp('Mensaje Guardado', '📲 La estructura predeterminada de convocatoria para WhatsApp fue actualizada.');
+  }
+}
+
+window._cambiarScopePlantillaConvocatoria = (val) => {
+  _cargarTextoPlantillaSegunScope(val);
+};
+
+window._onInputPlantillaConvocatoria = () => {
+  actualizarPreviewConvocatoriaConfig();
+};
+
+window._insertarTagConvocatoria = (tag) => {
+  const txtArea = document.getElementById('cfg-convocatoria-template');
+  if (!txtArea) return;
+
+  const start = typeof txtArea.selectionStart === 'number' ? txtArea.selectionStart : txtArea.value.length;
+  const end = typeof txtArea.selectionEnd === 'number' ? txtArea.selectionEnd : txtArea.value.length;
+  const before = txtArea.value.slice(0, start);
+  const after = txtArea.value.slice(end);
+
+  txtArea.value = before + tag + after;
+  const nextPos = start + tag.length;
+  txtArea.focus();
+  try {
+    txtArea.setSelectionRange(nextPos, nextPos);
+  } catch (e) {}
+
+  actualizarPreviewConvocatoriaConfig();
+};
+
+window._guardarPlantillaConvocatoriaConfig = () => guardarPlantillaConvocatoriaConfig(false);
+
+window._restaurarPlantillaConvocatoriaDefault = () => {
+  const scope = document.getElementById('cfg-conv-scope')?.value || '__club__';
+  const txtArea = document.getElementById('cfg-convocatoria-template');
+  if (txtArea) txtArea.value = DEFAULT_PLANTILLA_CONVOCATORIA;
+
+  if (scope && scope.startsWith('cat:')) {
+    const cat = scope.slice(4);
+    if (categoriasData[cat]) {
+      delete categoriasData[cat].plantillaConvocatoria;
+    }
+  } else {
+    perfil.plantillaConvocatoria = DEFAULT_PLANTILLA_CONVOCATORIA;
+  }
+
+  autoSaveLocal();
+  guardarFirebase();
+  renderPlantillaConvocatoriaConfigUI(scope);
+  mostrarToastRapido('Mensaje Restaurado', '🔄 Se restauró la estructura original de convocatoria.');
+};
+
+window._usarPlantillaClubEnCategoria = (cat) => {
+  if (categoriasData[cat]) {
+    delete categoriasData[cat].plantillaConvocatoria;
+  }
+  autoSaveLocal();
+  guardarFirebase();
+  renderPlantillaConvocatoriaConfigUI(`cat:${cat}`);
+  mostrarToastRapido('Heredando del Club', `🌐 ${cat} ahora usa la plantilla general del club.`);
+};
+
 
 
 

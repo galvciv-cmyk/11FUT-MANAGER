@@ -581,6 +581,10 @@
                   title="Compartir alineación por WhatsApp o redes">📲 COMPARTIR EN WHATSAPP</button>
                 <button class="btn btn-gray" id="btn-export-png-A" style="margin-top:6px;padding:10px;">📸 GUARDAR
                   IMAGEN TÁCTICA</button>
+                <button type="button" class="btn btn-gold" id="btn-planilla-pdf-tactica"
+                  onclick="window._abrirModalPlanillaJuegoPDF && window._abrirModalPlanillaJuegoPDF('tactica')"
+                  style="margin-top:6px;padding:10px;font-weight:900;"
+                  title="Descargar hoja PDF de campo con alineación y recuadros de estadísticas">📄 PLANILLA DE JUEGO (PDF)</button>
                 <button class="btn btn-red" id="btn-limpiar-cancha-A" style="margin-top:6px;padding:10px;">🧹 LIMPIAR
                   CANCHA Y BANCO</button>
               </div>
@@ -1024,7 +1028,11 @@
           <div class="card">
             <div class="card-title">📅 CITACIÓN Y CONVOCATORIA</div>
             <select id="torneo-A" style="margin-bottom:8px;"></select>
-            <input type="text" id="rival-A" placeholder="Rival">
+            <input type="text" id="jornada-A" value="" placeholder="Jornada (ej. Jornada 1, Semifinal...)">
+            <div class="rival-selector-row">
+              <select id="rival-A" aria-label="Seleccionar equipo rival"></select>
+              <button type="button" class="btn btn-gold btn-add-rival-plus" id="btn-add-rival-citacion" title="Registrar nuevo equipo rival y escudo" onclick="window._abrirModalNuevoRival && window._abrirModalNuevoRival('citacion')">+</button>
+            </div>
             <input type="text" id="lugar-A" placeholder="Sede / Dirección">
             <button class="btn btn-gray" id="btn-maps-A" style="margin-bottom:8px;">📍 BUSCAR EN MAPS</button>
             <input type="text" id="mapa-A" placeholder="Link de mapa (opcional)">
@@ -1036,6 +1044,7 @@
             <input type="text" id="kit-A" placeholder="Uniforme (Kit)">
             <input type="text" id="saludo-A" value="⚽ CONVOCATORIA" placeholder="Encabezado">
             <button class="btn btn-green" id="btn-wa-A" style="margin-top:6px;">📲 ENVIAR POR WHATSAPP Y PROGRAMAR JUEGO</button>
+            <button type="button" class="btn btn-gold" id="btn-planilla-pdf-citacion" onclick="window._abrirModalPlanillaJuegoPDF && window._abrirModalPlanillaJuegoPDF('citacion')" style="margin-top:6px;font-weight:900;">📄 DESCARGAR PLANILLA DE CAMPO (PDF)</button>
             <button type="button" class="btn btn-gray" id="btn-limpiar-citacion-A" onclick="window._limpiarFormularioCitacion && window._limpiarFormularioCitacion('A')" style="margin-top:6px;font-size:11px;">🧹 LIMPIAR FORMULARIO</button>
           </div>
         </div>
@@ -1207,10 +1216,14 @@
 
         <!-- JUEGOS PROGRAMADOS DESDE CITACIÓN -->
         <div class="card" style="border-color:var(--oro);">
-          <div class="card-title">
+          <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
             <span>📅 JUEGOS PROGRAMADOS</span>
-            <button class="btn btn-gold" onclick="window._abrirNuevoPartidoForm()"
-              style="width:auto;padding:6px 12px;font-size:11px;">➕ NUEVO PARTIDO</button>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <button type="button" class="btn btn-gray" onclick="window._abrirModalNuevoRival && window._abrirModalNuevoRival('historial')"
+                style="width:auto;padding:6px 12px;font-size:11px;border-color:rgba(212,175,55,0.45);color:var(--oro);">🛡️ RIVALES (+)</button>
+              <button class="btn btn-gold" onclick="window._abrirNuevoPartidoForm()"
+                style="width:auto;padding:6px 12px;font-size:11px;">➕ NUEVO PARTIDO</button>
+            </div>
           </div>
           <div id="juegos-programados-list"></div>
         </div>
@@ -1244,7 +1257,7 @@
           <div class="search-input-wrap">
             <span class="search-icon">🔍</span>
             <input type="text" id="input-buscar-historial" class="search-input"
-              placeholder="Buscar por rival, torneo o fecha..." oninput="window._onBuscarHistorial(this.value)">
+              placeholder="Buscar por rival, jornada, torneo o fecha..." oninput="window._onBuscarHistorial(this.value)">
           </div>
         </div>
 
@@ -2224,6 +2237,66 @@
 
                 <button class="btn btn-green" id="btn-soporte-wa-kit" style="margin-top:10px;font-size:12px;">💬
                   SOLICITAR UNIFORME PROFESIONAL (WHATSAPP)</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN 6: MENSAJE PREDETERMINADO DE CONVOCATORIA (WHATSAPP) -->
+          <div>
+            <button class="cfg-accordion-header" id="header-cfg-sec-convocatoria"
+              onclick="window._toggleConfigSection('cfg-sec-convocatoria')">
+              <span>📲 MENSAJE PREDETERMINADO DE CONVOCATORIA</span>
+              <span class="cfg-arrow">►</span>
+            </button>
+            <div class="cfg-accordion-content" id="cfg-sec-convocatoria" style="display:none;padding-top:8px;">
+              <div class="card" style="margin:0;display:flex;flex-direction:column;gap:10px;">
+                <div style="font-size:11.5px;color:#aaa;line-height:1.45;">
+                  Personaliza la estructura fija de tu convocatoria de WhatsApp (reglas del equipo, implementos, puntualidad). Toca cualquier etiqueta dorada para insertar automáticamente ese dato del partido donde tengas el cursor.
+                </div>
+
+                <div style="background:#0d0d0d;padding:10px;border-radius:8px;border:1px solid #222;">
+                  <label for="cfg-conv-scope" style="font-size:11px;color:var(--oro);font-weight:800;display:block;margin-bottom:4px;">🎯 APLICAR ESTE FORMATO A:</label>
+                  <select id="cfg-conv-scope" onchange="window._cambiarScopePlantillaConvocatoria && window._cambiarScopePlantillaConvocatoria(this.value)" style="margin-bottom:4px;"></select>
+                  <div id="cfg-conv-scope-hint" style="font-size:10.5px;color:#888;"></div>
+                </div>
+
+                <div>
+                  <label style="font-size:11px;color:var(--oro);font-weight:800;display:block;margin-bottom:6px;">➕ INSERTAR CAMPO DINÁMICO (TOCA PARA AGREGAR):</label>
+                  <div id="cfg-conv-tags-bar" style="display:flex;flex-wrap:wrap;gap:5px;">
+                    <button type="button" class="filter-chip" onclick="window._insertarTagConvocatoria('{encabezado}')">📢 Encabezado</button>
+                    <button type="button" class="filter-chip" onclick="window._insertarTagConvocatoria('{club}')">⚽ Club</button>
+                    <button type="button" class="filter-chip" onclick="window._insertarTagConvocatoria('{categoria}')">🏷️ Categoría</button>
+                    <button type="button" class="filter-chip" onclick="window._insertarTagConvocatoria('{torneo}')">🏆 Torneo</button>
+                    <button type="button" class="filter-chip" onclick="window._insertarTagConvocatoria('{jornada}')">📌 Jornada</button>
+                    <button type="button" class="filter-chip" onclick="window._insertarTagConvocatoria('{rival}')">🆚 Rival</button>
+                    <button type="button" class="filter-chip" onclick="window._insertarTagConvocatoria('{fecha}')">📅 Fecha</button>
+                    <button type="button" class="filter-chip" onclick="window._insertarTagConvocatoria('{hora_cita}')">⏰ Hora Cita</button>
+                    <button type="button" class="filter-chip" onclick="window._insertarTagConvocatoria('{hora_partido}')">⚽ Hora Inicio</button>
+                    <button type="button" class="filter-chip" onclick="window._insertarTagConvocatoria('{sede}')">📍 Sede</button>
+                    <button type="button" class="filter-chip" onclick="window._insertarTagConvocatoria('{mapa}')">🗺️ Mapa</button>
+                    <button type="button" class="filter-chip" onclick="window._insertarTagConvocatoria('{uniforme}')">🎽 Uniforme</button>
+                    <button type="button" class="filter-chip" onclick="window._insertarTagConvocatoria('{total_convocados}')">🔢 Total</button>
+                    <button type="button" class="filter-chip" onclick="window._insertarTagConvocatoria('{convocados}')">📋 Convocados</button>
+                    <button type="button" class="filter-chip" onclick="window._insertarTagConvocatoria('{titulares}')">🟢 Titulares</button>
+                    <button type="button" class="filter-chip" onclick="window._insertarTagConvocatoria('{suplentes}')">🟡 Suplentes</button>
+                  </div>
+                </div>
+
+                <div>
+                  <label for="cfg-convocatoria-template" style="font-size:11px;color:var(--oro);font-weight:800;display:block;margin-bottom:4px;">✍️ ESTRUCTURA DEL MENSAJE (USA *TEXTO* PARA NEGRITA EN WHATSAPP):</label>
+                  <textarea id="cfg-convocatoria-template" rows="11" oninput="window._onInputPlantillaConvocatoria && window._onInputPlantillaConvocatoria()" style="width:100%;background:#090c12;border:1px solid #2b3548;color:#f1f5f9;border-radius:8px;padding:10px;font-family:inherit;font-size:12.5px;line-height:1.45;resize:vertical;box-sizing:border-box;"></textarea>
+                </div>
+
+                <!-- VISTA PREVIA EN TIEMPO REAL TIPO WHATSAPP -->
+                <div style="background:#0b141a;border:1px solid rgba(37,211,102,0.35);border-radius:10px;padding:10px 12px;">
+                  <div style="font-size:10.5px;color:#25d366;font-weight:800;margin-bottom:6px;letter-spacing:0.4px;">💬 VISTA PREVIA EN WHATSAPP (CAMPOS VACÍOS SE OCULTAN SOLOS):</div>
+                  <div id="cfg-convocatoria-preview" style="background:#005c4b;color:#e9edef;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.45;white-space:pre-wrap;word-break:break-word;box-shadow:0 2px 6px rgba(0,0,0,0.4);"></div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:8px;">
+                  <button type="button" class="btn btn-green" onclick="window._guardarPlantillaConvocatoriaConfig && window._guardarPlantillaConvocatoriaConfig()" style="font-size:11.5px;font-weight:900;">💾 GUARDAR MENSAJE</button>
+                  <button type="button" class="btn btn-gray" onclick="window._restaurarPlantillaConvocatoriaDefault && window._restaurarPlantillaConvocatoriaDefault()" style="font-size:11px;">🔄 RESTAURAR ORIGINAL</button>
+                </div>
               </div>
             </div>
           </div>

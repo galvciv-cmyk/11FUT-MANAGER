@@ -3,7 +3,7 @@ import { guardarFirebase } from "../services/firebase.js";
 import { FIELD_POSITIONS, ZONE_COLORS, POS_CONFIG } from "./squad.js";
 import { getImg } from "./tactics.js";
 import { subirImagenCloudinary } from "../services/cloudinary.js";
-import { formatFecha } from "./history.js";
+import { formatFecha, obtenerEscudoRival, renderEscudoEquipoHTML } from "./history.js";
 import { mostrarToastRapido, mostrarNotificacionApp } from "./config.js";
 import { renderStats } from "./stats.js";
 
@@ -154,12 +154,13 @@ export function renderFichaJugadorContent(nombre) {
       return `
         <div style="background:rgba(15,23,42,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 12px;margin-bottom:8px;transition:border-color 0.2s;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:4px;">
-            <span style="font-size:11px;color:#888;font-weight:600;">🏆 ${h.torneo || 'Liga Oficial'} • 📅 ${formatFecha(h.fecha)}</span>
+            <span style="font-size:11px;color:#888;font-weight:600;">🏆 ${h.torneo || 'Liga Oficial'}${h.jornada ? ` • 📌 ${h.jornada}` : ''} • 📅 ${formatFecha(h.fecha)}</span>
             <span style="${resBadgeClass}border-radius:4px;padding:1px 6px;font-size:9.5px;font-weight:900;letter-spacing:0.5px;">${resLetra} (${h.gf} - ${h.gc})</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#fff;">
-              vs <span style="color:#d4af37;">${(h.rival || 'RIVAL').toUpperCase()}</span>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#fff;display:flex;align-items:center;gap:6px;">
+              ${renderEscudoEquipoHTML(h.rival || 'Rival', obtenerEscudoRival(h.rival, h.rivalLogo), 20, false)}
+              <span>vs <span style="color:#d4af37;">${(h.rival || 'RIVAL').toUpperCase()}</span></span>
             </div>
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
               ${rolBadge}

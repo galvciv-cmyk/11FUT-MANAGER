@@ -382,6 +382,23 @@ export async function guardarStatJugador() {
 // ══════════════════════════════════════════════════════════════════════════
 // DASHBOARD COLECTIVO DE RENDIMIENTO DEL EQUIPO
 // ══════════════════════════════════════════════════════════════════════════
+export function obtenerUltimosPartidosRacha(partidos, limite = 5) {
+  if (!Array.isArray(partidos) || !partidos.length) return [];
+  return [...partidos]
+    .map((p, idx) => ({ p, idx }))
+    .sort((a, b) => {
+      const fa = String(a.p?.fecha || '');
+      const fb = String(b.p?.fecha || '');
+      if (fa && fb && fa !== fb) return fb.localeCompare(fa);
+      const ida = Number(a.p?.id);
+      const idb = Number(b.p?.id);
+      if (!isNaN(ida) && !isNaN(idb) && ida !== idb) return idb - ida;
+      return a.idx - b.idx;
+    })
+    .slice(0, limite)
+    .map(x => x.p);
+}
+
 export function renderDashboardColectivo(targetId = 'dashboard-colectivo-container') {
   const cont = document.getElementById(targetId);
   if (!cont) return;
@@ -418,14 +435,15 @@ export function renderDashboardColectivo(targetId = 'dashboard-colectivo-contain
   const avgGc = pj > 0 ? (gc / pj).toFixed(1) : '0.0';
   const pctValla = pj > 0 ? Math.round((vallas / pj) * 100) : 0;
 
-  // Racha últimos 5 partidos
-  const ultimos5 = partidos.slice(-5).reverse();
+  // Racha últimos 5 partidos (ordenados del más reciente al más antiguo)
+  const ultimos5 = obtenerUltimosPartidosRacha(partidos, 5);
   const rachaHtml = ultimos5.length > 0 ? ultimos5.map(m => {
     const mGf = parseInt(m.gf, 10) || 0;
     const mGc = parseInt(m.gc, 10) || 0;
-    if (mGf > mGc) return `<span title="${m.rival} (${mGf}-${mGc})" style="background:#092113;border:1px solid var(--verde-campo);color:var(--verde-campo);padding:3px 8px;border-radius:4px;font-size:11px;font-weight:900;">🟢 V</span>`;
-    if (mGf === mGc) return `<span title="${m.rival} (${mGf}-${mGc})" style="background:#262006;border:1px solid var(--oro);color:var(--oro);padding:3px 8px;border-radius:4px;font-size:11px;font-weight:900;">🟡 E</span>`;
-    return `<span title="${m.rival} (${mGf}-${mGc})" style="background:#230808;border:1px solid var(--rojo);color:var(--rojo);padding:3px 8px;border-radius:4px;font-size:11px;font-weight:900;">🔴 D</span>`;
+    const tipInfo = `${m.rival || 'Rival'}${m.jornada ? ' (' + m.jornada + ')' : ''}: ${mGf}-${mGc}`;
+    if (mGf > mGc) return `<span title="${tipInfo}" style="background:#092113;border:1px solid var(--verde-campo);color:var(--verde-campo);padding:3px 8px;border-radius:4px;font-size:11px;font-weight:900;">🟢 V</span>`;
+    if (mGf === mGc) return `<span title="${tipInfo}" style="background:#262006;border:1px solid var(--oro);color:var(--oro);padding:3px 8px;border-radius:4px;font-size:11px;font-weight:900;">🟡 E</span>`;
+    return `<span title="${tipInfo}" style="background:#230808;border:1px solid var(--rojo);color:var(--rojo);padding:3px 8px;border-radius:4px;font-size:11px;font-weight:900;">🔴 D</span>`;
   }).join(' ') : `<span style="font-size:11px;color:#777;">Sin partidos registrados</span>`;
 
   cont.innerHTML = `
