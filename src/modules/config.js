@@ -1,4 +1,4 @@
-import { perfil, setPinHash, setCategoriaActiva, autoSaveLocal, updateStats, updateHistorial, categoriasData, plantel, currentProfile, isSuperAdmin, DEFAULT_PLANTEL, DEFAULT_PERFIL, DEFAULT_PLANTILLA_CONVOCATORIA, aplicarPlantillaConvocatoria, esAdminOEntrenadorUnico, TABLA_PLANES_SAAS, TABLA_SAAS_PLANES, obtenerPlanPorDTs, KITS, generarFechaVencimientoPrueba } from "./state.js";
+import { perfil, setPinHash, setCategoriaActiva, autoSaveLocal, updateStats, updateHistorial, categoriasData, plantel, currentProfile, isSuperAdmin, DEFAULT_PLANTEL, DEFAULT_PERFIL, DEFAULT_PLANTILLA_CONVOCATORIA, aplicarPlantillaConvocatoria, obtenerAvatarPerfil, sincronizarAvataresConLogoClub, esAdminOEntrenadorUnico, TABLA_PLANES_SAAS, TABLA_SAAS_PLANES, obtenerPlanPorDTs, KITS, generarFechaVencimientoPrueba } from "./state.js";
 import { guardarFirebase, hashPin, getPublicId, auth, db } from "../services/firebase.js";
 import { doc, setDoc } from "firebase/firestore";
 import { signOut } from "firebase/auth";
@@ -163,7 +163,7 @@ function _dispararAutoGuardado(inmediato = false) {
           p.equipos = eqList;
           if (eqList.length > 0 && !p.categoria) p.categoria = eqList[0];
         }
-        if (!p.avatar || p.avatar === DEFAULT_LOGO) p.avatar = perfil.logo || DEFAULT_LOGO;
+        p.avatar = obtenerAvatarPerfil(p);
       });
     }    // Auto-guardar modo y esquema táctico favorito predeterminado
     const modoSelect = document.getElementById('cfg-modo-predeterminado');
@@ -528,6 +528,9 @@ export function renderPerfilesPinsUI() {
       const subLabel = tieneEquipos ? `(${equiposTexto})` : '<small style="color:#888;">(Sin equipos asignados)</small>';
       const rolDisplay = (maxContratado === 1 && !isMaster) ? 'DT (ADMIN)' : p.rol;
 
+      const usaFotoPropia = Boolean(p.avatarPersonalizado && p.avatarCustom);
+      const avatarMostrar = obtenerAvatarPerfil(p);
+
       return `
       <div style="background:#0d0d0d;border:1px solid ${esPredeterminado ? 'var(--oro)' : '#222'};padding:12px;border-radius:10px;margin-bottom:8px;display:flex;flex-direction:column;gap:8px;">
         <!-- Fila superior: rol + ícono PIN + botón eliminar -->
@@ -537,6 +540,26 @@ export function renderPerfilesPinsUI() {
             <span style="font-size:14px;margin-left:4px;" title="${tienePIN ? 'PIN asignado' : 'Sin PIN — acceso libre'}">${pinIcon}</span>
           </span>
           ${!esPredeterminado ? `<button type="button" onclick="window._eliminarPerfilConfig('${p.id}')" style="background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);color:#e74c3c;padding:4px 8px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;" title="Eliminar este perfil DT">ELIMINAR</button>` : `<span style="font-size:10px;color:var(--oro);font-weight:700;background:rgba(212,175,55,0.12);padding:2px 8px;border-radius:6px;">Protegido</span>`}
+        </div>
+        <!-- Foto de Perfil vs Logo Predeterminado del Club -->
+        <div style="display:flex;align-items:center;gap:12px;background:#131720;border:1px solid #252d3d;border-radius:8px;padding:8px 10px;">
+          <div style="width:50px;height:50px;min-width:50px;border-radius:50%;border:2px solid ${usaFotoPropia ? '#2ecc71' : 'var(--oro)'};background:#0a0c10;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            <img id="prev-avatar-prof-${p.id}" src="${avatarMostrar}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:${usaFotoPropia ? 'cover' : 'contain'};padding:${usaFotoPropia ? '0' : '3px'};box-sizing:border-box;" onerror="this.src='${DEFAULT_LOGO}'">
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:10.5px;font-weight:800;color:${usaFotoPropia ? '#34d399' : 'var(--oro)'};margin-bottom:5px;">
+              ${usaFotoPropia ? '📷 Usando Foto de Perfil Propia' : '🏅 Usando Logo Predeterminado del Club'}
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <label class="btn btn-gold" style="width:auto;margin:0;padding:5px 10px;font-size:10.5px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
+                📷 Subir Foto
+                <input type="file" accept="image/*" style="display:none;" onchange="window._subirFotoPerfilIndividual('${p.id}', this)">
+              </label>
+              <button type="button" class="btn ${usaFotoPropia ? 'btn-gray' : 'btn-blue'}" onclick="window._usarLogoClubEnPerfil('${p.id}')" style="width:auto;margin:0;padding:5px 10px;font-size:10.5px;${!usaFotoPropia ? 'opacity:0.85;' : ''}" title="Usar siempre el logo actual del club">
+                🏅 Logo del Club
+              </button>
+            </div>
+          </div>
         </div>
         <!-- Nombre -->
         <input type="text" id="cfg-nombre-input-${p.id}" value="${p.nombre || ''}" placeholder="Nombre del Entrenador / Perfil" style="flex:1;font-size:13px;padding:8px;background:#181818;border:1px solid #333;color:#fff;border-radius:6px;">
@@ -645,9 +668,7 @@ export async function guardarPinsConfig() {
         p.equipos = eqList;
         p.categoria = eqList.length > 0 ? eqList[0] : '';
       }
-      if (!p.avatar || p.avatar === DEFAULT_LOGO) {
-        p.avatar = perfil.logo || DEFAULT_LOGO;
-      }
+      p.avatar = obtenerAvatarPerfil(p);
     });
 
     autoSaveLocal();
@@ -1134,7 +1155,7 @@ export async function guardarKits() {
   mostrarNotificacionApp('Kits Guardados', 'Kit de uniforme actualizado con éxito.');
 }
 
-export async function guardarLogo() {
+export async function guardarLogo(cerrarAlGuardar = true) {
   const esAdmin = esAdminOEntrenadorUnico(currentProfile);
   if (!esAdmin) {
     return mostrarNotificacionApp('Acceso Restringido', '🔒 Se requieren permisos de Director Deportivo o Entrenador para modificar el logo del club.', false);
@@ -1142,7 +1163,9 @@ export async function guardarLogo() {
   const fileInput = document.getElementById('up-cfg-logo');
   if (!fileInput || !fileInput.files.length) {
     perfil.logo = perfil.logo || DEFAULT_LOGO;
+    sincronizarAvataresConLogoClub();
     aplicarPerfil();
+    renderPerfilesPinsUI();
     return mostrarNotificacionApp('Logo Predeterminado', 'Se mantiene el logo oficial del club.');
   }
 
@@ -1151,17 +1174,28 @@ export async function guardarLogo() {
   if (overlay) overlay.style.display = 'flex';
 
   try {
-    const url = await subirImagenCloudinary(file);
+    const url = await subirImagenCloudinary(file, 'club_logo_' + Date.now());
     perfil.logo = url || DEFAULT_LOGO;
+    sincronizarAvataresConLogoClub();
+
+    const imgPrev = document.getElementById('img-prev-cfg-logo');
+    const divPrev = document.getElementById('prev-cfg-logo');
+    const icoLogo = document.getElementById('ico-cfg-logo');
+    if (imgPrev) imgPrev.src = perfil.logo;
+    if (divPrev) divPrev.style.display = 'block';
+    if (icoLogo) icoLogo.style.display = 'none';
+
     aplicarPerfil();
+    renderPerfilesPinsUI();
     autoSaveLocal();
     await guardarFirebase();
-    cerrarConfig();
-    mostrarNotificacionApp('Logo Actualizado', 'El logo del club fue actualizado con éxito.');
+    if (cerrarAlGuardar) cerrarConfig();
+    mostrarNotificacionApp('Logo Actualizado', '🏅 El logo del club y los perfiles predeterminados se actualizaron con éxito.');
   } catch (e) {
     perfil.logo = perfil.logo || DEFAULT_LOGO;
+    sincronizarAvataresConLogoClub();
     aplicarPerfil();
-    mostrarNotificacionApp('Error al Subir', 'Ocurrió un inconveniente con la imagen. Se mantendrá el logo predeterminado.', false);
+    mostrarNotificacionApp('Error al Subir', 'Ocurrió un inconveniente con la imagen. Se mantendrá el logo actual.', false);
   } finally {
     if (overlay) overlay.style.display = 'none';
   }
@@ -1253,8 +1287,20 @@ export function cerrarSesion() {
 }
 
 export function aplicarPerfil() {
+  sincronizarAvataresConLogoClub();
   const clubName = perfil.club || '11FUT MANAGER';
   const logoUrl = perfil.logo || DEFAULT_LOGO;
+
+  const btnSwitchProf = document.getElementById('btn-switch-profile');
+  if (btnSwitchProf) {
+    const activeProf = currentProfile || (perfil.profiles && perfil.profiles[0]) || null;
+    const profAvatar = obtenerAvatarPerfil(activeProf, logoUrl);
+    const esFotoPropia = Boolean(activeProf && activeProf.avatarPersonalizado && activeProf.avatarCustom);
+    btnSwitchProf.style.display = 'inline-flex';
+    btnSwitchProf.style.alignItems = 'center';
+    btnSwitchProf.style.gap = '6px';
+    btnSwitchProf.innerHTML = `<img src="${profAvatar}" alt="Perfil" style="width:20px;height:20px;border-radius:50%;object-fit:${esFotoPropia ? 'cover' : 'contain'};background:#0a0c10;border:1px solid rgba(212,175,55,0.6);" onerror="this.src='${DEFAULT_LOGO}'"> <span>PERFIL</span>`;
+  }
 
   const headerTitle = document.getElementById('header-club');
   if (headerTitle) headerTitle.textContent = clubName;
@@ -2615,3 +2661,74 @@ window._usarPlantillaClubEnCategoria = (cat) => {
 
 
 
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// FOTO DE PERFIL INDIVIDUAL VS LOGO PREDETERMINADO DEL CLUB
+// ══════════════════════════════════════════════════════════════════════════
+window._subirFotoPerfilIndividual = async (profId, inputEl) => {
+  const file = inputEl?.files?.[0];
+  if (!file || !Array.isArray(perfil.profiles)) return;
+
+  const prof = perfil.profiles.find(p => p.id === profId);
+  if (!prof) return;
+
+  const overlay = document.getElementById('upload-overlay');
+  if (overlay) overlay.style.display = 'flex';
+
+  try {
+    const compressed = await resizarImagenPNG(file, 220);
+    let finalUrl = compressed || '';
+    try {
+      const cloudUrl = await subirImagenCloudinary(file, 'perfil_dt_' + profId + '_' + Date.now());
+      if (cloudUrl && cloudUrl.startsWith('http')) {
+        finalUrl = cloudUrl;
+      }
+    } catch (errCloud) {}
+
+    if (finalUrl) {
+      prof.avatarPersonalizado = true;
+      prof.avatarCustom = finalUrl;
+      prof.avatar = finalUrl;
+
+      if (currentProfile && currentProfile.id === prof.id) {
+        currentProfile.avatarPersonalizado = true;
+        currentProfile.avatarCustom = finalUrl;
+        currentProfile.avatar = finalUrl;
+      }
+
+      aplicarPerfil();
+      renderPerfilesPinsUI();
+      autoSaveLocal();
+      await guardarFirebase();
+      mostrarToastRapido('Foto de Perfil Actualizada', `📷 Se guardó la foto personalizada para ${prof.nombre || 'el perfil'}.`);
+    }
+  } catch (err) {
+    mostrarNotificacionApp('Error de Imagen', 'No se pudo cargar la foto seleccionada.', false);
+  } finally {
+    if (overlay) overlay.style.display = 'none';
+    if (inputEl) inputEl.value = '';
+  }
+};
+
+window._usarLogoClubEnPerfil = async (profId) => {
+  if (!Array.isArray(perfil.profiles)) return;
+  const prof = perfil.profiles.find(p => p.id === profId);
+  if (!prof) return;
+
+  prof.avatarPersonalizado = false;
+  delete prof.avatarCustom;
+  prof.avatar = perfil.logo || DEFAULT_LOGO;
+
+  if (currentProfile && currentProfile.id === prof.id) {
+    currentProfile.avatarPersonalizado = false;
+    delete currentProfile.avatarCustom;
+    currentProfile.avatar = prof.avatar;
+  }
+
+  aplicarPerfil();
+  renderPerfilesPinsUI();
+  autoSaveLocal();
+  await guardarFirebase();
+  mostrarToastRapido('Logo del Club Aplicado', `🏅 ${prof.nombre || 'El perfil'} ahora utiliza siempre el logo predeterminado del club.`);
+};

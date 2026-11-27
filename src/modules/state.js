@@ -13,6 +13,7 @@ export const DEFAULT_PLANTEL = {
 };
 
 export const SUPER_ADMIN_EMAIL = "gyknova@gmail.com";
+export const DEFAULT_CLUB_LOGO_URL = "https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png";
 
 export const DEFAULT_PLANTILLA_CONVOCATORIA = `*{encabezado}*
 
@@ -235,6 +236,7 @@ export function updatePerfil(newPerfil) {
     if (!perfil.plantillaConvocatoria || typeof perfil.plantillaConvocatoria !== 'string') {
       perfil.plantillaConvocatoria = DEFAULT_PLANTILLA_CONVOCATORIA;
     }
+    sincronizarAvataresConLogoClub();
     
     // Si ya completó wizard antes o tiene categorías/club configurado, mantener wizardCompletado: true
     if (newPerfil.wizardCompletado !== undefined) {
@@ -375,6 +377,38 @@ export function setKits(kitsArray) {
     KITS.push(...kitsArray);
   } else {
     KITS.push(DEFAULT_PREDETERMINADO_KIT);
+  }
+}
+
+export function obtenerAvatarPerfil(prof, logoClubOverride = '') {
+  if (prof && prof.avatarPersonalizado === true && prof.avatarCustom && String(prof.avatarCustom).trim()) {
+    return String(prof.avatarCustom).trim();
+  }
+  const clubLogo = (logoClubOverride && String(logoClubOverride).trim())
+    || (perfil && perfil.logo && String(perfil.logo).trim())
+    || DEFAULT_CLUB_LOGO_URL;
+  return clubLogo;
+}
+
+export function sincronizarAvataresConLogoClub() {
+  if (!perfil || !Array.isArray(perfil.profiles)) return;
+  const clubLogo = (perfil.logo && String(perfil.logo).trim()) || DEFAULT_CLUB_LOGO_URL;
+  perfil.profiles.forEach(p => {
+    if (!p) return;
+    if (p.avatarPersonalizado === true && p.avatarCustom && String(p.avatarCustom).trim()) {
+      p.avatar = String(p.avatarCustom).trim();
+    } else {
+      p.avatarPersonalizado = false;
+      p.avatar = clubLogo;
+    }
+  });
+  if (currentProfile && currentProfile.id) {
+    const match = perfil.profiles.find(p => p.id === currentProfile.id);
+    if (match) {
+      currentProfile.avatar = match.avatar;
+      currentProfile.avatarPersonalizado = match.avatarPersonalizado;
+      currentProfile.avatarCustom = match.avatarCustom;
+    }
   }
 }
 

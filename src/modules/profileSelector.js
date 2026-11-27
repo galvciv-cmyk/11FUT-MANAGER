@@ -1,4 +1,4 @@
-import { perfil, setCurrentProfile, setCategoriaActiva, autoSaveLocal, isSuperAdmin } from "./state.js";
+import { perfil, setCurrentProfile, setCategoriaActiva, autoSaveLocal, isSuperAdmin, obtenerAvatarPerfil } from "./state.js";
 import { mostrarNotificacionApp, mostrarConfirmacionApp, mostrarToastRapido, cerrarSesion } from "./config.js";
 import { guardarFirebase } from "../services/firebase.js";
 
@@ -99,7 +99,7 @@ export function renderProfileSelector(onProfileSelected, forceShow = false) {
             `}
             <div class="profile-card-item" onclick="window._onSelectProfileCard('${p.id}')" style="display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:transform 0.2s ease;">
               <div style="width:110px;height:110px;border-radius:50%;border:3px solid ${(p.rol === 'ADMIN' || (perfil.profiles && perfil.profiles.length <= 1)) ? 'var(--oro)' : '#2ecc71'};padding:4px;background:#111;box-shadow:0 8px 25px rgba(0,0,0,0.6);position:relative;display:flex;align-items:center;justify-content:center;">
-                <img src="${p.avatar || perfil.logo}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" onerror="this.src='https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'">
+                <img src="${obtenerAvatarPerfil(p)}" style="width:100%;height:100%;border-radius:50%;object-fit:${p.avatarPersonalizado ? 'cover' : 'contain'};padding:${p.avatarPersonalizado ? '0' : '4px'};box-sizing:border-box;" onerror="this.src='https://res.cloudinary.com/djhpfdklk/image/upload/v1785381498/11fut_logo_iqnyxk.png'">
                 <div style="position:absolute;bottom:0;right:0;background:${(p.rol === 'ADMIN' || (perfil.profiles && perfil.profiles.length <= 1)) ? 'var(--oro)' : '#2ecc71'};color:#000;font-size:10px;font-weight:900;padding:2px 6px;border-radius:10px;">${(p.rol !== 'ADMIN' && perfil.profiles && perfil.profiles.length <= 1) ? 'DT (ADMIN)' : p.rol}</div>
               </div>
               <div style="margin-top:12px;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:#fff;">${p.nombre}</div>
@@ -357,7 +357,10 @@ export function renderProfileSelector(onProfileSelected, forceShow = false) {
     const subEl = document.getElementById('pin-profile-subtitle');
     if (subEl) subEl.textContent = 'Se requiere autorización del Director Deportivo';
     const imgEl = document.getElementById('pin-profile-avatar-img');
-    if (imgEl) imgEl.src = profTarget.avatar || perfil.logo;
+    if (imgEl) {
+      imgEl.src = obtenerAvatarPerfil(profTarget);
+      imgEl.style.objectFit = profTarget.avatarPersonalizado ? 'cover' : 'contain';
+    }
 
     const modalPad = document.getElementById('pin-pad-modal');
     if (modalPad) {
@@ -386,7 +389,10 @@ export function renderProfileSelector(onProfileSelected, forceShow = false) {
     const subEl = document.getElementById('pin-profile-subtitle');
     if (subEl) subEl.textContent = prof.rol === 'ADMIN' ? 'Perfil Director Deportivo (ADMIN)' : 'Perfil Entrenador (DT)';
     const imgEl = document.getElementById('pin-profile-avatar-img');
-    if (imgEl) imgEl.src = prof.avatar || perfil.logo;
+    if (imgEl) {
+      imgEl.src = obtenerAvatarPerfil(prof);
+      imgEl.style.objectFit = prof.avatarPersonalizado ? 'cover' : 'contain';
+    }
 
     const modalPad = document.getElementById('pin-pad-modal');
     if (modalPad) {

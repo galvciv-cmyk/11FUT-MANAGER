@@ -1572,6 +1572,7 @@ export function actualizarVisibilidadPestanasRol() {
 function handleProfileSelected(prof) {
   if (prof) {
     setCurrentProfile(prof);
+    aplicarPerfil();
     if (prof.id) {
       localStorage.setItem('11fut_active_profile_id', prof.id);
     }
@@ -2232,6 +2233,7 @@ async function initApp() {
     guardarEsquemaPredeterminadoConfig();
   });
   document.getElementById('uz-cfg-logo')?.addEventListener('click', () => document.getElementById('up-cfg-logo')?.click());
+  document.getElementById('up-cfg-logo')?.addEventListener('change', () => guardarLogo(false));
   document.getElementById('btn-cfg-subir-logo')?.addEventListener('click', guardarLogo);
 
   document.getElementById('btn-cfg-cambiar-pin')?.addEventListener('click', cambiarPin);
